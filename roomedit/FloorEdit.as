@@ -11,6 +11,7 @@ package angel.roomedit {
 		public static const RESIZE_EVENT:String = "floorResized";
 
 		private var palette:IRoomEditorPalette;
+		public var paintWhileDragging:Boolean;
 		private var hasBeenEdited:Boolean = false;
 		private var dragging:Boolean = false;
 		
@@ -122,7 +123,7 @@ package angel.roomedit {
 				(parent as Sprite).startDrag();
 				dragging = true;
 			} else {
-				if (event.target is FloorTile) {
+				if (event.target is FloorTile && paintWhileDragging) {
 					addEventListener(MouseEvent.MOUSE_MOVE, continuePaintDrag);
 					addEventListener(MouseEvent.MOUSE_UP, endPaintDrag);
 				}

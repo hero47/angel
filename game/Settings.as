@@ -52,7 +52,6 @@ package angel.game {
 			sprintPoints += runPoints;
 			
 			playerId = xml.@player;
-			trace("Settings.playerId", playerId);
 		}
 		
 	}

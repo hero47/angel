@@ -41,14 +41,14 @@ package angel.common {
 				
 				var blankTileImage:Shape = new Shape();
 				
-				blankTileImage.graphics.lineStyle(0, 0);
+				blankTileImage.graphics.lineStyle(0, 0xffffff);
 				blankTileImage.graphics.moveTo(TILE_WIDTH/2, 0);
 				blankTileImage.graphics.lineTo(TILE_WIDTH, TILE_HEIGHT / 2);
 				blankTileImage.graphics.lineTo(TILE_WIDTH / 2, TILE_HEIGHT);
 				blankTileImage.graphics.lineTo(0, TILE_HEIGHT / 2);
 				blankTileImage.graphics.lineTo(TILE_WIDTH/2, 0);
 				
-				blankTileImage.graphics.beginFill(0x000000, 1);
+				blankTileImage.graphics.beginFill(0xffffff, 1);
 				blankTileImage.graphics.drawCircle(TILE_WIDTH / 2, TILE_HEIGHT / 2, 2);
 				
 				defaultTileData.draw(blankTileImage);
