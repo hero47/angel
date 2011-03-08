@@ -65,13 +65,13 @@ package angel.common {
 			var allButtons:Array = new Array();
 			for (var n:int;n<alertOptions.buttons.length;n++) {
 				var button:SimpleButton = promptBackground.getChildByName(alertOptions.buttons[n])
-				button.addEventListener(MouseEvent.CLICK, myFunction);
+				button.addEventListener(MouseEvent.CLICK, myClickFunction);
 				allButtons.push(button);
 			}
 			//	THIS IS DECLARED HERE SIMPLY SO I HAVE ACCESS TO alertOptions
-			function myFunction(event:MouseEvent):void {
+			function myClickFunction(event:MouseEvent):void {
 				for (var i:int;i<allButtons.length;i++) {
-					allButtons[i].removeEventListener(MouseEvent.CLICK, myFunction);
+					allButtons[i].removeEventListener(MouseEvent.CLICK, myClickFunction);
 				}
 				closeAlert(myAlert);
 				if (alertOptions.callback != null) alertOptions.callback(event.target.name);

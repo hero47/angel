@@ -6,6 +6,8 @@ package angel.common {
 	import flash.display.SimpleButton;
 	import flash.display.Sprite;
 	import flash.display.Stage;
+	import flash.events.Event;
+	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
 	import flash.filters.BitmapFilter;
 	import flash.filters.BitmapFilterQuality;
@@ -20,6 +22,7 @@ package angel.common {
 	import flash.text.TextFieldType;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
+	import flash.ui.Keyboard;
 	// Based on Alert class courtesy of http://fatal-exception.co.uk/blog/?p=69
 	public class KludgeDialogBox {
 		//
@@ -68,7 +71,7 @@ package angel.common {
 			var allButtons:Array = new Array();
 			for (var n:int;n<alertOptions.buttons.length;n++) {
 				var button:SimpleButton = promptBackground.getChildByName(alertOptions.buttons[n])
-				button.addEventListener(MouseEvent.CLICK, myFunction);
+				button.addEventListener(MouseEvent.CLICK, myClickFunction);
 				allButtons.push(button);
 			}
 			
@@ -77,18 +80,29 @@ package angel.common {
 				var input:TextField = promptBackground.getChildByName("input" + n);
 				allInputs.push(input);
 			}
+			// pressing Enter acts as click on first button!
+			allInputs[0].addEventListener(KeyboardEvent.KEY_DOWN, myEnterFunction);
 			//	THIS IS DECLARED HERE SIMPLY SO I HAVE ACCESS TO alertOptions
-			function myFunction(event:MouseEvent):void {
+			function cleanupAndNotifyButtonPressed(buttonName:String):void {
 				for (var i:int;i<allButtons.length;i++) {
-					allButtons[i].removeEventListener(MouseEvent.CLICK, myFunction);
+					allButtons[i].removeEventListener(MouseEvent.CLICK, myClickFunction);
 				}
+				allInputs[0].removeEventListener(KeyboardEvent.KEY_DOWN, myEnterFunction);
 				closeAlert(myAlert);
 				if (alertOptions.callback != null) {
 					var inputValues:Array = new Array();
 					for (i = 0; i < allInputs.length; i++) {
 						inputValues.push(allInputs[i].text);
 					}
-					alertOptions.callback(event.target.name, inputValues);
+					alertOptions.callback(buttonName, inputValues);
+				}
+			}
+			function myClickFunction(event:MouseEvent):void {
+				cleanupAndNotifyButtonPressed(event.target.name);
+			}
+			function myEnterFunction(event:KeyboardEvent):void {
+				if (event.keyCode == Keyboard.ENTER) {
+					cleanupAndNotifyButtonPressed(alertOptions.buttons[0]);
 				}
 			}
 		}
@@ -335,6 +349,8 @@ package angel.common {
 			myTextField.selectable = true;
 			myTextField.type = TextFieldType.INPUT;
 			myTextField.border = true;
+			myTextField.background = true;
+			myTextField.backgroundColor = brightenColour(alertOptions.colour, 50);
 			myTextField.autoSize = TextFieldAutoSize.NONE;
 			myTextField.height = btnHeight;
 			myTextField.name = name;

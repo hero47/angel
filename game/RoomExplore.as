@@ -35,7 +35,7 @@ package angel.game {
 				return;
 			}
 			if (event.keyCode == KEYBOARD_C) {
-				room.toggleCombatMode();
+				room.changeModeTo(RoomCombat);
 			}
 			
 		}

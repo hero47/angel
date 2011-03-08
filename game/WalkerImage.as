@@ -1,4 +1,5 @@
 package angel.game {
+	import angel.common.Prop;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.geom.Point;
@@ -16,8 +17,16 @@ package angel.game {
 		
 		private var bits:Vector.<Vector.<BitmapData>>;
 		
-		public function WalkerImage(bitmap:Bitmap) {
-			var groupBitmapData:BitmapData = bitmap.bitmapData;
+		public function WalkerImage(groupBitmapData:BitmapData) {
+			var image:BitmapData;
+			var onlyOneImage:Boolean = false;
+			
+			// If we were given a single image instead of a pane of images, stash it into all our references so we
+			// at least show something meaningful
+			if (groupBitmapData.height == Prop.HEIGHT && groupBitmapData.width == Prop.WIDTH) {
+				onlyOneImage = true;
+				image = groupBitmapData;
+			}
 			var zerozero:Point = new Point(0, 0);
 			bits = new Vector.<Vector.<BitmapData>>(9);
 			bits.fixed = true;
@@ -25,10 +34,12 @@ package angel.game {
 				bits[facing] = new Vector.<BitmapData>(3);
 				bits[facing].fixed = true;
 				for (var j:int = 0; j < 3; j++) {
-					var image:BitmapData = new BitmapData(Entity.WIDTH, Entity.HEIGHT);
-					image.copyPixels(groupBitmapData,
-							new Rectangle(imageColumn[facing] * Entity.WIDTH, j * Entity.HEIGHT, Entity.WIDTH, Entity.HEIGHT),
-							zerozero);
+					if (!onlyOneImage) {
+						image = new BitmapData(Prop.WIDTH, Prop.HEIGHT);
+						image.copyPixels(groupBitmapData,
+								new Rectangle(imageColumn[facing] * Prop.WIDTH, j * Prop.HEIGHT, Prop.WIDTH, Prop.HEIGHT),
+								zerozero);
+					}
 					bits[facing][j] = image;
 				}
 			}

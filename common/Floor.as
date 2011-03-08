@@ -130,40 +130,24 @@ package angel.common {
 			
 		}
 		
-		// Loads data from specified file.
-		// NOTE: File must be in the same directory that we're running from!
-		public function loadFloorFromXmlFile(filename:String):void {
-			LoaderWithErrorCatching.LoadFile(filename, floorXmlLoaded);
-		}
-		
-		private var xml:XML; // hold xml until tileset loaded
-		private function floorXmlLoaded(event:Event):void {
-			xml = new XML(event.target.data);
-			if ((xml.@x.length() == 0) || (xml.tileset.length() == 0)) {
-				Alert.show("Invalid room file.");
-				return;
-			}
-			
+		public function loadFromXml(floorXml:XML):void {
 			var newTileset:Tileset = new Tileset();
-			newTileset.initFromXml(xml, tilesetLoadedCallback);
-		}
-		
-		private function tilesetLoadedCallback(newTileset:Tileset):void {
-			if (myTileset != null) {
-				myTileset.cleanup();
-			}
-			myTileset = newTileset;
-			
-			resize(xml.@x, xml.@y);
+			newTileset.initFromXml(floorXml, function(newTileset:Tileset):void {
+				if (myTileset != null) {
+					myTileset.cleanup();
+				}
+				myTileset = newTileset;
+				
+				resize(floorXml.@x, floorXml.@y);
 
-			var floorRows:XMLList = xml.floor;
-			for each (var floorRowXml:XML in floorRows) {
-				initFloorRowFromXml(floorRowXml)
-			}
-			setTileImagesFromNames();
+				var floorRows:XMLList = floorXml.floorTiles;
+				for each (var floorRowXml:XML in floorRows) {
+					initFloorRowFromXml(floorRowXml)
+				}
+				setTileImagesFromNames();
 
-			xml = null;
-			dispatchEvent(new Event(MAP_LOADED_EVENT));
+				dispatchEvent(new Event(MAP_LOADED_EVENT));
+			} );
 		}
 		
 	} //end class Floor

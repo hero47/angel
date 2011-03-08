@@ -11,7 +11,7 @@ package angel.roomedit {
 	
 	//UNDONE: FloorTile now has .tileName, this class hasn't been revised to use it
 	
-	public class FloorTilePalette extends Sprite {
+	public class FloorTilePalette extends Sprite implements IRoomEditorPalette {
 		
 		private static const LABEL_WIDTH:int = Tileset.TILE_WIDTH;
 		private static const LABEL_HEIGHT:int = 18;
@@ -19,15 +19,15 @@ package angel.roomedit {
 		private static const Y_GUTTER:int = 5;
 		private static const ITEM_HEIGHT:int = (Tileset.TILE_HEIGHT + LABEL_HEIGHT + Y_GUTTER);
 		private static const ITEM_WIDTH:int = Tileset.TILE_WIDTH + X_GUTTER;
-		private static const XSIZE:int = Tileset.TILE_WIDTH * 3;
-		private static const YSIZE:int = Math.ceil((Tileset.TILES_IN_SET + 1) / 3) * ITEM_HEIGHT;
-		private static const BACKCOLOR:uint = 0xffffff;
-		private static const SELECT_COLOR:uint = 0x00ffff;
+		public static const XSIZE:int = Tileset.TILE_WIDTH * 3;
+		public static const YSIZE:int = Math.ceil((Tileset.TILES_IN_SET + 1) / 3) * ITEM_HEIGHT;
+		public static const BACKCOLOR:uint = 0xffffff;
+		public static const SELECT_COLOR:uint = 0x00ffff;
 		
 		private var tileset:Tileset;
 		private var uniqueTileNames:Vector.<NameAndCount>;
 		
-		public var selectedTileName:String = "";
+		private var selectedTileName:String = "";
 		private var selection:Sprite = null;
 		private var editingTileNames:Boolean = false;
 		
@@ -39,6 +39,11 @@ package angel.roomedit {
 			
 			addEventListener(MouseEvent.CLICK, clickListener);
 		}
+
+		public function applyToTile(floorTile:FloorTile):void {
+			floorTile.tileName = selectedTileName;
+			floorTile.bitmapData = tileset.tileDataNamed(selectedTileName);
+		}		
 		
 		public function changeTileset(tileset:Tileset):void {
 			this.tileset = tileset;

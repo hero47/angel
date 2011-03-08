@@ -1,6 +1,7 @@
 package angel.game {
 	import angel.common.Floor;
 	import angel.common.FloorTile;
+	import angel.common.Prop;
 	import flash.display.DisplayObject;
 	import flash.display.Graphics;
 	import flash.display.Shape;
@@ -23,7 +24,6 @@ package angel.game {
 		// and detect clicks on entities.
 		private var contentsLayer:Sprite;
 		public var cells:Vector.<Vector.<Cell>>;
-		private var entities:Vector.<Entity>;
 		public var playerCharacter:Entity;
 		public var size:Point;
 		public var mode:RoomMode;
@@ -59,7 +59,6 @@ package angel.game {
 		
 		private function finishInit(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, finishInit);
-			mode = new RoomExplore(this);
 
 		}
 		
@@ -77,7 +76,7 @@ package angel.game {
 		//CONSIDER: should entity.addToRoom add itself to the contentsLayer, or do we want the ability to
 		//be in the room but not yet on stage?
 		public function addEntity(entity:Entity, location:Point):void {
-			cells[location.x][location.y].addEntity(entity);
+			cells[location.x][location.y].add(entity);
 			contentsLayer.addChild(entity);
 			entity.addToRoom(this, location);
 		}
@@ -93,10 +92,10 @@ package angel.game {
 		
 		// This will generally be called by the entity as it crosses the boundary between one floor tile
 		// and another during movement.
-		public function changeEntityLocation(entity:Entity, newLocation:Point):void {
-			cells[entity.location.x][entity.location.y].removeEntity(entity);
-			cells[newLocation.x][newLocation.y].addEntity(entity);
-			if (entity == playerCharacter) {
+		public function changePropLocation(prop:Prop, newLocation:Point):void {
+			cells[prop.location.x][prop.location.y].remove(prop);
+			cells[newLocation.x][newLocation.y].add(prop);
+			if (prop == playerCharacter) {
 				mode.playerMoved(newLocation);
 			}
 		}
@@ -126,12 +125,12 @@ package angel.game {
 			}
 		}
 		
-		public function toggleCombatMode():void {
-			mode.cleanup();
-			mode = (mode is RoomCombat) ? new RoomExplore(this) : new RoomCombat(this);
+		public function changeModeTo(newModeClass:Class):void {
+			if (mode != null) {
+				mode.cleanup();
+			}
+			mode = new newModeClass(this);
 		}
-		
-		
 	} // end class Room
 
 }

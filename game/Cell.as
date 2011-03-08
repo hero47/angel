@@ -1,27 +1,28 @@
 package angel.game {
 	import angel.common.Assert
+	import angel.common.Prop;
 
 	// The room the player currently occupies is divided into Cells.  Each cell represents the contents of one
 	// square on the map, including any terrain properties.
 	public class Cell {
 		
-		public var contents:Vector.<Entity>;
+		public var contents:Vector.<Prop>;
 		
 		public function Cell() {
 			
 		}
 		
-		public function addEntity(entity:Entity):void {
+		public function add(prop:Prop):void {
 			if (contents == null) {
-				contents = new Vector.<Entity>();
+				contents = new Vector.<Prop>();
 			}
-			contents.push(entity);
+			contents.push(prop);
 		}
 		
-		public function removeEntity(entity:Entity):void {
-			Assert.assertTrue(contents != null && contents.indexOf(entity) >= 0, "Removing entity that's not there");
+		public function remove(prop:Prop):void {
+			Assert.assertTrue(contents != null && contents.indexOf(prop) >= 0, "Removing entity that's not there");
 			if (contents != null) {
-				var i:int = contents.indexOf(entity);
+				var i:int = contents.indexOf(prop);
 				if (i >= 0) {
 					contents.splice(i, 1);
 				}
