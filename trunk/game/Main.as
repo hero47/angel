@@ -8,10 +8,12 @@ package angel.game {
 	import flash.geom.Rectangle;
 	
 	public class Main extends Sprite {
+		private var catalog:Catalog;
 		private var floor:Floor;
 		private var testEntity:Entity;
 		private var room:Room;
 		private var startLoc:Point;
+		private var entitiesToCreate:int;
 		
 		public function Main() {
 			stage.scaleMode = "noScale";
@@ -21,6 +23,13 @@ package angel.game {
 		}
 	
 		private function initFromXml():void {
+			catalog = new Catalog();
+			catalog.addEventListener(Catalog.CATALOG_LOADED_EVENT, catalogLoadedListener);
+			catalog.loadFromXmlFile("AngelCatalog.xml");
+		}
+		
+		private function catalogLoadedListener(event:Event):void {
+			catalog.removeEventListener(Catalog.CATALOG_LOADED_EVENT, catalogLoadedListener);
 			LoaderWithErrorCatching.LoadFile("AngelInit.xml", xmlLoadedForInit);
 		}
 
@@ -32,38 +41,45 @@ package angel.game {
 			}
 			Settings.initFromXml(xmlData.settings);
 			startLoc = new Point(xmlData.room.@startX, xmlData.room.@startY);
-			floor = new Floor();
-			floor.addEventListener(Floor.MAP_LOADED_EVENT, mapLoadedListener);
-			floor.loadFloorFromXmlFile(xmlData.room);
+			LoaderWithErrorCatching.LoadFile(xmlData.room, roomXmlLoaded);
 		}
 		
 		private function createTestEntity():Entity {
 			[Embed(source='../../../assets/MA_mobile-barbara_4b.png')]
-			var tempWalker:Class;
+			var tempWalkerBits:Class;
 			
-			var bitmap:Bitmap = new tempWalker();
-			var entity:Walker = new Walker(new WalkerImage(bitmap));
-			return entity;
-		}
-
-		private function createCrate():Entity {
-			[Embed(source='../../../assets/lw-crate3.png')]
-			var tempCrate:Class;
-			
-			var bitmap:Bitmap = new tempCrate();
-			var entity:Entity = new Entity(bitmap);
+			var bitmap:Bitmap = new tempWalkerBits();
+			var entity:Walker = new Walker(new WalkerImage(bitmap.bitmapData));
 			entity.solid = true;
 			return entity;
 		}
-
-		private function createPillar():Entity {
-			[Embed(source='../../../assets/MA_lw-pillar2.png')]
-			var tempPillar:Class;
+		
+		private function addPropByName(propName:String, location:Point):void {
+			++entitiesToCreate;
+			catalog.retrieveBitmapData(propName, function(bitmapData:BitmapData):void {
+				var prop:Entity = new Entity(new Bitmap(bitmapData));
+				prop.solid = true;
+				room.addEntity(prop, location);
+				--entitiesToCreate;
+				if (entitiesToCreate == 0) {
+					finishedCreatingEntities();
+				}
+			});
+		}
+		
+		private var contentsXml:XML; // stash here for use in mapLoadedListener
+		private function roomXmlLoaded(event:Event):void {
+			var xml:XML = new XML(event.target.data);
 			
-			var bitmap:Bitmap = new tempPillar();
-			var entity:Entity = new Entity(bitmap);
-			entity.solid = true;
-			return entity;
+			if (xml.floor.length() == 0) {
+				Alert.show("Invalid room file.");
+				return;
+			}
+			
+			contentsXml = xml.contents[0];
+			floor = new Floor();
+			floor.addEventListener(Floor.MAP_LOADED_EVENT, mapLoadedListener);			
+			floor.loadFromXml(xml.floor[0]);
 		}
 		
 
@@ -72,14 +88,36 @@ package angel.game {
 			room = new Room(floor);
 			addChild(room);
 			room.scrollToCenter(startLoc, true);
-			room.addPlayerCharacter(createTestEntity(), startLoc);
-			room.addEntity(createCrate(), new Point(1,0));
-			room.addEntity(createCrate(), new Point(1,1));
-			room.addEntity(createCrate(), new Point(0,1));
-			room.addEntity(createPillar(), new Point(4, 2));
-			room.addEntity(createPillar(), new Point(4, 3));
-			room.addEntity(createPillar(), new Point(4, 4));
+			
+			entitiesToCreate = 0;
+			for each (var propXml:XML in contentsXml.prop) {
+				var propName:String = propXml;
+				addPropByName(propName, new Point(propXml.@x, propXml.@y));
+			}
+			
+			// This callback will be processed BEFORE all the ones right above here adding props
+			if (Settings.playerId == "") {
+				room.addPlayerCharacter(createTestEntity(), startLoc);
+			} else {
+				catalog.retrieveBitmapData(Settings.playerId, function(bitmapData:BitmapData):void {
+					var entity:Walker = new Walker(new WalkerImage(bitmapData));
+					entity.solid = true;
+					room.addPlayerCharacter(entity, startLoc);
+				});
+			}
+			
+
 		}
+
+		private function finishedCreatingEntities():void {
+			room.changeModeTo(RoomExplore);
+		}
+		
+		// we take new size in parameters rather than retrieving from floor in case floor hasn't
+		// finished loading yet when this is called
+		public function initContentsFromXml(xml:XML):void {
+		}
+		
 		
 	}	// end class Main
 }

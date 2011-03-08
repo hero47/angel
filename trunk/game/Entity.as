@@ -1,6 +1,7 @@
 package angel.game {
 	import angel.common.Assert;
 	import angel.common.Floor;
+	import angel.common.Prop;
 	import angel.common.Tileset;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -12,15 +13,7 @@ package angel.game {
 
 	// A physical object in the game world -- we aren't yet distinguishing between pc/npc/mobile/immobile.
 	
-	public class Entity extends Sprite {
-		// Size of art assets for entities
-		public static const WIDTH:int = 64;
-		public static const HEIGHT:int = 128;
-		
-		// offsets from top corner of a tile's bounding box, to top corner of entity's bounding box when standing on it
-		private static const OFFSET_X:int = 0;
-		private static const OFFSET_Y:int = -96;
-		
+	public class Entity extends Prop {
 		private static const PIXELS_FOR_ADJACENT_MOVE:int = Math.sqrt(Tileset.TILE_WIDTH * Tileset.TILE_WIDTH/4 + Tileset.TILE_HEIGHT * Tileset.TILE_HEIGHT/4);
 		private static const PIXELS_FOR_VERT_MOVE:int = Tileset.TILE_HEIGHT;
 		private static const PIXELS_FOR_HORZ_MOVE:int = Tileset.TILE_WIDTH;
@@ -37,17 +30,12 @@ package angel.game {
 		public var moveSpeed:Number = Settings.DEFAULT_MOVE_SPEED;
 		public var adjacentTilesPerFrame:Number = moveSpeed / Settings.FRAMES_PER_SECOND;
 		public var combatMovePoints:int = Settings.combatMovePoints;
-		public var solid:Boolean = false;
 		
 		public var isPlayerControlled:Boolean;
+
 		
-		private var image:Bitmap;
+
 		private var room:Room;
-		private var myLocation:Point = null;
-		// Depth represents distance to the "camera" plane, in our orthogonal view
-		// The fractional part of depth indicates distance away from that line of cell-centers
-		private var myDepth:Number = -Infinity;
-		
 		private var moveGoal:Point; // the tile we're trying to get to
 		private var path:Vector.<Point>; // the tiles we're trying to move through to get there
 		private var moveTo:Point; // the tile we're immediately in the process of moving onto
@@ -57,10 +45,7 @@ package angel.game {
 		protected var facing:int;
 		
 		public function Entity(bitmap:Bitmap = null) {
-			image = bitmap;
-			if (bitmap != null) {
-				addChild(image);
-			}
+			super(bitmap);
 		}
 		
 		public function addToRoom(room:Room, newLocation:Point = null):void {
@@ -68,28 +53,6 @@ package angel.game {
 			if (newLocation != null) {
 				this.location = newLocation;
 			}
-		}
-		
-		public function get location():Point {
-			Assert.assertTrue(parent != null, "Getting location of an entity not on stage");
-			return myLocation;
-		}
-		
-		public function set location(newLocation:Point):void {
-			myLocation = newLocation;
-			myDepth = newLocation.x + newLocation.y;
-			var pixels:Point = pixelLocStandingOnTile(newLocation);
-			this.x = pixels.x;
-			this.y = pixels.y;
-			Assert.assertTrue(parent != null, "Setting location of an entity not on stage");
-			if (parent != null) {
-				adjustDrawOrder();
-			}
-		}
-		
-		private function pixelLocStandingOnTile(tileLoc:Point):Point {
-			var tilePixelLoc:Point = Floor.tileBoxCornerOf(tileLoc);
-			return new Point(tilePixelLoc.x + OFFSET_X, tilePixelLoc.y + OFFSET_Y);
 		}
 		
 		//UNDONE deal with changing goal partway through move
@@ -161,7 +124,7 @@ package angel.game {
 				frameOfMove = 0;
 			}
 			if (frameOfMove == Math.floor(coordsForEachFrameOfMove.length/2)) {
-				room.changeEntityLocation(this, moveTo);
+				room.changePropLocation(this, moveTo);
 				myLocation = moveTo;
 			}
 			adjustImage();
@@ -290,38 +253,6 @@ package angel.game {
 			}
 		}
 		
-		protected function get depth():Number {
-			return myDepth;
-		}
-
-		// CAUTION: Depends on all children in content layer being Entity
-		private function adjustDrawOrder():void {
-			var index:int = parent.getChildIndex(this);
-			var correctIndex:int;
-			var other:Entity = null;
-			// Assuming depth is currently correct or too low, find index I should move to
-			for (correctIndex = index; correctIndex > 0; correctIndex--) {
-				other = Entity(parent.getChildAt(correctIndex - 1));
-				if (other.depth < myDepth) {
-					break;
-				}
-			}
-			if (correctIndex == index) {
-				//That didn't find a move, so depth must be correct or too high.
-				for (correctIndex = index; correctIndex < parent.numChildren-1; correctIndex++) {
-					other = Entity(parent.getChildAt(correctIndex + 1));
-					if (other.depth > myDepth) {
-						break;
-					}
-				}
-			}
-			
-			if (correctIndex != index) {
-				parent.setChildIndex(this, correctIndex);
-			}
-
-		}
-
 		private function scrollRoomToKeepPlayerWithinBox(distanceFromEdge:int):void {
 			var xOffset:int = 0;
 			var yOffset:int = 0;

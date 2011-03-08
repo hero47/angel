@@ -13,6 +13,8 @@ package angel.game {
 		public static var runPoints:int;
 		public static var sprintPoints:int;
 		
+		public static var playerId:String;
+		
 		public function Settings() {
 			
 		}
@@ -49,6 +51,8 @@ package angel.game {
 			runPoints += walkPoints;
 			sprintPoints += runPoints;
 			
+			playerId = xml.@player;
+			trace("Settings.playerId", playerId);
 		}
 		
 	}

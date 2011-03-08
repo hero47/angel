@@ -72,7 +72,7 @@ package angel.game {
 			}
 			switch (event.keyCode) {
 				case KEYBOARD_C:
-					room.toggleCombatMode();
+					room.changeModeTo(RoomExplore);
 					break;
 				case Keyboard.BACKSPACE:
 					removeLastPathSegment();

@@ -1,5 +1,7 @@
 package angel.roomedit {
 	import angel.common.*;
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	
@@ -8,26 +10,49 @@ package angel.roomedit {
 		public static const DEFAULT_FLOORSIZE_X:int = 10;
 		public static const DEFAULT_FLOORSIZE_Y:int = 10;
 		
+		private var catalog:Catalog;
+		private var room:RoomLight;
 		private var floor:FloorEdit;
-		public var palette:FloorTilePalette;
+		public var tilesPalette:FloorTilePalette;
+		public var propPalette:PropPalette;
 		
 		private var editNamesButton:SimplerButton;
 		private var finishedEditNamesButton:SimplerButton;
+		
+		private var propButton:SimplerButton;
+		private var tilesButton:SimplerButton;
 
 		public function Main():void {
 			Alert.init(stage);
-			initButtons();
-
+			catalog = new Catalog();
+			catalog.addEventListener(Catalog.CATALOG_LOADED_EVENT, catalogLoadedListener);
+			catalog.loadFromXmlFile("AngelCatalog.xml");
+		}
+		
+		private function catalogLoadedListener(event:Event):void {
+			catalog.removeEventListener(Catalog.CATALOG_LOADED_EVENT, catalogLoadedListener);
+			
 			floor = new FloorEdit(DEFAULT_FLOORSIZE_X, DEFAULT_FLOORSIZE_Y);
-			addChild(floor);
-			floor.x = 430;
-			floor.y = 55;
 			floor.addEventListener(Floor.MAP_LOADED_EVENT, mapLoadedListener);
-			palette = new FloorTilePalette(floor.tileset);
-			palette.x = 5;
-			palette.y = 30;
-			addChild(palette);
-			floor.attachPalette(palette);
+			
+			room = new RoomLight(floor, catalog);
+			addChild(room);
+			room.x = 430;
+			room.y = 55;
+			
+			tilesPalette = new FloorTilePalette(floor.tileset);
+			tilesPalette.x = 5;
+			tilesPalette.y = 30;
+			addChild(tilesPalette);
+			floor.attachPalette(tilesPalette);
+			
+			propPalette = new PropPalette(room, catalog);
+			propPalette.x = 5;
+			propPalette.y = 30;
+			addChild(propPalette);
+			propPalette.visible = false;
+			
+			initButtons();
 		}
 		
 		private function initButtons():void {
@@ -39,35 +64,35 @@ package angel.roomedit {
 			button.y = 5;
 			button.width = 100;
 			addChild(button);
-			left += button.width + 10;
+			left += button.width + 5;
 			
 			button = new SimplerButton("Load tileset", clickedLoadTileset);
 			button.x = left;
 			button.y = 5;
 			button.width = 100;
 			addChild(button);
-			left += button.width + 10;
+			left += button.width + 5;
 			
 			button = new SimplerButton("Save room", clickedSaveRoom);
 			button.x = left;
 			button.y = 5;
 			button.width = 100;
 			addChild(button);
-			left += button.width + 10;
+			left += button.width + 5;
 			
 			button = new SimplerButton("Clear", clickedClear);
 			button.x = left;
 			button.y = 5;
-			button.width = 80;
+			button.width = 60;
 			addChild(button);
-			left += button.width + 10;
+			left += button.width + 5;
 			
 			button = new SimplerButton("Redisplay", clickedRedisplay);
 			button.x = left;
 			button.y = 5;
 			button.width = 100;
 			addChild(button);
-			left += button.width + 10;
+			left += button.width + 5;
 			
 			editNamesButton = new SimplerButton("Edit Names", clickedEditNames);
 			finishedEditNamesButton = new SimplerButton("Done Editing", clickedEditNames, 0xff0000);
@@ -77,14 +102,14 @@ package angel.roomedit {
 			addChild(editNamesButton);
 			addChild(finishedEditNamesButton);
 			finishedEditNamesButton.visible = false;
-			left += editNamesButton.width + 10;
+			left += editNamesButton.width + 5;
 			
 			button = new SimplerButton("Size", clickedSize);
 			button.x = left;
 			button.y = 5;
 			button.width = 50;
 			addChild(button);
-			left += button.width + 10;
+			left += button.width + 5;
 			
 			button = new SimplerButton("In", clickedZoomIn, 0x000080);
 			button.x = left;
@@ -97,11 +122,21 @@ package angel.roomedit {
 			button.y = 5;
 			button.width = 30;
 			addChild(button);
-			left += button.width + 10;
+			left += button.width + 5;
+			
+			propButton = new SimplerButton("Prop", clickedProp);
+			tilesButton = new SimplerButton("Tiles", clickedProp);
+			propButton.x = tilesButton.x = left;
+			propButton.y = tilesButton.y = 5;
+			propButton.width = tilesButton.width = 50;
+			addChild(propButton);
+			addChild(tilesButton);
+			tilesButton.visible = false;
+			left += propButton.width + 5;
 		}
 		
 		private function clickedLoadRoom(event:Event):void {
-			floor.launchLoadRoomDialog();
+			room.launchLoadRoomDialog();
 		}
 		
 		private function clickedLoadTileset(event:Event):void {
@@ -111,11 +146,11 @@ package angel.roomedit {
 
 		private function changeTilesetCallback(newTileset:Tileset):void {
 			floor.changeTileset(newTileset);
-			palette.changeTileset(floor.tileset);
+			tilesPalette.changeTileset(floor.tileset);
 		}
 
 		private function clickedSaveRoom(event:Event):void {
-			floor.saveRoomAsXmlFile();			
+			room.saveRoomAsXmlFile();			
 		}
 		
 		private function clickedClear(event:Event):void {
@@ -125,7 +160,7 @@ package angel.roomedit {
 		private function clickedEditNames(event:Event):void {
 			var edit:Boolean = editNamesButton.visible;
 			floor.visible = !edit;
-			palette.setEditMode(edit);
+			tilesPalette.setEditMode(edit);
 			editNamesButton.visible = !edit;
 			finishedEditNamesButton.visible = edit;
 			if (!edit) {
@@ -154,8 +189,19 @@ package angel.roomedit {
 		}
 		
 		private function mapLoadedListener(event:Event):void {
-			palette.changeTileset(floor.tileset);
+			tilesPalette.changeTileset(floor.tileset);
 		}
+		
+		private function clickedProp(event:Event):void {
+			var showProp:Boolean = propButton.visible;
+			propButton.visible = !showProp;
+			tilesButton.visible = showProp;
+			propPalette.visible = showProp;
+			tilesPalette.visible = !showProp;
+			floor.attachPalette(showProp ? propPalette : tilesPalette);
+		}
+
+
 		
 	} // end class Main
 	

@@ -1,5 +1,6 @@
 package angel.roomedit {
 	import angel.common.*;
+	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
@@ -7,9 +8,10 @@ package angel.roomedit {
 	import flash.utils.ByteArray;
 	
 	public class FloorEdit extends Floor {
+		public static const RESIZE_EVENT:String = "floorResized";
 
-		private var palette:FloorTilePalette;
-		private var notBlank:Boolean = false;
+		private var palette:IRoomEditorPalette;
+		private var hasBeenEdited:Boolean = false;
 		private var dragging:Boolean = false;
 		
 		public function FloorEdit(sizeX:int, sizeY:int) {
@@ -21,12 +23,12 @@ package angel.roomedit {
 			addEventListener(MAP_LOADED_EVENT, mapLoadedListener);
 		}
 
-		public function attachPalette(palette:FloorTilePalette):void {
+		public function attachPalette(palette:IRoomEditorPalette):void {
 			this.palette = palette;
 		}
 		
 		public function clear():void {
-			notBlank = false;
+			hasBeenEdited = false;
 			for (var i:int = 0; i < xy.x; i++) {
 				for (var j:int = 0; j < xy.y; j++) {
 					floorGrid[i][j].tileName = "";
@@ -37,15 +39,11 @@ package angel.roomedit {
 		}
 
 		private function mapLoadedListener(event:Event):void {
-			notBlank = true;
+			hasBeenEdited = true;
 		}
 		
 		public function get tileset():Tileset {
 			return myTileset;
-		}
-						
-		public function launchLoadRoomDialog():void {
-			new FileChooser(loadFloorFromXmlFile);
 		}
 		
 		// Puts up dialog for user to select save location, then writes data to the file.
@@ -70,7 +68,7 @@ package angel.roomedit {
 				return;
 			}
 			
-			if (notBlank && ((newSize.x < xy.x) || (newSize.y < xy.y))) {
+			if (hasBeenEdited && ((newSize.x < xy.x) || (newSize.y < xy.y))) {
 				var alertOptions:Object = new Object();
 				alertOptions.buttons = ["OK", "Cancel"];
 				alertOptions.callback = confirmChangeSizeCallback;
@@ -88,9 +86,11 @@ package angel.roomedit {
 		
 		override protected function resize(newX:int, newY:int):void {
 			super.resize(newX, newY);
-			graphics.clear();
+			dispatchEvent(new Event(RESIZE_EVENT));
+			
 			// Draw a background to recognize mouse movements so Wm doesn't leap off a tall building
 			// Or maybe not.
+			//graphics.clear();
 			//graphics.beginFill(0xffffff, 1);
 			//graphics.drawRect( -(newY + 1) * FLOOR_TILE_X, -2 * FLOOR_TILE_Y,
 			//		(newY +newY + 4) * FLOOR_TILE_X,  (newX + newY + 4) * FLOOR_TILE_Y);
@@ -112,16 +112,14 @@ package angel.roomedit {
 		}
 		
 		private function changeTile(floorTile:FloorTile):void {
-			var newName:String = palette.selectedTileName;
-			floorTile.tileName = newName;
-			floorTile.bitmapData = myTileset.tileDataNamed(newName);
-			notBlank = (newName != "");
+			palette.applyToTile(floorTile);
+			hasBeenEdited = true;
 		}
 		
 		private function mouseDownListener(event:MouseEvent):void {
 			if (event.shiftKey) {
 				addEventListener(MouseEvent.MOUSE_UP, endDrag);
-				startDrag();
+				(parent as Sprite).startDrag();
 				dragging = true;
 			} else {
 				if (event.target is FloorTile) {
@@ -134,7 +132,7 @@ package angel.roomedit {
 
 		private function endDrag(event:MouseEvent):void {
 			removeEventListener(MouseEvent.MOUSE_UP, endDrag);
-			stopDrag();
+			(parent as Sprite).stopDrag();
 		}
 		
 		private function endPaintDrag(event:MouseEvent):void {
@@ -142,19 +140,19 @@ package angel.roomedit {
 			removeEventListener(MouseEvent.MOUSE_UP, endPaintDrag);
 		}
 		
-		public function saveRoomAsXmlFile():void {
-			var roomXml:XML = new XML(<room/>);
-			roomXml.@x = xy.x;
-			roomXml.@y = xy.y;
-			roomXml.appendChild( myTileset.xml );
+		public function buildFloorXml():XML {
+			var xml:XML = new XML(<floor/>);
+			xml.@x = xy.x;
+			xml.@y = xy.y;
+			xml.appendChild( myTileset.xml );
 			for (var i:int = 0; i < xy.y; i++) {
-				roomXml.appendChild( createRowXml(i) );
+				xml.appendChild( buildRowXml(i) );
 			}
-			saveXmlToFile(roomXml);
+			return xml;
 		}
 
-		private function createRowXml(row:int):XML {
-			var xml:XML = <floor/>;
+		private function buildRowXml(row:int):XML {
+			var xml:XML = <floorTiles/>;
 			xml.@row = row;
 			for (var i:int = 0; i < xy.x; i++) {
 				var nameXml:XML = <name/>
@@ -166,16 +164,7 @@ package angel.roomedit {
 			return xml;
 		}
 		
-		// UNDONE: This really belongs in a util class somewhere
-		public static function saveXmlToFile(xml:XML):void {
-			// convert xml to binary data
-			var ba:ByteArray = new ByteArray( );
-			ba.writeUTFBytes( xml );
- 
-			// save to disk
-			var fr:FileReference = new FileReference( );
-			fr.save( ba, 'room.xml' );
-		}
+
 
 
 	} //end class FloorEdit
