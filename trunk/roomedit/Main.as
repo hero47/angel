@@ -45,6 +45,7 @@ package angel.roomedit {
 			tilesPalette.y = 30;
 			addChild(tilesPalette);
 			floor.attachPalette(tilesPalette);
+			floor.paintWhileDragging = true;
 			
 			propPalette = new PropPalette(room, catalog);
 			propPalette.x = 5;
@@ -199,6 +200,7 @@ package angel.roomedit {
 			propPalette.visible = showProp;
 			tilesPalette.visible = !showProp;
 			floor.attachPalette(showProp ? propPalette : tilesPalette);
+			floor.paintWhileDragging = !showProp;
 		}
 
 
