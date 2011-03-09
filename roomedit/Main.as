@@ -10,7 +10,7 @@ package angel.roomedit {
 		public static const DEFAULT_FLOORSIZE_X:int = 10;
 		public static const DEFAULT_FLOORSIZE_Y:int = 10;
 		
-		private var catalog:Catalog;
+		private var catalog:CatalogEdit;
 		private var room:RoomLight;
 		private var floor:FloorEdit;
 		public var tilesPalette:FloorTilePalette;
@@ -24,7 +24,7 @@ package angel.roomedit {
 
 		public function Main():void {
 			Alert.init(stage);
-			catalog = new Catalog();
+			catalog = new CatalogEdit();
 			catalog.addEventListener(Catalog.CATALOG_LOADED_EVENT, catalogLoadedListener);
 			catalog.loadFromXmlFile("AngelCatalog.xml");
 		}
