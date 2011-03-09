@@ -161,7 +161,7 @@ package angel.game {
 			// First, see if we can just take the default path without hitting an obstacle
 			while (!nextStep.equals(goal)) {
 				nextStep = new Point(nextStep.x + sign(goal.x - nextStep.x), nextStep.y + sign(goal.y - nextStep.y));
-				if (room.solid(nextStep)) {
+				if (tileBlocked(nextStep)) {
 					blocked = true;
 					break;
 				}
@@ -178,9 +178,20 @@ package angel.game {
 			return myPath;
 		}
 		
+		// If I'm not solid, I can go anywhere.  And I can always return to the tile I'm currently standing on
+		// as part of the same move (even if I somehow got accidentally placed onto another solid object) -- this
+		// avoids blocking my own move or getting stuck.
+		// Other than that, if I'm solid I can't move into a solid tile.
+		public function tileBlocked(loc:Point):Boolean {
+			if (!solid || loc.equals(myLocation)) {
+				return false;
+			}
+			return room.solid(loc);
+		}
+		
 		// Fill in path.  Return false if there is no path
 		private function findShortestPathTo(from:Point, goal:Point, path:Vector.<Point>):Boolean {
-			// 0 = unvisited. -1 = solid.  other number = steps to reach goal, counting goal itself as 1.
+			// 0 = unvisited. -1 = blocked.  other number = steps to reach goal, counting goal itself as 1.
 			var steps:Vector.<Vector.<int>> = new Vector.<Vector.<int>>(room.size.x);
 			for (var i:int = 0; i < room.size.x; i++) {
 				steps[i] = new Vector.<int>(room.size.y);
@@ -192,7 +203,7 @@ package angel.game {
 			while (edge.length > 0) {
 				var current:Point = edge.shift();
 				var stepsFromGoal:int = steps[current.x][current.y] + 1;
-				if (stepsFromGoal == 0) { // solid cell
+				if (stepsFromGoal == 0) { // blocked cell
 					continue;
 				}
 				for (var xNext:int = Math.min(room.size.x-1, current.x + 1); xNext >= Math.max(0, current.x - 1); --xNext) {
@@ -205,7 +216,7 @@ package angel.game {
 							return true;
 						}
 						var neighbor:Point = new Point(xNext, yNext);
-						steps[xNext][yNext] = room.solid(neighbor) ? -1 : stepsFromGoal;
+						steps[xNext][yNext] = tileBlocked(neighbor) ? -1 : stepsFromGoal;
 						edge.push(neighbor);
 					}
 				}
