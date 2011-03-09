@@ -135,9 +135,7 @@ package angel.game {
 					return;
 				}
 				var loc:Point = (event.target as FloorTile).location;
-				var playerIsSolid:Boolean = room.playerCharacter.solid;
-				room.playerCharacter.solid = false;
-				if (!room.solid(loc)) {
+				if (!room.playerCharacter.tileBlocked(loc)) {
 					var currentEnd:Point = (path.length == 0 ? room.playerCharacter.location : path[path.length - 1]);
 					if (!loc.equals(currentEnd)) {
 						var pathToMouse:Vector.<Point> = room.playerCharacter.findPathTo(loc, currentEnd);
@@ -146,7 +144,6 @@ package angel.game {
 						}
 					}
 				}
-				room.playerCharacter.solid = playerIsSolid;
 			}
 		}
 		
@@ -197,7 +194,7 @@ package angel.game {
 				}
 				tileWithFilter = event.target as FloorTile;
 				var distance:int = 1000;
-				if (!room.solid(tileWithFilter.location) && (path.length < room.playerCharacter.combatMovePoints)) {
+				if (!room.playerCharacter.tileBlocked(tileWithFilter.location) && (path.length < room.playerCharacter.combatMovePoints)) {
 					var pathToMouse:Vector.<Point> = room.playerCharacter.findPathTo(tileWithFilter.location, 
 							(path.length == 0 ? null : path[path.length-1]) );
 					if (pathToMouse != null) {

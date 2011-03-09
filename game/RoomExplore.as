@@ -47,7 +47,7 @@ package angel.game {
 					return;
 				}
 				var loc:Point = (event.target as FloorTile).location;
-				if (!loc.equals(room.playerCharacter.location) && !room.solid(loc)) {
+				if (!loc.equals(room.playerCharacter.location) && !room.playerCharacter.tileBlocked(loc)) {
 					playerMoveInProgress = room.playerCharacter.startMovingToward(loc);
 					if (playerMoveInProgress) {
 						if (!(Settings.testExploreScroll > 0)) {
