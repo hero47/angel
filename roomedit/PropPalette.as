@@ -4,6 +4,7 @@ package angel.roomedit {
 	import angel.common.FloorTile;
 	import angel.common.KludgeDialogBox;
 	import angel.common.Prop;
+	import angel.common.PropImage;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
@@ -17,16 +18,14 @@ package angel.roomedit {
 		private var selectedPropName:String = "";
 		private var selectedPropBitmapData:BitmapData;
 		private var selection:Sprite = null;
-		private var propImagesToLoad:int;
-		private var imagesAcross:int = 3;
 		
 		public function PropPalette(room:RoomLight, catalog:CatalogEdit) {
 			this.room = room;
 			this.catalog = catalog;
 
 			var allPropNames:Array = catalog.allPropNames();
-			propImagesToLoad = allPropNames.length;
-			
+		
+			var imagesAcross:int = 3;
 			while (imagesAcross * imagesAcross < allPropNames.length) {
 				imagesAcross += 3;
 			}
@@ -37,31 +36,28 @@ package angel.roomedit {
 			graphics.drawRect(0, 0, imagesAcross*Prop.WIDTH, imagesAcross*Prop.HEIGHT);
 			
 			for (var i:int = 0; i < allPropNames.length; i++) {
-				addPaletteItem(i, allPropNames[i]);
+				addPaletteItem(allPropNames[i], i, imagesAcross);
 			}
 			
+			addEventListener(MouseEvent.CLICK, clickListener);
 		}
 
-		private function addPaletteItem(i:int, propName:String):void {
+		private function addPaletteItem(propName:String, i:int, imagesAcross:int):void {
 			var sprite:Sprite = new Sprite();
 			sprite.name = propName;
 			addChild(sprite);
 			sprite.x = (i % imagesAcross) * Prop.WIDTH;
-			sprite.y = Math.floor(i / imagesAcross) * Prop.HEIGHT;			
-			catalog.retrieveBitmapData(propName, function(bitmapData:BitmapData):void {
-				var bitmap:Bitmap = new Bitmap(bitmapData);
-				sprite.addChild(bitmap);
-				--propImagesToLoad;
-				if (propImagesToLoad == 0) {
-					addEventListener(MouseEvent.CLICK, clickListener);
-				}
-			});
+			sprite.y = Math.floor(i / imagesAcross) * Prop.HEIGHT;
+			var propImage:PropImage = catalog.retrievePropImage(propName);
+			var bitmap:Bitmap = new Bitmap(propImage.imageData);
+			sprite.addChild(bitmap);
 		}
 		
 		public function applyToTile(floorTile:FloorTile):void {
 			if (room.occupied(floorTile.location)) {
 				room.removeProp(floorTile.location);
 			} else if (selectedPropName != "") {
+				//CONSIDER: should this be going through a PropImage for resource management?
 				var prop:Prop = new Prop(new Bitmap(selectedPropBitmapData));
 				room.addProp(prop, selectedPropName, floorTile.location);
 			}
@@ -86,38 +82,7 @@ package angel.roomedit {
 				selectedPropBitmapData = Bitmap(foo.getChildAt(0)).bitmapData;
 				moveHilight(foo);
 			}
-		}
-		
-		// Puts up dialog for user to select prop name
-		public function launchPropDialog():void {
-			if (!catalog.loaded) {
-				Alert.show("Catalog not loaded yet");
-				return;
-			}
-			KludgeDialogBox.init(stage);
-			var options:Object = new Object();
-			options.buttons = ["OK", "Cancel"];
-			options.inputs = ["Prop name:"];
-			options.callback = userEnteredPropName;
-			KludgeDialogBox.show("Select prop name to place:", options);
-		}
-
-		private function userEnteredPropName(buttonClicked:String, values:Array):void {
-			if (buttonClicked != "OK") {
-				return;
-			}
-			catalog.retrieveBitmapData(values[0], function(bitmapData:BitmapData):void {
-				selectedPropName = values[0];
-				selectedPropBitmapData = bitmapData;
-				var foo:Bitmap = new Bitmap(bitmapData);
-				foo.x = 100;
-				foo.y = 100;
-				addChild(foo);
-			});
-			
-		}
-			
-	
+		}	
 		
 	} // end class PropPalette
 

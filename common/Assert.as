@@ -9,6 +9,10 @@ package angel.common {
 			
 		}
 		
+		public static function fail(message:String):void {
+				Alert.show("Assert failed!\n" + message + "\n" + GetStackTrace());
+		}
+		
 		public static function assertTrue(check:Boolean, message:String):void {
 			if (!check) {
 				Alert.show("Assert failed!\n" + message + "\n" + GetStackTrace());

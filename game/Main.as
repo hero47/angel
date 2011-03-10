@@ -7,13 +7,14 @@ package angel.game {
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	
+	
+	// GAME Main class
 	public class Main extends Sprite {
 		private var catalog:Catalog;
 		private var floor:Floor;
 		private var testEntity:Entity;
 		private var room:Room;
 		private var startLoc:Point;
-		private var entitiesToCreate:int;
 		
 		public function Main() {
 			stage.scaleMode = "noScale";
@@ -44,27 +45,11 @@ package angel.game {
 			LoaderWithErrorCatching.LoadFile(xmlData.room, roomXmlLoaded);
 		}
 		
-		private function createTestEntity():Entity {
-			[Embed(source='../../../assets/MA_mobile-barbara_4b.png')]
-			var tempWalkerBits:Class;
-			
-			var bitmap:Bitmap = new tempWalkerBits();
-			var entity:Walker = new Walker(new WalkerImage(bitmap.bitmapData));
-			entity.solid = true;
-			return entity;
-		}
-		
-		private function addPropByName(propName:String, location:Point):void {
-			++entitiesToCreate;
-			catalog.retrieveBitmapData(propName, function(bitmapData:BitmapData):void {
-				var prop:Entity = new Entity(new Bitmap(bitmapData));
-				prop.solid = true;
-				room.addEntity(prop, location);
-				--entitiesToCreate;
-				if (entitiesToCreate == 0) {
-					finishedCreatingEntities();
-				}
-			});
+		public function addPropByName(propName:String, location:Point):void {
+			var propImage:PropImage = catalog.retrievePropImage(propName);
+			var prop:Entity = Entity.createFromPropImage(propImage);
+			prop.solid = true;
+			room.addEntity(prop, location);
 		}
 		
 		private var contentsXml:XML; // stash here for use in mapLoadedListener
@@ -79,7 +64,7 @@ package angel.game {
 			contentsXml = xml.contents[0];
 			floor = new Floor();
 			floor.addEventListener(Floor.MAP_LOADED_EVENT, mapLoadedListener);			
-			floor.loadFromXml(xml.floor[0]);
+			floor.loadFromXml(catalog, xml.floor[0]);
 		}
 		
 
@@ -89,27 +74,15 @@ package angel.game {
 			addChild(room);
 			room.scrollToCenter(startLoc, true);
 			
-			entitiesToCreate = 0;
 			for each (var propXml:XML in contentsXml.prop) {
 				var propName:String = propXml;
 				addPropByName(propName, new Point(propXml.@x, propXml.@y));
 			}
 			
-			// This callback will be processed BEFORE all the ones right above here adding props
-			if (Settings.playerId == "") {
-				room.addPlayerCharacter(createTestEntity(), startLoc);
-			} else {
-				catalog.retrieveBitmapData(Settings.playerId, function(bitmapData:BitmapData):void {
-					var entity:Walker = new Walker(new WalkerImage(bitmapData));
-					entity.solid = true;
-					room.addPlayerCharacter(entity, startLoc);
-				});
-			}
+			var entity:Walker = new Walker(catalog.retrieveWalkerImage(Settings.playerId));
+			entity.solid = true;
+			room.addPlayerCharacter(entity, startLoc);
 			
-
-		}
-
-		private function finishedCreatingEntities():void {
 			room.changeModeTo(RoomExplore);
 		}
 		

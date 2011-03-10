@@ -145,7 +145,7 @@ package angel.roomedit {
 			var xml:XML = new XML(<floor/>);
 			xml.@x = xy.x;
 			xml.@y = xy.y;
-			xml.appendChild( myTileset.xml );
+			xml.@id = myTilesetId;
 			for (var i:int = 0; i < xy.y; i++) {
 				xml.appendChild( buildRowXml(i) );
 			}

@@ -116,6 +116,7 @@ package angel.game {
 			dots.length = startFrom;
 		}
 		
+		// TAG tile-width-is-twice-height: dots will not have correct aspect if tiles no longer follow this rule!
 		private static const DOT_X_RADIUS:int = 12;
 		private static const DOT_Y_RADIUS:int = 6;
 		private function dot(color:uint, center:Point, isEnd:Boolean = false):Shape {

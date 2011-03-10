@@ -3,6 +3,7 @@ package angel.roomedit {
 	import angel.common.Catalog;
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Prop;
+	import angel.common.PropImage;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
@@ -92,11 +93,10 @@ package angel.roomedit {
 			}
 		}
 		
-		public function addPropByName(propName:String, location:Point):void {			
-			catalog.retrieveBitmapData(propName, function(bitmapData:BitmapData):void {
-				var prop:Prop = new Prop(new Bitmap(bitmapData));
-				addProp(prop, propName, location);
-			});
+		public function addPropByName(propName:String, location:Point):void {
+			var propImage:PropImage = catalog.retrievePropImage(propName);
+			var prop:Prop = Prop.createFromPropImage(propImage);
+			addProp(prop, propName, location);
 		}
 		
 		public function occupied(location:Point):Boolean {
@@ -128,7 +128,7 @@ package angel.roomedit {
 				return;
 			}
 			
-			floor.loadFromXml(xml.floor[0]);
+			floor.loadFromXml(catalog, xml.floor[0]);
 			initContentsFromXml(xml.floor.@x, xml.floor.@y, xml.contents[0]);
 		}
 
@@ -163,19 +163,9 @@ package angel.roomedit {
 			var roomXml:XML = new XML(<room/>);
 			roomXml.appendChild( floor.buildFloorXml() );
 			roomXml.appendChild( buildContentsXml() );
-			saveXmlToFile(roomXml);
+			CatalogEdit.saveXmlToFile(roomXml, "room.xml"); // should really be in a util class but I won't make one just for that
 		}
-		
-		// UNDONE: This really belongs in a util class somewhere
-		public static function saveXmlToFile(xml:XML):void {
-			// convert xml to binary data
-			var ba:ByteArray = new ByteArray( );
-			ba.writeUTFBytes( xml );
- 
-			// save to disk
-			var fr:FileReference = new FileReference( );
-			fr.save( ba, 'room.xml' );
-		}
+
 		
 	} // end class RoomLight
 		
