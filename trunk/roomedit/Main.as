@@ -134,6 +134,13 @@ package angel.roomedit {
 			addChild(tilesButton);
 			tilesButton.visible = false;
 			left += propButton.width + 5;
+			
+			button = new SimplerButton("Save Catalog", clickedSaveCatalog);
+			button.x = left;
+			button.y = 5;
+			button.width = 50;
+			addChild(button);
+			left += button.width + 5;
 		}
 		
 		private function clickedLoadRoom(event:Event):void {
@@ -166,6 +173,7 @@ package angel.roomedit {
 			finishedEditNamesButton.visible = edit;
 			if (!edit) {
 				floor.setTileImagesFromNames();
+				//catalog.changeXml(floor.tilesetId);
 			}
 		}
 
@@ -204,6 +212,9 @@ package angel.roomedit {
 		}
 
 
+		private function clickedSaveCatalog(event:Event):void {
+			catalog.save();
+		}
 		
 	} // end class Main
 	

@@ -1,4 +1,5 @@
 package angel.game {
+	import angel.common.WalkerImage;
 	import flash.display.Bitmap;
 	import flash.geom.Point;
 	
@@ -16,7 +17,7 @@ package angel.game {
 
 		override protected function adjustImage():void {
 			var foot:int = frameOfMove * walkFrames.length / coordsForEachFrameOfMove.length;
-			(getChildAt(0) as Bitmap).bitmapData = images.bitsFacing(facing, walkFrames[foot]);
+			imageBitmap.bitmapData = images.bitsFacing(facing, walkFrames[foot]);
 		}
 		
 		

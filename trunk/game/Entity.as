@@ -2,6 +2,7 @@ package angel.game {
 	import angel.common.Assert;
 	import angel.common.Floor;
 	import angel.common.Prop;
+	import angel.common.PropImage;
 	import angel.common.Tileset;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -46,6 +47,10 @@ package angel.game {
 		
 		public function Entity(bitmap:Bitmap = null) {
 			super(bitmap);
+		}
+		
+		public static function createFromPropImage(propImage:PropImage):Entity {
+			return new Entity(new Bitmap(propImage.imageData));
 		}
 		
 		public function addToRoom(room:Room, newLocation:Point = null):void {

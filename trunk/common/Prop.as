@@ -3,11 +3,13 @@ package angel.common {
 	import flash.display.Sprite;
 	import flash.geom.Point;
 	
-	// Prop is the simple, most lightweight thing that can inhabit a room.  It can draw itself, and it can be
-	// solid (two solid objects can't be in the same cell).
+	// The simple, most lightweight thing that can inhabit a room.  Room editor uses these directly; game extends
+	// them.
+	// CONSIDER: Room editor creates these either from a cataloged PropImage (when loading) or directly from
+	// a bitmap (when adding to the map by clicking a tile).  That may need to change when we get resource management.
 	public class Prop extends Sprite {
 
-		protected var image:Bitmap;
+		protected var imageBitmap:Bitmap;
 		protected var myLocation:Point = null;
 		public var solid:Boolean = false;
 		
@@ -25,11 +27,16 @@ package angel.common {
 		
 		
 		public function Prop(bitmap:Bitmap = null) {
-			image = bitmap;
+			imageBitmap = bitmap;
 			if (bitmap != null) {
-				addChild(image);
+				addChild(imageBitmap);
 			}
 		}
+		
+		public static function createFromPropImage(propImage:PropImage):Prop {
+			return new Prop(new Bitmap(propImage.imageData));
+		}
+		
 
 		public function get location():Point {
 			Assert.assertTrue(parent != null, "Getting location of an entity not on stage");

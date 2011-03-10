@@ -12,17 +12,17 @@ package angel.common {
 	public class Catalog extends EventDispatcher {
 		public static const CATALOG_LOADED_EVENT:String = "catalogLoaded";
 		
-		public static const PROP:int = 1;
-		public static const WALKER:int = 2;
-		public static const TILESET:int = 3;
-		
 		public var loaded:Boolean = false;
 		
 		protected var lookup:Object = new Object(); // associative array mapping name to CatalogEntry
+		protected var collectMessages:String = null; // if not null, suppress warning/error messages and stash them here instead
 		
 		public function Catalog() {
 		}
 
+		public function entry(id:String):CatalogEntry {
+			return lookup[id];
+		}
 		
 		// Loads data from specified file.
 		// NOTE: File must be in the same directory that we're running from!
@@ -30,84 +30,124 @@ package angel.common {
 			LoaderWithErrorCatching.LoadFile(filename, catalogXmlLoaded);
 		}
 		
-		private var xml:XML; // hold xml until tileset loaded
-		private function catalogXmlLoaded(event:Event):void {
+		protected function catalogXmlLoaded(event:Event):void {
 			var duplicateNames:String = "";
-			xml = new XML(event.target.data);
+			var xml:XML = new XML(event.target.data);
+			var entry:CatalogEntry;
 			for each (var propXml:XML in xml.prop) {
-				addCatalogEntry(propXml, propXml.@file, PROP, duplicateNames);
+				addCatalogEntry(propXml.@id, propXml.@file, CatalogEntry.PROP, duplicateNames);
 			}
 			for each (var walkerXml:XML in xml.walker) {
-				addCatalogEntry(walkerXml, walkerXml.@file, WALKER, duplicateNames);
+				addCatalogEntry(walkerXml.@id, walkerXml.@file, CatalogEntry.WALKER, duplicateNames);
+			}
+			for each (var tilesetXml:XML in xml.tileset) {
+				entry = addCatalogEntry(tilesetXml.@id, tilesetXml.@file, CatalogEntry.TILESET, duplicateNames);
+				entry.xml = tilesetXml;
 			}
 			if (duplicateNames.length > 0) {
-				duplicateNames = "WARNING: Duplicate name(s) in catalog:\n" + duplicateNames;
-				Alert.show(duplicateNames);
+				message("WARNING: Duplicate name(s) in catalog:\n" + duplicateNames);
 			}
 			loaded = true;
 			dispatchEvent(new Event(CATALOG_LOADED_EVENT));
 		}
 		
-		// add the specified entry. If it's a duplicate, replace previous one and add to duplicateNames for reporting
-		private function addCatalogEntry(lookupName:String, filename:String, type:int, duplicateNames:String):void {
-			if (lookup[lookupName] != undefined) {
-				duplicateNames += lookupName + "\n";
+		protected function message(text:String):void {
+			if (collectMessages != null) {
+				Alert.show(text);
+			} else {
+				collectMessages += text;
 			}
-			var entry:CatalogEntry = new CatalogEntry();
-			entry.filename = filename;
-			entry.type = type;
-			lookup[lookupName] = entry;			
+		}
+		
+		// add the specified entry. If it's a duplicate, replace previous one and add to duplicateNames for reporting
+		private function addCatalogEntry(id:String, filename:String, type:int, duplicateNames:String):CatalogEntry {
+			if (lookup[id] != undefined) {
+				duplicateNames += id + "\n";
+			}
+			var entry:CatalogEntry  = new CatalogEntry(filename, type);
+			lookup[id] = entry;
+			return entry;
 		}
 		
 		// call the function, passing bitmapData as parameter
-		public function retrieveBitmapData(propName:String, callback:Function):void {
-			var entry:CatalogEntry = lookup[propName];
-		
-			if (entry == null) {
-				Alert.show("Error: " + propName + " not in catalog.");
-				entry = new CatalogEntry();
-				lookup[propName] = entry;
-				entry.bitmapData = makeDefaultBitmap(propName);
-			}
-			if (entry.bitmapData != null) {
-				callback(entry.bitmapData);
-				return;
-			}
-			
-			LoaderWithErrorCatching.LoadBytesFromFile(entry.filename,
-				function(event:Event):void {
-					var bitmap:Bitmap = event.target.content;
-					entry.bitmapData = bitmap.bitmapData;
-					verifyCorrectSize(entry);
-					callback(entry.bitmapData);
-				}, function():void {
-					entry.bitmapData = makeDefaultBitmap(propName);
-					callback(entry.bitmapData);
-				} 
-			);
-			
+		public function retrievePropImage(propId:String):PropImage {
+			return loadOrRetrieveCatalogEntry(propId, CatalogEntry.PROP, PropImage) as PropImage;
 		}
 		
-		private function verifyCorrectSize(entry:CatalogEntry):void {
-			if (entry.type == PROP) {
-				if ((entry.bitmapData.width != Prop.WIDTH) || (entry.bitmapData.height != Prop.HEIGHT)) {
-					Alert.show("Warning: prop file " + entry.filename + " has wrong dimensions!");
-				}
-			} else {
-				if ((entry.bitmapData.width != Prop.WIDTH * 9) || (entry.bitmapData.height != Prop.HEIGHT * 3)) {
-					Alert.show("Warning: walker file " + entry.filename + " has wrong dimensions!");
-				}
-			}
+		// call the function, passing walkerImage as parameter
+		public function retrieveWalkerImage(walkerId:String):WalkerImage {
+			return loadOrRetrieveCatalogEntry(walkerId, CatalogEntry.WALKER, WalkerImage) as WalkerImage;
 		}
 
-		private function makeDefaultBitmap(propName:String):BitmapData {
-			var bitmapData:BitmapData = new BitmapData(Prop.WIDTH, Prop.HEIGHT, false, 0xff00ff);
-			var myTextField:TextField = new TextField();
-			myTextField.selectable = false;
-			myTextField.text = propName;
-			myTextField.type = TextFieldType.DYNAMIC;
-			bitmapData.draw(myTextField);
-			return bitmapData;
+		// call the function, passing tileset as parameter
+		public function retrieveTileset(tilesetId:String):Tileset {
+			return loadOrRetrieveCatalogEntry(tilesetId, CatalogEntry.TILESET, Tileset) as Tileset;
+		}
+		
+		// finishEntry takes CatalogEntry with data set to bitmapData (and xml if appropriate),
+		// and replaces data with the finished object to cache
+		private function loadOrRetrieveCatalogEntry(id:String, type:int, resourceClass:Class):ICatalogedResource {
+			var entry:CatalogEntry = lookup[id];
+			var inCatalog:Boolean = true;
+		
+			if (entry == null) {
+				inCatalog = false;
+				message("Error: " + id + " not in catalog.");
+				entry = new CatalogEntry(id, type);
+				lookup[id] = entry;
+			}
+			
+			Assert.assertTrue(entry.type == type, "Catalog entry " + id + " is wrong type.");
+			
+			if (entry.data != null) {
+				return entry.data;
+			}
+
+			entry.data = new resourceClass();
+			entry.data.prepareTemporaryVersionForUse(id, entry);
+
+			if (inCatalog) {
+				LoaderWithErrorCatching.LoadBytesFromFile(entry.filename,
+					function(event:Event):void {
+						var bitmap:Bitmap = event.target.content;
+						warnIfBitmapIsWrongSize(entry, bitmap.bitmapData);
+						entry.data.dataFinishedLoading(bitmap.bitmapData);
+					}
+				);
+			}
+
+			return entry.data;
+		}
+		
+		private function warnIfBitmapIsWrongSize(entry:CatalogEntry, bitmapData:BitmapData):void {
+			var typeName:String;
+			var correctWidth:int;
+			var correctHeight:int;
+			switch (entry.type) {
+				case CatalogEntry.PROP:
+					typeName = "Prop";
+					correctWidth = Prop.WIDTH;
+					correctHeight = Prop.HEIGHT;
+				break;
+				case CatalogEntry.WALKER:
+					typeName = "Walker";
+					correctWidth = Prop.WIDTH * 9;
+					correctHeight = Prop.HEIGHT * 3;
+				break;
+				case CatalogEntry.TILESET:
+					typeName = "Tileset";
+					correctWidth = Tileset.TILESET_X;
+					correctHeight = Tileset.TILESET_Y;
+				break;
+			}
+			if ((bitmapData.width != correctWidth) || (bitmapData.height != correctHeight)) {
+				message("Warning: " + typeName + " file " + entry.filename + " is not " +
+						correctWidth + "x" + correctHeight + ".  Please fix!");
+			}
+		}
+		
+		private function makeDefaultTileset(id:String):Tileset {
+			return new Tileset();
 		}
 		
 	} // end class Catalog

@@ -11,10 +11,12 @@ package angel.common {
 		public static const FLOOR_TILE_X:int = (Tileset.TILE_WIDTH / 2);
 		public static const FLOOR_TILE_Y:int = (Tileset.TILE_HEIGHT / 2);
 		
+
 		protected var xy:Point = new Point();
 
 		protected var floorGrid:Vector.<Vector.<FloorTile>>;
 		protected var myTileset:Tileset;
+		protected var myTilesetId:String;
 		
 		public function Floor() {
 		}
@@ -130,24 +132,22 @@ package angel.common {
 			
 		}
 		
-		public function loadFromXml(floorXml:XML):void {
-			var newTileset:Tileset = new Tileset();
-			newTileset.initFromXml(floorXml, function(newTileset:Tileset):void {
-				if (myTileset != null) {
-					myTileset.cleanup();
-				}
-				myTileset = newTileset;
-				
-				resize(floorXml.@x, floorXml.@y);
+		public function loadFromXml(catalog:Catalog, floorXml:XML):void {
+			myTilesetId = floorXml.tileset.@id;
+			if (myTileset != null) {
+				myTileset.cleanup();
+			}
+			myTileset = catalog.retrieveTileset(myTilesetId);
+			
+			resize(floorXml.@x, floorXml.@y);
 
-				var floorRows:XMLList = floorXml.floorTiles;
-				for each (var floorRowXml:XML in floorRows) {
-					initFloorRowFromXml(floorRowXml)
-				}
-				setTileImagesFromNames();
+			var floorRows:XMLList = floorXml.floorTiles;
+			for each (var floorRowXml:XML in floorRows) {
+				initFloorRowFromXml(floorRowXml)
+			}
+			setTileImagesFromNames();
 
-				dispatchEvent(new Event(MAP_LOADED_EVENT));
-			} );
+			dispatchEvent(new Event(MAP_LOADED_EVENT));
 		}
 		
 	} //end class Floor
