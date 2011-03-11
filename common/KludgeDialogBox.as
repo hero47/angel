@@ -43,6 +43,8 @@ package angel.common {
 		
 		buttons:Array			-	An array (maximum of 3) containing the Strings of the buttons to be shown in the Alert prompt
 		inputs:Array			-   An array containing labels for the text input fields
+		defaultValues:Array		-	An array containing default values for the text input fields
+		customControl:DisplayObject	- Anything. Place this in the box and let it do its thing.
 		callBack:Function		-	The function to be called when OK has been clicked - returns array of strings for input fields
 		colour:int				-	Main colour for the Alert
 		promptAlpha:int			-	Alpha of the Alert prompt
@@ -55,7 +57,7 @@ package angel.common {
 		}
 		public static function show(Text:* = "Made by dVyper", ALERTOPTIONS:Object = null):void {
 			if (stage == null) {
-				trace("Alert class has not been initialised!");
+				trace("KludgeDialogBox class has not been initialised!");
 				return;
 			}
 			var alertOptions:AlertOptions = new AlertOptions(ALERTOPTIONS, Text);
@@ -81,13 +83,17 @@ package angel.common {
 				allInputs.push(input);
 			}
 			// pressing Enter acts as click on first button!
-			allInputs[0].addEventListener(KeyboardEvent.KEY_DOWN, myEnterFunction);
+			if (allInputs.length > 0) {
+				allInputs[0].addEventListener(KeyboardEvent.KEY_DOWN, myEnterFunction);
+			}
 			//	THIS IS DECLARED HERE SIMPLY SO I HAVE ACCESS TO alertOptions
 			function cleanupAndNotifyButtonPressed(buttonName:String):void {
 				for (var i:int;i<allButtons.length;i++) {
 					allButtons[i].removeEventListener(MouseEvent.CLICK, myClickFunction);
 				}
-				allInputs[0].removeEventListener(KeyboardEvent.KEY_DOWN, myEnterFunction);
+				if (allInputs.length > 0) {
+					allInputs[0].removeEventListener(KeyboardEvent.KEY_DOWN, myEnterFunction);
+				}
 				closeAlert(myAlert);
 				if (alertOptions.callback != null) {
 					var inputValues:Array = new Array();
@@ -234,7 +240,10 @@ package angel.common {
 			var textField:TextField = createTextField(alertOptions);
 			var myWidth:int = textField.width + 30;
 			var heightForInputs:int = alertOptions.inputs.length * (btnHeight+2);
-			var myHeight:int = textField.height+65 + heightForInputs;
+			if (alertOptions.customControl != null) {
+				heightForInputs += alertOptions.customControl.height;
+			}
+			var myHeight:int = textField.height + 65 + heightForInputs;
 			if (myWidth < minimumWidths[alertOptions.buttons.length-1]) {
 				myWidth = minimumWidths[alertOptions.buttons.length-1];
 			}
@@ -289,15 +298,25 @@ package angel.common {
 				maxLabelWidth = Math.max(maxLabelWidth, label.width);
 			}
 			for (i = 0; i < alertOptions.inputs.length; i++) {
-				var input:TextField = createInputField("input"+i, alertOptions);
+				var input:TextField = createInputField("input" + i, alertOptions);
+				if (alertOptions.defaultValues != null) {
+					input.text = alertOptions.defaultValues[i];
+				}
 				input.x = 20 + maxLabelWidth;
 				input.width = actualPrompt.width - input.x - 15;
 				input.y = actualPrompt.height - 45 - heightForInputs + (i * (btnHeight +2));
 				actualPrompt.addChild(input);
 				if (i == 0) {
 					stage.focus = input;
+					input.setSelection(0, input.text.length);
 				}
 			}
+			
+			if (alertOptions.customControl != null) {
+				actualPrompt.addChild(alertOptions.customControl);
+				alertOptions.customControl.x = (actualPrompt.width - alertOptions.customControl.width) / 2;
+				alertOptions.customControl.y = actualPrompt.height - 45 - alertOptions.customControl.height;
+			}	
 			
 			for (i=0;i<alertButtons.length;i++) {
 				alertButtons[i].y = actualPrompt.height-35;
@@ -352,7 +371,7 @@ package angel.common {
 			myTextField.background = true;
 			myTextField.backgroundColor = brightenColour(alertOptions.colour, 50);
 			myTextField.autoSize = TextFieldAutoSize.NONE;
-			myTextField.height = btnHeight;
+			myTextField.height = btnHeight+2;
 			myTextField.name = name;
 			return myTextField;
 		}
@@ -396,11 +415,14 @@ package angel.common {
 		}
 	}
 }
+import flash.display.DisplayObject;
 import flash.geom.Point;
 internal class AlertOptions {
 	//
 	public var background:String;
 	public var inputs:Array = new Array();
+	public var defaultValues:Array = new Array();
+	public var customControl:DisplayObject;
 	public var buttons:Array = new Array();
 	public var callback:Function;
 	public var colour:int;
@@ -427,6 +449,8 @@ internal class AlertOptions {
 				}
 			}
 			inputs = alertOptions.inputs;
+			defaultValues = alertOptions.defaultValues;
+			customControl = alertOptions.customControl;
 			callback = alertOptions.callback; 
 			if (alertOptions.colour == null) {
 				colour = 0x4E7DB1;
