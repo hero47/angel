@@ -49,11 +49,10 @@ package angel.common {
 			return xy;
 		}
 		
-		public function changeTileset(tileset:Tileset):void {
-			if (myTileset != null) {
-				myTileset.cleanup();
-			}
-			myTileset = tileset;
+		//UNDONE: this will be replaced with addTileset
+		public function changeTileset(catalog:Catalog, newTilesetId:String):void {
+			myTilesetId = newTilesetId;
+			myTileset = catalog.retrieveTileset(myTilesetId);
 			setTileImagesFromNames();
 		}
 
@@ -133,10 +132,7 @@ package angel.common {
 		}
 		
 		public function loadFromXml(catalog:Catalog, floorXml:XML):void {
-			myTilesetId = floorXml.tileset.@id;
-			if (myTileset != null) {
-				myTileset.cleanup();
-			}
+			myTilesetId = floorXml.tileset[0];
 			myTileset = catalog.retrieveTileset(myTilesetId);
 			
 			resize(floorXml.@x, floorXml.@y);

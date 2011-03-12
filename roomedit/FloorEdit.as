@@ -53,6 +53,7 @@ package angel.roomedit {
 			var options:Object = new Object();
 			options.buttons = ["OK", "Cancel"];
 			options.inputs = ["X:", "Y:"];
+			options.defaultValues = [xy.x, xy.y];
 			options.callback = userEnteredSize;
 			KludgeDialogBox.show("New size for map:", options);
 		}
@@ -142,10 +143,11 @@ package angel.roomedit {
 		}
 		
 		public function buildFloorXml():XML {
-			var xml:XML = new XML(<floor/>);
+			var xml:XML = <floor/>;
 			xml.@x = xy.x;
 			xml.@y = xy.y;
-			xml.@id = myTilesetId;
+			xml.appendChild( new XML("<tileset>"+myTilesetId+"</tileset>"));
+			xml.@tilesetId = myTilesetId;
 			for (var i:int = 0; i < xy.y; i++) {
 				xml.appendChild( buildRowXml(i) );
 			}

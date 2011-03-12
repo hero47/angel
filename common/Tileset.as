@@ -17,8 +17,8 @@ package angel.common {
 	import angel.roomedit.FileChooser;
 
 	public class Tileset implements ICatalogedResource {
-		private static const TILESET_X_TILES:int = 4;
-		private static const TILESET_Y_TILES:int = 5;
+		protected static const TILESET_X_TILES:int = 4;
+		protected static const TILESET_Y_TILES:int = 5;
 		public static const TILES_IN_SET:int = (TILESET_X_TILES * TILESET_Y_TILES);
 		public static const TILESET_X:int = 256;
 		public static const TILESET_Y:int = 160;
@@ -27,11 +27,10 @@ package angel.common {
 		
 		private static var defaultTileData:BitmapData = null;
 		
-		private var entry:CatalogEntry;
+		protected var entry:CatalogEntry;
 		
-		private var callbackWithTilesetWhenComplete:Function;
-		private var tiles:Vector.<BitmapData>;
-		private var tileNames:Vector.<String>;
+		protected var tiles:Vector.<BitmapData>;
+		protected var tileNames:Vector.<String>;
 		
 		public function Tileset() {
 			Assert.assertTrue(TILE_WIDTH == TILE_HEIGHT * 2, "Code tagged tile-width-is-twice-height will break!");
@@ -82,14 +81,6 @@ package angel.common {
 			}
 			bitmapData.dispose();
 		}
-	
-		public function initFromBitmapData(bitmapData:BitmapData):void {
-			tiles = createTilesFromBitmapData(bitmapData);
-			bitmapData.dispose();
-			if (tileNames == null) {
-				createDefaultTileNames();
-			}
-		}
 		
 		public function fillNamesFromXml(tilesetXml:XML):void {
 			var names:XMLList = tilesetXml.name;
@@ -123,7 +114,7 @@ package angel.common {
 			}
 		}
 		
-		private function createDefaultTileNames():void {
+		public function createDefaultTileNames():void {
 			tileNames = new Vector.<String>(TILES_IN_SET);
 			for (var i:int = 0; i < tiles.length; i++) {
 				tileNames[i] = String.fromCharCode("A".charCodeAt(0) + i);
@@ -170,32 +161,12 @@ package angel.common {
         private function nameMatches(element:*, index:int, arr:Array):Boolean {
             return (element.manager == true);
         }
-
 		
-		//callback function takes Tileset as parameter
-		public function getFilenameAndLoad(callbackWithTilesetWhenComplete:Function):void {
-			this.callbackWithTilesetWhenComplete = callbackWithTilesetWhenComplete;
-			createDefaultTileNames();
-			new FileChooser(tilesetLoadedIntoByteArray, null, true);
-		}
-
-		private function tilesetLoadedIntoByteArray(filename:String, bytes:ByteArray):void {
-			entry = new CatalogEntry(filename, CatalogEntry.TILESET); // UNDONE get an id, add to catalog
-			LoaderWithErrorCatching.LoadBytes(bytes, tilesetAvailableAsBitmap);
-		}
 		
-		private function tilesetAvailableAsBitmap(event:Event):void {
-			var compoundBitmap:Bitmap = event.target.content;
-			if ((compoundBitmap.width != TILESET_X) || (compoundBitmap.height != TILESET_Y)) {
-				Alert.show("WARNING: Tileset bitmap is not " + TILESET_X + "x" + TILESET_Y + ".  Please fix!");
-			}
-			initFromBitmapData(compoundBitmap.bitmapData);
-			callbackWithTilesetWhenComplete(this);
-		}
-		
-		public function get xml():XML {
+		public function renderAsXml(id:String):XML {
 			var tilesetXml:XML = <tileset/>;
 			tilesetXml.@file = entry.filename;
+			tilesetXml.@id = id;
 			for (var i:int = 0; i < tileNames.length; i++) {
 				var nameXml:XML = <name/>
 				nameXml.appendChild(tileNames[i]);
@@ -204,46 +175,13 @@ package angel.common {
 			return tilesetXml;
 		}
 
-		public function initFromXml(xml:XML, callbackWithTilesetWhenComplete:Function):void {
-			this.callbackWithTilesetWhenComplete = callbackWithTilesetWhenComplete;
-			createBlankTiles();
-			
-			var tilesetXmlList:XMLList = xml.tileset;
-			if (tilesetXmlList.length() > 1) {
-				Alert.show("XML file has multiple tilesets; not supported yet.");
-			}
-			var tilesetXml:XML = tilesetXmlList[0];
-			entry = new CatalogEntry(tilesetXml.@file, CatalogEntry.TILESET); // UNDONE I think this function becomes obsolete. If not, get an id, add to catalog
-			fillNamesFromXml(tilesetXml);
-
-			LoaderWithErrorCatching.LoadBytesFromFile(entry.filename, tilesetAvailableAsBitmap);
-		}
-		
-
-		private function createTilesFromBitmapData(bitmapData:BitmapData):Vector.<BitmapData> {
-			var theseTiles:Vector.<BitmapData> = new Vector.<BitmapData>(TILES_IN_SET);
-			var zerozero:Point = new Point(0, 0);
-			var i:int = 0;
-			for (var tileY:int = 0; tileY < TILESET_Y_TILES; tileY++) {
-				for (var tileX:int = 0; tileX < TILESET_X_TILES; tileX++) {
-					var sourceRect:Rectangle = new Rectangle(tileX*TILE_WIDTH, tileY*TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
-					var tileData:BitmapData = new BitmapData(TILE_WIDTH, TILE_HEIGHT);
-					tileData.copyPixels(bitmapData, sourceRect, zerozero);
-					theseTiles[i++] = tileData;
-				}
-			}
-			return theseTiles;
-		}
-		
-
-		public function cleanup():void {
+		public function disposeResource():void {
 			for (var i:int = 0; i < TILES_IN_SET; i++) {
 				if (tiles[i] !== defaultTileData) {
 					tiles[i].dispose();
 					tiles[i] = defaultTileData;
 				}
 			}
-			tileNames = null;
 		}
 		
 	} // end class Tileset

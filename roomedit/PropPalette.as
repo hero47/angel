@@ -1,6 +1,7 @@
 package angel.roomedit {
 	import angel.common.Alert;
 	import angel.common.Catalog;
+	import angel.common.CatalogEntry;
 	import angel.common.FloorTile;
 	import angel.common.KludgeDialogBox;
 	import angel.common.Prop;
@@ -23,7 +24,7 @@ package angel.roomedit {
 			this.room = room;
 			this.catalog = catalog;
 
-			var allPropNames:Array = catalog.allPropNames();
+			var allPropNames:Array = catalog.allNames(CatalogEntry.PROP);
 		
 			var imagesAcross:int = 3;
 			while (imagesAcross * imagesAcross < allPropNames.length) {

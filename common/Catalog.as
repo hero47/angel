@@ -42,7 +42,9 @@ package angel.common {
 			}
 			for each (var tilesetXml:XML in xml.tileset) {
 				entry = addCatalogEntry(tilesetXml.@id, tilesetXml.@file, CatalogEntry.TILESET, duplicateNames);
-				entry.xml = tilesetXml;
+				if (entry != null) {
+					entry.xml = tilesetXml;
+				}
 			}
 			if (duplicateNames.length > 0) {
 				message("WARNING: Duplicate name(s) in catalog:\n" + duplicateNames);
@@ -59,10 +61,13 @@ package angel.common {
 			}
 		}
 		
-		// add the specified entry. If it's a duplicate, replace previous one and add to duplicateNames for reporting
-		private function addCatalogEntry(id:String, filename:String, type:int, duplicateNames:String):CatalogEntry {
+		// add the specified entry. If it's a duplicate, add to duplicateNames for reporting & return null
+		public function addCatalogEntry(id:String, filename:String, type:int, duplicateNames:String = null):CatalogEntry {
 			if (lookup[id] != undefined) {
-				duplicateNames += id + "\n";
+				if (duplicateNames != null) {
+					duplicateNames += id + "\n";
+				}
+				return null;
 			}
 			var entry:CatalogEntry  = new CatalogEntry(filename, type);
 			lookup[id] = entry;
