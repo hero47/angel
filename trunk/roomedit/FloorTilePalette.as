@@ -31,7 +31,8 @@ package angel.roomedit {
 		private var selection:Sprite = null;
 		private var editingTileNames:Boolean = false;
 		
-		public function FloorTilePalette(tileset:Tileset) {
+		public function FloorTilePalette(tileset:Tileset, editNames:Boolean = false) {
+			editingTileNames = editNames;
 			changeTileset(tileset);
 			graphics.lineStyle(2, 0x000000);
 			graphics.beginFill(BACKCOLOR, 1);
@@ -47,7 +48,17 @@ package angel.roomedit {
 		
 		public function changeTileset(tileset:Tileset):void {
 			this.tileset = tileset;
-			var tempNames:Object = new Object();
+			buildListOfUniqueTileNames();
+			
+			removeAllChildren();
+			if (editingTileNames) {
+				createPaletteItemsForEditMode();
+			} else {
+				createPaletteItemsForNormalMode();
+			}
+		}
+		
+		private function buildListOfUniqueTileNames():void {
 			uniqueTileNames = new Vector.<NameAndCount>();
 			uniqueTileNames.push(new NameAndCount("", 0));
 			for (var i:int = 0; i < Tileset.TILES_IN_SET; i++) {
@@ -65,9 +76,11 @@ package angel.roomedit {
 					uniqueTileNames.push(new NameAndCount(tileName, 1));
 				}
 			}
-			
-			removeAllChildren();
-			for (i = 0; i < uniqueTileNames.length; i++) {
+		}
+		
+		
+		private function createPaletteItemsForNormalMode():void {
+			for (var i:int = 0; i < uniqueTileNames.length; i++) {
 				var foo:Sprite = createNormalPaletteItem(i);
 				addChild(foo);
 				foo.x = (i % 3) * ITEM_WIDTH;
@@ -78,37 +91,34 @@ package angel.roomedit {
 			}
 			selectedTileName = "";
 		}
-
-		public function setEditMode(edit:Boolean):void {
-			if (edit != !editingTileNames) {
-				Alert.show("Error: edit mode confused.");
-				return;
+		
+		private function createPaletteItemsForEditMode():void {
+			for (var i:int = 0; i < Tileset.TILES_IN_SET; i++) {
+				var foo:Sprite = createEditablePaletteItem(i);
+				addChild(foo);
+				foo.x = (i % 3) * ITEM_WIDTH;
+				foo.y = Math.floor(i / 3) * ITEM_HEIGHT;
 			}
-
-			if (edit) {
-				removeAllChildren();
-				for (var i:int = 0; i < Tileset.TILES_IN_SET; i++) {
-					var foo:Sprite = createEditablePaletteItem(i);
-					addChild(foo);
-					foo.x = (i % 3) * ITEM_WIDTH;
-					foo.y = Math.floor(i / 3) * ITEM_HEIGHT;
-				}
-				selectedTileName = "";
-				editingTileNames = true;
-			} else {
-				for (i = 0; i < numChildren; i++) {
-					var child:DisplayObject = getChildAt(i);
-					if (child is SpriteWithIndex) {
-						var item:SpriteWithIndex = (child as SpriteWithIndex);
-						var tileIndex:int = item.index;
-						tileset.setTileName(tileIndex, (item.getChildAt(1) as TextField).text);
-					}
-				}
-				changeTileset(tileset);
-				editingTileNames = false;
-			}
+			selectedTileName = "";		
 		}
 
+		public function setEditMode(editNames:Boolean):void {
+			editingTileNames = editNames;
+			changeTileset(tileset);
+		}
+
+		public function setTileNamesFromPalette():void {
+			for (var i:int = 0; i < numChildren; i++) {
+				var child:DisplayObject = getChildAt(i);
+				if (child is SpriteWithIndex) {
+					var item:SpriteWithIndex = (child as SpriteWithIndex);
+					var tileIndex:int = item.index;
+					tileset.setTileName(tileIndex, (item.getChildAt(1) as TextField).text);
+				}
+			}
+			
+		}
+		
 		private function removeAllChildren():void {
 			while (numChildren > 0) {
 				removeChildAt(0);

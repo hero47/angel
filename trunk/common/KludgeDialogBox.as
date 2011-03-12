@@ -242,6 +242,7 @@ package angel.common {
 			var heightForInputs:int = alertOptions.inputs.length * (btnHeight+2);
 			if (alertOptions.customControl != null) {
 				heightForInputs += alertOptions.customControl.height;
+				myWidth = Math.max(myWidth, alertOptions.customControl.width + 30);
 			}
 			var myHeight:int = textField.height + 65 + heightForInputs;
 			if (myWidth < minimumWidths[alertOptions.buttons.length-1]) {
