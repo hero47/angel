@@ -54,7 +54,7 @@ package angel.roomedit {
 			sprite.addChild(bitmap);
 		}
 		
-		public function applyToTile(floorTile:FloorTile):void {
+		public function applyToTile(floorTile:FloorTileEdit):void {
 			if (room.occupied(floorTile.location)) {
 				room.removeProp(floorTile.location);
 			} else if (selectedPropName != "") {

@@ -15,8 +15,6 @@ package angel.common {
 		protected var xy:Point = new Point();
 
 		protected var floorGrid:Vector.<Vector.<FloorTile>>;
-		protected var myTileset:Tileset;
-		protected var myTilesetId:String;
 		
 		public function Floor() {
 		}
@@ -49,99 +47,60 @@ package angel.common {
 			return xy;
 		}
 		
-		//UNDONE: this will be replaced with addTileset
-		public function changeTileset(catalog:Catalog, newTilesetId:String):void {
-			myTilesetId = newTilesetId;
-			myTileset = catalog.retrieveTileset(myTilesetId);
-			setTileImagesFromNames();
-		}
-
-		// Re-pick images based on tile name.  If no tiles share names, then this will not change the images.
-		public function setTileImagesFromNames():void {
-			for (var i:int = 0; i < xy.x; i++) {
-				for (var j:int = 0; j < xy.y; j++) {
-					var floorTile:FloorTile = floorGrid[i][j];
-					floorTile.bitmapData = myTileset.tileDataNamed(floorTile.tileName);
-				}
-			}			
+		public function addTileAt(tile:FloorTile, x:int, y:int):void {
+			floorGrid[x][y] = tile;
+			tile.x = (x - y) * FLOOR_TILE_X;
+			tile.y = (x + y) * FLOOR_TILE_Y;
+			addChild(tile);
+		
 		}
 		
-		protected function resize(newX:int, newY:int):void {
-			var x:int;
-			var y:int;
-			
-			if (floorGrid == null) {
-				floorGrid = new Vector.<Vector.<FloorTile>>;
-				xy.x = xy.y = 0;
-			}
-			
-			if (floorGrid.length < newX) {
-				floorGrid.length = newX;
-			}
-			for (x = 0; x < floorGrid.length; x++) {
-				if (x < xy.x) { // column x has existing tiles
-					if (x >= newX) { // column x is outside new bounds, remove those tiles
-						removeTilesInRange(x, 0, xy.y);
-					} else { // column x is inside new & old bounds, shorten or lengthen as needed
-						if (newY < xy.y) { // column needs to be shortened
-							removeTilesInRange(x, newY, xy.y);
-						}
-						floorGrid[x].length = newY;
-					}
-				} else { // need to add column x
-					floorGrid[x] = new Vector.<FloorTile>(newY);
-				}
-			}
-			if (floorGrid.length > newX) {
-				floorGrid.length = newX;
-			}			
-			
-			xy.x = newX;
-			xy.y = newY;
-			createTilesAsNeeded();
-		}
-		
-		private function removeTilesInRange(x:int, yStart:int, yUpTo:int):void {
-			for (var i:int = yStart; i < yUpTo; i++) {
-				removeChild(floorGrid[x][i]);
+		// This version only reads the data needed for game.  FloorEdit overrides with a version that reads
+		// additional data used only by the editor.
+		protected function setTileFromXml(catalog:Catalog, x:int, y:int, tileXml:XML):void {
+			var tilesetId:String = tileXml.@set;
+			if (tilesetId == "") {
+				floorGrid[x][y].bitmapData = Tileset.getDefaultTileData();
+			} else {
+				var index:int = tileXml.@i;
+				var tileset:Tileset = catalog.retrieveTileset(tilesetId);
+				floorGrid[x][y].bitmapData = tileset.tileBitmapData(index);
 			}
 		}
 		
-		private function createTilesAsNeeded():void {
-			for (var i:int = 0; i < xy.x; i++) {
-				for (var j:int = 0; j < xy.y; j++) {
-					if (floorGrid[i][j] == null) {
-						var tile:FloorTile = new FloorTile(myTileset.tileDataNamed(""), "", i, j);
-						floorGrid[i][j] = tile;
-						tile.x = (i - j) * FLOOR_TILE_X;
-						tile.y = (i + j) * FLOOR_TILE_Y;
-						addChild(tile);
-					}
+		// This version expects to only be called once; it does not remove or reuse any existing tiles.
+		// The version for editor (FloorEdit) overrides it with one that does.
+		protected function createFloorGrid(sizeX:int, sizeY:int):void {
+			floorGrid = new Vector.<Vector.<FloorTile>>(sizeX);
+			xy.x = sizeX;
+			xy.y = sizeY;
+			for (var x:int = 0; x < sizeX; x++) {
+				floorGrid[x] = new Vector.<FloorTile>(sizeY);
+				for (var y:int = 0; y < sizeY; y++) {
+					var tile:FloorTile = new FloorTile(Tileset.getDefaultTileData(), x, y);
+					addTileAt(tile, x, y);
 				}
-			}			
+			}
 		}
-
-		private function initFloorRowFromXml(floorXml:XML):void {
+		
+		private function initFloorRowFromXml(catalog:Catalog, floorXml:XML):void {
 			var rowNum:int = floorXml.@row;
 			var i:int = 0;
-			var names:XMLList = floorXml.name;
-			for each (var name:String in names) {
-				floorGrid[i++][rowNum].tileName = name;
+			var tiles:XMLList = floorXml.tile;
+			for each (var tile:XML in tiles) {
+				setTileFromXml(catalog, i++, rowNum, tile);
 			}
 			
 		}
 		
 		public function loadFromXml(catalog:Catalog, floorXml:XML):void {
-			myTilesetId = floorXml.tileset[0];
-			myTileset = catalog.retrieveTileset(myTilesetId);
-			
-			resize(floorXml.@x, floorXml.@y);
+			createFloorGrid(floorXml.@x, floorXml.@y);
 
 			var floorRows:XMLList = floorXml.floorTiles;
 			for each (var floorRowXml:XML in floorRows) {
-				initFloorRowFromXml(floorRowXml)
+				initFloorRowFromXml(catalog, floorRowXml)
 			}
-			setTileImagesFromNames();
+			//setTileImagesFromNames();
 
 			dispatchEvent(new Event(MAP_LOADED_EVENT));
 		}

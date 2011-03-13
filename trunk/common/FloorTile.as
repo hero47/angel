@@ -8,14 +8,12 @@ package angel.common {
 	public class FloorTile extends Sprite {
 		private var image:Bitmap;
 		private var roomLoc:Point = null;
-		public var tileName:String;
 		
-		// name and location are cached in the tile for the convenience of users; they're not actually used
+		// location is cached in the tile for the convenience of users; it's not actually used
 		// by the tile itself.
-		public function FloorTile(bitmapData:BitmapData, tileName:String = "", roomX:int = -1, roomY:int = -1):void {
+		public function FloorTile(bitmapData:BitmapData, roomX:int = -1, roomY:int = -1):void {
 			this.image = new Bitmap(bitmapData);
 			addChild(image);
-			this.tileName = tileName;
 			var hitArea:Sprite = createHitArea();
 			hitArea.visible = false;
 			hitArea.mouseEnabled = false;

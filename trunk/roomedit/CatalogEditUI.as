@@ -140,7 +140,7 @@ package angel.roomedit {
 			if (tilesPalette != null) {
 				removeChild(tilesPalette);
 			}
-			tilesPalette = new FloorTilePalette(catalog.retrieveTileset(tilesetId), true);
+			tilesPalette = new FloorTilePalette(catalog, tilesetId, true);
 			tilesPalette.x = 5;
 			tilesPalette.y = 30;
 			addChild(tilesPalette);
