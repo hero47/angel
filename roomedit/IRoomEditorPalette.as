@@ -1,10 +1,8 @@
 package angel.roomedit {
-	import angel.common.FloorTile;
-	
 
 	public interface IRoomEditorPalette {
 		
-		function applyToTile(floorTile:FloorTile):void;
+		function applyToTile(floorTile:FloorTileEdit):void;
 		
 	}
 	

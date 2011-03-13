@@ -35,6 +35,7 @@ package angel.roomedit {
 			
 		}
 
+		// Add prop at the given location.  If there's already something there, this replaces previous content.
 		public function addProp(prop:Prop, propName:String, location:Point):void {
 			if (propGrid[location.x][location.y] != null) {
 				contentsLayer.removeChild(propGrid[location.x][location.y].prop);
@@ -42,6 +43,15 @@ package angel.roomedit {
 			propGrid[location.x][location.y] = new PropAndName(prop, propName);
 			contentsLayer.addChild(prop);
 			prop.location = location;
+		}
+		
+		public function removeAllProps():void {
+			var loc:Point = new Point();
+			for (loc.x = 0; loc.x < xy.x; ++loc.x) {
+				for (loc.y = 0; loc.y < xy.y; ++loc.y) {
+					removeProp(loc);
+				}
+			}
 		}
 
 		private function floorResized(event:Event):void {

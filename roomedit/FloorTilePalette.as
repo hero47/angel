@@ -4,6 +4,7 @@ package angel.roomedit {
 	import flash.display.DisplayObject;
 	import flash.display.Sprite;
 	import flash.events.MouseEvent;
+	import flash.geom.Point;
 	import flash.text.TextField;
 	import flash.text.TextFieldType;
 	import flash.text.TextFormat;
@@ -24,31 +25,37 @@ package angel.roomedit {
 		public static const BACKCOLOR:uint = 0xffffff;
 		public static const SELECT_COLOR:uint = 0x00ffff;
 		
+		private var catalog:Catalog;
 		private var tileset:Tileset;
+		private var tilesetId:String;
 		private var uniqueTileNames:Vector.<NameAndCount>;
 		
 		private var selectedTileName:String = "";
 		private var selection:Sprite = null;
 		private var editingTileNames:Boolean = false;
 		
-		public function FloorTilePalette(tileset:Tileset, editNames:Boolean = false) {
+		public function FloorTilePalette(catalog:Catalog, tilesetId:String, editNames:Boolean = false) {
+			this.catalog = catalog;
 			editingTileNames = editNames;
-			changeTileset(tileset);
 			graphics.lineStyle(2, 0x000000);
 			graphics.beginFill(BACKCOLOR, 1);
 			graphics.drawRect(0, 0, XSIZE, YSIZE);
 			
+			changeTileset(tilesetId);
 			addEventListener(MouseEvent.CLICK, clickListener);
 		}
 
-		public function applyToTile(floorTile:FloorTile):void {
-			floorTile.tileName = selectedTileName;
-			floorTile.bitmapData = tileset.tileDataNamed(selectedTileName);
+		public function applyToTile(tile:FloorTileEdit):void {
+			var index:int = tileset.tileIndexForName(selectedTileName);
+			tile.setTile(catalog, tilesetId, index);
 		}		
 		
-		public function changeTileset(tileset:Tileset):void {
-			this.tileset = tileset;
-			buildListOfUniqueTileNames();
+		public function changeTileset(tilesetId:String):void {
+			if (tilesetId != this.tilesetId) {
+				this.tilesetId = tilesetId;
+				this.tileset = (tilesetId == "" ? new Tileset() : catalog.retrieveTileset(tilesetId));
+				buildListOfUniqueTileNames();
+			}
 			
 			removeAllChildren();
 			if (editingTileNames) {
@@ -104,7 +111,7 @@ package angel.roomedit {
 
 		public function setEditMode(editNames:Boolean):void {
 			editingTileNames = editNames;
-			changeTileset(tileset);
+			changeTileset(tilesetId);
 		}
 
 		public function setTileNamesFromPalette():void {
@@ -151,14 +158,15 @@ package angel.roomedit {
 			if (uniqueTileNames[uniqueTileNameIndex].count > 1) {
 				label += " (" + uniqueTileNames[uniqueTileNameIndex].count + ")";
 			}
-			var item:SpriteWithIndex = createPaletteItem(label, tileset.tileDataNamed(tileName), false);
+			var tileIndex:int = tileset.tileIndexForName(tileName);
+			var item:SpriteWithIndex = createPaletteItem(label, tileset.tileBitmapData(tileIndex), false);
 			item.index = uniqueTileNameIndex;
 			item.mouseChildren = false;
 			return item;
 		}
 		
 		private function createEditablePaletteItem(tileIndex:int):SpriteWithIndex {
-			var item:SpriteWithIndex = createPaletteItem(tileset.tileName(tileIndex), tileset.tileData(tileIndex), true);
+			var item:SpriteWithIndex = createPaletteItem(tileset.tileName(tileIndex), tileset.tileBitmapData(tileIndex), true);
 			item.index = tileIndex;
 			return item;
 		}

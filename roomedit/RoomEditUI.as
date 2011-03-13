@@ -27,7 +27,7 @@ package angel.roomedit {
 		public function RoomEditUI(catalog:CatalogEdit) {
 			this.catalog = catalog;
 			
-			floor = new FloorEdit(DEFAULT_FLOORSIZE_X, DEFAULT_FLOORSIZE_Y);
+			floor = new FloorEdit(catalog, DEFAULT_FLOORSIZE_X, DEFAULT_FLOORSIZE_Y);
 			floor.addEventListener(Floor.MAP_LOADED_EVENT, mapLoadedListener);
 			
 			room = new RoomLight(floor, catalog);
@@ -35,7 +35,7 @@ package angel.roomedit {
 			room.x = 430;
 			room.y = 55;
 			
-			tilesPalette = new FloorTilePalette(floor.tileset);
+			tilesPalette = new FloorTilePalette(catalog, "");
 			tilesPalette.x = 5;
 			tilesPalette.y = 30;
 			addChild(tilesPalette);
@@ -80,7 +80,7 @@ package angel.roomedit {
 			addChild(button);
 			left += button.width + 5;
 			
-			button = new SimplerButton("Add tileset", clickedAddTileset);
+			button = new SimplerButton("Change tileset", clickedAddTileset);
 			button.x = left;
 			button.y = 5;
 			button.width = 100;
@@ -94,7 +94,7 @@ package angel.roomedit {
 			addChild(button);
 			left += button.width + 5;
 			
-			button = new SimplerButton("Redisplay", clickedRedisplay);
+			button = new SimplerButton("Shuffle tiles", clickedRedisplay);
 			button.x = left;
 			button.y = 5;
 			button.width = 100;
@@ -143,22 +143,22 @@ package angel.roomedit {
 			tilesetCombo = ComboBox(tilesetChooser.getChildAt(0));
 			KludgeDialogBox.init(stage);
 			var options:Object = { buttons:["OK", "Cancel"], inputs:[], customControl:tilesetChooser,
-					callback:addTilesetCallback };
+					callback:changeTilesetCallback };
 			var text:String = "Select tileset:";
 			KludgeDialogBox.show(text, options);
 		}
-		private function addTilesetCallback(buttonClicked:String, values:Array):void {
+		private function changeTilesetCallback(buttonClicked:String, values:Array):void {
 			if (buttonClicked != "OK") {
 				return;
 			}
 			var tilesetId:String = tilesetCombo.value;
 			tilesetCombo = null;
-			tilesPalette.changeTileset(catalog.retrieveTileset(tilesetId));
-			floor.changeTileset(catalog, tilesetId);
+			tilesPalette.changeTileset(tilesetId);
 		}
 		
 		private function clickedClear(event:Event):void {
 			floor.clear();
+			room.removeAllProps();
 		}
 
 		private function clickedRedisplay(event:Event):void {
@@ -182,7 +182,7 @@ package angel.roomedit {
 		}
 		
 		private function mapLoadedListener(event:Event):void {
-			tilesPalette.changeTileset(floor.tileset);
+			tilesPalette.changeTileset(floor.getMostCommonTilesetId());
 		}
 		
 		private function clickedProp(event:Event):void {

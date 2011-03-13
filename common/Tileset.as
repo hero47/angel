@@ -34,6 +34,12 @@ package angel.common {
 		
 		public function Tileset() {
 			Assert.assertTrue(TILE_WIDTH == TILE_HEIGHT * 2, "Code tagged tile-width-is-twice-height will break!");
+			getDefaultTileData();
+			
+			createBlankTiles();
+		}
+		
+		public static function getDefaultTileData():BitmapData {
 			if (defaultTileData == null) {
 				defaultTileData = new BitmapData(TILE_WIDTH, TILE_HEIGHT, true, 0); // fully transparent
 				
@@ -51,8 +57,7 @@ package angel.common {
 				
 				defaultTileData.draw(blankTileImage);
 			}
-			
-			createBlankTiles();
+			return defaultTileData;
 		}
 		
 		public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry):void {
@@ -80,6 +85,13 @@ package angel.common {
 				}
 			}
 			bitmapData.dispose();
+		}
+		
+		public function tileBitmapData(i:int):BitmapData {
+			if (i < 0) {
+				return defaultTileData;
+			}
+			return tiles[i];
 		}
 		
 		public function fillNamesFromXml(tilesetXml:XML):void {
@@ -121,47 +133,6 @@ package angel.common {
 				//tileNames[i] = "tile" + String(i + 1);
 			}
 		}
-
-		public function tileData(i:int):BitmapData {
-			return tiles[i];
-		}
-		
-		public function tileName(i:int):String {
-			return (tileNames[i] == null ? "" : tileNames[i]);
-		}
-
-		public function setTileName(i:int, newName:String):void {
-			tileNames[i] = newName;
-		}
-		
-		public function randomTileName():String {
-			return tileNames[Math.floor(Math.random() * tiles.length)];
-		}	
-
-		// Return the BitmapData for a random tile tagged with the given name, or defaultTileData if none match
-		public function tileDataNamed(name:String):BitmapData {
-			if (name != null && name.length > 0) {
-				var matches:Vector.<BitmapData> = new Vector.<BitmapData>();
-				var i:int = 0;
-				do {
-					i = tileNames.indexOf(name, i);
-					if (i >= 0) {
-						matches.push(tiles[i]);
-						i++;
-					}
-				} while (i >= 0);
-				
-				if (matches.length > 0) {
-					return matches[ Math.floor(Math.random() * matches.length) ];
-				}
-			}
-			return defaultTileData;
-		}
-
-        private function nameMatches(element:*, index:int, arr:Array):Boolean {
-            return (element.manager == true);
-        }
-		
 		
 		public function renderAsXml(id:String):XML {
 			var tilesetXml:XML = <tileset/>;
@@ -183,6 +154,42 @@ package angel.common {
 				}
 			}
 		}
+		
+		/************* Tilename stuff, this may all move to an EditTileset class later ***************/
+
+		public function tileName(i:int):String {
+			return (tileNames[i] == null ? "" : tileNames[i]);
+		}
+
+		public function setTileName(i:int, newName:String):void {
+			tileNames[i] = newName;
+		}
+		
+		public function randomTileName():String {
+			return tileNames[Math.floor(Math.random() * tiles.length)];
+		}	
+
+		// Return the index for a random tile tagged with the given name, or -1 if none match
+		public function tileIndexForName(name:String):int {
+			if (name != null && name.length > 0) {
+				var matches:Vector.<int> = new Vector.<int>();
+				var i:int = 0;
+				do {
+					i = tileNames.indexOf(name, i);
+					if (i >= 0) {
+						matches.push(i);
+						i++;
+					}
+				} while (i >= 0);
+				
+				if (matches.length > 0) {
+					return matches[ Math.floor(Math.random() * matches.length) ];
+				}
+			}
+			return -1;
+		}
+
+	
 		
 	} // end class Tileset
 	
