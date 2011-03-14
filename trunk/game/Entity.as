@@ -39,7 +39,7 @@ package angel.game {
 		private var room:Room;
 		private var moveGoal:Point; // the tile we're trying to get to
 		private var path:Vector.<Point>; // the tiles we're trying to move through to get there
-		private var moveTo:Point; // the tile we're immediately in the process of moving onto
+		private var movingTo:Point; // the tile we're immediately in the process of moving onto
 		protected var coordsForEachFrameOfMove:Vector.<Point>;
 		private var depthChangePerFrame:Number;
 		protected var frameOfMove:int;
@@ -60,20 +60,15 @@ package angel.game {
 			}
 		}
 		
-		//UNDONE deal with changing goal partway through move
 		//return true if moving, false if goal is unreachable or already there
 		public function startMovingToward(goal:Point):Boolean {
-			//room.changeEntityLocation(this, goal); // teleport directly there
-			if (path == null) {
-				moveGoal = goal;
-				path = findPathTo(goal);
-				if (path != null) {
-					room.addEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
-					return true;
-				}
-				return false;
+			moveGoal = goal;
+			path = findPathTo(goal);
+			if (path != null) {
+				room.addEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
+				return true;
 			}
-			return true
+			return false;
 		}
 		
 		public function startMovingAlongPath(newPath:Vector.<Point>):void {
@@ -90,7 +85,7 @@ package angel.game {
 		// fills in coordsForEachFrameOfMove, depthChangePerFrame, and facing
 		// This is a horrid name but I haven't been able to think of a better one or a better refactoring
 		private function calculateStuffForMovementFrames():void {
-			var tileMoveVector:Point = moveTo.subtract(myLocation);
+			var tileMoveVector:Point = movingTo.subtract(myLocation);
 			facing = facingMap[tileMoveVector.x + 1][tileMoveVector. y + 1];
 			
 			var totalPixels:int;
@@ -117,20 +112,20 @@ package angel.game {
 				coordsForEachFrameOfMove[i] = nextCoords;
 			}
 			// plug the last location in directly to remove accumulated rounding errors
-			coordsForEachFrameOfMove[i] = pixelLocStandingOnTile(moveTo);
+			coordsForEachFrameOfMove[i] = pixelLocStandingOnTile(movingTo);
 		}
 		
 		//UNDONE once we have obstacles, recalculate path each tile in case obstacles change
 		//NOTE: once we're animating steps, animation may need to continue past arrival to get both feet on ground
 		protected function moveOneFrameAlongPath(event:Event):void {
-			if (moveTo == null) {
-				moveTo = path.shift();
+			if (movingTo == null) {
+				movingTo = path.shift();
 				calculateStuffForMovementFrames();
 				frameOfMove = 0;
-			}
-			if (frameOfMove == Math.floor(coordsForEachFrameOfMove.length/2)) {
-				room.changePropLocation(this, moveTo);
-				myLocation = moveTo;
+				// Change the "real" location to the next tile.  Doing this on first frame of move rather than
+				// halfway through the move circumvents a whole host of problems!
+				room.changePropLocation(this, movingTo);
+				myLocation = movingTo;
 			}
 			adjustImage();
 			x = coordsForEachFrameOfMove[frameOfMove].x;
@@ -144,7 +139,7 @@ package angel.game {
 			
 			frameOfMove++;
 			if (frameOfMove == coordsForEachFrameOfMove.length) {
-				moveTo = null;
+				movingTo = null;
 				coordsForEachFrameOfMove = null;
 				if (path.length == 0) {
 					path = null;
