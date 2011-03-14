@@ -27,6 +27,12 @@ package angel.game {
 				Vector.<int>([5,4,3]), Vector.<int>([6,2,2]), Vector.<int>([7,0,1])
 			]);		
 		
+
+		// check neighbor tiles in this order when choosing path, so we'll prefer "straight" moves
+		private static const neighborCheck:Vector.<Point> = Vector.<Point>([
+				new Point(1, 0), new Point(0, 1), new Point(0, -1), new Point( -1, 0),
+				new Point(1, 1), new Point(1, -1), new Point( -1, -1), new Point( -1, 1) ]);
+
 		// Entity stats!  Eventually these will be initialized from data files.  They may go in a separate object.
 		public var moveSpeed:Number = Settings.DEFAULT_MOVE_SPEED;
 		public var adjacentTilesPerFrame:Number = moveSpeed / Settings.FRAMES_PER_SECOND;
@@ -206,19 +212,23 @@ package angel.game {
 				if (stepsFromGoal == 0) { // blocked cell
 					continue;
 				}
-				for (var xNext:int = Math.min(room.size.x-1, current.x + 1); xNext >= Math.max(0, current.x - 1); --xNext) {
-					for (var yNext:int = Math.min(room.size.y-1, current.y + 1); yNext >= Math.max(0, current.y - 1); --yNext) {
-						if (steps[xNext][yNext] != 0) {
-							continue;
-						}
-						if (xNext == from.x && yNext == from.y) {
-							extractPathFromStepGrid(goal, steps, path, current);
-							return true;
-						}
-						var neighbor:Point = new Point(xNext, yNext);
-						steps[xNext][yNext] = tileBlocked(neighbor) ? -1 : stepsFromGoal;
-						edge.push(neighbor);
+				for (i = 0; i < neighborCheck.length; i++) {
+					var nextNeighbor:Point = neighborCheck[i];
+					var xNext:int = current.x + nextNeighbor.x;
+					var yNext:int = current.y + nextNeighbor.y;
+					if ((xNext < 0) || (xNext > room.size.x - 1) || (yNext < 0) || (yNext > room.size.y - 1)) {
+						continue;
 					}
+					if (steps[xNext][yNext] != 0) {
+						continue;
+					}
+					if (xNext == from.x && yNext == from.y) {
+						extractPathFromStepGrid(goal, steps, path, current);
+						return true;
+					}
+					var neighbor:Point = new Point(xNext, yNext);
+					steps[xNext][yNext] = tileBlocked(neighbor) ? -1 : stepsFromGoal;
+					edge.push(neighbor);
 				}
 
 				//traceStepGrid(steps);
@@ -228,27 +238,26 @@ package angel.game {
 		}
 		
 		private function extractPathFromStepGrid(goal:Point, steps:Vector.<Vector.<int>>, path:Vector.<Point>, firstStep:Point):void {
+			//traceStepGrid(steps);
 			path.length = 0;
 			var current:Point = firstStep.clone();
 			path.push(current);
 			var lookingFor:int = steps[firstStep.x][firstStep.y] - 1;
 			while (lookingFor > 1) {
-				var foundStep:Boolean = false;
-				//favor the higher-numbered tiles, they're closer to camera
-				for (var xNext:int = Math.min(room.size.x-1, current.x + 1); xNext >= Math.max(0, current.x - 1); --xNext) {
-					for (var yNext:int = Math.min(room.size.y-1, current.y + 1); yNext >= Math.max(0, current.y - 1); --yNext) {
-						if (steps[xNext][yNext] == lookingFor) {
-							current = new Point(xNext, yNext);
-							path.push(current);
-							--lookingFor;
-							foundStep = true;
-							break;
-						}
-					} // end for yNext
-					if (foundStep) {
+				for (var i:int = 0; i < neighborCheck.length; i++) {
+					var nextNeighbor:Point = neighborCheck[i];
+					var xNext:int = current.x + nextNeighbor.x;
+					var yNext:int = current.y + nextNeighbor.y;
+					if ((xNext < 0) || (xNext > room.size.x - 1) || (yNext < 0) || (yNext > room.size.y - 1)) {
+						continue;
+					}
+					if (steps[xNext][yNext] == lookingFor) {
+						current = new Point(xNext, yNext);
+						path.push(current);
+						--lookingFor;
 						break;
 					}
-				} // end for xNext
+				} // end for
 			}
 			path.push(goal);
 		}
