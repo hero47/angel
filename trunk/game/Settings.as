@@ -13,6 +13,11 @@ package angel.game {
 		public static var runPoints:int;
 		public static var sprintPoints:int;
 		
+		public static var exploreSpeed:Number = DEFAULT_MOVE_SPEED;
+		public static var walkSpeed:Number = DEFAULT_MOVE_SPEED;
+		public static var runSpeed:Number = DEFAULT_MOVE_SPEED;
+		public static var sprintSpeed:Number = DEFAULT_MOVE_SPEED;
+		
 		public static var playerId:String = "Player";
 		
 		public function Settings() {
@@ -53,6 +58,19 @@ package angel.game {
 			
 			if (xml.@player.length() > 0) {
 				playerId = xml.@player;
+			}
+			
+			if (xml.@exploreSpeed.length() > 0) {
+				exploreSpeed = xml.@exploreSpeed;
+			}
+			if (xml.@walkSpeed.length() > 0) {
+				walkSpeed = xml.@walkSpeed;
+			}
+			if (xml.@runSpeed.length() > 0) {
+				runSpeed = xml.@runSpeed;
+			}
+			if (xml.@sprintSpeed.length() > 0) {
+				sprintSpeed = xml.@sprintSpeed;
 			}
 		}
 		
