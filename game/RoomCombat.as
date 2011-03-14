@@ -84,8 +84,8 @@ package angel.game {
 						
 						room.scrollToCenter(room.playerCharacter.location, true); // snap to current location
 						room.scrollToCenter(path[path.length - 1]); // begin gradual scroll to final location
-							
-						room.playerCharacter.startMovingAlongPath(path); //CAUTION: this vector now belongs to entity!
+						
+						room.playerCharacter.startMovingAlongPath(path, gaitForDistance(path.length)); //CAUTION: this vector now belongs to entity!
 						path = new Vector.<Point>();
 						endIndexes.length = 0;
 					}
@@ -185,6 +185,16 @@ package angel.game {
 				return sprintColor;
 			} else {
 				return outOfRangeColor;
+			}
+		}
+		
+		private function gaitForDistance(distance:int):int {
+			if (distance<= Settings.walkPoints) {
+				return Entity.GAIT_WALK;
+			} else if (distance <= Settings.runPoints) {
+				return Entity.GAIT_RUN;
+			} else {
+				return Entity.GAIT_SPRINT;
 			}
 		}
 		

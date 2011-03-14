@@ -18,6 +18,11 @@ package angel.game {
 		private static const PIXELS_FOR_ADJACENT_MOVE:int = Math.sqrt(Tileset.TILE_WIDTH * Tileset.TILE_WIDTH/4 + Tileset.TILE_HEIGHT * Tileset.TILE_HEIGHT/4);
 		private static const PIXELS_FOR_VERT_MOVE:int = Tileset.TILE_HEIGHT;
 		private static const PIXELS_FOR_HORZ_MOVE:int = Tileset.TILE_WIDTH;
+		
+		public static const GAIT_EXPLORE:int = 0;
+		public static const GAIT_WALK:int = 1;
+		public static const GAIT_RUN:int = 2;
+		public static const GAIT_SPRINT:int = 3;
 
 		// Facing == rotation/45 if we were in a top-down view.
 		// This will make it convenient if we ever want to determine facing from actual angles
@@ -34,8 +39,7 @@ package angel.game {
 				new Point(1, 1), new Point(1, -1), new Point( -1, -1), new Point( -1, 1) ]);
 
 		// Entity stats!  Eventually these will be initialized from data files.  They may go in a separate object.
-		public var moveSpeed:Number = Settings.DEFAULT_MOVE_SPEED;
-		public var adjacentTilesPerFrame:Number = moveSpeed / Settings.FRAMES_PER_SECOND;
+		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
 		public var combatMovePoints:int = Settings.combatMovePoints;
 		
 		public var isPlayerControlled:Boolean;
@@ -46,6 +50,7 @@ package angel.game {
 		private var moveGoal:Point; // the tile we're trying to get to
 		private var path:Vector.<Point>; // the tiles we're trying to move through to get there
 		private var movingTo:Point; // the tile we're immediately in the process of moving onto
+		private var moveSpeed:Number;
 		protected var coordsForEachFrameOfMove:Vector.<Point>;
 		private var depthChangePerFrame:Number;
 		protected var frameOfMove:int;
@@ -67,8 +72,9 @@ package angel.game {
 		}
 		
 		//return true if moving, false if goal is unreachable or already there
-		public function startMovingToward(goal:Point):Boolean {
+		public function startMovingToward(goal:Point, gait:int=GAIT_EXPLORE):Boolean {
 			moveGoal = goal;
+			moveSpeed = gaitSpeeds[gait];
 			path = findPathTo(goal);
 			if (path != null) {
 				room.addEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
@@ -77,10 +83,11 @@ package angel.game {
 			return false;
 		}
 		
-		public function startMovingAlongPath(newPath:Vector.<Point>):void {
+		public function startMovingAlongPath(newPath:Vector.<Point>, gait:int = GAIT_EXPLORE):void {
 			Assert.assertTrue(newPath != null, "Attempt to follow null path");
 			path = newPath;
 			moveGoal = path[path.length - 1];
+			moveSpeed = gaitSpeeds[gait];
 			room.addEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
 		}
 		
@@ -102,7 +109,7 @@ package angel.game {
 			} else {
 				totalPixels = PIXELS_FOR_HORZ_MOVE;
 			}
-			var pixelsPerFrame:int = adjacentTilesPerFrame * totalPixels;
+			var pixelsPerFrame:int = moveSpeed * totalPixels / Settings.FRAMES_PER_SECOND;
 			var depthChange:int = (tileMoveVector.x + tileMoveVector.y)
 			var frames:int = Math.ceil(totalPixels / pixelsPerFrame);
 			depthChangePerFrame = depthChange / frames;
