@@ -1,9 +1,11 @@
 package angel.roomedit {
 	import angel.common.Alert;
 	import angel.common.Catalog;
+	import angel.common.CatalogEntry;
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Prop;
 	import angel.common.PropImage;
+	import angel.common.WalkerImage;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
@@ -18,7 +20,7 @@ package angel.roomedit {
 		public var floor:FloorEdit;
 		private var catalog:CatalogEdit;
 		private var contentsLayer:Sprite;
-		private var propGrid:Vector.<Vector.<PropAndName>>;
+		private var propGrid:Vector.<Vector.<ContentItem>>;
 		private var xy:Point = new Point();
 		
 		public function RoomLight(floor:FloorEdit, catalog:CatalogEdit) {
@@ -35,12 +37,13 @@ package angel.roomedit {
 			
 		}
 
-		// Add prop at the given location.  If there's already something there, this replaces previous content.
-		public function addProp(prop:Prop, propName:String, location:Point):void {
+		// Add something at the given location.  If there's already something there, this replaces previous content.
+		// type is CatalogEntry type for saving (all content items are turned into props for room editor)
+		public function addContentItem(prop:Prop, type:int, id:String, location:Point):void {
 			if (propGrid[location.x][location.y] != null) {
 				contentsLayer.removeChild(propGrid[location.x][location.y].prop);
 			}
-			propGrid[location.x][location.y] = new PropAndName(prop, propName);
+			propGrid[location.x][location.y] = new ContentItem(prop, type, id);
 			contentsLayer.addChild(prop);
 			prop.location = location;
 		}
@@ -49,7 +52,7 @@ package angel.roomedit {
 			var loc:Point = new Point();
 			for (loc.x = 0; loc.x < xy.x; ++loc.x) {
 				for (loc.y = 0; loc.y < xy.y; ++loc.y) {
-					removeProp(loc);
+					removeItemAt(loc);
 				}
 			}
 		}
@@ -65,7 +68,7 @@ package angel.roomedit {
 			var y:int;
 			
 			if (propGrid == null) {
-				propGrid = new Vector.<Vector.<PropAndName>>;
+				propGrid = new Vector.<Vector.<ContentItem>>;
 				xy.x = xy.y = 0;
 			}
 			
@@ -83,7 +86,7 @@ package angel.roomedit {
 						propGrid[x].length = newY;
 					}
 				} else { // need to add column x
-					propGrid[x] = new Vector.<PropAndName>(newY);
+					propGrid[x] = new Vector.<ContentItem>(newY);
 				}
 			}
 			if (propGrid.length > newX) {
@@ -103,21 +106,39 @@ package angel.roomedit {
 			}
 		}
 		
-		public function addPropByName(propName:String, location:Point):void {
-			var propImage:PropImage = catalog.retrievePropImage(propName);
+		public function addPropByName(id:String, location:Point):void {
+			var propImage:PropImage = catalog.retrievePropImage(id);
 			var prop:Prop = Prop.createFromPropImage(propImage);
-			addProp(prop, propName, location);
+			addContentItem(prop, CatalogEntry.PROP, id, location);
+		}
+		
+		public function addWalkerByName(id:String, location:Point):void {
+			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(id);
+			var prop:Prop = Prop.createFromBitmapData(walkerImage.bitsFacing(1));
+			addContentItem(prop, CatalogEntry.WALKER, id, location);
 		}
 		
 		public function occupied(location:Point):Boolean {
 			return (propGrid[location.x][location.y] != null);
 		}
 		
-		public function removeProp(location:Point):void {
+		public function removeItemAt(location:Point):void {
 			if (propGrid[location.x][location.y] != null) {
 				contentsLayer.removeChild(propGrid[location.x][location.y].prop);
 				propGrid[location.x][location.y] = null;
 			}
+		}
+		
+		// returns first location containing a content item with the given id, or null if none match
+		public function find(id:String):Point {
+			for (var i:int = 0; i < propGrid.length; i++) {
+				for (var j:int = 0; j < propGrid[i].length; j++) {
+					if (propGrid[i][j] != null && propGrid[i][j].id == id) {
+						return new Point(i, j);
+					}
+				}
+			}
+			return null;
 		}
 		
 		public function launchLoadRoomDialog():void {
@@ -140,6 +161,7 @@ package angel.roomedit {
 			
 			floor.loadFromXml(catalog, xml.floor[0]);
 			initContentsFromXml(xml.floor.@x, xml.floor.@y, xml.contents[0]);
+			dispatchEvent(new Event(Event.INIT));
 		}
 
 		// we take new size in parameters rather than retrieving from floor in case floor hasn't
@@ -147,9 +169,14 @@ package angel.roomedit {
 		public function initContentsFromXml(newx:int, newy:int, xml:XML):void {
 			resize(0, 0); // removes all existing props
 			resize(newx, newy);
+			var id:String;
 			for each (var propXml:XML in xml.prop) {
-				var propName:String = propXml;
-				addPropByName(propName, new Point(propXml.@x, propXml.@y));
+				id = propXml;
+				addPropByName(id, new Point(propXml.@x, propXml.@y));
+			}
+			for each (var walkerXml:XML in xml.walker) {
+				id = walkerXml;
+				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y));
 			}
 		}
 		
@@ -158,10 +185,10 @@ package angel.roomedit {
 			for (var i:int = 0; i < propGrid.length; i++) {
 				for (var j:int = 0; j < propGrid[i].length; j++) {
 					if (propGrid[i][j] != null) {
-						var propXml:XML = <prop/>
+						var propXml:XML = new XML("<" + CatalogEntry.xmlTag[propGrid[i][j].type] + "/>");
 						propXml.@x = i;
 						propXml.@y = j;
-						propXml.appendChild(propGrid[i][j].propName);
+						propXml.appendChild(propGrid[i][j].id);
 						xml.appendChild(propXml);
 					}
 				}
@@ -182,11 +209,13 @@ package angel.roomedit {
 }
 import angel.common.Prop;
 
-class PropAndName {
-	public var prop:Prop;
-	public var propName:String;
-	public function PropAndName(prop:Prop, propName:String) {
+class ContentItem {
+	public var prop:Prop; // All content items are turned into props in room editor
+	public var type:int;
+	public var id:String;
+	public function ContentItem(prop:Prop, type:int, id:String) {
 		this.prop = prop;
-		this.propName = propName;
+		this.type = type;
+		this.id = id;
 	}
 }

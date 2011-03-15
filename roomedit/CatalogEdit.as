@@ -61,9 +61,9 @@ package angel.roomedit {
 		
 		// Create a combobox holding all catalog ids for the given CatalogEntry type.
 		// Due to pecularities of ComboBox, we embed it in a Sprite.  The actual ComboBox is getChildAt(0) of the sprite!
-		public function createChooser(type:int):Sprite {
+		public function createChooser(type:int, width:int = 200):Sprite {
 			var combo:ComboBox = new ComboBox();
-			combo.width = 200;
+			combo.width = width;
 			
 			var allNamesOfThisType:Array = allNames(type);
 			for (var i:int = 0; i < allNamesOfThisType.length; i++) {
@@ -71,13 +71,13 @@ package angel.roomedit {
 			}
 			
 			// WARNING: ComboBox violates all sorts of groundrules.  It changes parent's height to MORE than its
-			// own height property.  Also, if its width is increased it sticks out  past the edge of its parent
+			// own height property.  Also, if its width is increased it sticks out past the edge of its parent
 			// without changing parent's width.
 			// The best workaround I've found for this is to enclose it in a sprite (which fixes the height
 			// problem) and draw an invisible line across the correct width.
 			var foo:Sprite = new Sprite();
 			foo.graphics.moveTo(0, 0);
-			foo.graphics.lineTo(200, 0);
+			foo.graphics.lineTo(width, 0);
 			foo.addChild(combo);
 			return foo;
 		}

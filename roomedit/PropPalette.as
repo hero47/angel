@@ -20,7 +20,7 @@ package angel.roomedit {
 		private var selectedPropBitmapData:BitmapData;
 		private var selection:Sprite = null;
 		
-		public function PropPalette(room:RoomLight, catalog:CatalogEdit) {
+		public function PropPalette(catalog:CatalogEdit, room:RoomLight) {
 			this.room = room;
 			this.catalog = catalog;
 
@@ -32,8 +32,7 @@ package angel.roomedit {
 			}
 			this.scaleX = this.scaleY = 3 / imagesAcross;
 			
-			graphics.lineStyle(2, 0x000000);
-			graphics.beginFill(FloorTilePalette.BACKCOLOR, 1);
+			graphics.beginFill(EditorSettings.PALETTE_BACKCOLOR, 1);
 			graphics.drawRect(0, 0, imagesAcross*Prop.WIDTH, imagesAcross*Prop.HEIGHT);
 			
 			for (var i:int = 0; i < allPropNames.length; i++) {
@@ -56,22 +55,26 @@ package angel.roomedit {
 		
 		public function applyToTile(floorTile:FloorTileEdit):void {
 			if (room.occupied(floorTile.location)) {
-				room.removeProp(floorTile.location);
+				room.removeItemAt(floorTile.location);
 			} else if (selectedPropName != "") {
-				//CONSIDER: should this be going through a PropImage for resource management?
-				var prop:Prop = new Prop(new Bitmap(selectedPropBitmapData));
-				room.addProp(prop, selectedPropName, floorTile.location);
+				//CONSIDER: this will need revision if we add resource management
+				var prop:Prop = Prop.createFromBitmapData(selectedPropBitmapData);
+				room.addContentItem(prop, CatalogEntry.PROP, selectedPropName, floorTile.location);
 			}
+		}
+		
+		public function paintWhileDragging():Boolean {
+			return false;
 		}
 		
 		private function moveHilight(newSelection:Sprite):void {
 			if (selection != null) {
-				selection.graphics.beginFill(FloorTilePalette.BACKCOLOR, 1);
+				selection.graphics.beginFill(EditorSettings.PALETTE_BACKCOLOR, 1);
 				selection.graphics.drawRect(0, 0, Prop.WIDTH, Prop.HEIGHT);
 			}
 			selection = newSelection;
 			if (newSelection != null) {
-				selection.graphics.beginFill(FloorTilePalette.SELECT_COLOR, 1);
+				selection.graphics.beginFill(EditorSettings.PALETTE_SELECT_COLOR, 1);
 				selection.graphics.drawRect(0, 0, Prop.WIDTH, Prop.HEIGHT);
 			}
 		}	

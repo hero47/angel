@@ -3,9 +3,13 @@ package angel.roomedit {
 	import angel.common.Floor;
 	import angel.common.KludgeDialogBox;
 	import angel.common.SimplerButton;
+	import angel.common.Util;
 	import fl.controls.ComboBox;
+	import flash.display.DisplayObject;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.MouseEvent;
+	import flash.text.TextField;
 	
 	/**
 	 * ...
@@ -15,56 +19,79 @@ package angel.roomedit {
 		public static const DEFAULT_FLOORSIZE_X:int = 10;
 		public static const DEFAULT_FLOORSIZE_Y:int = 10;
 		
+		
 		private var catalog:CatalogEdit;
 		private var room:RoomLight;
 		private var floor:FloorEdit;
-		public var tilesPalette:FloorTilePalette;
-		public var propPalette:PropPalette;
+		private var paletteHolder:Sprite;
 		
-		private var propButton:SimplerButton;
-		private var tilesButton:SimplerButton;
+		private static const TILE_PALETTE_INDEX:int = 0;
+		private static const PROP_PALETTE_INDEX:int = 1;
+		private static const NPC_PALETTE_INDEX:int = 2;
+		private static const tabLabels:Vector.<String> = Vector.<String>(["Tiles", "Props", "NPCs"]);
+		private var paletteTabs:Vector.<TextField> = new Vector.<TextField>(3);
+		private var palettes:Vector.<Sprite> = new Vector.<Sprite>(3);
 		
 		public function RoomEditUI(catalog:CatalogEdit) {
 			this.catalog = catalog;
 			
 			floor = new FloorEdit(catalog, DEFAULT_FLOORSIZE_X, DEFAULT_FLOORSIZE_Y);
-			floor.addEventListener(Floor.MAP_LOADED_EVENT, mapLoadedListener);
+			floor.addEventListener(Event.INIT, mapLoadedListener);
 			
 			room = new RoomLight(floor, catalog);
 			addChild(room);
 			room.x = 430;
 			room.y = 55;
 			
-			tilesPalette = new FloorTilePalette(catalog, "");
-			tilesPalette.x = 5;
-			tilesPalette.y = 30;
-			addChild(tilesPalette);
-			floor.attachPalette(tilesPalette);
-			floor.paintWhileDragging = true;
-			
-			propPalette = new PropPalette(room, catalog);
-			propPalette.x = 5;
-			propPalette.y = 30;
-			addChild(propPalette);
-			propPalette.visible = false;
-			
+			// Do these AFTER room so they float on top of it
+			initPaletteHolder();
 			initButtons();
 			
+			var tilesPalette:FloorTilePalette = new FloorTilePalette(catalog, "");
+			tilesPalette.y = EditorSettings.PALETTE_LABEL_HEIGHT;
+			paletteHolder.addChild(tilesPalette);
+			palettes[TILE_PALETTE_INDEX] = tilesPalette;
+			
+			var propPalette:PropPalette = new PropPalette(catalog, room);
+			propPalette.y = EditorSettings.PALETTE_LABEL_HEIGHT;
+			paletteHolder.addChild(propPalette);
+			palettes[PROP_PALETTE_INDEX] = propPalette;
+			
+			var npcPalette:NpcPalette = new NpcPalette(catalog, room);
+			npcPalette.y = EditorSettings.PALETTE_LABEL_HEIGHT;
+			paletteHolder.addChild(npcPalette);
+			palettes[NPC_PALETTE_INDEX] = npcPalette;
+			
+			switchPaletteTo(paletteTabs[TILE_PALETTE_INDEX]);		
+			
 		}
+		
+		private function initPaletteHolder():void {
+			paletteHolder = new Sprite();
+			paletteHolder.graphics.beginFill(EditorSettings.PALETTE_BACKCOLOR, 1);
+			paletteHolder.graphics.drawRect(0, 0, EditorSettings.PALETTE_XSIZE, EditorSettings.PALETTE_YSIZE + EditorSettings.PALETTE_LABEL_HEIGHT);
+			paletteHolder.x = 5;
+			paletteHolder.y = 30;
+			
+			paletteTabs = new Vector.<TextField>();
+			var tab:TextField;
+			
+			for (var i:int = 0; i < 3; i++) {
+				tab = Util.textBox(tabLabels[i], EditorSettings.PALETTE_XSIZE / 3);
+				tab.x = EditorSettings.PALETTE_XSIZE / 3 * i;
+				tab.background = true;
+				tab.border = true;
+				tab.addEventListener(MouseEvent.CLICK, switchPalette);
+				paletteHolder.addChild(tab);
+				paletteTabs[i] = tab;
+			}
+			addChild(paletteHolder);
+		}
+		
 		
 		private function initButtons():void {
 			var button:SimplerButton;
 			var left:int = 10;
-			
-			propButton = new SimplerButton("Prop", clickedProp);
-			tilesButton = new SimplerButton("Tiles", clickedProp);
-			propButton.x = tilesButton.x = left;
-			propButton.y = tilesButton.y = 5;
-			propButton.width = tilesButton.width = 50;
-			addChild(propButton);
-			addChild(tilesButton);
-			tilesButton.visible = false;
-			left += propButton.width + 5;
 			
 			button = new SimplerButton("Load room", clickedLoadRoom);
 			button.x = left;
@@ -153,7 +180,7 @@ package angel.roomedit {
 			}
 			var tilesetId:String = tilesetCombo.value;
 			tilesetCombo = null;
-			tilesPalette.changeTileset(tilesetId);
+			(palettes[TILE_PALETTE_INDEX] as FloorTilePalette).changeTileset(tilesetId);
 		}
 		
 		private function clickedClear(event:Event):void {
@@ -182,23 +209,29 @@ package angel.roomedit {
 		}
 		
 		private function mapLoadedListener(event:Event):void {
-			tilesPalette.changeTileset(floor.getMostCommonTilesetId());
-		}
-		
-		private function clickedProp(event:Event):void {
-			var showProp:Boolean = propButton.visible;
-			propButton.visible = !showProp;
-			tilesButton.visible = showProp;
-			propPalette.visible = showProp;
-			tilesPalette.visible = !showProp;
-			floor.attachPalette(showProp ? propPalette : tilesPalette);
-			floor.paintWhileDragging = !showProp;
+			(palettes[TILE_PALETTE_INDEX] as FloorTilePalette).changeTileset(floor.getMostCommonTilesetId());
 		}
 
 		private function clickedEditCatalog(event:Event):void {
 			(parent as Main).editCatalog();
 		}
 
+		private function switchPaletteTo(palette:DisplayObject):void {
+			for (var i:int = 0; i < paletteTabs.length; i++) {
+				if (paletteTabs[i] == palette) {
+					paletteTabs[i].backgroundColor = EditorSettings.PALETTE_BACKCOLOR;
+					palettes[i].visible = true;
+					floor.attachPalette(palettes[i] as IRoomEditorPalette);
+				} else {
+					paletteTabs[i].backgroundColor = 0x888888;
+					palettes[i].visible = false;
+				}
+			}
+		}
+
+		private function switchPalette(event:Event):void {
+			switchPaletteTo(event.target as DisplayObject);
+		}
 
 		
 	}
