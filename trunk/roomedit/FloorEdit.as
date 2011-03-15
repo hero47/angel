@@ -22,11 +22,12 @@ package angel.roomedit {
 			resize(sizeX, sizeY);
 			addEventListener(MouseEvent.CLICK, clickListener);
 			addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
-			addEventListener(MAP_LOADED_EVENT, mapLoadedListener);
+			addEventListener(Event.INIT, mapLoadedListener);
 		}
 
 		public function attachPalette(palette:IRoomEditorPalette):void {
 			this.palette = palette;
+			paintWhileDragging = palette.paintWhileDragging();
 		}
 		
 		public function clear():void {

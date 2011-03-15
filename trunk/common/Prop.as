@@ -1,5 +1,6 @@
 package angel.common {
 	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.geom.Point;
 	
@@ -31,6 +32,10 @@ package angel.common {
 			if (bitmap != null) {
 				addChild(imageBitmap);
 			}
+		}
+		
+		public static function createFromBitmapData(bitmapData:BitmapData):Prop {
+			return new Prop(new Bitmap(bitmapData));
 		}
 		
 		public static function createFromPropImage(propImage:PropImage):Prop {

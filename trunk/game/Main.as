@@ -45,13 +45,6 @@ package angel.game {
 			LoaderWithErrorCatching.LoadFile(xmlData.room, roomXmlLoaded);
 		}
 		
-		public function addPropByName(propName:String, location:Point):void {
-			var propImage:PropImage = catalog.retrievePropImage(propName);
-			var prop:Entity = Entity.createFromPropImage(propImage);
-			prop.solid = true;
-			room.addEntity(prop, location);
-		}
-		
 		private var contentsXml:XML; // stash here for use in mapLoadedListener
 		private function roomXmlLoaded(event:Event):void {
 			var xml:XML = new XML(event.target.data);
@@ -63,21 +56,18 @@ package angel.game {
 			
 			contentsXml = xml.contents[0];
 			floor = new Floor();
-			floor.addEventListener(Floor.MAP_LOADED_EVENT, mapLoadedListener);			
+			floor.addEventListener(Event.INIT, mapLoadedListener);			
 			floor.loadFromXml(catalog, xml.floor[0]);
 		}
 		
 
 		private function mapLoadedListener(event:Event):void {
-			floor.removeEventListener(Floor.MAP_LOADED_EVENT, mapLoadedListener);
+			floor.removeEventListener(Event.INIT, mapLoadedListener);
 			room = new Room(floor);
 			addChild(room);
 			room.scrollToCenter(startLoc, true);
 			
-			for each (var propXml:XML in contentsXml.prop) {
-				var propName:String = propXml;
-				addPropByName(propName, new Point(propXml.@x, propXml.@y));
-			}
+			room.fillContentsFromXml(catalog, contentsXml);
 			
 			var entity:Walker = new Walker(catalog.retrieveWalkerImage(Settings.playerId));
 			entity.solid = true;

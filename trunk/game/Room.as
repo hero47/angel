@@ -1,7 +1,9 @@
 package angel.game {
+	import angel.common.Catalog;
 	import angel.common.Floor;
 	import angel.common.FloorTile;
 	import angel.common.Prop;
+	import angel.common.PropImage;
 	import flash.display.DisplayObject;
 	import flash.display.Graphics;
 	import flash.display.Shape;
@@ -131,6 +133,32 @@ package angel.game {
 			}
 			mode = new newModeClass(this);
 		}
+		
+		public function fillContentsFromXml(catalog:Catalog, contentsXml:XML):void {
+			for each (var propXml:XML in contentsXml.prop) {
+				var propName:String = propXml;
+				addPropByName(catalog, propName, new Point(propXml.@x, propXml.@y));
+			}
+			for each (var walkerXml:XML in contentsXml.walker) {
+				var walkerName:String = walkerXml;
+				addWalkerByName(catalog, walkerName, new Point(walkerXml.@x, walkerXml.@y));
+			}
+			
+		}
+		
+		public function addPropByName(catalog:Catalog, id:String, location:Point):void {
+			var propImage:PropImage = catalog.retrievePropImage(id);
+			var prop:Entity = Entity.createFromPropImage(propImage);
+			prop.solid = true;
+			addEntity(prop, location);
+		}
+		
+		public function addWalkerByName(catalog:Catalog, id:String, location:Point):void {
+			var entity:Walker = new Walker(catalog.retrieveWalkerImage(id));
+			entity.solid = true;
+			addEntity(entity, location);
+		}
+		
 	} // end class Room
 
 }

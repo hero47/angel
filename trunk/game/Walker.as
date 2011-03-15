@@ -11,7 +11,7 @@ package angel.game {
 		
 		public function Walker(images:WalkerImage) {
 			this.images = images;
-			facing = 2;
+			facing = 1;
 			super(new Bitmap(images.bitsFacing(2)));
 		}
 

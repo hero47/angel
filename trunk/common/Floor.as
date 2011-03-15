@@ -6,8 +6,6 @@ package angel.common {
 	
 	// (0,0) of floor is the top corner of tile (0,0)'s bounding box, which is at top center almost
 	public class Floor extends Sprite {
-		public static const MAP_LOADED_EVENT:String = "mapLoaded";
-		
 		public static const FLOOR_TILE_X:int = (Tileset.TILE_WIDTH / 2);
 		public static const FLOOR_TILE_Y:int = (Tileset.TILE_HEIGHT / 2);
 		
@@ -102,7 +100,7 @@ package angel.common {
 			}
 			//setTileImagesFromNames();
 
-			dispatchEvent(new Event(MAP_LOADED_EVENT));
+			dispatchEvent(new Event(Event.INIT));
 		}
 		
 	} //end class Floor
