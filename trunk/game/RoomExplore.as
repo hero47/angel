@@ -51,6 +51,7 @@ package angel.game {
 		// For God-only-knows what reason, the version of Keyboard class for Flex compilation is missing all
 		// of the letter-key constants.  The version in CS5 has them.  ?????
 		public static const KEYBOARD_C:uint = 67;
+		public static const KEYBOARD_V:uint = 86;
 		private function exploreModeKeyDownListener(event:KeyboardEvent):void {
 			switch (event.keyCode) {
 				case KEYBOARD_C:
@@ -59,6 +60,9 @@ package angel.game {
 					} else {
 						room.changeModeTo(RoomCombat);
 					}
+				break;
+				case KEYBOARD_V:
+					room.toggleVisibility();
 				break;
 				case Keyboard.SPACE:
 					// if move in progress, stop moving as soon as possible.

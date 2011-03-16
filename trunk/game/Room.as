@@ -77,6 +77,10 @@ package angel.game {
 			}
 		}
 		
+		public function toggleVisibility():void {
+			contentsLayer.alpha = 1.5 - contentsLayer.alpha;
+		}
+		
 		//CONSIDER: should entity.addToRoom add itself to the contentsLayer, or do we want the ability to
 		//be in the room but not yet on stage?
 		public function addEntity(entity:Entity, location:Point):void {
