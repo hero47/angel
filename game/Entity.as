@@ -15,6 +15,10 @@ package angel.game {
 	// A physical object in the game world -- we aren't yet distinguishing between pc/npc/mobile/immobile.
 	
 	public class Entity extends Prop {
+		// Events
+		public static const MOVED:String = "entityMoved";
+		public static const FINISHED_MOVING:String = "entityFinishedMoving";
+		
 		private static const PIXELS_FOR_ADJACENT_MOVE:int = Math.sqrt(Tileset.TILE_WIDTH * Tileset.TILE_WIDTH/4 + Tileset.TILE_HEIGHT * Tileset.TILE_HEIGHT/4);
 		private static const PIXELS_FOR_VERT_MOVE:int = Tileset.TILE_HEIGHT;
 		private static const PIXELS_FOR_HORZ_MOVE:int = Tileset.TILE_WIDTH;
@@ -26,25 +30,32 @@ package angel.game {
 
 		// Facing == rotation/45 if we were in a top-down view.
 		// This will make it convenient if we ever want to determine facing from actual angles
+		public static const FACE_CAMERA:int = 1;
+		
 		
 		// This array maps from a one-tile movement to facing, with arbitrary "face camera" for center
-		private static const facingMap:Vector.<Vector.<int>> = Vector.<Vector.<int>>([
-				Vector.<int>([5,4,3]), Vector.<int>([6,2,2]), Vector.<int>([7,0,1])
-			]);		
-		
+		public static const neighborToFacing:Vector.<Vector.<int>> = Vector.<Vector.<int>>([
+				Vector.<int>([5,4,3]), Vector.<int>([6,FACE_CAMERA,2]), Vector.<int>([7,0,1])
+			]);
+		public static const facingToNeighbor:Vector.<Point> = Vector.<Point>([
+				new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point( -1, 1),
+				new Point( -1, 0), new Point( -1, -1), new Point(0, -1), new Point( -1, -1)
+			]);
 
 		// check neighbor tiles in this order when choosing path, so we'll prefer "straight" moves
 		private static const neighborCheck:Vector.<Point> = Vector.<Point>([
 				new Point(1, 0), new Point(0, 1), new Point(0, -1), new Point( -1, 0),
-				new Point(1, 1), new Point(1, -1), new Point( -1, -1), new Point( -1, 1) ]);
+				new Point(1, 1), new Point(1, -1), new Point( -1, -1), new Point( -1, 1)
+			]);
 
 		// Entity stats!  Eventually these will be initialized from data files.  They may go in a separate object.
 		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
 		public var combatMovePoints:int = Settings.combatMovePoints;
+		public var exploreBrainClass:Class;
+		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
+		public var brain:Object;
 		
 		public var isPlayerControlled:Boolean;
-
-		
 
 		private var room:Room;
 		private var moveGoal:Point; // the tile we're trying to get to
@@ -91,15 +102,19 @@ package angel.game {
 			room.addEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
 		}
 		
-		protected function adjustImage():void {
+		protected function adjustImageForMove():void {
 			// Does nothing in the case of a basic single-image entity
+		}
+		
+		public function turnToFacing(newFacing:int):void {
+			facing = newFacing;
 		}
 		
 		// fills in coordsForEachFrameOfMove, depthChangePerFrame, and facing
 		// This is a horrid name but I haven't been able to think of a better one or a better refactoring
 		private function calculateStuffForMovementFrames():void {
 			var tileMoveVector:Point = movingTo.subtract(myLocation);
-			facing = facingMap[tileMoveVector.x + 1][tileMoveVector. y + 1];
+			facing = neighborToFacing[tileMoveVector.x + 1][tileMoveVector. y + 1];
 			
 			var totalPixels:int;
 			if ((tileMoveVector.x == 0) || (tileMoveVector.y == 0)) {
@@ -128,19 +143,25 @@ package angel.game {
 			coordsForEachFrameOfMove[i] = pixelLocStandingOnTile(movingTo);
 		}
 		
-		//UNDONE once we have obstacles, recalculate path each tile in case obstacles change
-		//NOTE: once we're animating steps, animation may need to continue past arrival to get both feet on ground
 		protected function moveOneFrameAlongPath(event:Event):void {
 			if (movingTo == null) {
 				movingTo = path.shift();
+				// Someone may have moved onto my path in the time since I plotted it.  If so, abort move.
+				// If my brain wants to do something special in this case, it will need to remember its goal,
+				// listen for FINISHED_MOVING event, compare location to goal, and take appropriate action.
+				if (tileBlocked(movingTo)) {
+					finishedMoving();
+					return;
+				}
 				calculateStuffForMovementFrames();
 				frameOfMove = 0;
 				// Change the "real" location to the next tile.  Doing this on first frame of move rather than
 				// halfway through the move circumvents a whole host of problems!
 				room.changePropLocation(this, movingTo);
+				dispatchEvent(new Event(MOVED));
 				myLocation = movingTo;
 			}
-			adjustImage();
+			adjustImageForMove();
 			x = coordsForEachFrameOfMove[frameOfMove].x;
 			y = coordsForEachFrameOfMove[frameOfMove].y;
 			myDepth += depthChangePerFrame;
@@ -155,11 +176,15 @@ package angel.game {
 				movingTo = null;
 				coordsForEachFrameOfMove = null;
 				if (path.length == 0) {
-					path = null;
-					room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
-					room.playerFinishedMoving();
+					finishedMoving();
 				}
 			}
+		}
+		
+		private function finishedMoving():void {
+			path = null;
+			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
+			dispatchEvent(new Event(FINISHED_MOVING));
 		}
 		
 		// if from is null, find path from current location
@@ -196,6 +221,9 @@ package angel.game {
 		// avoids blocking my own move or getting stuck.
 		// Other than that, if I'm solid I can't move into a solid tile.
 		public function tileBlocked(loc:Point):Boolean {
+			if (loc.x < 0 || loc.x >= room.size.x || loc.y < 0 || loc.y >= room.size.y) {
+				return true;
+			}
 			if (!solid || loc.equals(myLocation)) {
 				return false;
 			}
@@ -229,27 +257,25 @@ package angel.game {
 					if (steps[xNext][yNext] != 0) {
 						continue;
 					}
-					if (xNext == from.x && yNext == from.y) {
-						extractPathFromStepGrid(goal, steps, path, current);
-						return true;
-					}
 					var neighbor:Point = new Point(xNext, yNext);
 					steps[xNext][yNext] = tileBlocked(neighbor) ? -1 : stepsFromGoal;
 					edge.push(neighbor);
+					
+					if (xNext == from.x && yNext == from.y) {
+						extractPathFromStepGrid(from, goal, steps, path);
+						return true;
+					}
 				}
-
-				//traceStepGrid(steps);
 
 			} // end while edge.length > 0
 			return false;
 		}
 		
-		private function extractPathFromStepGrid(goal:Point, steps:Vector.<Vector.<int>>, path:Vector.<Point>, firstStep:Point):void {
+		private function extractPathFromStepGrid(from:Point, goal:Point, steps:Vector.<Vector.<int>>, path:Vector.<Point>):void {
 			//traceStepGrid(steps);
 			path.length = 0;
-			var current:Point = firstStep.clone();
-			path.push(current);
-			var lookingFor:int = steps[firstStep.x][firstStep.y] - 1;
+			var current:Point = from.clone();
+			var lookingFor:int = steps[current.x][current.y] - 1;
 			while (lookingFor > 1) {
 				for (var i:int = 0; i < neighborCheck.length; i++) {
 					var nextNeighbor:Point = neighborCheck[i];

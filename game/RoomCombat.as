@@ -6,6 +6,7 @@ package angel.game {
 	import flash.display.Graphics;
 	import flash.display.Shape;
 	import flash.display.Sprite;
+	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
 	import flash.filters.GlowFilter;
@@ -54,6 +55,8 @@ package angel.game {
 			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatModeMouseUpListener);
 			room.removeEventListener(MouseEvent.MOUSE_MOVE, combatModeMouseMoveListener);
 			room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatModeKeyDownListener);
+			room.playerCharacter.removeEventListener(Entity.MOVED, playerMoved);
+			room.playerCharacter.removeEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
 			room.decorationsLayer.graphics.clear();
 			room.parent.removeChild(movePointsDisplay);
 			clearDots();
@@ -85,6 +88,8 @@ package angel.game {
 						room.scrollToCenter(room.playerCharacter.location, true); // snap to current location
 						room.scrollToCenter(path[path.length - 1]); // begin gradual scroll to final location
 						
+						room.playerCharacter.addEventListener(Entity.MOVED, playerMoved);
+						room.playerCharacter.addEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
 						room.playerCharacter.startMovingAlongPath(path, gaitForDistance(path.length)); //CAUTION: this vector now belongs to entity!
 						path = new Vector.<Point>();
 						endIndexes.length = 0;
@@ -251,18 +256,19 @@ package angel.game {
 			return myTextField;
 		}
 		
-		// called with null when move finishes
-		public function playerMoved(newLocation:Point):void {
-			if (newLocation == null) {
-				playerMoveInProgress = false;
-				movePointsDisplay.visible = true;
-				movePointsDisplay.text = String(room.playerCharacter.combatMovePoints);
-			} else {
-				var dotToRemove:Shape = dots.shift();
-				room.decorationsLayer.removeChild(dotToRemove);
-			}
+		
+		private function playerMoved(event:Event):void {
+			var dotToRemove:Shape = dots.shift();
+			room.decorationsLayer.removeChild(dotToRemove);
 		}		
 
+		private function playerFinishedMoving(event:Event):void {
+			room.playerCharacter.removeEventListener(Entity.MOVED, playerMoved);
+			room.playerCharacter.removeEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
+			playerMoveInProgress = false;
+			movePointsDisplay.visible = true;
+			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints);
+		}
 		
 	} // end class RoomCombat
 
