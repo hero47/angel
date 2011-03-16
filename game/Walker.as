@@ -12,7 +12,7 @@ package angel.game {
 		public function Walker(images:WalkerImage) {
 			this.images = images;
 			facing = 1;
-			super(new Bitmap(images.bitsFacing(2)));
+			super(new Bitmap(images.bitsFacing(1)));
 		}
 
 		override protected function adjustImage():void {

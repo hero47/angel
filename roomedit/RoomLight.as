@@ -1,5 +1,6 @@
 package angel.roomedit {
 	import angel.common.Alert;
+	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.CatalogEntry;
 	import angel.common.LoaderWithErrorCatching;
@@ -39,11 +40,11 @@ package angel.roomedit {
 
 		// Add something at the given location.  If there's already something there, this replaces previous content.
 		// type is CatalogEntry type for saving (all content items are turned into props for room editor)
-		public function addContentItem(prop:Prop, type:int, id:String, location:Point):void {
+		public function addContentItem(prop:Prop, type:int, id:String, location:Point, attributes:Object = null):void {
 			if (propGrid[location.x][location.y] != null) {
 				contentsLayer.removeChild(propGrid[location.x][location.y].prop);
 			}
-			propGrid[location.x][location.y] = new ContentItem(prop, type, id);
+			propGrid[location.x][location.y] = new ContentItem(prop, type, id, attributes);
 			contentsLayer.addChild(prop);
 			prop.location = location;
 		}
@@ -112,10 +113,15 @@ package angel.roomedit {
 			addContentItem(prop, CatalogEntry.PROP, id, location);
 		}
 		
-		public function addWalkerByName(id:String, location:Point):void {
+		public function addWalkerByName(id:String, location:Point, exploreBehavior:String):void {
 			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(id);
 			var prop:Prop = Prop.createFromBitmapData(walkerImage.bitsFacing(1));
-			addContentItem(prop, CatalogEntry.WALKER, id, location);
+			var attributes:Object = null;
+			if (exploreBehavior != "") {
+				attributes = new Object();
+				attributes["explore"] = exploreBehavior;
+			}
+			addContentItem(prop, CatalogEntry.WALKER, id, location, attributes);
 		}
 		
 		public function occupied(location:Point):Boolean {
@@ -140,6 +146,19 @@ package angel.roomedit {
 			}
 			return null;
 		}
+
+		public function attributesOfItemAt(loc:Point):Object {
+			if (propGrid[loc.x][loc.y] != null) {
+				return propGrid[loc.x][loc.y].attributes;
+			}
+			return null;
+		}
+
+		public function setAttributesOfItemAt(loc:Point, attributes:Object):void {
+			Assert.assertTrue(propGrid[loc.x][loc.y] != null, "Setting attributes for empty location");
+			propGrid[loc.x][loc.y].attributes = attributes;
+		}
+		
 		
 		public function launchLoadRoomDialog():void {
 			new FileChooser(loadRoomFromXmlFile);
@@ -175,8 +194,9 @@ package angel.roomedit {
 				addPropByName(id, new Point(propXml.@x, propXml.@y));
 			}
 			for each (var walkerXml:XML in xml.walker) {
+				trace(walkerXml.attributes());
 				id = walkerXml;
-				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y));
+				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml.@explore);
 			}
 		}
 		
@@ -188,6 +208,14 @@ package angel.roomedit {
 						var propXml:XML = new XML("<" + CatalogEntry.xmlTag[propGrid[i][j].type] + "/>");
 						propXml.@x = i;
 						propXml.@y = j;
+						var attributes:Object = propGrid[i][j].attributes;
+						if (attributes != null) {
+							for (var att:String in attributes) {
+								if (attributes[att] != "") {
+									propXml.@[att] = attributes[att];
+								}
+							}
+						}
 						propXml.appendChild(propGrid[i][j].id);
 						xml.appendChild(propXml);
 					}
@@ -213,9 +241,11 @@ class ContentItem {
 	public var prop:Prop; // All content items are turned into props in room editor
 	public var type:int;
 	public var id:String;
-	public function ContentItem(prop:Prop, type:int, id:String) {
+	public var attributes:Object; // associative array mapping attribute name to value
+	public function ContentItem(prop:Prop, type:int, id:String, attributes:Object = null) {
 		this.prop = prop;
 		this.type = type;
 		this.id = id;
+		this.attributes = (attributes == null ? new Object() : attributes);
 	}
 }
