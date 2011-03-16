@@ -29,7 +29,7 @@ package angel.roomedit {
 
 		public function setTile(catalog:Catalog, tilesetId:String, index:int):void {
 			var tileset:Tileset = (tilesetId == "" ? emptyTileset : catalog.retrieveTileset(tilesetId));
-			var tileName:String = tileset.tileName(index);
+			var tileName:String = (index == -1 ? "" : tileset.tileName(index));
 			this.tilesetId = tilesetId;
 			this.tileset = tileset;
 			this.tileName = tileName;
