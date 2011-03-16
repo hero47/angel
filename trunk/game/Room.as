@@ -11,6 +11,7 @@ package angel.game {
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
+	import flash.filters.GlowFilter;
 	import flash.geom.Point;
 	import flash.ui.Keyboard;
 
@@ -24,12 +25,14 @@ package angel.game {
 		// contentsLayer is set transparent to mouse when we're looking for tile clicks, for movement.
 		// Later, when we have modes where they'll be picking targets, we can set its mouseChildren to true
 		// and detect clicks on entities.
+
 		private var contentsLayer:Sprite;
 		public var cells:Vector.<Vector.<Cell>>;
 		public var playerCharacter:Entity;
 		public var size:Point;
 		public var mode:RoomMode;
 		
+		private var tileWithFilter:FloorTile;
 		private var scrollingTo:Point = null;
 				
 		public function Room(floor:Floor) {
@@ -74,6 +77,16 @@ package angel.game {
 				this.x = scrollingTo.x;
 				this.y = scrollingTo.y;
 				scrollingTo = null;
+			}
+		}
+	
+		public function moveHilight(tile:FloorTile, color:uint):void {
+			if (tileWithFilter != null) {
+				tileWithFilter.filters = [];
+			}
+			tileWithFilter = tile;
+			if (tile != null) {
+				tileWithFilter.filters = [ new GlowFilter(color, 1, 15, 15, 10, 1, true, false) ];
 			}
 		}
 		

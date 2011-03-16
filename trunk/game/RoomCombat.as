@@ -32,8 +32,6 @@ package angel.game {
 		private static const runColor:uint = 0xffd800;
 		private static const sprintColor:uint = 0xff0000;
 		private static const outOfRangeColor:uint = 0x888888;
-		
-		private var tileWithFilter:FloorTile;
 
 		public function RoomCombat(room:Room) {
 			this.room = room;
@@ -60,9 +58,7 @@ package angel.game {
 			room.decorationsLayer.graphics.clear();
 			room.parent.removeChild(movePointsDisplay);
 			clearDots();
-			if (tileWithFilter != null) {
-				tileWithFilter.filters = [];
-			}
+			room.moveHilight(null, 0);
 		}
 		
 		// For God-only-knows what reason, the version of Keyboard class for Flex compilation is missing all
@@ -213,20 +209,16 @@ package angel.game {
 		
 		private function combatModeMouseMoveListener(event:MouseEvent):void {
 			if (!playerMoveInProgress && event.target is FloorTile) {
-				if (tileWithFilter != null) {
-					tileWithFilter.filters = [];
-				}
-				tileWithFilter = event.target as FloorTile;
+				var tile:FloorTile = event.target as FloorTile;
 				var distance:int = 1000;
-				if (!room.playerCharacter.tileBlocked(tileWithFilter.location) && (path.length < room.playerCharacter.combatMovePoints)) {
-					var pathToMouse:Vector.<Point> = room.playerCharacter.findPathTo(tileWithFilter.location, 
+				if (!room.playerCharacter.tileBlocked(tile.location) && (path.length < room.playerCharacter.combatMovePoints)) {
+					var pathToMouse:Vector.<Point> = room.playerCharacter.findPathTo(tile.location, 
 							(path.length == 0 ? null : path[path.length-1]) );
 					if (pathToMouse != null) {
 						distance = path.length + pathToMouse.length;
 					}
 				}
-				tileWithFilter.filters = 
-						[ new GlowFilter(colorForDistance(distance), 1, 15, 15, 10, 1, true, false) ];
+				room.moveHilight(tile, colorForDistance(distance));
 			}
 		}
 		
