@@ -14,8 +14,7 @@ package angel.game {
 		
 		private var room:Room;
 		public var playerMoveInProgress:Boolean = false;
-		private var dragging:Boolean = false;		
-		private var tileWithFilter:FloorTile;
+		private var dragging:Boolean = false;
 		
 		public function RoomExplore(room:Room) {
 			this.room = room;
@@ -38,6 +37,7 @@ package angel.game {
 			room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, exploreModeKeyDownListener);
 			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
 			room.playerCharacter.removeEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
+			room.moveHilight(null, 0);
 			room.forEachEntity(endEntityBrain);
 			timeQueue = null;
 		}
@@ -98,12 +98,7 @@ package angel.game {
 		
 		private function exploreModeMouseMoveListener(event:MouseEvent):void {
 			if (event.target is FloorTile) {
-				if (tileWithFilter != null) {
-					tileWithFilter.filters = [];
-				}
-				tileWithFilter = event.target as FloorTile;
-				tileWithFilter.filters = 
-						[ new GlowFilter(0xffffff, 1, 15, 15, 10, 1, true, false) ];
+				room.moveHilight(event.target as FloorTile, 0xffffff);;
 			}
 		}
 		
