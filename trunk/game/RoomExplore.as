@@ -4,6 +4,7 @@ package angel.game {
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
+	import flash.filters.GlowFilter;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.ui.Keyboard;
@@ -13,12 +14,14 @@ package angel.game {
 		
 		private var room:Room;
 		public var playerMoveInProgress:Boolean = false;
-		private var dragging:Boolean = false;
+		private var dragging:Boolean = false;		
+		private var tileWithFilter:FloorTile;
 		
 		public function RoomExplore(room:Room) {
 			this.room = room;
 			room.addEventListener(MouseEvent.CLICK, exploreModeClickListener);
 			room.addEventListener(MouseEvent.MOUSE_DOWN, exploreModeMouseDownListener);
+			room.addEventListener(MouseEvent.MOUSE_MOVE, exploreModeMouseMoveListener);
 			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, exploreModeKeyDownListener);
 			room.addEventListener(Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
 			if (room.playerCharacter != null) {
@@ -31,6 +34,7 @@ package angel.game {
 			room.removeEventListener(MouseEvent.CLICK, exploreModeClickListener);
 			room.removeEventListener(MouseEvent.MOUSE_DOWN, exploreModeMouseDownListener);
 			room.removeEventListener(MouseEvent.MOUSE_UP, exploreModeMouseUpListener);
+			room.removeEventListener(MouseEvent.MOUSE_MOVE, exploreModeMouseMoveListener);
 			room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, exploreModeKeyDownListener);
 			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
 			room.playerCharacter.removeEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
@@ -90,6 +94,17 @@ package angel.game {
 		private function exploreModeMouseUpListener(event:MouseEvent):void {
 			room.removeEventListener(MouseEvent.MOUSE_UP, exploreModeMouseUpListener);
 			room.stopDrag();
+		}
+		
+		private function exploreModeMouseMoveListener(event:MouseEvent):void {
+			if (event.target is FloorTile) {
+				if (tileWithFilter != null) {
+					tileWithFilter.filters = [];
+				}
+				tileWithFilter = event.target as FloorTile;
+				tileWithFilter.filters = 
+						[ new GlowFilter(0xffffff, 1, 15, 15, 10, 1, true, false) ];
+			}
 		}
 		
 		private function exploreModeClickListener(event:MouseEvent):void {
