@@ -3,6 +3,7 @@ package angel.roomedit {
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
+	import flash.filters.GlowFilter;
 	import flash.geom.Point;
 	import flash.net.FileReference;
 	import flash.utils.ByteArray;
@@ -15,6 +16,7 @@ package angel.roomedit {
 		public var paintWhileDragging:Boolean;
 		private var hasBeenEdited:Boolean = false;
 		private var dragging:Boolean = false;
+		private var tileWithFilter:FloorTile;
 		
 		public function FloorEdit(catalog:CatalogEdit, sizeX:int, sizeY:int) {
 			super();
@@ -22,6 +24,7 @@ package angel.roomedit {
 			resize(sizeX, sizeY);
 			addEventListener(MouseEvent.CLICK, clickListener);
 			addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
+			addEventListener(MouseEvent.MOUSE_MOVE, updateTileHilight);
 			addEventListener(Event.INIT, mapLoadedListener);
 		}
 
@@ -203,7 +206,21 @@ package angel.roomedit {
 			palette.applyToTile(tile);
 			hasBeenEdited = true;
 		}
-		
+
+		private function updateTileHilight(event:MouseEvent):void {
+			if (event.target is FloorTile) {
+				var tile:FloorTile = event.target as FloorTile;
+				if (tileWithFilter != null) {
+					tileWithFilter.filters = [];
+				}
+				tileWithFilter = tile;
+				if (tile != null) {
+					tileWithFilter.filters = [ new GlowFilter(0xffffff, 1, 15, 15, 10, 1, true, false) ];
+				}
+			}
+			
+		}
+
 		private function mouseDownListener(event:MouseEvent):void {
 			if (event.shiftKey) {
 				addEventListener(MouseEvent.MOUSE_UP, endDrag);
