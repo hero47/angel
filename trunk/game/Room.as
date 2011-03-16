@@ -55,14 +55,16 @@ package angel.game {
 			}
 			
 			addEventListener(Event.ENTER_FRAME, enterFrameListener);
-			addEventListener(Event.ADDED_TO_STAGE, finishInit);
+			//addEventListener(Event.ADDED_TO_STAGE, finishInit);
 			
 		}
 		
+		/*
 		private function finishInit(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, finishInit);
 
 		}
+		*/
 		
 		public function scrollToCenter(tileLoc:Point, instant:Boolean=false):void {
 			var desiredCenter:Point = Floor.centerOf(tileLoc);
@@ -82,6 +84,18 @@ package angel.game {
 			contentsLayer.addChild(entity);
 			entity.addToRoom(this, location);
 		}
+		
+		public function forEachEntity(callWithEntity:Function):void {
+			for (var i:int = 0; i < size.x; i++) {
+				for (var j:int = 0; j < size.y; j++) {
+					for each (var prop:Prop in cells[i][j].contents) {
+						if (prop is Entity) {
+							callWithEntity(prop);
+						}
+					}
+				}
+			}
+		}
 
 		public function addPlayerCharacter(entity:Entity, location:Point): void {
 			if (playerCharacter != null) {
@@ -97,13 +111,6 @@ package angel.game {
 		public function changePropLocation(prop:Prop, newLocation:Point):void {
 			cells[prop.location.x][prop.location.y].remove(prop);
 			cells[newLocation.x][newLocation.y].add(prop);
-			if (prop == playerCharacter) {
-				mode.playerMoved(newLocation);
-			}
-		}
-		
-		public function playerFinishedMoving():void {
-			mode.playerMoved(null);
 		}
 		
 		public function solid(location:Point):Boolean {
@@ -134,6 +141,8 @@ package angel.game {
 			mode = new newModeClass(this);
 		}
 		
+		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander }
+		
 		public function fillContentsFromXml(catalog:Catalog, contentsXml:XML):void {
 			for each (var propXml:XML in contentsXml.prop) {
 				var propName:String = propXml;
@@ -141,7 +150,13 @@ package angel.game {
 			}
 			for each (var walkerXml:XML in contentsXml.walker) {
 				var walkerName:String = walkerXml;
-				addWalkerByName(catalog, walkerName, new Point(walkerXml.@x, walkerXml.@y));
+				var walker:Walker = addWalkerByName(catalog, walkerName, new Point(walkerXml.@x, walkerXml.@y));
+				var exploreSetting:String = walkerXml.@explore;
+				for (var brainName:String in exploreBrain) {
+					if (brainName == exploreSetting) {
+						walker.exploreBrainClass = exploreBrain[brainName];
+					}
+				}
 			}
 			
 		}
@@ -153,10 +168,11 @@ package angel.game {
 			addEntity(prop, location);
 		}
 		
-		public function addWalkerByName(catalog:Catalog, id:String, location:Point):void {
+		public function addWalkerByName(catalog:Catalog, id:String, location:Point):Walker {
 			var entity:Walker = new Walker(catalog.retrieveWalkerImage(id));
 			entity.solid = true;
 			addEntity(entity, location);
+			return entity;
 		}
 		
 	} // end class Room
