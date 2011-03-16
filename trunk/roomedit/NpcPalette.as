@@ -24,7 +24,12 @@ package angel.roomedit {
 		private var walkerFacingFront:Bitmap;
 		private var walkerCombo:ComboBox;
 		private var locationText:TextField;
-		private var available:Boolean;
+		private var attributeDisplay:Sprite;
+		private var exploreCombo:ComboBox;
+		
+		private var locationOfCurrentSelection:Point;
+		
+		private static const exploreChoices:Vector.<String> = Vector.<String>(["", "fidget", "wander"]);
 		
 		public function NpcPalette(catalog:CatalogEdit, room:RoomLight) {
 			this.catalog = catalog;
@@ -46,8 +51,13 @@ package angel.roomedit {
 			walkerCombo.addEventListener(Event.CHANGE, changeWalker);
 			
 			locationText = Util.textBox("", EditorSettings.PALETTE_XSIZE, Util.DEFAULT_TEXT_HEIGHT, TextFormatAlign.CENTER);
-			locationText.y = walkerChooser.y + walkerChooser.height + 10;
+			locationText.y = walkerChooser.y + walkerCombo.height + 10;
 			addChild(locationText);
+			
+			attributeDisplay = createAttributeDisplay();
+			attributeDisplay.x = walkerChooser.x;
+			attributeDisplay.y = locationText.y + locationText.height + 10;
+			addChild(attributeDisplay);
 			
 			walkerCombo.selectedIndex = 0;
 			changeWalker(null);
@@ -55,34 +65,65 @@ package angel.roomedit {
 			room.addEventListener(Event.INIT, roomLoaded);
 		}
 		
+		private function createAttributeDisplay():Sprite {
+			var holder:Sprite = new Sprite();
+			var exploreLabel:TextField = Util.textBox("Explore mode behavior:", EditorSettings.PALETTE_XSIZE-20);
+			holder.addChild(exploreLabel);
+			exploreCombo = createExploreChooser();
+			exploreCombo.y = exploreLabel.y + exploreLabel.height;
+			exploreCombo.addEventListener(Event.CHANGE, changeExplore);
+			holder.addChild(exploreCombo);
+			return holder;
+		}
+		
+		
 		private function changeWalker(event:Event):void {
-			var walkerId:String = walkerCombo.value;
+			var walkerId:String = walkerCombo.selectedLabel;
 			
 			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
 			walkerFacingFront.bitmapData = walkerImage.bitsFacing(1);
 			
-			updateAvailability();
+			updateAvailabilityAndAttributes();
 		}
 		
-		private function updateAvailability():void {
-			var location:Point = room.find(walkerCombo.value);
-			available = (location == null);
-			locationText.text = (available ? "Available" : "Location: " + location);
+		private function updateAvailabilityAndAttributes():void {
+			locationOfCurrentSelection = room.find(walkerCombo.selectedLabel);
+			var onMap:Boolean = (locationOfCurrentSelection != null);
+			locationText.text = (onMap ? "Location: " + locationOfCurrentSelection : "Available");
+			attributeDisplay.visible = onMap;
+			
+			if (onMap) {
+				var attributes:Object = room.attributesOfItemAt(locationOfCurrentSelection);
+				if (attributes == null) {
+					exploreCombo.selectedIndex = 0;
+				} else {
+					exploreCombo.selectedIndex = indexInExploreChooser(attributes["explore"]);
+				}
+			}
+		}
+		
+		private function changeExplore(event:Event):void {
+			var attributes:Object = room.attributesOfItemAt(locationOfCurrentSelection);
+			if (attributes == null) {
+				attributes = new Object();
+			}
+			attributes["explore"] = exploreCombo.selectedLabel;
+			room.setAttributesOfItemAt(locationOfCurrentSelection, attributes);
 		}
 
 		public function applyToTile(tile:FloorTileEdit):void {
 			if (room.occupied(tile.location)) {
 				room.removeItemAt(tile.location);
 			} else {
-				if (available) {
+				if (locationOfCurrentSelection == null) {
 					//CONSIDER: this will need revision if we add resource management
 					var prop:Prop = Prop.createFromBitmapData(walkerFacingFront.bitmapData);
-					room.addContentItem(prop, CatalogEntry.WALKER, walkerCombo.value, tile.location);
+					room.addContentItem(prop, CatalogEntry.WALKER, walkerCombo.selectedLabel, tile.location);
 				} else {
-					Alert.show("Cannot place " + walkerCombo.value + " -- already in room.");
+					Alert.show("Cannot place " + walkerCombo.selectedLabel + " -- already in room.");
 				}
 			}
-			updateAvailability();
+			updateAvailabilityAndAttributes();
 		}
 		
 		public function paintWhileDragging():Boolean {
@@ -91,7 +132,7 @@ package angel.roomedit {
 		
 		private function roomLoaded(event:Event):void {
 			if (this.visible) {
-				updateAvailability();
+				updateAvailabilityAndAttributes();
 			}
 		}
 		
@@ -99,10 +140,28 @@ package angel.roomedit {
 		override public function set visible(value:Boolean):void {
 			super.visible = value;
 			if (this.visible) {
-				updateAvailability();
+				updateAvailabilityAndAttributes();
 			}
 		}
 		
-	}
+		private function createExploreChooser():ComboBox {
+			var combo:ComboBox = new ComboBox();
+			combo.width = EditorSettings.PALETTE_XSIZE - 10;
+			for (var i:int = 0; i < exploreChoices.length; i++) {
+				combo.addItem( { label:exploreChoices[i] } );
+			}
+			return combo;
+		}
+		
+		private function indexInExploreChooser(label:String):int {
+			for (var i:int = 0; i < exploreChoices.length; i++) {
+				if (exploreChoices[i] == label) {
+					return i;
+				}
+			}
+			return 0;
+		}
+		
+	} // end class NpcPalette
 
 }
