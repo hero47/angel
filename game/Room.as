@@ -33,6 +33,7 @@ package angel.game {
 		public var mode:RoomMode;
 		
 		private var tileWithFilter:FloorTile;
+		//private var entityWithFilter:Entity; // not yet, but will be needed for future story
 		private var scrollingTo:Point = null;
 				
 		public function Room(floor:Floor) {
@@ -84,9 +85,27 @@ package angel.game {
 			if (tileWithFilter != null) {
 				tileWithFilter.filters = [];
 			}
+			/*
+			if (entityWithFilter != null) {
+				entityWithFilter.filters = [];
+				entityWithFilter = null;
+			}
+			*/
 			tileWithFilter = tile;
-			if (tile != null) {
-				tileWithFilter.filters = [ new GlowFilter(color, 1, 15, 15, 10, 1, true, false) ];
+			if (tileWithFilter != null) {
+				var glow:GlowFilter = new GlowFilter(color, 1, 15, 15, 10, 1, true, false);
+				tileWithFilter.filters = [ glow ];
+				/* 
+				// NOTE: when we get to this story, it will want to only light up entities that respond to clicks
+				// and that filtering may be done in the RoomMode rather than here
+				var cell:Cell = cells[tileWithFilter.location.x][tileWithFilter.location.y];
+				if (cell != null) {
+					entityWithFilter = cell.firstOccupant();
+					if (entityWithFilter != null) {
+						entityWithFilter.filters = [ glow ];
+					}
+				}
+				*/
 			}
 		}
 		
@@ -125,9 +144,15 @@ package angel.game {
 		
 		// This will generally be called by the entity as it crosses the boundary between one floor tile
 		// and another during movement.
-		public function changePropLocation(prop:Prop, newLocation:Point):void {
-			cells[prop.location.x][prop.location.y].remove(prop);
-			cells[newLocation.x][newLocation.y].add(prop);
+		public function changeEntityLocation(entity:Entity, newLocation:Point):void {
+			cells[entity.location.x][entity.location.y].remove(entity);
+			cells[newLocation.x][newLocation.y].add(entity);
+			/*
+			if (entityWithFilter == entity) {
+				entityWithFilter.filters = [];
+				entityWithFilter = null;
+			}
+			*/
 		}
 		
 		public function solid(location:Point):uint {
