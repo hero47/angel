@@ -72,7 +72,9 @@ package angel.game {
 		}
 		
 		public static function createFromPropImage(propImage:PropImage):Entity {
-			return new Entity(new Bitmap(propImage.imageData));
+			var entity:Entity = new Entity(new Bitmap(propImage.imageData));
+			entity.solid = propImage.solid;
+			return entity;
 		}
 		
 		public function addToRoom(room:Room, newLocation:Point = null):void {
@@ -198,8 +200,9 @@ package angel.game {
 			
 			// First, see if we can just take the default path without hitting an obstacle
 			while (!nextStep.equals(goal)) {
-				nextStep = new Point(nextStep.x + sign(goal.x - nextStep.x), nextStep.y + sign(goal.y - nextStep.y));
-				if (tileBlocked(nextStep)) {
+				var step:Point = new Point(sign(goal.x - nextStep.x), sign(goal.y - nextStep.y));
+				nextStep = checkBlockage(nextStep, step);
+				if (nextStep == null) {
 					blocked = true;
 					break;
 				}
@@ -224,10 +227,26 @@ package angel.game {
 			if (loc.x < 0 || loc.x >= room.size.x || loc.y < 0 || loc.y >= room.size.y) {
 				return true;
 			}
-			if (!solid || loc.equals(myLocation)) {
+			if (!(solid & Prop.SOLID) || loc.equals(myLocation)) {
 				return false;
 			}
-			return room.solid(loc);
+			return (room.solid(loc) & Prop.SOLID) != 0;
+		}
+		
+		// step is a one-tile vector. Return from+step if legal, null if not
+		public function checkBlockage(from:Point, step:Point):Point {
+			var target:Point = from.add(step);
+			if (tileBlocked(target)) {
+				return null;
+			}
+			if (step.x == 0 || step.y == 0) {
+				return target;
+			}
+			if ( (room.solid(new Point(from.x, from.y + step.y)) & Prop.HARD_CORNER) &&
+				 (room.solid(new Point(from.x + step.x, from.y)) & Prop.HARD_CORNER) ) {
+				return null;
+			}
+			return target;
 		}
 		
 		// Fill in path.  Return false if there is no path
@@ -244,24 +263,29 @@ package angel.game {
 			while (edge.length > 0) {
 				var current:Point = edge.shift();
 				var stepsFromGoal:int = steps[current.x][current.y] + 1;
-				if (stepsFromGoal == 0) { // blocked cell
-					continue;
-				}
+				Assert.assertTrue(stepsFromGoal != 0, "Edge contains blocked cell");
 				for (i = 0; i < neighborCheck.length; i++) {
-					var nextNeighbor:Point = neighborCheck[i];
-					var xNext:int = current.x + nextNeighbor.x;
-					var yNext:int = current.y + nextNeighbor.y;
-					if ((xNext < 0) || (xNext > room.size.x - 1) || (yNext < 0) || (yNext > room.size.y - 1)) {
+					var stepToNextNeighbor:Point = neighborCheck[i];
+					var xNext:int = current.x + stepToNextNeighbor.x;
+					var yNext:int = current.y + stepToNextNeighbor.y;
+					if ((xNext < 0) || (xNext >= room.size.x) || (yNext < 0) || (yNext >= room.size.y)) {
 						continue;
 					}
 					if (steps[xNext][yNext] != 0) {
 						continue;
 					}
-					var neighbor:Point = new Point(xNext, yNext);
-					steps[xNext][yNext] = tileBlocked(neighbor) ? -1 : stepsFromGoal;
-					edge.push(neighbor);
 					
-					if (xNext == from.x && yNext == from.y) {
+					var neighbor:Point = checkBlockage(current, stepToNextNeighbor);
+					if (neighbor == null) {
+						if (tileBlocked(new Point(xNext, yNext))) {
+							steps[xNext][yNext] = -1;
+						}
+					} else {
+						steps[xNext][yNext] = stepsFromGoal;
+						edge.push(neighbor);
+					}
+					
+					if ((xNext == from.x) && (yNext == from.y)) {
 						extractPathFromStepGrid(from, goal, steps, path);
 						return true;
 					}

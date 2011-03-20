@@ -8,10 +8,13 @@ package angel.common {
 	 * ...
 	 * @author Beth Moursund
 	 */
+	
+	// UNDONE: This has expanded to more than just an image, and should be renamed at some point
 	public class PropImage implements ICatalogedResource {
 		
 		private var entry:CatalogEntry;
 		public var imageData:BitmapData;
+		public var solid:uint;
 		
 		public function PropImage() {
 			
@@ -26,6 +29,13 @@ package angel.common {
 			myTextField.text = id;
 			myTextField.y = Prop.HEIGHT / 2;
 			imageData.draw(myTextField);
+			
+			if (entry.xml != null && entry.xml.@solid.length() > 0) {
+				solid = entry.xml.@solid;
+			} else {
+				solid = Prop.SOLID;
+			}
+			entry.xml = null;
 		}
 		
 		public function get catalogEntry():CatalogEntry {

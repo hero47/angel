@@ -22,6 +22,7 @@ package angel.roomedit {
 		
 		private var newTilesetFilename:String;
 		private var tilesetId:String;
+		private var propId:String;
 		
 		public function CatalogEditUI(catalog:CatalogEdit) {
 			this.catalog = catalog;
@@ -37,6 +38,13 @@ package angel.roomedit {
 			left += button.width + 5;
 			
 			button = new SimplerButton("Edit tile names", clickedEditTileNames);
+			button.x = left;
+			button.y = 5;
+			button.width = 100;
+			addChild(button);
+			left += button.width + 5;
+			
+			button = new SimplerButton("Edit props", clickedEditProp);
 			button.x = left;
 			button.y = 5;
 			button.width = 100;
@@ -147,6 +155,14 @@ package angel.roomedit {
 			finishedEditNamesButton.x = tilesPalette.x + tilesPalette.width + 10;
 			finishedEditNamesButton.y = tilesPalette.y;
 			finishedEditNamesButton.visible = true;
+		}
+		
+		private function clickedEditProp(event:Event):void {
+			KludgeDialogBox.init(stage);
+			var options:Object = { buttons:["Done"], inputs:[], customControl:new PropEditUI(catalog) };
+			var text:String = "Edit prop solidity";
+			KludgeDialogBox.show(text, options);
+			
 		}
 		
 		private function clickedSaveCatalog(event:Event):void {

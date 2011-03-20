@@ -33,15 +33,15 @@ package angel.game {
 			return (contents != null && contents.length > 0);
 		}
 		
-		public function solid():Boolean {
+		public function solid():uint {
 			if (contents != null) {
+				var solid:uint = 0;
 				for (var i:int = 0; i < contents.length; i++) {
-					if (contents[i].solid) {
-						return true;
-					}
+					solid |= contents[i].solid;
+					return solid;
 				}
 			}
-			return false;
+			return Prop.GHOST;
 		}
 		
 	}

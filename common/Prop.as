@@ -10,9 +10,15 @@ package angel.common {
 	// a bitmap (when adding to the map by clicking a tile).  That may need to change when we get resource management.
 	public class Prop extends Sprite {
 
+		// ORing together the solidity for everything on a tile must give solidity for the tile as a whole.
+		public static const GHOST:uint = 0x0;
+		public static const SOLID:uint = 0x1;	// normal solid object
+		public static const HARD_CORNER:uint = 0x2; // prevent movement between two adjacent diagonals if both hard
+		public static const HARD_SOLID:uint = (SOLID | HARD_CORNER);
+		
 		protected var imageBitmap:Bitmap;
 		protected var myLocation:Point = null;
-		public var solid:Boolean = false;
+		public var solid:uint = GHOST;
 		
 		// Depth represents distance to the "camera" plane, in our orthogonal view
 		// The fractional part of depth indicates distance away from that line of cell-centers

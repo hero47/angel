@@ -70,7 +70,7 @@ package angel.game {
 			room.fillContentsFromXml(catalog, contentsXml);
 			
 			var entity:Walker = new Walker(catalog.retrieveWalkerImage(Settings.playerId));
-			entity.solid = true;
+			entity.solid = Prop.SOLID;
 			room.addPlayerCharacter(entity, startLoc);
 			
 			room.changeModeTo(RoomExplore);

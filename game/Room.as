@@ -130,7 +130,10 @@ package angel.game {
 			cells[newLocation.x][newLocation.y].add(prop);
 		}
 		
-		public function solid(location:Point):Boolean {
+		public function solid(location:Point):uint {
+			if ((location.x < 0) || (location.x >= size.x) || (location.y < 0) || (location.y >= size.y)) {
+				return Prop.HARD_SOLID;
+			}
 			return cells[location.x][location.y].solid();
 		}
 		
@@ -181,13 +184,12 @@ package angel.game {
 		public function addPropByName(catalog:Catalog, id:String, location:Point):void {
 			var propImage:PropImage = catalog.retrievePropImage(id);
 			var prop:Entity = Entity.createFromPropImage(propImage);
-			prop.solid = true;
 			addEntity(prop, location);
 		}
 		
 		public function addWalkerByName(catalog:Catalog, id:String, location:Point):Walker {
 			var entity:Walker = new Walker(catalog.retrieveWalkerImage(id));
-			entity.solid = true;
+			entity.solid = Prop.SOLID;
 			addEntity(entity, location);
 			return entity;
 		}

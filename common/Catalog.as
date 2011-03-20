@@ -35,7 +35,10 @@ package angel.common {
 			var xml:XML = new XML(event.target.data);
 			var entry:CatalogEntry;
 			for each (var propXml:XML in xml.prop) {
-				addCatalogEntry(propXml.@id, propXml.@file, CatalogEntry.PROP, duplicateNames);
+				entry = addCatalogEntry(propXml.@id, propXml.@file, CatalogEntry.PROP, duplicateNames);
+				if (entry != null) {
+					entry.xml = propXml;
+				}
 			}
 			for each (var walkerXml:XML in xml.walker) {
 				addCatalogEntry(walkerXml.@id, walkerXml.@file, CatalogEntry.WALKER, duplicateNames);
