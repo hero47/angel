@@ -54,9 +54,27 @@ package angel.roomedit {
 			var entry:CatalogEntry = lookup[id];
 			var tag:String = CatalogEntry.xmlTag[entry.type];
 			
-			var current:XMLList = catalogXml.tileset.(@id == id);
+			var current:XMLList = catalogXml[tag].(@id == id);
 			
 			current[0] = newXml;
+		}
+		
+		public function changeXmlAttribute(id:String, attribute:String, newValue:String):void {
+			var entry:CatalogEntry = lookup[id];
+			var tag:String = CatalogEntry.xmlTag[entry.type];
+			
+			var current:XMLList = catalogXml[tag].(@id == id);
+			current[0].@[attribute] = newValue;
+		}
+		
+		public function deleteXmlAttribute(id:String, attribute:String):void {
+			var entry:CatalogEntry = lookup[id];
+			var tag:String = CatalogEntry.xmlTag[entry.type];
+			
+			var current:XMLList = catalogXml[tag].(@id == id);
+			if (current[0].@[attribute].length() > 0) {
+				delete current[0].@[attribute];
+			}
 		}
 		
 		// Create a combobox holding all catalog ids for the given CatalogEntry type.

@@ -193,14 +193,14 @@ package angel.roomedit {
 		}
 		
 		private function clickedZoomIn(event:Event):void {
-			floor.scaleX += 0.1;
-			floor.scaleY += 0.1;
+			room.scaleX += 0.1;
+			room.scaleY += 0.1;
 		}
 		
 		private function clickedZoomOut(event:Event):void {
-			if (floor.scaleX > 0.1) {
-				floor.scaleX -= 0.1;
-				floor.scaleY -= 0.1;
+			if (room.scaleX > 0.1) {
+				room.scaleX -= 0.1;
+				room.scaleY -= 0.1;
 			}
 		}
 
