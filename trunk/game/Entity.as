@@ -116,7 +116,7 @@ package angel.game {
 		// This is a horrid name but I haven't been able to think of a better one or a better refactoring
 		private function calculateStuffForMovementFrames():void {
 			var tileMoveVector:Point = movingTo.subtract(myLocation);
-			facing = neighborToFacing[tileMoveVector.x + 1][tileMoveVector. y + 1];
+			facing = neighborToFacing[tileMoveVector.x + 1][tileMoveVector.y + 1];
 			
 			var totalPixels:int;
 			if ((tileMoveVector.x == 0) || (tileMoveVector.y == 0)) {
@@ -159,7 +159,7 @@ package angel.game {
 				frameOfMove = 0;
 				// Change the "real" location to the next tile.  Doing this on first frame of move rather than
 				// halfway through the move circumvents a whole host of problems!
-				room.changePropLocation(this, movingTo);
+				room.changeEntityLocation(this, movingTo);
 				dispatchEvent(new Event(MOVED));
 				myLocation = movingTo;
 			}
@@ -283,15 +283,17 @@ package angel.game {
 					} else {
 						steps[xNext][yNext] = stepsFromGoal;
 						edge.push(neighbor);
-					}
 					
-					if ((xNext == from.x) && (yNext == from.y)) {
-						extractPathFromStepGrid(from, goal, steps, path);
-						return true;
+						if ((xNext == from.x) && (yNext == from.y)) {
+							extractPathFromStepGrid(from, goal, steps, path);
+							//trace(path);
+							return true;
+						}
 					}
 				}
 
 			} // end while edge.length > 0
+			//trace("tile", goal, "unreachable");
 			return false;
 		}
 		
@@ -302,17 +304,20 @@ package angel.game {
 			var lookingFor:int = steps[current.x][current.y] - 1;
 			while (lookingFor > 1) {
 				for (var i:int = 0; i < neighborCheck.length; i++) {
-					var nextNeighbor:Point = neighborCheck[i];
-					var xNext:int = current.x + nextNeighbor.x;
-					var yNext:int = current.y + nextNeighbor.y;
+					var stepToNextNeighbor:Point = neighborCheck[i];
+					var xNext:int = current.x + stepToNextNeighbor.x;
+					var yNext:int = current.y + stepToNextNeighbor.y;
 					if ((xNext < 0) || (xNext > room.size.x - 1) || (yNext < 0) || (yNext > room.size.y - 1)) {
 						continue;
 					}
 					if (steps[xNext][yNext] == lookingFor) {
-						current = new Point(xNext, yNext);
-						path.push(current);
-						--lookingFor;
-						break;
+						var neighbor:Point = checkBlockage(current, stepToNextNeighbor);
+						if (neighbor != null) {
+							current = neighbor;
+							path.push(current);
+							--lookingFor;
+							break;
+						}
 					}
 				} // end for
 			}

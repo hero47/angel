@@ -6,27 +6,34 @@ package angel.game {
 	// square on the map, including any terrain properties.
 	public class Cell {
 		
-		public var contents:Vector.<Prop>;
+		public var contents:Vector.<Entity>;
 		
 		public function Cell() {
 			
 		}
 		
-		public function add(prop:Prop):void {
+		public function add(entity:Entity):void {
 			if (contents == null) {
-				contents = new Vector.<Prop>();
+				contents = new Vector.<Entity>();
 			}
-			contents.push(prop);
+			contents.push(entity);
 		}
 		
-		public function remove(prop:Prop):void {
-			Assert.assertTrue(contents != null && contents.indexOf(prop) >= 0, "Removing entity that's not there");
+		public function remove(entity:Entity):void {
+			Assert.assertTrue(contents != null && contents.indexOf(entity) >= 0, "Removing entity that's not there");
 			if (contents != null) {
-				var i:int = contents.indexOf(prop);
+				var i:int = contents.indexOf(entity);
 				if (i >= 0) {
 					contents.splice(i, 1);
 				}
 			}
+		}
+		
+		public function firstOccupant():Entity {
+			if (!occupied()) {
+				return null;
+			}
+			return contents[0];
 		}
 		
 		public function occupied():Boolean {

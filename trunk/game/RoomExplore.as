@@ -98,7 +98,17 @@ package angel.game {
 		
 		private function exploreModeMouseMoveListener(event:MouseEvent):void {
 			if (event.target is FloorTile) {
-				room.moveHilight(event.target as FloorTile, 0xffffff);;
+				var tile:FloorTile = event.target as FloorTile;
+				if (room.playerCharacter.tileBlocked(tile.location)) {
+					room.moveHilight(null, 0);
+				} else {
+					var pathToMouse:Vector.<Point> = room.playerCharacter.findPathTo(tile.location);
+					if (pathToMouse == null) {
+						room.moveHilight(null, 0);
+					} else {
+						room.moveHilight(tile, 0xffffff);;
+					}
+				}
 			}
 		}
 		
