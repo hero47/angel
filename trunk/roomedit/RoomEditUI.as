@@ -31,6 +31,7 @@ package angel.roomedit {
 		private static const tabLabels:Vector.<String> = Vector.<String>(["Tiles", "Props", "NPCs"]);
 		private var paletteTabs:Vector.<TextField> = new Vector.<TextField>(3);
 		private var palettes:Vector.<Sprite> = new Vector.<Sprite>(3);
+		private var visibleOnlyWhenPaletteIsTileset:Vector.<DisplayObject> = new Vector.<DisplayObject>();
 		
 		public function RoomEditUI(catalog:CatalogEdit) {
 			this.catalog = catalog;
@@ -107,13 +108,6 @@ package angel.roomedit {
 			addChild(button);
 			left += button.width + 5;
 			
-			button = new SimplerButton("Change tileset", clickedAddTileset);
-			button.x = left;
-			button.y = 5;
-			button.width = 100;
-			addChild(button);
-			left += button.width + 5;
-			
 			button = new SimplerButton("Clear", clickedClear);
 			button.x = left;
 			button.y = 5;
@@ -121,12 +115,29 @@ package angel.roomedit {
 			addChild(button);
 			left += button.width + 5;
 			
+			button = new SimplerButton("Change tileset", clickedAddTileset);
+			button.x = left;
+			button.y = 5;
+			button.width = 100;
+			addChild(button);
+			left += button.width + 5;
+			visibleOnlyWhenPaletteIsTileset.push(button);
+			
+			button = new SimplerButton("Fill", clickedFill);
+			button.x = left;
+			button.y = 5;
+			button.width = 60;
+			addChild(button);
+			left += button.width + 5;
+			visibleOnlyWhenPaletteIsTileset.push(button);
+			
 			button = new SimplerButton("Shuffle tiles", clickedRedisplay);
 			button.x = left;
 			button.y = 5;
 			button.width = 100;
 			addChild(button);
 			left += button.width + 5;
+			visibleOnlyWhenPaletteIsTileset.push(button);
 			
 			button = new SimplerButton("Size", clickedSize);
 			button.x = left;
@@ -187,6 +198,10 @@ package angel.roomedit {
 			floor.clear();
 			room.removeAllProps();
 		}
+		
+		private function clickedFill(event:Event):void {
+			floor.fillEmptyTilesWithCurrentSelection();
+		}
 
 		private function clickedRedisplay(event:Event):void {
 			floor.setTileImagesFromNames();
@@ -222,6 +237,10 @@ package angel.roomedit {
 					paletteTabs[i].backgroundColor = EditorSettings.PALETTE_BACKCOLOR;
 					palettes[i].visible = true;
 					floor.attachPalette(palettes[i] as IRoomEditorPalette);
+					var isTile:Boolean = (palettes[i] is FloorTilePalette);
+					for each (var it:DisplayObject in visibleOnlyWhenPaletteIsTileset) {
+						it.visible =  isTile;
+					}
 				} else {
 					paletteTabs[i].backgroundColor = 0x888888;
 					palettes[i].visible = false;

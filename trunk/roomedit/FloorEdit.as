@@ -43,6 +43,18 @@ package angel.roomedit {
 			}
 		}
 		
+		public function fillEmptyTilesWithCurrentSelection():void {
+			hasBeenEdited = true;
+			for (var i:int = 0; i < xy.x; i++) {
+				for (var j:int = 0; j < xy.y; j++) {
+					var tile:FloorTileEdit = (floorGrid[i][j] as FloorTileEdit);
+					if (tile.tileName == "") {
+						palette.applyToTile(tile);
+					}
+				}
+			}
+		}
+		
 		public function getMostCommonTilesetId():String {
 			var tilesetIds:Object = new Object(); // associative array mapping id to tilecount
 			for (var i:int = 0; i < xy.x; i++) {
