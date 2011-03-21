@@ -1,5 +1,6 @@
 package angel.game {
 	import angel.common.Alert;
+	import angel.common.Floor;
 	import angel.common.FloorTile;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
@@ -19,6 +20,9 @@ package angel.game {
 		public function RoomExplore(room:Room) {
 			this.room = room;
 			room.addEventListener(MouseEvent.CLICK, exploreModeClickListener);
+			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
+			//we're substituting ctrl-click.
+			//room.addEventListener(MouseEvent.RIGHT_CLICK, launchPieMenu);
 			room.addEventListener(MouseEvent.MOUSE_DOWN, exploreModeMouseDownListener);
 			room.addEventListener(MouseEvent.MOUSE_MOVE, exploreModeMouseMoveListener);
 			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, exploreModeKeyDownListener);
@@ -113,6 +117,12 @@ package angel.game {
 		}
 		
 		private function exploreModeClickListener(event:MouseEvent):void {
+			if (event.ctrlKey) {
+				// Temporary since Flash Projector doesn't support right-button events.
+				// If/when we switch to AIR this will be replaced with a real right click listener.
+				launchPieMenu(event);
+				return;
+			}
 			if (!dragging && event.target is FloorTile) {
 				var loc:Point = (event.target as FloorTile).location;
 				if (!loc.equals(room.playerCharacter.location) && !room.playerCharacter.tileBlocked(loc)) {
@@ -130,6 +140,19 @@ package angel.game {
 		private function playerFinishedMoving(event:Event):void {
 			playerMoveInProgress = false;
 			room.playerCharacter.removeEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
+		}
+		
+		private function launchPieMenu(event:MouseEvent):void {
+			if (event.target is FloorTile) {
+				var tile:FloorTile = event.target as FloorTile;
+				var tileCenterOnStage:Point = room.floor.localToGlobal(Floor.centerOf(tile.location));
+				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
+				slices.push(new PieSlice(PieSlice.testIconData(), null));
+				slices.push(new PieSlice(null, null));
+				slices.push(new PieSlice(null, null));
+				var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices);
+				room.stage.addChild(pie);
+			}
 		}
 		
 		/***************  TIMER STUFF  ****************/

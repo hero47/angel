@@ -1,4 +1,5 @@
 package angel.common {
+	import flash.geom.Point;
 	import flash.text.TextField;
 	import flash.text.TextFieldType;
 	import flash.text.TextFormat;
@@ -32,6 +33,22 @@ package angel.common {
 			
 			myTextField.text = text;
 			return myTextField;
+		}
+		
+		public static function pointOnCircleFromFacing(radius:Number, facing:Number, center:Point = null):Point {
+			var loc:Point = new Point();
+
+			loc.x = radius*Math.cos(facing*(Math.PI/180));
+            loc.y = radius*Math.sin(facing*(Math.PI/180));
+			if (center != null) {
+				loc.x += center.x;
+				loc.y += center.y;
+			}
+            return loc;
+		}
+		
+		public static function findRotFacingVector(vector:Point):Number {
+			return Math.atan2(vector.y, vector.x ) * 180 / Math.PI;
 		}
 		
 	}
