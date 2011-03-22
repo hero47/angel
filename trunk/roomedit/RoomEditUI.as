@@ -8,6 +8,7 @@ package angel.roomedit {
 	import flash.display.DisplayObject;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
 	import flash.text.TextField;
 	
@@ -65,6 +66,32 @@ package angel.roomedit {
 			
 			switchPaletteTo(paletteTabs[TILE_PALETTE_INDEX]);		
 			
+			addEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
+		}
+		
+		private function addedToStageListener(event:Event):void {
+			removeEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
+			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
+		}
+		
+		// For God-only-knows what reason, the version of Keyboard class for Flex compilation is missing all
+		// of the letter-key constants.  The version in CS5 has them.  ?????
+		public static const KEYBOARD_V:uint = 86;
+		private function keyDownListener(event:KeyboardEvent):void {
+			switch (event.keyCode) {
+				case KEYBOARD_V:
+					room.toggleVisibility();
+				break;
+			}
+		}
+		
+		override public function set visible(value:Boolean):void {
+			super.visible = value;
+			if (value) {
+				stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
+			} else {
+				stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
+			}
 		}
 		
 		private function initPaletteHolder():void {
