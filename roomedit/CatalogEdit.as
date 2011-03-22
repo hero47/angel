@@ -47,7 +47,6 @@ package angel.roomedit {
 		
 		public function appendXml(newXml:XML):void {
 			catalogXml.appendChild(newXml);
-			trace(catalogXml);
 		}
 
 		public function changeXml(id:String, newXml:XML):void {

@@ -17,8 +17,14 @@ package angel.game {
 		}
 
 		override protected function adjustImageForMove():void {
-			var foot:int = frameOfMove * walkFrames.length / coordsForEachFrameOfMove.length;
-			imageBitmap.bitmapData = images.bitsFacing(facing, walkFrames[foot]);
+			var step:int;
+			if (coordsForEachFrameOfMove == null) {
+				step = WalkerImage.STAND;
+			} else {
+				var foot:int = frameOfMove * walkFrames.length / coordsForEachFrameOfMove.length;
+				step = walkFrames[foot];
+			}
+			imageBitmap.bitmapData = images.bitsFacing(facing, step);
 		}
 		
 		override public function turnToFacing(newFacing:int):void {

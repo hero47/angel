@@ -117,13 +117,14 @@ package angel.roomedit {
 			addContentItem(prop, CatalogEntry.PROP, id, location);
 		}
 		
-		public function addWalkerByName(id:String, location:Point, exploreBehavior:String):void {
+		public function addWalkerByName(id:String, location:Point, exploreBehavior:String, combatBehavior:String):void {
 			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(id);
 			var prop:Prop = Prop.createFromBitmapData(walkerImage.bitsFacing(1));
 			var attributes:Object = null;
-			if (exploreBehavior != "") {
+			if (exploreBehavior != "" || combatBehavior != "") {
 				attributes = new Object();
 				attributes["explore"] = exploreBehavior;
+				attributes["combat"] = combatBehavior;
 			}
 			addContentItem(prop, CatalogEntry.WALKER, id, location, attributes);
 		}
@@ -198,9 +199,8 @@ package angel.roomedit {
 				addPropByName(id, new Point(propXml.@x, propXml.@y));
 			}
 			for each (var walkerXml:XML in xml.walker) {
-				trace(walkerXml.attributes());
 				id = walkerXml;
-				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml.@explore);
+				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml.@explore, walkerXml.@combat);
 			}
 		}
 		

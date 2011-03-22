@@ -49,6 +49,7 @@ package angel.game {
 			movePointsDisplay.x = 10;
 			movePointsDisplay.y = 10;
 			room.parent.addChild(movePointsDisplay);
+			room.forEachEntity(initEntityBrain);
 		}
 
 		public function cleanup():void {
@@ -63,6 +64,23 @@ package angel.game {
 			room.parent.removeChild(movePointsDisplay);
 			clearDots();
 			room.moveHilight(null, 0);
+			room.forEachEntity(endEntityBrain);
+		}
+		
+		private function initEntityBrain(entity:Entity):void {
+			if (entity.combatBrainClass != null) {
+				entity.brain = new entity.combatBrainClass(entity, this);
+				entity.personalTileHilight = new GlowFilter(0xff0000, 1, 15, 15, 10, 1, true, false);
+				room.updatePersonalTileHilight(entity);
+			}
+		}
+		
+		private function endEntityBrain(entity:Entity):void {
+			entity.brain = null;
+			if (entity.combatBrainClass != null) {
+				entity.personalTileHilight = null;
+				room.updatePersonalTileHilight(entity);
+			}
 		}
 		
 		// For God-only-knows what reason, the version of Keyboard class for Flex compilation is missing all
@@ -99,8 +117,8 @@ package angel.game {
 				playerMoveInProgress = true;
 				movePointsDisplay.visible = false;
 				
-				room.scrollToCenter(room.playerCharacter.location, true); // snap to current location
-				room.scrollToCenter(path[path.length - 1]); // begin gradual scroll to final location
+				//room.scrollToCenter(room.playerCharacter.location, true); // snap to current location
+				//room.scrollToCenter(path[path.length - 1]); // begin gradual scroll to final location
 				
 				if (gaitChoice == Entity.GAIT_UNSPECIFIED) {
 					gaitChoice = gaitForDistance(path.length);
@@ -342,7 +360,6 @@ package angel.game {
 		}
 		
 		private function pieMenuDismissed():void {
-			trace("got to dismiss");
 			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatModeKeyDownListener);
 		}
 		

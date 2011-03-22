@@ -8,6 +8,7 @@ package angel.game {
 		public static const DEFAULT_MOVE_SPEED:Number = 2; // speeds in adjacent-tiles-per-second
 		
 		public static var testExploreScroll:int = 0;
+		public static var showEnemyMoves:Boolean = false;
 		public static var combatMovePoints:int = 10;
 		public static var walkPoints:int;
 		public static var runPoints:int;
@@ -72,6 +73,8 @@ package angel.game {
 			if (xml.@sprintSpeed.length() > 0) {
 				sprintSpeed = xml.@sprintSpeed;
 			}
+			
+			showEnemyMoves = (String(xml.@showEnemyMoves) == "yes");
 		}
 		
 	}

@@ -26,10 +26,12 @@ package angel.roomedit {
 		private var locationText:TextField;
 		private var attributeDisplay:Sprite;
 		private var exploreCombo:ComboBox;
+		private var combatCombo:ComboBox;
 		
 		private var locationOfCurrentSelection:Point;
 		
 		private static const exploreChoices:Vector.<String> = Vector.<String>(["", "fidget", "wander"]);
+		private static const combatChoices:Vector.<String> = Vector.<String>(["", "wander"]);
 		
 		public function NpcPalette(catalog:CatalogEdit, room:RoomLight) {
 			this.catalog = catalog;
@@ -67,12 +69,22 @@ package angel.roomedit {
 		
 		private function createAttributeDisplay():Sprite {
 			var holder:Sprite = new Sprite();
+			
 			var exploreLabel:TextField = Util.textBox("Explore mode behavior:", EditorSettings.PALETTE_XSIZE-20);
 			holder.addChild(exploreLabel);
-			exploreCombo = createExploreChooser();
+			exploreCombo = createBrainChooser(exploreChoices);
 			exploreCombo.y = exploreLabel.y + exploreLabel.height;
 			exploreCombo.addEventListener(Event.CHANGE, changeExplore);
 			holder.addChild(exploreCombo);
+			
+			var combatLabel:TextField = Util.textBox("Combat mode behavior:", EditorSettings.PALETTE_XSIZE-20);
+			combatLabel.y = exploreCombo.y + exploreCombo.height + 10;
+			holder.addChild(combatLabel);
+			combatCombo = createBrainChooser(combatChoices);
+			combatCombo.y = combatLabel.y + combatLabel.height;
+			combatCombo.addEventListener(Event.CHANGE, changeCombat);
+			holder.addChild(combatCombo);
+			
 			return holder;
 		}
 		
@@ -96,8 +108,10 @@ package angel.roomedit {
 				var attributes:Object = room.attributesOfItemAt(locationOfCurrentSelection);
 				if (attributes == null) {
 					exploreCombo.selectedIndex = 0;
+					combatCombo.selectedIndex = 0;
 				} else {
-					exploreCombo.selectedIndex = indexInExploreChooser(attributes["explore"]);
+					exploreCombo.selectedIndex = indexInChoices(exploreChoices, attributes["explore"]);
+					combatCombo.selectedIndex = indexInChoices(combatChoices, attributes["combat"]);
 				}
 			}
 		}
@@ -108,6 +122,15 @@ package angel.roomedit {
 				attributes = new Object();
 			}
 			attributes["explore"] = exploreCombo.selectedLabel;
+			room.setAttributesOfItemAt(locationOfCurrentSelection, attributes);
+		}
+		
+		private function changeCombat(event:Event):void {
+			var attributes:Object = room.attributesOfItemAt(locationOfCurrentSelection);
+			if (attributes == null) {
+				attributes = new Object();
+			}
+			attributes["combat"] = combatCombo.selectedLabel;
 			room.setAttributesOfItemAt(locationOfCurrentSelection, attributes);
 		}
 
@@ -144,18 +167,18 @@ package angel.roomedit {
 			}
 		}
 		
-		private function createExploreChooser():ComboBox {
+		private function createBrainChooser(choices:Vector.<String>):ComboBox {
 			var combo:ComboBox = new ComboBox();
 			combo.width = EditorSettings.PALETTE_XSIZE - 10;
-			for (var i:int = 0; i < exploreChoices.length; i++) {
-				combo.addItem( { label:exploreChoices[i] } );
+			for (var i:int = 0; i < choices.length; i++) {
+				combo.addItem( { label:choices[i] } );
 			}
 			return combo;
 		}
 		
-		private function indexInExploreChooser(label:String):int {
-			for (var i:int = 0; i < exploreChoices.length; i++) {
-				if (exploreChoices[i] == label) {
+		private function indexInChoices(choices:Vector.<String>, label:String):int {
+			for (var i:int = 0; i < choices.length; i++) {
+				if (choices[i] == label) {
 					return i;
 				}
 			}
