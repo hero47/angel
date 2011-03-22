@@ -37,6 +37,10 @@ package angel.roomedit {
 			addChild(contentsLayer);
 			
 		}
+		
+		public function toggleVisibility():void {
+			contentsLayer.alpha = 1.5 - contentsLayer.alpha;
+		}
 
 		// Add something at the given location.  If there's already something there, this replaces previous content.
 		// type is CatalogEntry type for saving (all content items are turned into props for room editor)
