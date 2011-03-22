@@ -24,6 +24,8 @@ package angel.game {
 		private static const PIXELS_FOR_HORZ_MOVE:int = Tileset.TILE_WIDTH;
 		
 		public static const GAIT_EXPLORE:int = 0;
+		public static const GAIT_UNSPECIFIED:int = 0;
+		//NOTE: if distance allows walking, gait can be walk/run/sprint; if distance allows running, can be run/sprint
 		public static const GAIT_WALK:int = 1;
 		public static const GAIT_RUN:int = 2;
 		public static const GAIT_SPRINT:int = 3;

@@ -5,8 +5,10 @@ package angel.game {
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
+	import flash.ui.Keyboard;
 	
 	/**
 	 * ...
@@ -23,14 +25,16 @@ package angel.game {
 		public static const ICON_SIZE:int = 28; // square
 		
 		private var slices:Vector.<PieSlice>;
+		private var callbackAfterClose:Function;
 		private var pie:Sprite;
 		private var facingFirstSliceEdge:int;
 		private var sliceDegrees:int;
 		
 		private var overIcon:Bitmap;
 		
-		public function PieMenu(centerX:int, centerY:int, slices:Vector.<PieSlice>) {
+		public function PieMenu(centerX:int, centerY:int, slices:Vector.<PieSlice>, callbackAfterClose:Function = null) {
 			this.slices = slices;
+			this.callbackAfterClose = callbackAfterClose;
 			Assert.assertTrue(slices != null && slices.length > 0, "Pie menu missing data");
 			
 			createPie();
@@ -52,6 +56,7 @@ package angel.game {
 			graphics.drawRect(0, 0, stage.stageWidth, stage.stageHeight);
 			addEventListener(MouseEvent.CLICK, dismiss);
 			
+			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 		}
 		
 		private function createPie():void {
@@ -82,6 +87,15 @@ package angel.game {
 		
 		private function dismiss(event:MouseEvent):void {
 			cleanup();
+			if (callbackAfterClose != null) {
+				callbackAfterClose();
+			}
+		}
+		
+		private function keyDownListener(event:KeyboardEvent):void {
+			if (event.keyCode == Keyboard.BACKSPACE) {
+				dismiss(null);
+			}
 		}
 		
 		private function clickedPie(event:MouseEvent):void {
@@ -91,7 +105,7 @@ package angel.game {
 			} else {
 				Alert.show("Clicked slice " + sliceIndex + ", no code attached.");
 			}
-			cleanup();
+			dismiss(null);
 		}
 		
 		private function mouseOverPie(event:MouseEvent):void {
@@ -125,6 +139,7 @@ package angel.game {
 		
 		public function cleanup():void {
 			if (parent != null) {
+				stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 				parent.removeChild(this);
 			}
 			removeEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
