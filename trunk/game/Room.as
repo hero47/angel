@@ -145,6 +145,11 @@ package angel.game {
 		// This will generally be called by the entity as it crosses the boundary between one floor tile
 		// and another during movement.
 		public function changeEntityLocation(entity:Entity, newLocation:Point):void {
+			if (entity.personalTileHilight != null) {
+				//CONSIDER: if mouse is over one of these tiles, do we need to special-case mouse hilight???
+				floor.tileAt(entity.location).filters = [];
+				floor.tileAt(newLocation).filters = [ entity.personalTileHilight ];
+			}
 			cells[entity.location.x][entity.location.y].remove(entity);
 			cells[newLocation.x][newLocation.y].add(entity);
 			/*
@@ -153,6 +158,15 @@ package angel.game {
 				entityWithFilter = null;
 			}
 			*/
+		}
+		
+		public function updatePersonalTileHilight(entity:Entity):void {
+			if (entity.personalTileHilight == null) {
+				//CONSIDER: if mouse is over one of these tiles, do we need to special-case mouse hilight???
+				floor.tileAt(entity.location).filters = [];
+			} else {
+				floor.tileAt(entity.location).filters = [ entity.personalTileHilight ];
+			}
 		}
 		
 		public function solid(location:Point):uint {
@@ -186,7 +200,8 @@ package angel.game {
 			mode = new newModeClass(this);
 		}
 		
-		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander }
+		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander };
+		private static const combatBrain:Object = { wander:CombatBrainWander };
 		
 		public function fillContentsFromXml(catalog:Catalog, contentsXml:XML):void {
 			for each (var propXml:XML in contentsXml.prop) {
@@ -197,11 +212,9 @@ package angel.game {
 				var walkerName:String = walkerXml;
 				var walker:Walker = addWalkerByName(catalog, walkerName, new Point(walkerXml.@x, walkerXml.@y));
 				var exploreSetting:String = walkerXml.@explore;
-				for (var brainName:String in exploreBrain) {
-					if (brainName == exploreSetting) {
-						walker.exploreBrainClass = exploreBrain[brainName];
-					}
-				}
+				walker.exploreBrainClass = exploreBrain[exploreSetting];
+				var combatSetting:String = walkerXml.@combat;
+				walker.combatBrainClass = combatBrain[combatSetting];
 			}
 			
 		}

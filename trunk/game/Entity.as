@@ -9,6 +9,7 @@ package angel.game {
 	import flash.display.DisplayObject;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.filters.GlowFilter;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
@@ -54,8 +55,15 @@ package angel.game {
 		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
 		public var combatMovePoints:int = Settings.combatMovePoints;
 		public var exploreBrainClass:Class;
+		public var combatBrainClass:Class;
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
 		public var brain:Object;
+		
+		// I'm not terribly happy about this as a UI feature, but Wm wants "enemies" to have their tiles outlined
+		// in red during combat.  In the first implementation, I'm going to completely ignore the fact that this
+		// will overwrite or be overwritten by the mouse-movement tile outlines.  If we end up keeping the feature,
+		// and if the mouse conflict becomes a problem, then I'll have to hack in some sort of multiple-filter-tracking.
+		public var personalTileHilight:GlowFilter;
 		
 		public var isPlayerControlled:Boolean;
 
@@ -171,14 +179,21 @@ package angel.game {
 			myDepth += depthChangePerFrame;
 			adjustDrawOrder();
 			
-			if (isPlayerControlled && (Settings.testExploreScroll > 0) && (room.mode is RoomExplore)) {
-				scrollRoomToKeepPlayerWithinBox(Settings.testExploreScroll);
+			if (room.mode is RoomExplore) {
+				if (isPlayerControlled && (Settings.testExploreScroll > 0)) {
+					scrollRoomToKeepPlayerWithinBox(Settings.testExploreScroll);
+				}
+			} else {
+				if (isPlayerControlled || Settings.showEnemyMoves) {
+					centerRoomOnThis();
+				}
 			}
 			
 			frameOfMove++;
 			if (frameOfMove == coordsForEachFrameOfMove.length) {
 				movingTo = null;
 				coordsForEachFrameOfMove = null;
+				adjustImageForMove(); // make sure we end up in "standing" posture even if move was ultra-fast
 				if (path.length == 0) {
 					finishedMoving();
 				}
@@ -186,7 +201,9 @@ package angel.game {
 		}
 		
 		private function finishedMoving():void {
+			movingTo = null;
 			path = null;
+			coordsForEachFrameOfMove = null;
 			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
 			dispatchEvent(new Event(FINISHED_MOVING));
 		}
@@ -358,7 +375,13 @@ package angel.game {
 
 			room.x += xOffset;
 			room.y += yOffset;
-		}		
+		}
+		
+		private function centerRoomOnThis():void {
+			room.x = (stage.stageWidth / 2) - (this.x + this.width)/2;
+			room.y = (stage.stageHeight / 2) - (this.y + this.height)/2;
+			
+		}
 		
 		public static function sign(foo:int):int {
 			return (foo < 0 ? -1 : (foo > 0 ? 1 : 0));

@@ -40,6 +40,10 @@ package angel.common {
 			coord.y = (tileLoc.x + tileLoc.y + 1) * FLOOR_TILE_Y;
 			return coord;
 		}
+		
+		public function tileAt(tileLoc:Point):FloorTile {
+			return floorGrid[tileLoc.x][tileLoc.y];
+		}
 
 		public function get size():Point {
 			return xy;
