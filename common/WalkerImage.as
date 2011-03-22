@@ -12,7 +12,7 @@ package angel.common {
 		public static const RIGHT:int = 1;
 		public static const LEFT:int = 2;
 		
-		[Embed(source = '../../../assets/temp_default_walker.png')]
+		[Embed(source = '../../../EmbeddedAssets/temp_default_walker.png')]
 		private var DefaultWalkerBitmap:Class;
 		
 		private var entry:CatalogEntry;

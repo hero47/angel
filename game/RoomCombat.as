@@ -3,6 +3,7 @@ package angel.game {
 	import angel.common.Assert;
 	import angel.common.Floor;
 	import angel.common.FloorTile;
+	import angel.roomedit.Icon;
 	import flash.display.Graphics;
 	import flash.display.Shape;
 	import flash.display.Sprite;
@@ -38,6 +39,9 @@ package angel.game {
 			room.addEventListener(MouseEvent.MOUSE_DOWN, combatModeMouseDownListener);
 			room.addEventListener(MouseEvent.MOUSE_MOVE, combatModeMouseMoveListener);
 			room.addEventListener(MouseEvent.CLICK, combatModeClickListener);
+			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
+			//we're substituting ctrl-click.
+			//room.addEventListener(MouseEvent.RIGHT_CLICK, launchPieMenu);
 			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatModeKeyDownListener);
 			drawCombatGrid(room.decorationsLayer.graphics);
 			movePointsDisplay = createMovePointsTextField();
@@ -84,23 +88,44 @@ package angel.game {
 				break;
 				
 				case Keyboard.ENTER:
-					if (path.length > 0) {
-						playerMoveInProgress = true;
-						movePointsDisplay.visible = false;
-						
-						room.scrollToCenter(room.playerCharacter.location, true); // snap to current location
-						room.scrollToCenter(path[path.length - 1]); // begin gradual scroll to final location
-						
-						room.playerCharacter.addEventListener(Entity.MOVED, playerMoved);
-						room.playerCharacter.addEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
-						room.playerCharacter.startMovingAlongPath(path, gaitForDistance(path.length)); //CAUTION: this vector now belongs to entity!
-						path = new Vector.<Point>();
-						endIndexes.length = 0;
-					}
+					doMove();
 				break;
 			}
 			
 		}
+		
+		private function doMove(gaitChoice:int = Entity.GAIT_UNSPECIFIED):void {
+			if (path.length > 0) {
+				playerMoveInProgress = true;
+				movePointsDisplay.visible = false;
+				
+				room.scrollToCenter(room.playerCharacter.location, true); // snap to current location
+				room.scrollToCenter(path[path.length - 1]); // begin gradual scroll to final location
+				
+				if (gaitChoice == Entity.GAIT_UNSPECIFIED) {
+					gaitChoice = gaitForDistance(path.length);
+				}
+				room.playerCharacter.addEventListener(Entity.MOVED, playerMoved);
+				room.playerCharacter.addEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
+				room.playerCharacter.startMovingAlongPath(path, gaitChoice); //CAUTION: this vector now belongs to entity!
+				path = new Vector.<Point>();
+				endIndexes.length = 0;
+			}
+		
+		}
+		
+		private function doMoveWalk():void {
+			doMove(Entity.GAIT_WALK);
+		}
+		
+		private function doMoveRun():void {
+			doMove(Entity.GAIT_RUN);
+		}
+		
+		private function doMoveSprint():void {
+			doMove(Entity.GAIT_SPRINT);
+		}
+		
 
 		private function combatModeMouseDownListener(event:MouseEvent):void {
 			if (event.shiftKey) {
@@ -139,6 +164,12 @@ package angel.game {
 		}
 		
 		private function combatModeClickListener(event:MouseEvent):void {
+			if (event.ctrlKey) {
+				// Temporary since Flash Projector doesn't support right-button events.
+				// If/when we switch to AIR this will be replaced with a real right click listener.
+				launchPieMenu(event);
+				return;
+			}
 			if (!dragging && event.target is FloorTile) {
 				if (playerMoveInProgress) {
 					Alert.show("No commands allowed until move finishes.");
@@ -183,6 +214,12 @@ package angel.game {
 				path.length = dots.length;
 				movePointsDisplay.text = String(room.playerCharacter.combatMovePoints - path.length);
 			}
+		}
+		
+		private function removePath():void {
+			clearDots(0);
+			path.length = 0;
+			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints);
 		}
 		
 		private function colorForDistance(distance:int):uint {
@@ -268,6 +305,45 @@ package angel.game {
 			playerMoveInProgress = false;
 			movePointsDisplay.visible = true;
 			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints);
+		}	
+		
+		private function launchPieMenu(event:MouseEvent):void {
+			if (!playerMoveInProgress && event.target is FloorTile) {
+				var tile:FloorTile = event.target as FloorTile;
+				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
+				
+				if (path.length > 0) {
+					if (tile.location.equals(room.playerCharacter.location) ||
+							tile.location.equals(path[path.length - 1])) {
+						combatMovePie(slices);
+					}
+				}
+				
+				if (slices.length > 0) {
+					var tileCenterOnStage:Point = room.floor.localToGlobal(Floor.centerOf(tile.location));
+					room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatModeKeyDownListener);
+					var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices, pieMenuDismissed);
+					room.stage.addChild(pie);
+				}
+			}
+		}
+		
+		private function combatMovePie(slices:Vector.<PieSlice>):void {
+			// Pie-menu demo code, will be replaced once we have real functionality to put here
+			slices.push(new PieSlice(Icon.bitmapData(Icon.CancelMove), removePath));
+			var minGait:int = gaitForDistance(path.length);
+			if (minGait <= Entity.GAIT_WALK) {
+				slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doMoveWalk));
+			}
+			if (minGait <= Entity.GAIT_RUN) {
+				slices.push(new PieSlice(Icon.bitmapData(Icon.Run), doMoveRun));
+			}
+			slices.push(new PieSlice(Icon.bitmapData(Icon.Sprint), doMoveSprint));
+		}
+		
+		private function pieMenuDismissed():void {
+			trace("got to dismiss");
+			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatModeKeyDownListener);
 		}
 		
 	} // end class RoomCombat

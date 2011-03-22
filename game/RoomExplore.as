@@ -140,19 +140,25 @@ package angel.game {
 		private function playerFinishedMoving(event:Event):void {
 			playerMoveInProgress = false;
 			room.playerCharacter.removeEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
-		}
+		}	
 		
 		private function launchPieMenu(event:MouseEvent):void {
 			if (event.target is FloorTile) {
+				room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, exploreModeKeyDownListener);
 				var tile:FloorTile = event.target as FloorTile;
 				var tileCenterOnStage:Point = room.floor.localToGlobal(Floor.centerOf(tile.location));
 				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
+				// Pie-menu demo code, will be replaced once we have real functionality to put here
 				slices.push(new PieSlice(PieSlice.testIconData(), null));
 				slices.push(new PieSlice(null, null));
 				slices.push(new PieSlice(null, null));
-				var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices);
+				var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices, pieMenuDismissed);
 				room.stage.addChild(pie);
 			}
+		}
+		
+		private function pieMenuDismissed():void {
+			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, exploreModeKeyDownListener);
 		}
 		
 		/***************  TIMER STUFF  ****************/

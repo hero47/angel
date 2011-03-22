@@ -18,7 +18,7 @@ package angel.game {
 		}
 		
 				
-		[Embed(source='../../../assets/TestMenuItem.png')]
+		[Embed(source='../../../EmbeddedAssets/TestMenuItem.png')]
 		public static const TestIconBitmap:Class;
 		
 		public static function testIconData():BitmapData {
