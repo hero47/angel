@@ -1,4 +1,4 @@
-package angel.roomedit {
+package angel.game {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	/**
@@ -20,6 +20,8 @@ package angel.roomedit {
 		
 		[Embed(source = '../../../EmbeddedAssets/IconCancelMove.png')]
 		public static const CancelMove:Class;
+		[Embed(source = '../../../EmbeddedAssets/IconStay.png')]
+		public static const Stay:Class;
 		[Embed(source = '../../../EmbeddedAssets/IconWalk.png')]
 		public static const Walk:Class;
 		[Embed(source = '../../../EmbeddedAssets/IconRun.png')]

@@ -4,13 +4,13 @@ package angel.game {
 	import angel.common.Floor;
 	import angel.common.FloorTile;
 	import angel.common.Util;
-	import angel.roomedit.Icon;
 	import flash.display.Graphics;
 	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
+	import flash.events.TimerEvent;
 	import flash.filters.GlowFilter;
 	import flash.geom.Point;
 	import flash.text.TextField;
@@ -18,6 +18,7 @@ package angel.game {
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
 	import flash.ui.Keyboard;
+	import flash.utils.Timer;
 
 	
 	public class RoomCombat implements RoomMode {
@@ -30,6 +31,8 @@ package angel.game {
 		private var endIndexes:Vector.<int> = new Vector.<int>();
 		private var movePointsDisplay:TextField;
 		private var dragging:Boolean = false;
+		
+		private var pauseBetweenMoves:Timer = new Timer(2000, 1);;
 		
 		private var enemies:Vector.<Entity> = new Vector.<Entity>();
 		
@@ -48,6 +51,7 @@ package angel.game {
 			room.parent.addChild(movePointsDisplay);
 			room.addEventListener(Entity.MOVED, removeFirstDotOnPath);
 			room.addEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
+			pauseBetweenMoves.addEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
 			room.forEachEntity(initEntityForCombat);
 			Util.shuffle(enemies); // enemy turn order is randomized at start of combat and stays the same thereafter
 			
@@ -59,6 +63,7 @@ package angel.game {
 			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatModeMouseUpListener);
 			room.removeEventListener(Entity.MOVED, removeFirstDotOnPath);
 			room.removeEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
+			pauseBetweenMoves.removeEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
 			clearDots();
 			room.parent.removeChild(movePointsDisplay);
@@ -141,6 +146,7 @@ package angel.game {
 			if (gaitChoice == Entity.GAIT_UNSPECIFIED) {
 				gaitChoice = room.playerCharacter.gaitForDistance(path.length);
 			}
+			room.playerCharacter.centerRoomOnMe();
 			startEntityFollowingPath(room.playerCharacter, gaitChoice);
 		}
 		
@@ -148,6 +154,11 @@ package angel.game {
 			entity.startMovingAlongPath(path, gait); //CAUTION: this path now belongs to entity!
 			path = new Vector.<Point>();
 			endIndexes.length = 0;
+		}
+		
+		private function doPlayerMoveStay():void {
+			removePath();
+			doPlayerMove(Entity.GAIT_WALK);
 		}
 		
 		private function doPlayerMoveWalk():void {
@@ -338,12 +349,12 @@ package angel.game {
 			if (playerMoveInProgress) {
 				playerMoveInProgress = false;
 			}
-			doNextEnemyMove();
+			plotNextEnemyMove();
 		}
 		
-		private function doNextEnemyMove():void {
+		private function plotNextEnemyMove():void {
 			++iEnemyMoveInProgress;
-			trace("doNextEnemyMove for enemy #", iEnemyMoveInProgress);
+			trace("plotNextEnemyMove for enemy #", iEnemyMoveInProgress);
 			if (iEnemyMoveInProgress >= enemies.length) {
 				trace("All enemy moves have been processed, go back to player");
 				iEnemyMoveInProgress = -1;
@@ -354,14 +365,19 @@ package angel.game {
 				return;
 			}
 			
-			//UNDONE: start a timer for 2 seconds
+			//Start a timer for 2 seconds.  (It will be running while enemy calculates move, so we don't care if
+			//that takes more than a frame!)
+			pauseBetweenMoves.start();
 			
 			if (Settings.showEnemyMoves) {
 				enemies[iEnemyMoveInProgress].centerRoomOnMe();
 			}
 			enemies[iEnemyMoveInProgress].brain.chooseMoveAndDrawDots();
-			
-			//UNDONE: this code goes in timer callback, after the 2 seconds has expired
+		}
+		
+		private function enemyMoveTimerListener(event:TimerEvent):void {
+			trace("enemyMoveTimerListener for enemy #", iEnemyMoveInProgress);
+			pauseBetweenMoves.reset();
 			enemies[iEnemyMoveInProgress].brain.doMove();
 		}
 		
@@ -371,11 +387,9 @@ package angel.game {
 				var tile:FloorTile = event.target as FloorTile;
 				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
 				
-				if (path.length > 0) {
-					if (tile.location.equals(room.playerCharacter.location) ||
-							tile.location.equals(path[path.length - 1])) {
-						combatMovePie(slices);
-					}
+				if (tile.location.equals(room.playerCharacter.location) ||
+							(path.length > 0 && tile.location.equals(path[path.length - 1]))) {
+					combatMovePie(slices);
 				}
 				
 				if (slices.length > 0) {
@@ -388,15 +402,20 @@ package angel.game {
 		}
 		
 		private function combatMovePie(slices:Vector.<PieSlice>):void {
-			slices.push(new PieSlice(Icon.bitmapData(Icon.CancelMove), removePath));
-			var minGait:int = room.playerCharacter.gaitForDistance(path.length);
-			if (minGait <= Entity.GAIT_WALK) {
-				slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doPlayerMoveWalk));
+			if (path.length > 0) {
+				slices.push(new PieSlice(Icon.bitmapData(Icon.CancelMove), removePath));
 			}
-			if (minGait <= Entity.GAIT_RUN) {
-				slices.push(new PieSlice(Icon.bitmapData(Icon.Run), doPlayerMoveRun));
+			slices.push(new PieSlice(Icon.bitmapData(Icon.Stay), doPlayerMoveStay));
+			if (path.length > 0) {
+				var minGait:int = room.playerCharacter.gaitForDistance(path.length);
+				if (minGait <= Entity.GAIT_WALK) {
+					slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doPlayerMoveWalk));
+				}
+				if (minGait <= Entity.GAIT_RUN) {
+					slices.push(new PieSlice(Icon.bitmapData(Icon.Run), doPlayerMoveRun));
+				}
+				slices.push(new PieSlice(Icon.bitmapData(Icon.Sprint), doPlayerMoveSprint));
 			}
-			slices.push(new PieSlice(Icon.bitmapData(Icon.Sprint), doPlayerMoveSprint));
 		}
 		
 		private function pieMenuDismissed():void {
