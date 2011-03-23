@@ -4,6 +4,7 @@ package angel.game {
 	import angel.common.Prop;
 	import angel.common.PropImage;
 	import angel.common.Tileset;
+	import angel.common.Util;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
@@ -31,6 +32,7 @@ package angel.game {
 		public static const GAIT_WALK:int = 1;
 		public static const GAIT_RUN:int = 2;
 		public static const GAIT_SPRINT:int = 3;
+		public static const GAIT_TOO_FAR:int = 4;
 
 		// Facing == rotation/45 if we were in a top-down view.
 		// This will make it convenient if we ever want to determine facing from actual angles
@@ -230,7 +232,7 @@ package angel.game {
 			
 			// First, see if we can just take the default path without hitting an obstacle
 			while (!nextStep.equals(goal)) {
-				var step:Point = new Point(sign(goal.x - nextStep.x), sign(goal.y - nextStep.y));
+				var step:Point = new Point(Util.sign(goal.x - nextStep.x), Util.sign(goal.y - nextStep.y));
 				nextStep = checkBlockage(nextStep, step);
 				if (nextStep == null) {
 					blocked = true;
@@ -393,8 +395,17 @@ package angel.game {
 			room.y = (stage.stageHeight / 2) - this.y - this.height/2;
 		}
 		
-		public static function sign(foo:int):int {
-			return (foo < 0 ? -1 : (foo > 0 ? 1 : 0));
+		// NOTE: At some point entities will probably have their own individual move points & gait percentages.
+		public function gaitForDistance(distance:int):int {
+			if (distance<= Settings.walkPoints) {
+				return Entity.GAIT_WALK;
+			} else if (distance <= Settings.runPoints) {
+				return Entity.GAIT_RUN;
+			} else if (distance <= Settings.sprintPoints) {
+				return Entity.GAIT_SPRINT;
+			} else {
+				return Entity.GAIT_TOO_FAR;
+			}
 		}
 		
 

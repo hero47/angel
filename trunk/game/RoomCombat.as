@@ -128,18 +128,18 @@ package angel.game {
 				break;
 				
 				case Keyboard.ENTER:
-					doMove();
+					doPlayerMove();
 				break;
 			}
 			
 		}
 		
-		private function doMove(gaitChoice:int = Entity.GAIT_UNSPECIFIED):void {
+		private function doPlayerMove(gaitChoice:int = Entity.GAIT_UNSPECIFIED):void {
 			disableCombatUi();			
 			playerMoveInProgress = true;
 			
 			if (gaitChoice == Entity.GAIT_UNSPECIFIED) {
-				gaitChoice = gaitForDistance(path.length);
+				gaitChoice = room.playerCharacter.gaitForDistance(path.length);
 			}
 			startEntityFollowingPath(room.playerCharacter, gaitChoice);
 		}
@@ -150,16 +150,16 @@ package angel.game {
 			endIndexes.length = 0;
 		}
 		
-		private function doMoveWalk():void {
-			doMove(Entity.GAIT_WALK);
+		private function doPlayerMoveWalk():void {
+			doPlayerMove(Entity.GAIT_WALK);
 		}
 		
-		private function doMoveRun():void {
-			doMove(Entity.GAIT_RUN);
+		private function doPlayerMoveRun():void {
+			doPlayerMove(Entity.GAIT_RUN);
 		}
 		
-		private function doMoveSprint():void {
-			doMove(Entity.GAIT_SPRINT);
+		private function doPlayerMoveSprint():void {
+			doPlayerMove(Entity.GAIT_SPRINT);
 		}
 		
 
@@ -215,20 +215,23 @@ package angel.game {
 					if (!loc.equals(currentEnd)) {
 						var pathToMouse:Vector.<Point> = room.playerCharacter.findPathTo(loc, currentEnd);
 						if (pathToMouse != null && pathToMouse.length <= room.playerCharacter.combatMovePoints - path.length) {
-							extendPath(pathToMouse);
+							extendPath(room.playerCharacter, pathToMouse);
 						}
 					}
 				}
 			}
 		}
 		
-		public function extendPath(pathFromCurrentEndToNewEnd:Vector.<Point>):void {
+		// entity's move settings are used to determine dot color
+		// return minimum gait required for this path length
+		public function extendPath(entity:Entity, pathFromCurrentEndToNewEnd:Vector.<Point>):int {
 			clearDots();
 			path = path.concat(pathFromCurrentEndToNewEnd);
 			endIndexes.push(path.length - 1);
 			dots.length = path.length;
 			var endIndexIndex:int = 0;
-			var color:uint = colorForDistance(path.length);
+			var gait:int = entity.gaitForDistance(path.length);
+			var color:uint = colorForGait(gait);
 			for (var i:int = 0; i < path.length; i++) {
 				var isEnd:Boolean = (i == endIndexes[endIndexIndex]);
 				dots[i] = dot(color, Floor.centerOf(path[i]), isEnd );
@@ -239,6 +242,7 @@ package angel.game {
 			}
 			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints - path.length);
 			trace("end of extendPath, path & dots length", path.length);
+			return gait;
 		}
 		
 		private function removeLastPathSegment():void {
@@ -257,26 +261,19 @@ package angel.game {
 			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints);
 		}
 		
-		private function colorForDistance(distance:int):uint {
-			if (distance<= Settings.walkPoints) {
-				return walkColor;
-			} else if (distance <= Settings.runPoints) {
-				return runColor;
-			} else if (distance <= Settings.sprintPoints) {
-				return sprintColor;
-			} else {
-				return outOfRangeColor;
+		private function colorForGait(gait:int):uint {
+			switch (gait) {
+				case Entity.GAIT_WALK:
+					return walkColor;
+				break;
+				case Entity.GAIT_RUN:
+					return runColor;
+				break;
+				case Entity.GAIT_SPRINT:
+					return sprintColor;
+				break;
 			}
-		}
-		
-		private function gaitForDistance(distance:int):int {
-			if (distance<= Settings.walkPoints) {
-				return Entity.GAIT_WALK;
-			} else if (distance <= Settings.runPoints) {
-				return Entity.GAIT_RUN;
-			} else {
-				return Entity.GAIT_SPRINT;
-			}
+			return outOfRangeColor;
 		}
 		
 		private function combatModeMouseMoveListener(event:MouseEvent):void {
@@ -291,7 +288,7 @@ package angel.game {
 						distance = path.length + pathToMouse.length;
 					}
 				}
-				room.moveHilight(tile, colorForDistance(distance));
+				room.moveHilight(tile, colorForGait(room.playerCharacter.gaitForDistance(distance)));
 			}
 		}
 		
@@ -391,16 +388,15 @@ package angel.game {
 		}
 		
 		private function combatMovePie(slices:Vector.<PieSlice>):void {
-			// Pie-menu demo code, will be replaced once we have real functionality to put here
 			slices.push(new PieSlice(Icon.bitmapData(Icon.CancelMove), removePath));
-			var minGait:int = gaitForDistance(path.length);
+			var minGait:int = room.playerCharacter.gaitForDistance(path.length);
 			if (minGait <= Entity.GAIT_WALK) {
-				slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doMoveWalk));
+				slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doPlayerMoveWalk));
 			}
 			if (minGait <= Entity.GAIT_RUN) {
-				slices.push(new PieSlice(Icon.bitmapData(Icon.Run), doMoveRun));
+				slices.push(new PieSlice(Icon.bitmapData(Icon.Run), doPlayerMoveRun));
 			}
-			slices.push(new PieSlice(Icon.bitmapData(Icon.Sprint), doMoveSprint));
+			slices.push(new PieSlice(Icon.bitmapData(Icon.Sprint), doPlayerMoveSprint));
 		}
 		
 		private function pieMenuDismissed():void {
