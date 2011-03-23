@@ -65,6 +65,10 @@ package angel.common {
 			}
 		}
 		
-	}
+		public static function sign(foo:int):int {
+			return (foo < 0 ? -1 : (foo > 0 ? 1 : 0));
+		}
+		
+	} // end class Util
 
 }
