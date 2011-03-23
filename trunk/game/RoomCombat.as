@@ -3,6 +3,7 @@ package angel.game {
 	import angel.common.Assert;
 	import angel.common.Floor;
 	import angel.common.FloorTile;
+	import angel.common.Util;
 	import angel.roomedit.Icon;
 	import flash.display.Graphics;
 	import flash.display.Shape;
@@ -23,11 +24,14 @@ package angel.game {
 		
 		private var room:Room;
 		private var playerMoveInProgress:Boolean = false;
+		private var iEnemyMoveInProgress:int = -1;
 		private var path:Vector.<Point> = new Vector.<Point>();
 		private var dots:Vector.<Shape> = new Vector.<Shape>();
 		private var endIndexes:Vector.<int> = new Vector.<int>();
 		private var movePointsDisplay:TextField;
 		private var dragging:Boolean = false;
+		
+		private var enemies:Vector.<Entity> = new Vector.<Entity>();
 		
 		private static const walkColor:uint = 0x00ff00;
 		private static const runColor:uint = 0xffd800;
@@ -36,6 +40,50 @@ package angel.game {
 
 		public function RoomCombat(room:Room) {
 			this.room = room;
+			drawCombatGrid(room.decorationsLayer.graphics);
+			movePointsDisplay = createMovePointsTextField();
+			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints);
+			movePointsDisplay.x = 10;
+			movePointsDisplay.y = 10;
+			room.parent.addChild(movePointsDisplay);
+			room.addEventListener(Entity.MOVED, removeFirstDotOnPath);
+			room.addEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
+			room.forEachEntity(initEntityForCombat);
+			Util.shuffle(enemies); // enemy turn order is randomized at start of combat and stays the same thereafter
+			
+			enableCombatUi();
+		}
+
+		public function cleanup():void {
+			disableCombatUi();
+			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatModeMouseUpListener);
+			room.removeEventListener(Entity.MOVED, removeFirstDotOnPath);
+			room.removeEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
+			room.decorationsLayer.graphics.clear(); // remove grid outlines
+			clearDots();
+			room.parent.removeChild(movePointsDisplay);
+			room.forEachEntity(cleanupEntityFromCombat);
+		}
+		
+		private function initEntityForCombat(entity:Entity):void {
+			if (entity.combatBrainClass != null) {
+				enemies.push(entity);
+				entity.brain = new entity.combatBrainClass(entity, this);
+				entity.personalTileHilight = new GlowFilter(0xff0000, 1, 15, 15, 10, 1, true, false);
+				room.updatePersonalTileHilight(entity);
+			}
+		}
+		
+		private function cleanupEntityFromCombat(entity:Entity):void {
+			entity.brain = null;
+			if (entity.combatBrainClass != null) {
+				entity.personalTileHilight = null;
+				room.updatePersonalTileHilight(entity);
+			}
+		}
+		
+		// call this when player-controlled part of the turn begins, to allow player to enter move
+		private function enableCombatUi():void {
 			room.addEventListener(MouseEvent.MOUSE_DOWN, combatModeMouseDownListener);
 			room.addEventListener(MouseEvent.MOUSE_MOVE, combatModeMouseMoveListener);
 			room.addEventListener(MouseEvent.CLICK, combatModeClickListener);
@@ -43,44 +91,18 @@ package angel.game {
 			//we're substituting ctrl-click.
 			//room.addEventListener(MouseEvent.RIGHT_CLICK, launchPieMenu);
 			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatModeKeyDownListener);
-			drawCombatGrid(room.decorationsLayer.graphics);
-			movePointsDisplay = createMovePointsTextField();
+			movePointsDisplay.visible = true;
 			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints);
-			movePointsDisplay.x = 10;
-			movePointsDisplay.y = 10;
-			room.parent.addChild(movePointsDisplay);
-			room.forEachEntity(initEntityBrain);
 		}
-
-		public function cleanup():void {
+		
+		// call this when computer-controlled part of the turn begins, to prevent player from mucking around
+		private function disableCombatUi():void {
+			movePointsDisplay.visible = false;
+			room.moveHilight(null, 0);
 			room.removeEventListener(MouseEvent.CLICK, combatModeClickListener);
 			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatModeMouseDownListener);
-			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatModeMouseUpListener);
 			room.removeEventListener(MouseEvent.MOUSE_MOVE, combatModeMouseMoveListener);
 			room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatModeKeyDownListener);
-			room.playerCharacter.removeEventListener(Entity.MOVED, playerMoved);
-			room.playerCharacter.removeEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
-			room.decorationsLayer.graphics.clear();
-			room.parent.removeChild(movePointsDisplay);
-			clearDots();
-			room.moveHilight(null, 0);
-			room.forEachEntity(endEntityBrain);
-		}
-		
-		private function initEntityBrain(entity:Entity):void {
-			if (entity.combatBrainClass != null) {
-				entity.brain = new entity.combatBrainClass(entity, this);
-				entity.personalTileHilight = new GlowFilter(0xff0000, 1, 15, 15, 10, 1, true, false);
-				room.updatePersonalTileHilight(entity);
-			}
-		}
-		
-		private function endEntityBrain(entity:Entity):void {
-			entity.brain = null;
-			if (entity.combatBrainClass != null) {
-				entity.personalTileHilight = null;
-				room.updatePersonalTileHilight(entity);
-			}
 		}
 		
 		// For God-only-knows what reason, the version of Keyboard class for Flex compilation is missing all
@@ -113,23 +135,19 @@ package angel.game {
 		}
 		
 		private function doMove(gaitChoice:int = Entity.GAIT_UNSPECIFIED):void {
-			if (path.length > 0) {
-				playerMoveInProgress = true;
-				movePointsDisplay.visible = false;
-				
-				//room.scrollToCenter(room.playerCharacter.location, true); // snap to current location
-				//room.scrollToCenter(path[path.length - 1]); // begin gradual scroll to final location
-				
-				if (gaitChoice == Entity.GAIT_UNSPECIFIED) {
-					gaitChoice = gaitForDistance(path.length);
-				}
-				room.playerCharacter.addEventListener(Entity.MOVED, playerMoved);
-				room.playerCharacter.addEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
-				room.playerCharacter.startMovingAlongPath(path, gaitChoice); //CAUTION: this vector now belongs to entity!
-				path = new Vector.<Point>();
-				endIndexes.length = 0;
+			disableCombatUi();			
+			playerMoveInProgress = true;
+			
+			if (gaitChoice == Entity.GAIT_UNSPECIFIED) {
+				gaitChoice = gaitForDistance(path.length);
 			}
+			startEntityFollowingPath(room.playerCharacter, gaitChoice);
+		}
 		
+		public function startEntityFollowingPath(entity:Entity, gait:int):void {
+			entity.startMovingAlongPath(path, gait); //CAUTION: this path now belongs to entity!
+			path = new Vector.<Point>();
+			endIndexes.length = 0;
 		}
 		
 		private function doMoveWalk():void {
@@ -146,6 +164,7 @@ package angel.game {
 		
 
 		private function combatModeMouseDownListener(event:MouseEvent):void {
+			Assert.assertTrue(!playerMoveInProgress, "Listener should be disabled");
 			if (event.shiftKey) {
 				room.addEventListener(MouseEvent.MOUSE_UP, combatModeMouseUpListener);
 				room.startDrag();
@@ -189,10 +208,7 @@ package angel.game {
 				return;
 			}
 			if (!dragging && event.target is FloorTile) {
-				if (playerMoveInProgress) {
-					Alert.show("No commands allowed until move finishes.");
-					return;
-				}
+				Assert.assertTrue(!playerMoveInProgress, "Listener should be disabled");
 				var loc:Point = (event.target as FloorTile).location;
 				if (!room.playerCharacter.tileBlocked(loc)) {
 					var currentEnd:Point = (path.length == 0 ? room.playerCharacter.location : path[path.length - 1]);
@@ -206,22 +222,23 @@ package angel.game {
 			}
 		}
 		
-		private function extendPath(pathToMouse:Vector.<Point>):void {
+		public function extendPath(pathFromCurrentEndToNewEnd:Vector.<Point>):void {
 			clearDots();
-			path = path.concat(pathToMouse);
+			path = path.concat(pathFromCurrentEndToNewEnd);
 			endIndexes.push(path.length - 1);
 			dots.length = path.length;
 			var endIndexIndex:int = 0;
+			var color:uint = colorForDistance(path.length);
 			for (var i:int = 0; i < path.length; i++) {
-				var color:uint;
 				var isEnd:Boolean = (i == endIndexes[endIndexIndex]);
-				dots[i] = dot(colorForDistance(path.length), Floor.centerOf(path[i]), isEnd );
+				dots[i] = dot(color, Floor.centerOf(path[i]), isEnd );
 				room.decorationsLayer.addChild(dots[i]);
 				if (isEnd) {
 					++endIndexIndex;
 				}
 			}
 			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints - path.length);
+			trace("end of extendPath, path & dots length", path.length);
 		}
 		
 		private function removeLastPathSegment():void {
@@ -263,7 +280,8 @@ package angel.game {
 		}
 		
 		private function combatModeMouseMoveListener(event:MouseEvent):void {
-			if (!playerMoveInProgress && event.target is FloorTile) {
+			Assert.assertTrue(!playerMoveInProgress, "Listener should be disabled");
+			if (event.target is FloorTile) {
 				var tile:FloorTile = event.target as FloorTile;
 				var distance:int = 1000;
 				if (!room.playerCharacter.tileBlocked(tile.location) && (path.length < room.playerCharacter.combatMovePoints)) {
@@ -312,21 +330,47 @@ package angel.game {
 		}
 		
 		
-		private function playerMoved(event:Event):void {
+		private function removeFirstDotOnPath(event:Event):void {
+			trace("Remove a dot, dots.length", dots.length);
+			Assert.assertTrue(dots.length > 0, "Entity.MOVED with no dots remaining");
 			var dotToRemove:Shape = dots.shift();
 			room.decorationsLayer.removeChild(dotToRemove);
 		}		
 
-		private function playerFinishedMoving(event:Event):void {
-			room.playerCharacter.removeEventListener(Entity.MOVED, playerMoved);
-			room.playerCharacter.removeEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
-			playerMoveInProgress = false;
-			movePointsDisplay.visible = true;
-			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints);
-		}	
+		private function finishedMovingListener(event:Event = null):void {
+			if (playerMoveInProgress) {
+				playerMoveInProgress = false;
+			}
+			doNextEnemyMove();
+		}
+		
+		private function doNextEnemyMove():void {
+			++iEnemyMoveInProgress;
+			trace("doNextEnemyMove for enemy #", iEnemyMoveInProgress);
+			if (iEnemyMoveInProgress >= enemies.length) {
+				trace("All enemy moves have been processed, go back to player");
+				iEnemyMoveInProgress = -1;
+				if (Settings.showEnemyMoves) {
+					room.playerCharacter.centerRoomOnMe();
+				}
+				enableCombatUi();
+				return;
+			}
+			
+			//UNDONE: start a timer for 2 seconds
+			
+			if (Settings.showEnemyMoves) {
+				enemies[iEnemyMoveInProgress].centerRoomOnMe();
+			}
+			enemies[iEnemyMoveInProgress].brain.chooseMoveAndDrawDots();
+			
+			//UNDONE: this code goes in timer callback, after the 2 seconds has expired
+			enemies[iEnemyMoveInProgress].brain.doMove();
+		}
 		
 		private function launchPieMenu(event:MouseEvent):void {
-			if (!playerMoveInProgress && event.target is FloorTile) {
+			Assert.assertTrue(!playerMoveInProgress, "Listener should be disabled");
+			if (event.target is FloorTile) {
 				var tile:FloorTile = event.target as FloorTile;
 				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
 				

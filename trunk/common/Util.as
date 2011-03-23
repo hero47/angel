@@ -50,6 +50,20 @@ package angel.common {
 		public static function findRotFacingVector(vector:Point):Number {
 			return Math.atan2(vector.y, vector.x ) * 180 / Math.PI;
 		}
+
+		// Fisher-Yates shuffle
+		// declaring v:Vector isn't allowed, but Object works. Yay CS5.
+		public static function shuffle(v:Object):void {
+			for (var i:int = v.length - 1; i > 0; i--)
+			{
+				var j:int = Math.floor(Math.random() * (i + 1));
+				if (j != i) {
+					var temp:* = v[i];
+					v[i] = v[j];
+					v[j] = temp;
+				}
+			}
+		}
 		
 	}
 

@@ -7,6 +7,7 @@ package angel.game {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
+	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.filters.GlowFilter;
@@ -66,7 +67,6 @@ package angel.game {
 		public var personalTileHilight:GlowFilter;
 		
 		public var isPlayerControlled:Boolean;
-
 		private var room:Room;
 		private var moveGoal:Point; // the tile we're trying to get to
 		private var path:Vector.<Point>; // the tiles we're trying to move through to get there
@@ -77,12 +77,19 @@ package angel.game {
 		protected var frameOfMove:int;
 		protected var facing:int;
 		
-		public function Entity(bitmap:Bitmap = null) {
+		public var aaId:String; // catalog id + arbitrary index, for debugging, at top of alphabet for easy seeing!
+		private static var totalEntitiesCreated:int = 0;
+		
+		// id is for debugging use only
+		public function Entity(bitmap:Bitmap = null, id:String = "") {
 			super(bitmap);
+			
+			totalEntitiesCreated++;
+			aaId = id + "-" + String(totalEntitiesCreated);
 		}
 		
-		public static function createFromPropImage(propImage:PropImage):Entity {
-			var entity:Entity = new Entity(new Bitmap(propImage.imageData));
+		public static function createFromPropImage(propImage:PropImage, id:String = ""):Entity {
+			var entity:Entity = new Entity(new Bitmap(propImage.imageData), id);
 			entity.solid = propImage.solid;
 			return entity;
 		}
@@ -107,7 +114,10 @@ package angel.game {
 		}
 		
 		public function startMovingAlongPath(newPath:Vector.<Point>, gait:int = GAIT_EXPLORE):void {
-			Assert.assertTrue(newPath != null, "Attempt to follow null path");
+			if (newPath == null || newPath.length == 0) {
+				finishedMoving();
+				return;
+			}
 			path = newPath;
 			moveGoal = path[path.length - 1];
 			moveSpeed = gaitSpeeds[gait];
@@ -170,7 +180,7 @@ package angel.game {
 				// Change the "real" location to the next tile.  Doing this on first frame of move rather than
 				// halfway through the move circumvents a whole host of problems!
 				room.changeEntityLocation(this, movingTo);
-				dispatchEvent(new Event(MOVED));
+				dispatchEvent(new Event(MOVED, true));
 				myLocation = movingTo;
 			}
 			adjustImageForMove();
@@ -185,7 +195,7 @@ package angel.game {
 				}
 			} else {
 				if (isPlayerControlled || Settings.showEnemyMoves) {
-					centerRoomOnThis();
+					centerRoomOnMe();
 				}
 			}
 			
@@ -201,11 +211,12 @@ package angel.game {
 		}
 		
 		private function finishedMoving():void {
+			trace(aaId, "Finished moving");
 			movingTo = null;
 			path = null;
 			coordsForEachFrameOfMove = null;
 			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
-			dispatchEvent(new Event(FINISHED_MOVING));
+			dispatchEvent(new Event(FINISHED_MOVING, true));
 		}
 		
 		// if from is null, find path from current location
@@ -377,10 +388,9 @@ package angel.game {
 			room.y += yOffset;
 		}
 		
-		private function centerRoomOnThis():void {
-			room.x = (stage.stageWidth / 2) - (this.x + this.width)/2;
-			room.y = (stage.stageHeight / 2) - (this.y + this.height)/2;
-			
+		public function centerRoomOnMe():void {
+			room.x = (stage.stageWidth / 2) - this.x - this.width/2;
+			room.y = (stage.stageHeight / 2) - this.y - this.height/2;
 		}
 		
 		public static function sign(foo:int):int {
