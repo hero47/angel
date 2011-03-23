@@ -116,12 +116,16 @@ package angel.game {
 		}
 		
 		public function startMovingAlongPath(newPath:Vector.<Point>, gait:int = GAIT_EXPLORE):void {
-			if (newPath == null || newPath.length == 0) {
-				finishedMoving();
-				return;
-			}
-			path = newPath;
-			moveGoal = path[path.length - 1];
+			// You'd think we could just call finishedMoving() here, if we're passed a null or empty path.
+			// But if we do that, then the code that's listening for a FINISHED_MOVING event gets called
+			// before we return from here, and it starts the next entity's move calculations before
+			// the cleanup for this one has been done.  It's a terrible mess, because Actionscript's
+			// dispatchEvent does an immediate call rather than putting the event into a queue.
+			// So, we will pretend we have a path even if we don't, forcing that processing to happen
+			// next time we get an ENTER_FRAME which is really asynchronous.
+			path = (newPath == null ? new Vector.<Point> : newPath);
+			moveGoal = (path.length > 0 ? path[path.length - 1] : myLocation);
+			gait = Math.min(gait, GAIT_SPRINT);
 			moveSpeed = gaitSpeeds[gait];
 			room.addEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
 		}
@@ -173,7 +177,7 @@ package angel.game {
 				// Someone may have moved onto my path in the time since I plotted it.  If so, abort move.
 				// If my brain wants to do something special in this case, it will need to remember its goal,
 				// listen for FINISHED_MOVING event, compare location to goal, and take appropriate action.
-				if (tileBlocked(movingTo)) {
+				if (movingTo == null || tileBlocked(movingTo)) {
 					finishedMoving();
 					return;
 				}
