@@ -60,15 +60,17 @@ package angel.game {
 			
 			addEventListener(Event.ENTER_FRAME, enterFrameListener);
 			//addEventListener(Event.ADDED_TO_STAGE, finishInit);
-			
 		}
 		
 		/*
 		private function finishInit(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, finishInit);
-
 		}
 		*/
+		
+		override public function set x(value:Number):void {
+			super.x = value;
+		}
 		
 		public function scrollToCenter(tileLoc:Point, instant:Boolean=false):void {
 			var desiredCenter:Point = Floor.centerOf(tileLoc);
@@ -221,12 +223,12 @@ package angel.game {
 		
 		public function addPropByName(catalog:Catalog, id:String, location:Point):void {
 			var propImage:PropImage = catalog.retrievePropImage(id);
-			var prop:Entity = Entity.createFromPropImage(propImage);
+			var prop:Entity = Entity.createFromPropImage(propImage, id);
 			addEntity(prop, location);
 		}
 		
 		public function addWalkerByName(catalog:Catalog, id:String, location:Point):Walker {
-			var entity:Walker = new Walker(catalog.retrieveWalkerImage(id));
+			var entity:Walker = new Walker(catalog.retrieveWalkerImage(id), id);
 			entity.solid = Prop.SOLID;
 			addEntity(entity, location);
 			return entity;

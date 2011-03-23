@@ -9,11 +9,11 @@ package angel.game {
 		private static const walkFrames:Vector.<int> = Vector.<int>([WalkerImage.LEFT, WalkerImage.STAND,
 			WalkerImage.RIGHT, WalkerImage.STAND, WalkerImage.LEFT, WalkerImage.STAND, WalkerImage.RIGHT, WalkerImage.STAND]);
 		
-			
-		public function Walker(images:WalkerImage) {
+		// id is for debugging use only
+		public function Walker(images:WalkerImage, id:String="") {
 			this.images = images;
 			facing = Entity.FACE_CAMERA;
-			super(new Bitmap(images.bitsFacing(facing)));
+			super(new Bitmap(images.bitsFacing(facing)), id);
 		}
 
 		override protected function adjustImageForMove():void {
