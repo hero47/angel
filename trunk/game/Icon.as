@@ -29,6 +29,21 @@ package angel.game {
 		[Embed(source = '../../../EmbeddedAssets/IconSprint.png')]
 		public static const Sprint:Class;
 		
+		[Embed(source = '../../../EmbeddedAssets/combat_icon_fire.png')]
+		public static const CombatFire:Class;
+		[Embed(source='../../../EmbeddedAssets/combat_icon_cancel.png')]
+		public static const CombatCancelTarget:Class;
+		[Embed(source = '../../../EmbeddedAssets/combat_icon_hold.png')]
+		public static const CombatReserveFire:Class;
+		[Embed(source = '../../../EmbeddedAssets/combat_icon_notarget.png')]
+		public static const CombatNoTarget:Class;
+		
+		[Embed(source = '../../../EmbeddedAssets/combat_cursor_active.png')]
+		public static const CombatCursorActive:Class;
+		[Embed(source = '../../../EmbeddedAssets/combat_cursor_inactive.png')]
+		public static const CombatCursorInactive:Class;
+		
+		
 	}
 
 }
