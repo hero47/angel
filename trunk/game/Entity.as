@@ -217,7 +217,6 @@ package angel.game {
 		}
 		
 		private function finishedMoving():void {
-			trace(aaId, "Finished moving");
 			movingTo = null;
 			path = null;
 			coordsForEachFrameOfMove = null;
