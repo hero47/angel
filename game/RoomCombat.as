@@ -25,7 +25,7 @@ package angel.game {
 		
 		private var room:Room;
 		private var playerMoveInProgress:Boolean = false;
-		private var iEnemyMoveInProgress:int = -1;
+		private var iFighterTurnInProgress:int;
 		private var path:Vector.<Point> = new Vector.<Point>();
 		private var dots:Vector.<Shape> = new Vector.<Shape>();
 		private var endIndexes:Vector.<int> = new Vector.<int>();
@@ -34,7 +34,8 @@ package angel.game {
 		
 		private var pauseBetweenMoves:Timer = new Timer(2000, 1);;
 		
-		private var enemies:Vector.<Entity> = new Vector.<Entity>();
+		// The entities who get combat turns. Everything else is just decoration/obstacles.
+		private var fighters:Vector.<Entity> = new Vector.<Entity>();
 		
 		private static const walkColor:uint = 0x00ff00;
 		private static const runColor:uint = 0xffd800;
@@ -51,30 +52,36 @@ package angel.game {
 			movePointsDisplay.x = 10;
 			movePointsDisplay.y = 10;
 			room.parent.addChild(movePointsDisplay);
+			
 			room.addEventListener(Entity.MOVED, removeFirstDotOnPath);
 			room.addEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
 			pauseBetweenMoves.addEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
-			room.forEachEntity(initEntityForCombat);
-			Util.shuffle(enemies); // enemy turn order is randomized at start of combat and stays the same thereafter
 			
-			enableCombatUi();
+			room.forEachEntity(initEntityForCombat); // Add enemies to fighter list & init their combat brains
+			Util.shuffle(fighters); // enemy turn order is randomized at start of combat and stays the same thereafter
+			fighters.splice(0, 0, room.playerCharacter); // player always goes first
+			iFighterTurnInProgress = 0;
+			
+			enableCombatMoveUi();
 		}
 
 		public function cleanup():void {
-			disableCombatUi();
-			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatModeMouseUpListener);
+			disableCombatMoveUi();
+			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatSharedMouseUpListener);
 			room.removeEventListener(Entity.MOVED, removeFirstDotOnPath);
 			room.removeEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
 			pauseBetweenMoves.removeEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
 			clearDots();
 			room.parent.removeChild(movePointsDisplay);
-			room.forEachEntity(cleanupEntityFromCombat);
+			for each (var entity:Entity in fighters) {
+				cleanupEntityFromCombat(entity);
+			}
 		}
 		
 		private function initEntityForCombat(entity:Entity):void {
 			if (entity.combatBrainClass != null) {
-				enemies.push(entity);
+				fighters.push(entity);
 				entity.brain = new entity.combatBrainClass(entity, this);
 				entity.personalTileHilight = new GlowFilter(0xff0000, 1, 15, 15, 10, 1, true, false);
 				room.updatePersonalTileHilight(entity);
@@ -83,10 +90,8 @@ package angel.game {
 		
 		private function cleanupEntityFromCombat(entity:Entity):void {
 			entity.brain = null;
-			if (entity.combatBrainClass != null) {
-				entity.personalTileHilight = null;
-				room.updatePersonalTileHilight(entity);
-			}
+			entity.personalTileHilight = null;
+			room.updatePersonalTileHilight(entity);
 		}
 		
 		//NOTE: grid lines are tweaked up by one pixel because the tile image bitmaps actually extend one pixel outside the
@@ -123,40 +128,55 @@ package angel.game {
 			return myTextField;
 		}
 		
-		/********** Player UI-related ****************/
+		/********** Player UI-related -- Shared by Move & Fire segments ****************/
+
+		private function combatSharedMouseDownListener(event:MouseEvent):void {
+			if (event.shiftKey) {
+				room.addEventListener(MouseEvent.MOUSE_UP, combatSharedMouseUpListener);
+				room.startDrag();
+				dragging = true;
+			} else {
+				dragging = false;
+			}
+		}
+
+		private function combatSharedMouseUpListener(event:MouseEvent):void {
+			room.removeEventListener(MouseEvent.MOUSE_UP, combatSharedMouseUpListener);
+			room.stopDrag();
+		}
+		
+		/********** Player UI-related -- Move segment ****************/
 		
 		// call this when player-controlled part of the turn begins, to allow player to enter move
-		private function enableCombatUi():void {
-			room.addEventListener(MouseEvent.MOUSE_DOWN, combatModeMouseDownListener);
-			room.addEventListener(MouseEvent.MOUSE_MOVE, combatModeMouseMoveListener);
-			room.addEventListener(MouseEvent.CLICK, combatModeClickListener);
+		private function enableCombatMoveUi():void {
+			trace("entering player move phase");
+			room.addEventListener(MouseEvent.MOUSE_DOWN, combatSharedMouseDownListener);
+			room.addEventListener(MouseEvent.MOUSE_MOVE, combatMoveMouseMoveListener);
+			room.addEventListener(MouseEvent.CLICK, combatMoveClickListener);
 			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
 			//we're substituting ctrl-click.
 			//room.addEventListener(MouseEvent.RIGHT_CLICK, launchPieMenu);
-			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatModeKeyDownListener);
+			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatMoveKeyDownListener);
 			movePointsDisplay.visible = true;
 			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints);
 		}
 		
 		// call this when computer-controlled part of the turn begins, to prevent player from mucking around
-		private function disableCombatUi():void {
+		private function disableCombatMoveUi():void {
+			trace("ending player move phase");
 			movePointsDisplay.visible = false;
 			room.moveHilight(null, 0);
-			room.removeEventListener(MouseEvent.CLICK, combatModeClickListener);
-			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatModeMouseDownListener);
-			room.removeEventListener(MouseEvent.MOUSE_MOVE, combatModeMouseMoveListener);
-			room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatModeKeyDownListener);
+			room.removeEventListener(MouseEvent.CLICK, combatMoveClickListener);
+			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatSharedMouseDownListener);
+			room.removeEventListener(MouseEvent.MOUSE_MOVE, combatMoveMouseMoveListener);
+			room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatMoveKeyDownListener);
 		}
 		
 		// For God-only-knows what reason, the version of Keyboard class for Flex compilation is missing all
 		// of the letter-key constants.  The version in CS5 has them.  ?????
 		public static const KEYBOARD_C:uint = 67;
 		public static const KEYBOARD_V:uint = 86;
-		private function combatModeKeyDownListener(event:KeyboardEvent):void {
-			if (playerMoveInProgress) {
-				Alert.show("No commands allowed until move finishes.");
-				return;
-			}
+		private function combatMoveKeyDownListener(event:KeyboardEvent):void {
 			switch (event.keyCode) {
 				case KEYBOARD_C:
 					room.changeModeTo(RoomExplore);
@@ -176,20 +196,8 @@ package angel.game {
 			}
 			
 		}
-
-		private function combatModeMouseDownListener(event:MouseEvent):void {
-			Assert.assertTrue(!playerMoveInProgress, "Listener should be disabled");
-			if (event.shiftKey) {
-				room.addEventListener(MouseEvent.MOUSE_UP, combatModeMouseUpListener);
-				room.startDrag();
-				dragging = true;
-			} else {
-				dragging = false;
-			}
-		}
 		
-		private function combatModeMouseMoveListener(event:MouseEvent):void {
-			Assert.assertTrue(!playerMoveInProgress, "Listener should be disabled");
+		private function combatMoveMouseMoveListener(event:MouseEvent):void {
 			if (event.target is FloorTile) {
 				var tile:FloorTile = event.target as FloorTile;
 				var distance:int = 1000;
@@ -203,21 +211,15 @@ package angel.game {
 				room.moveHilight(tile, colorForGait(room.playerCharacter.gaitForDistance(distance)));
 			}
 		}
-
-		private function combatModeMouseUpListener(event:MouseEvent):void {
-			room.removeEventListener(MouseEvent.MOUSE_UP, combatModeMouseUpListener);
-			room.stopDrag();
-		}
 		
-		private function combatModeClickListener(event:MouseEvent):void {
+		private function combatMoveClickListener(event:MouseEvent):void {
 			if (event.ctrlKey) {
 				// Temporary since Flash Projector doesn't support right-button events.
 				// If/when we switch to AIR this will be replaced with a real right click listener.
-				launchPieMenu(event);
+				launchCombatMovePieMenu(event);
 				return;
 			}
 			if (!dragging && event.target is FloorTile) {
-				Assert.assertTrue(!playerMoveInProgress, "Listener should be disabled");
 				var loc:Point = (event.target as FloorTile).location;
 				if (!room.playerCharacter.tileBlocked(loc)) {
 					var currentEnd:Point = (path.length == 0 ? room.playerCharacter.location : path[path.length - 1]);
@@ -231,8 +233,7 @@ package angel.game {
 			}
 		}
 		
-		private function launchPieMenu(event:MouseEvent):void {
-			Assert.assertTrue(!playerMoveInProgress, "Listener should be disabled");
+		private function launchCombatMovePieMenu(event:MouseEvent):void {
 			if (event.target is FloorTile) {
 				var tile:FloorTile = event.target as FloorTile;
 				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
@@ -244,8 +245,8 @@ package angel.game {
 				
 				if (slices.length > 0) {
 					var tileCenterOnStage:Point = room.floor.localToGlobal(Floor.centerOf(tile.location));
-					room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatModeKeyDownListener);
-					var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices, pieMenuDismissed);
+					room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatMoveKeyDownListener);
+					var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices, combatMovePieDismissed);
 					room.stage.addChild(pie);
 				}
 			}
@@ -268,13 +269,13 @@ package angel.game {
 			}
 		}
 		
-		private function pieMenuDismissed():void {
-			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatModeKeyDownListener);
+		private function combatMovePieDismissed():void {
+			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatMoveKeyDownListener);
 		}
 		
 		private function doPlayerMove(gaitChoice:int = Entity.GAIT_UNSPECIFIED):void {
-			disableCombatUi();			
-			playerMoveInProgress = true;
+			Assert.assertTrue(iFighterTurnInProgress == 0, "doPlayerMove with iFighter " + iFighterTurnInProgress);
+			disableCombatMoveUi();
 			
 			if (gaitChoice == Entity.GAIT_UNSPECIFIED) {
 				gaitChoice = room.playerCharacter.gaitForDistance(path.length);
@@ -300,7 +301,101 @@ package angel.game {
 			doPlayerMove(Entity.GAIT_SPRINT);
 		}
 		
-		/****************** Used by both player & NPCs during combat turns *******************/
+		/********** Player UI-related -- Fire segment ****************/
+		
+		// call this when player-controlled part of the turn begins, to allow player to enter move
+		private function enableCombatFireUi():void {
+			trace("entering player fire phase");
+			room.addEventListener(MouseEvent.MOUSE_DOWN, combatSharedMouseDownListener);
+			room.addEventListener(MouseEvent.MOUSE_MOVE, combatFireMouseMoveListener);
+			room.addEventListener(MouseEvent.CLICK, combatFireClickListener);
+			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
+			//we're substituting ctrl-click.
+			//room.addEventListener(MouseEvent.RIGHT_CLICK, launchPieMenu);
+			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatFireKeyDownListener);
+			//UNDONE: hide cursor, display combat cursor icon
+		}
+		
+		// call this when computer-controlled part of the turn begins, to prevent player from mucking around
+		private function disableCombatFireUi():void {
+			trace("ending player fire phase");
+			room.moveHilight(null, 0);
+			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatSharedMouseDownListener);
+			room.removeEventListener(MouseEvent.MOUSE_MOVE, combatFireMouseMoveListener);
+			room.removeEventListener(MouseEvent.CLICK, combatFireClickListener);
+			room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatFireKeyDownListener);
+		}
+		
+		private function combatFireKeyDownListener(event:KeyboardEvent):void {
+			switch (event.keyCode) {
+				case KEYBOARD_C:
+					room.changeModeTo(RoomExplore);
+				break;
+				
+				case KEYBOARD_V:
+					room.toggleVisibility();
+				break;
+					
+				case Keyboard.BACKSPACE:
+					//UNDONE: cancel target selection
+				break;
+				
+				case Keyboard.ENTER:
+					finishedFire();
+					//UNDONE: fire or reserve fire
+				break;
+			}
+			
+		}
+		
+		private function combatFireMouseMoveListener(event:MouseEvent):void {
+			if (event.target is FloorTile) {
+				var tile:FloorTile = event.target as FloorTile;
+				room.moveHilight(tile, 0xffffff);
+				//UNDONE: hilight enemy on tile
+			}
+			//UNDONE: move combat cursor icon
+		}
+		
+		private function combatFireClickListener(event:MouseEvent):void {
+			if (event.ctrlKey) {
+				// Temporary since Flash Projector doesn't support right-button events.
+				// If/when we switch to AIR this will be replaced with a real right click listener.
+				launchCombatFirePieMenu(event);
+				return;
+			}
+			if (!dragging && event.target is FloorTile) {
+				var loc:Point = (event.target as FloorTile).location;
+				//UNDONE handle click
+			}
+		}
+		
+		private function launchCombatFirePieMenu(event:MouseEvent):void {
+			if (event.target is FloorTile) {
+				var tile:FloorTile = event.target as FloorTile;
+				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
+				
+				combatFirePie(slices);
+					
+				if (slices.length > 0) {
+					var tileCenterOnStage:Point = room.floor.localToGlobal(Floor.centerOf(tile.location));
+					room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatFireKeyDownListener);
+					var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices, combatFirePieDismissed);
+					room.stage.addChild(pie);
+				}
+			}
+		}
+		
+		private function combatFirePie(slices:Vector.<PieSlice>):void {
+			//UNDONE build pie menu
+		}
+		
+		private function combatFirePieDismissed():void {
+			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatFireKeyDownListener);
+		}
+
+		
+		/****************** Used by both player & NPCs during combat turns -- move segment *******************/
 		
 		public function startEntityFollowingPath(entity:Entity, gait:int):void {
 			entity.startMovingAlongPath(path, gait); //CAUTION: this path now belongs to entity!
@@ -348,7 +443,6 @@ package angel.game {
 				}
 			}
 			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints - path.length);
-			trace("end of extendPath, path & dots length", path.length);
 			return gait;
 		}
 		
@@ -374,7 +468,6 @@ package angel.game {
 		// CONSIDER: If we create specialized EntityEvent and pass entity as part of event data,
 		// then this could assert that entity.location equals dot location
 		private function removeFirstDotOnPath(event:Event):void {
-			trace("Remove a dot, dots.length", dots.length);
 			Assert.assertTrue(dots.length > 0, "Entity.MOVED with no dots remaining");
 			var dotToRemove:Shape = dots.shift();
 			room.decorationsLayer.removeChild(dotToRemove);
@@ -400,24 +493,30 @@ package angel.game {
 		// Called each time an entity (player or NPC) finishes its combat move
 		// (specifically, during ENTER_FRAME for last frame of movement)
 		private function finishedMovingListener(event:Event = null):void {
-			if (playerMoveInProgress) {
-				playerMoveInProgress = false;
+			trace("fighter", iFighterTurnInProgress, "(", fighters[iFighterTurnInProgress].aaId, ") finished moving");
+			if (iFighterTurnInProgress == 0) {
+				enableCombatFireUi();
+			} else {
+				//UNDONE: enemy fire
+				finishedFire();
 			}
-			
-			++iEnemyMoveInProgress;
-			trace("plotNextEnemyMove for enemy #", iEnemyMoveInProgress);
-			if (iEnemyMoveInProgress >= enemies.length) {
-				trace("All enemy moves have been processed, go back to player");
-				iEnemyMoveInProgress = -1;
+		}
+		
+		private function finishedFire():void {
+			trace("fighter", iFighterTurnInProgress, "(", fighters[iFighterTurnInProgress].aaId, ") finished fire");
+			++iFighterTurnInProgress;
+			if (iFighterTurnInProgress >= fighters.length) {
+				trace("All enemy turns have been processed, go back to player");
+				iFighterTurnInProgress = 0;
 				if (Settings.showEnemyMoves) {
 					room.playerCharacter.centerRoomOnMe();
 				}
-				enableCombatUi();
+				enableCombatMoveUi();
 				return;
 			}
 			
 			if (Settings.showEnemyMoves) {
-				enemies[iEnemyMoveInProgress].centerRoomOnMe();
+				fighters[iFighterTurnInProgress].centerRoomOnMe();
 			}
 			
 			// Give the player 2 seconds to gaze at the enemy's move dots before continuing with turn.
@@ -425,16 +524,17 @@ package angel.game {
 			// start complicating the AI, then there may be a delay before the move dots are drawn, but
 			// the total time between enemy's turn starting and enemy beginning to follow dots should
 			// stay at 2 seconds.)
+			// CONSIDER: We may put up some sort of "enemy processing turn" overlay
 			pauseBetweenMoves.reset();
 			pauseBetweenMoves.start();
 			
-			enemies[iEnemyMoveInProgress].brain.chooseMoveAndDrawDots();
+			fighters[iFighterTurnInProgress].brain.chooseMoveAndDrawDots();
 		}
 		
 		// Called each time the timer for gazing at the enemy's move dots expires
 		private function enemyMoveTimerListener(event:TimerEvent):void {
-			trace("enemyMoveTimerListener for enemy #", iEnemyMoveInProgress);
-			enemies[iEnemyMoveInProgress].brain.doMove();
+			trace("enemyMoveTimerListener for fighter #", iFighterTurnInProgress);
+			fighters[iFighterTurnInProgress].brain.doMove();
 		}
 		
 	} // end class RoomCombat
