@@ -26,17 +26,22 @@ package angel.game {
 		private var room:Room;
 		private var playerMoveInProgress:Boolean = false;
 		private var iFighterTurnInProgress:int;
-		private var path:Vector.<Point> = new Vector.<Point>();
-		private var dots:Vector.<Shape> = new Vector.<Shape>();
-		private var endIndexes:Vector.<int> = new Vector.<int>();
-		private var movePointsDisplay:TextField;
 		private var dragging:Boolean = false;
-		
-		private var pauseBetweenMoves:Timer = new Timer(2000, 1);;
+		private var ui:IUi;
+		private var moveUi:CombatMoveUi;
+		private var fireUi:CombatFireUi;
 		
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
-		private var fighters:Vector.<Entity> = new Vector.<Entity>();
+		private var fighters:Vector.<Entity>;
 		
+		private var pauseBetweenMoves:Timer;
+		
+		// public because they're accessed by the CombatMoveUi and/or entity combat brains
+		public var dots:Vector.<Shape> = new Vector.<Shape>();
+		public var endIndexes:Vector.<int> = new Vector.<int>();
+		public var path:Vector.<Point> = new Vector.<Point>();
+		
+		// Colors for movement dots/hilights
 		private static const walkColor:uint = 0x00ff00;
 		private static const runColor:uint = 0xffd800;
 		private static const sprintColor:uint = 0xff0000;
@@ -47,33 +52,34 @@ package angel.game {
 		public function RoomCombat(room:Room) {
 			this.room = room;
 			drawCombatGrid(room.decorationsLayer.graphics);
-			movePointsDisplay = createMovePointsTextField();
-			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints);
-			movePointsDisplay.x = 10;
-			movePointsDisplay.y = 10;
-			room.parent.addChild(movePointsDisplay);
 			
-			room.addEventListener(Entity.MOVED, removeFirstDotOnPath);
-			room.addEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
-			pauseBetweenMoves.addEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
-			
+			fighters = new Vector.<Entity>();
 			room.forEachEntity(initEntityForCombat); // Add enemies to fighter list & init their combat brains
 			Util.shuffle(fighters); // enemy turn order is randomized at start of combat and stays the same thereafter
 			fighters.splice(0, 0, room.playerCharacter); // player always goes first
 			iFighterTurnInProgress = 0;
 			
-			enableCombatMoveUi();
+			// These listeners can only trigger in specific phases, and most of them advance the phase.
+			// I'm keeping them around throughout combat rather than adding and removing them as we flip
+			// between phases because it seemed a little cleaner that way, but I'm not certain.
+			room.addEventListener(Entity.MOVED, removeFirstDotOnPath);
+			room.addEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
+			pauseBetweenMoves = new Timer(2000, 1);
+			pauseBetweenMoves.addEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
+			
+			moveUi = new CombatMoveUi(this, room);
+			fireUi = new CombatFireUi(this, room);
+			enableUi(moveUi);
 		}
 
 		public function cleanup():void {
-			disableCombatMoveUi();
-			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatSharedMouseUpListener);
+			ui.disable();
 			room.removeEventListener(Entity.MOVED, removeFirstDotOnPath);
 			room.removeEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
 			pauseBetweenMoves.removeEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
+			
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
 			clearDots();
-			room.parent.removeChild(movePointsDisplay);
 			for each (var entity:Entity in fighters) {
 				cleanupEntityFromCombat(entity);
 			}
@@ -83,15 +89,25 @@ package angel.game {
 			if (entity.combatBrainClass != null) {
 				fighters.push(entity);
 				entity.brain = new entity.combatBrainClass(entity, this);
-				entity.personalTileHilight = new GlowFilter(0xff0000, 1, 15, 15, 10, 1, true, false);
-				room.updatePersonalTileHilight(entity);
+				
+				var enemyMarker:Shape = new Shape();
+				enemyMarker.graphics.lineStyle(4, 0xff0000);
+				enemyMarker.graphics.drawCircle(0, 0, 15);
+				enemyMarker.graphics.drawCircle(0, 0, 30);
+				enemyMarker.graphics.drawCircle(0, 0, 45);
+				// TAG tile-width-is-twice-height: aspect will be off if tiles no longer follow this rule!
+				enemyMarker.scaleY = 0.5;
+				room.decorationsLayer.addChild(enemyMarker);
+				
+				entity.enemyMarker = enemyMarker;
+				room.moveEnemyMarkerIfNeeded(entity);
 			}
 		}
 		
 		private function cleanupEntityFromCombat(entity:Entity):void {
 			entity.brain = null;
-			entity.personalTileHilight = null;
-			room.updatePersonalTileHilight(entity);
+			room.decorationsLayer.removeChild(entity.enemyMarker);
+			entity.enemyMarker = null;
 		}
 		
 		//NOTE: grid lines are tweaked up by one pixel because the tile image bitmaps actually extend one pixel outside the
@@ -111,28 +127,63 @@ package angel.game {
 			}
 		}
 		
-		private function createMovePointsTextField():TextField {
-			var myTextField:TextField = new TextField();
-			myTextField.selectable = false;
-			myTextField.width = 40;
-			myTextField.height = 20;
-			var myTextFormat:TextFormat = new TextFormat();
-			myTextFormat.size = 16;
-			myTextFormat.align = TextFormatAlign.CENTER;
-			myTextField.defaultTextFormat = myTextFormat;
-			myTextField.type = TextFieldType.DYNAMIC;
-			myTextField.border = true;
-			myTextField.background = true;
-			myTextField.backgroundColor = 0xffffff;
-			myTextField.textColor = 0x0;
-			return myTextField;
+		/********** Player UI-related -- Refactoring with IUi ****************/
+
+		
+		// call this when player-controlled part of the turn begins, to allow player to enter move
+		private function enableUi(newUi:IUi):void {
+			ui = newUi;
+			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
+			room.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
+			room.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
+			room.addEventListener(MouseEvent.CLICK, mouseClickListener);
+			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
+			//we're substituting ctrl-click.
+			//room.addEventListener(MouseEvent.RIGHT_CLICK, rightClickListener);
+			
+			newUi.enable();
 		}
 		
-		/********** Player UI-related -- Shared by Move & Fire segments ****************/
+		public function disableUi():void {
+			room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
+			room.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
+			room.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
+			room.removeEventListener(MouseEvent.CLICK, mouseClickListener);
+			//room.removeEventListener(MouseEvent.RIGHT_CLICK, rightClickListener);
+			
+			room.removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
+			room.stopDrag();
+			
+			ui.disable();
+		}
+		
+		// For God-only-knows what reason, the version of Keyboard class for Flex compilation is missing all
+		// of the letter-key constants.  The version in CS5 has them.  ?????
+		public static const KEYBOARD_C:uint = 67;
+		public static const KEYBOARD_V:uint = 86;
+		private function keyDownListener(event:KeyboardEvent):void {
+			switch (event.keyCode) {
+				case KEYBOARD_C:
+					room.changeModeTo(RoomExplore);
+				break;
+				
+				case KEYBOARD_V:
+					room.toggleVisibility();
+				break;
+				
+				default:
+					ui.keyDown(event.keyCode);
+				break;
+			}
+		}
+		
+		private function mouseMoveListener(event:MouseEvent):void {
+			ui.mouseMove(event.localX, event.localY, event.target as FloorTile);
+		}
 
-		private function combatSharedMouseDownListener(event:MouseEvent):void {
+		private function mouseDownListener(event:MouseEvent):void {
 			if (event.shiftKey) {
-				room.addEventListener(MouseEvent.MOUSE_UP, combatSharedMouseUpListener);
+				room.addEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
 				room.startDrag();
 				dragging = true;
 			} else {
@@ -140,260 +191,41 @@ package angel.game {
 			}
 		}
 
-		private function combatSharedMouseUpListener(event:MouseEvent):void {
-			room.removeEventListener(MouseEvent.MOUSE_UP, combatSharedMouseUpListener);
+		private function mouseUpListener(event:MouseEvent):void {
+			room.removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
 			room.stopDrag();
 		}
 		
-		/********** Player UI-related -- Move segment ****************/
-		
-		// call this when player-controlled part of the turn begins, to allow player to enter move
-		private function enableCombatMoveUi():void {
-			trace("entering player move phase");
-			room.addEventListener(MouseEvent.MOUSE_DOWN, combatSharedMouseDownListener);
-			room.addEventListener(MouseEvent.MOUSE_MOVE, combatMoveMouseMoveListener);
-			room.addEventListener(MouseEvent.CLICK, combatMoveClickListener);
-			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
-			//we're substituting ctrl-click.
-			//room.addEventListener(MouseEvent.RIGHT_CLICK, launchPieMenu);
-			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatMoveKeyDownListener);
-			movePointsDisplay.visible = true;
-			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints);
-		}
-		
-		// call this when computer-controlled part of the turn begins, to prevent player from mucking around
-		private function disableCombatMoveUi():void {
-			trace("ending player move phase");
-			movePointsDisplay.visible = false;
-			room.moveHilight(null, 0);
-			room.removeEventListener(MouseEvent.CLICK, combatMoveClickListener);
-			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatSharedMouseDownListener);
-			room.removeEventListener(MouseEvent.MOUSE_MOVE, combatMoveMouseMoveListener);
-			room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatMoveKeyDownListener);
-		}
-		
-		// For God-only-knows what reason, the version of Keyboard class for Flex compilation is missing all
-		// of the letter-key constants.  The version in CS5 has them.  ?????
-		public static const KEYBOARD_C:uint = 67;
-		public static const KEYBOARD_V:uint = 86;
-		private function combatMoveKeyDownListener(event:KeyboardEvent):void {
-			switch (event.keyCode) {
-				case KEYBOARD_C:
-					room.changeModeTo(RoomExplore);
-				break;
-				
-				case KEYBOARD_V:
-					room.toggleVisibility();
-				break;
-					
-				case Keyboard.BACKSPACE:
-					removeLastPathSegment();
-				break;
-				
-				case Keyboard.ENTER:
-					doPlayerMove();
-				break;
-			}
-			
-		}
-		
-		private function combatMoveMouseMoveListener(event:MouseEvent):void {
-			if (event.target is FloorTile) {
-				var tile:FloorTile = event.target as FloorTile;
-				var distance:int = 1000;
-				if (!room.playerCharacter.tileBlocked(tile.location) && (path.length < room.playerCharacter.combatMovePoints)) {
-					var pathToMouse:Vector.<Point> = room.playerCharacter.findPathTo(tile.location, 
-							(path.length == 0 ? null : path[path.length-1]) );
-					if (pathToMouse != null) {
-						distance = path.length + pathToMouse.length;
-					}
-				}
-				room.moveHilight(tile, colorForGait(room.playerCharacter.gaitForDistance(distance)));
-			}
-		}
-		
-		private function combatMoveClickListener(event:MouseEvent):void {
+		private function mouseClickListener(event:MouseEvent):void {
 			if (event.ctrlKey) {
 				// Temporary since Flash Projector doesn't support right-button events.
 				// If/when we switch to AIR this will be replaced with a real right click listener.
-				launchCombatMovePieMenu(event);
+				rightClickListener(event);
 				return;
 			}
-			if (!dragging && event.target is FloorTile) {
-				var loc:Point = (event.target as FloorTile).location;
-				if (!room.playerCharacter.tileBlocked(loc)) {
-					var currentEnd:Point = (path.length == 0 ? room.playerCharacter.location : path[path.length - 1]);
-					if (!loc.equals(currentEnd)) {
-						var pathToMouse:Vector.<Point> = room.playerCharacter.findPathTo(loc, currentEnd);
-						if (pathToMouse != null && pathToMouse.length <= room.playerCharacter.combatMovePoints - path.length) {
-							extendPath(room.playerCharacter, pathToMouse);
-						}
-					}
-				}
+			if (!dragging && (event.target is FloorTile)) {
+				ui.mouseClick(event.target as FloorTile);
 			}
 		}
 		
-		private function launchCombatMovePieMenu(event:MouseEvent):void {
-			if (event.target is FloorTile) {
-				var tile:FloorTile = event.target as FloorTile;
-				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
-				
-				if (tile.location.equals(room.playerCharacter.location) ||
-							(path.length > 0 && tile.location.equals(path[path.length - 1]))) {
-					combatMovePie(slices);
-				}
-				
-				if (slices.length > 0) {
-					var tileCenterOnStage:Point = room.floor.localToGlobal(Floor.centerOf(tile.location));
-					room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatMoveKeyDownListener);
-					var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices, combatMovePieDismissed);
-					room.stage.addChild(pie);
-				}
-			}
-		}
-		
-		private function combatMovePie(slices:Vector.<PieSlice>):void {
-			if (path.length > 0) {
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CancelMove), removePath));
-			}
-			slices.push(new PieSlice(Icon.bitmapData(Icon.Stay), doPlayerMoveStay));
-			if (path.length > 0) {
-				var minGait:int = room.playerCharacter.gaitForDistance(path.length);
-				if (minGait <= Entity.GAIT_WALK) {
-					slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doPlayerMoveWalk));
-				}
-				if (minGait <= Entity.GAIT_RUN) {
-					slices.push(new PieSlice(Icon.bitmapData(Icon.Run), doPlayerMoveRun));
-				}
-				slices.push(new PieSlice(Icon.bitmapData(Icon.Sprint), doPlayerMoveSprint));
-			}
-		}
-		
-		private function combatMovePieDismissed():void {
-			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatMoveKeyDownListener);
-		}
-		
-		private function doPlayerMove(gaitChoice:int = Entity.GAIT_UNSPECIFIED):void {
-			Assert.assertTrue(iFighterTurnInProgress == 0, "doPlayerMove with iFighter " + iFighterTurnInProgress);
-			disableCombatMoveUi();
-			
-			if (gaitChoice == Entity.GAIT_UNSPECIFIED) {
-				gaitChoice = room.playerCharacter.gaitForDistance(path.length);
-			}
-			room.playerCharacter.centerRoomOnMe();
-			startEntityFollowingPath(room.playerCharacter, gaitChoice);
-		}
-		
-		private function doPlayerMoveStay():void {
-			removePath();
-			doPlayerMove(Entity.GAIT_WALK);
-		}
-		
-		private function doPlayerMoveWalk():void {
-			doPlayerMove(Entity.GAIT_WALK);
-		}
-		
-		private function doPlayerMoveRun():void {
-			doPlayerMove(Entity.GAIT_RUN);
-		}
-		
-		private function doPlayerMoveSprint():void {
-			doPlayerMove(Entity.GAIT_SPRINT);
-		}
-		
-		/********** Player UI-related -- Fire segment ****************/
-		
-		// call this when player-controlled part of the turn begins, to allow player to enter move
-		private function enableCombatFireUi():void {
-			trace("entering player fire phase");
-			room.addEventListener(MouseEvent.MOUSE_DOWN, combatSharedMouseDownListener);
-			room.addEventListener(MouseEvent.MOUSE_MOVE, combatFireMouseMoveListener);
-			room.addEventListener(MouseEvent.CLICK, combatFireClickListener);
-			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
-			//we're substituting ctrl-click.
-			//room.addEventListener(MouseEvent.RIGHT_CLICK, launchPieMenu);
-			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatFireKeyDownListener);
-			//UNDONE: hide cursor, display combat cursor icon
-		}
-		
-		// call this when computer-controlled part of the turn begins, to prevent player from mucking around
-		private function disableCombatFireUi():void {
-			trace("ending player fire phase");
-			room.moveHilight(null, 0);
-			room.removeEventListener(MouseEvent.MOUSE_DOWN, combatSharedMouseDownListener);
-			room.removeEventListener(MouseEvent.MOUSE_MOVE, combatFireMouseMoveListener);
-			room.removeEventListener(MouseEvent.CLICK, combatFireClickListener);
-			room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatFireKeyDownListener);
-		}
-		
-		private function combatFireKeyDownListener(event:KeyboardEvent):void {
-			switch (event.keyCode) {
-				case KEYBOARD_C:
-					room.changeModeTo(RoomExplore);
-				break;
-				
-				case KEYBOARD_V:
-					room.toggleVisibility();
-				break;
-					
-				case Keyboard.BACKSPACE:
-					//UNDONE: cancel target selection
-				break;
-				
-				case Keyboard.ENTER:
-					finishedFire();
-					//UNDONE: fire or reserve fire
-				break;
-			}
-			
-		}
-		
-		private function combatFireMouseMoveListener(event:MouseEvent):void {
-			if (event.target is FloorTile) {
-				var tile:FloorTile = event.target as FloorTile;
-				room.moveHilight(tile, 0xffffff);
-				//UNDONE: hilight enemy on tile
-			}
-			//UNDONE: move combat cursor icon
-		}
-		
-		private function combatFireClickListener(event:MouseEvent):void {
-			if (event.ctrlKey) {
-				// Temporary since Flash Projector doesn't support right-button events.
-				// If/when we switch to AIR this will be replaced with a real right click listener.
-				launchCombatFirePieMenu(event);
+		private function rightClickListener(event:MouseEvent):void {
+			if (!(event.target is FloorTile)) {
 				return;
 			}
-			if (!dragging && event.target is FloorTile) {
-				var loc:Point = (event.target as FloorTile).location;
-				//UNDONE handle click
+			var tile:FloorTile = event.target as FloorTile;
+			var slices:Vector.<PieSlice> = ui.pieMenuForTile(tile);
+			
+			if (slices != null && slices.length > 0) {
+				var tileCenterOnStage:Point = room.floor.localToGlobal(Floor.centerOf(tile.location));
+				room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
+				var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices, pieDismissed);
+				room.stage.addChild(pie);
 			}
 		}
 		
-		private function launchCombatFirePieMenu(event:MouseEvent):void {
-			if (event.target is FloorTile) {
-				var tile:FloorTile = event.target as FloorTile;
-				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
-				
-				combatFirePie(slices);
-					
-				if (slices.length > 0) {
-					var tileCenterOnStage:Point = room.floor.localToGlobal(Floor.centerOf(tile.location));
-					room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, combatFireKeyDownListener);
-					var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices, combatFirePieDismissed);
-					room.stage.addChild(pie);
-				}
-			}
+		private function pieDismissed():void {
+			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 		}
-		
-		private function combatFirePie(slices:Vector.<PieSlice>):void {
-			//UNDONE build pie menu
-		}
-		
-		private function combatFirePieDismissed():void {
-			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, combatFireKeyDownListener);
-		}
-
 		
 		/****************** Used by both player & NPCs during combat turns -- move segment *******************/
 		
@@ -404,7 +236,7 @@ package angel.game {
 		}
 		
 		// Remove dots at the end of the path, starting from index startFrom (default == remove all)
-		private function clearDots(startFrom:int = 0):void {
+		public function clearDots(startFrom:int = 0):void {
 			for (var i:int = startFrom; i < dots.length; i++) {
 				room.decorationsLayer.removeChild(dots[i]);
 			}
@@ -442,24 +274,7 @@ package angel.game {
 					++endIndexIndex;
 				}
 			}
-			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints - path.length);
 			return gait;
-		}
-		
-		private function removeLastPathSegment():void {
-			if (dots.length > 0) {
-				endIndexes.pop();
-				var clearFrom:int = (endIndexes.length == 0 ? 0 : endIndexes[endIndexes.length - 1] + 1);
-				clearDots(clearFrom);
-				path.length = dots.length;
-				movePointsDisplay.text = String(room.playerCharacter.combatMovePoints - path.length);
-			}
-		}
-		
-		private function removePath():void {
-			clearDots(0);
-			path.length = 0;
-			movePointsDisplay.text = String(room.playerCharacter.combatMovePoints);
 		}
 		
 		// Called by event listener each time an entity moves to a new tile during combat
@@ -473,7 +288,7 @@ package angel.game {
 			room.decorationsLayer.removeChild(dotToRemove);
 		}		
 		
-		private function colorForGait(gait:int):uint {
+		public static function colorForGait(gait:int):uint {
 			switch (gait) {
 				case Entity.GAIT_WALK:
 					return walkColor;
@@ -495,14 +310,16 @@ package angel.game {
 		private function finishedMovingListener(event:Event = null):void {
 			trace("fighter", iFighterTurnInProgress, "(", fighters[iFighterTurnInProgress].aaId, ") finished moving");
 			if (iFighterTurnInProgress == 0) {
-				enableCombatFireUi();
+				enableUi(fireUi);
 			} else {
 				//UNDONE: enemy fire
 				finishedFire();
 			}
 		}
 		
-		private function finishedFire():void {
+		// This will change to a listener if we want to hang around for a moment allowing player to see results
+		// of each shot before going to the next entity's move phase; Wm hasn't said that yet but it seems likely.
+		public function finishedFire():void {
 			trace("fighter", iFighterTurnInProgress, "(", fighters[iFighterTurnInProgress].aaId, ") finished fire");
 			++iFighterTurnInProgress;
 			if (iFighterTurnInProgress >= fighters.length) {
@@ -511,7 +328,8 @@ package angel.game {
 				if (Settings.showEnemyMoves) {
 					room.playerCharacter.centerRoomOnMe();
 				}
-				enableCombatMoveUi();
+				
+				enableUi(moveUi);
 				return;
 			}
 			

@@ -147,13 +147,9 @@ package angel.game {
 		// This will generally be called by the entity as it crosses the boundary between one floor tile
 		// and another during movement.
 		public function changeEntityLocation(entity:Entity, newLocation:Point):void {
-			if (entity.personalTileHilight != null) {
-				//CONSIDER: if mouse is over one of these tiles, do we need to special-case mouse hilight???
-				floor.tileAt(entity.location).filters = [];
-				floor.tileAt(newLocation).filters = [ entity.personalTileHilight ];
-			}
 			cells[entity.location.x][entity.location.y].remove(entity);
 			cells[newLocation.x][newLocation.y].add(entity);
+			moveEnemyMarkerIfNeeded(entity, newLocation);
 			/*
 			if (entityWithFilter == entity) {
 				entityWithFilter.filters = [];
@@ -162,12 +158,11 @@ package angel.game {
 			*/
 		}
 		
-		public function updatePersonalTileHilight(entity:Entity):void {
-			if (entity.personalTileHilight == null) {
-				//CONSIDER: if mouse is over one of these tiles, do we need to special-case mouse hilight???
-				floor.tileAt(entity.location).filters = [];
-			} else {
-				floor.tileAt(entity.location).filters = [ entity.personalTileHilight ];
+		public function moveEnemyMarkerIfNeeded(entity:Entity, newLocation:Point = null):void {
+			if (entity.enemyMarker != null) {
+				var tileCenter:Point = Floor.centerOf(newLocation == null ? entity.location : newLocation);
+				entity.enemyMarker.x = tileCenter.x;
+				entity.enemyMarker.y = tileCenter.y;
 			}
 		}
 		

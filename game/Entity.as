@@ -9,6 +9,7 @@ package angel.game {
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
+	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.filters.GlowFilter;
@@ -61,12 +62,9 @@ package angel.game {
 		public var combatBrainClass:Class;
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
 		public var brain:Object;
-		
-		// I'm not terribly happy about this as a UI feature, but Wm wants "enemies" to have their tiles outlined
-		// in red during combat.  In the first implementation, I'm going to completely ignore the fact that this
-		// will overwrite or be overwritten by the mouse-movement tile outlines.  If we end up keeping the feature,
-		// and if the mouse conflict becomes a problem, then I'll have to hack in some sort of multiple-filter-tracking.
-		public var personalTileHilight:GlowFilter;
+
+		// if non-null, drawn on decorations layer
+		public var enemyMarker:Shape;
 		
 		public var isPlayerControlled:Boolean;
 		private var room:Room;
