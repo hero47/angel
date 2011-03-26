@@ -4,6 +4,7 @@ package angel.game {
 	import angel.common.FloorTile;
 	import angel.common.Prop;
 	import angel.common.PropImage;
+	import angel.common.Util;
 	import flash.display.DisplayObject;
 	import flash.display.Graphics;
 	import flash.display.Shape;
@@ -31,6 +32,9 @@ package angel.game {
 		public var playerCharacter:Entity;
 		public var size:Point;
 		public var mode:RoomMode;
+
+		public var ui:IRoomUi;
+		private var dragging:Boolean = false;
 		
 		private var tileWithFilter:FloorTile;
 		//private var entityWithFilter:Entity; // not yet, but will be needed for future story
@@ -68,9 +72,107 @@ package angel.game {
 		}
 		*/
 		
-		override public function set x(value:Number):void {
-			super.x = value;
+		public function changeModeTo(newModeClass:Class):void {
+			if (mode != null) {
+				mode.cleanup();
+			}
+			mode = new newModeClass(this);
 		}
+		
+		/********** Player UI-related  ****************/
+		// CONSIDER: Move this into a class, have the things that now implement IRoomUi subclass it?
+		
+		// call this when player-controlled part of the turn begins, to allow player to enter move
+		public function enableUi(newUi:IRoomUi):void {
+			ui = newUi;
+			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
+			addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
+			addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
+			addEventListener(MouseEvent.CLICK, mouseClickListener);
+			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
+			//we're substituting ctrl-click.
+			//addEventListener(MouseEvent.RIGHT_CLICK, rightClickListener);
+			
+			newUi.enable();
+		}
+		
+		public function disableUi():void {
+			stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
+			removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
+			removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
+			removeEventListener(MouseEvent.CLICK, mouseClickListener);
+			//removeEventListener(MouseEvent.RIGHT_CLICK, rightClickListener);
+			
+			removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
+			stopDrag();
+			
+			ui.disable();
+		}
+		
+		
+		private function keyDownListener(event:KeyboardEvent):void {
+			switch (event.keyCode) {
+				case Util.KEYBOARD_V:
+					toggleVisibility();
+				break;
+				
+				default:
+					ui.keyDown(event.keyCode);
+				break;
+			}
+		}
+		
+		private function mouseMoveListener(event:MouseEvent):void {
+			ui.mouseMove(event.localX, event.localY, event.target as FloorTile);
+		}
+
+		private function mouseDownListener(event:MouseEvent):void {
+			if (event.shiftKey) {
+				addEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
+				startDrag();
+				dragging = true;
+			} else {
+				dragging = false;
+			}
+		}
+
+		private function mouseUpListener(event:MouseEvent):void {
+			removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
+			stopDrag();
+		}
+		
+		private function mouseClickListener(event:MouseEvent):void {
+			if (event.ctrlKey) {
+				// Temporary since Flash Projector doesn't support right-button events.
+				// If/when we switch to AIR this will be replaced with a real right click listener.
+				rightClickListener(event);
+				return;
+			}
+			if (!dragging && (event.target is FloorTile)) {
+				ui.mouseClick(event.target as FloorTile);
+			}
+		}
+		
+		private function rightClickListener(event:MouseEvent):void {
+			if (!(event.target is FloorTile)) {
+				return;
+			}
+			var tile:FloorTile = event.target as FloorTile;
+			var slices:Vector.<PieSlice> = ui.pieMenuForTile(tile);
+			
+			if (slices != null && slices.length > 0) {
+				var tileCenterOnStage:Point = floor.localToGlobal(Floor.centerOf(tile.location));
+				stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
+				var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices, pieDismissed);
+				stage.addChild(pie);
+			}
+		}
+		
+		private function pieDismissed():void {
+			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
+		}
+
+		/********************* end general ui **********************/
 		
 		public function scrollToCenter(tileLoc:Point, instant:Boolean=false):void {
 			var desiredCenter:Point = Floor.centerOf(tileLoc);
@@ -188,13 +290,6 @@ package angel.game {
 					this.y += vector.y;
 				}
 			}
-		}
-		
-		public function changeModeTo(newModeClass:Class):void {
-			if (mode != null) {
-				mode.cleanup();
-			}
-			mode = new newModeClass(this);
 		}
 		
 		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander };

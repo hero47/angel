@@ -27,7 +27,6 @@ package angel.game {
 		private var playerMoveInProgress:Boolean = false;
 		private var iFighterTurnInProgress:int;
 		private var dragging:Boolean = false;
-		private var ui:IUi;
 		private var moveUi:CombatMoveUi;
 		private var fireUi:CombatFireUi;
 		
@@ -67,13 +66,13 @@ package angel.game {
 			pauseBetweenMoves = new Timer(2000, 1);
 			pauseBetweenMoves.addEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
 			
-			moveUi = new CombatMoveUi(this, room);
-			fireUi = new CombatFireUi(this, room);
-			enableUi(moveUi);
+			moveUi = new CombatMoveUi(room, this);
+			fireUi = new CombatFireUi(room, this);
+			room.enableUi(moveUi);
 		}
 
 		public function cleanup():void {
-			ui.disable();
+			room.disableUi();
 			room.removeEventListener(Entity.MOVED, removeFirstDotOnPath);
 			room.removeEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
 			pauseBetweenMoves.removeEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
@@ -125,106 +124,6 @@ package angel.game {
 				graphics.moveTo(startPoint.x - (i * Floor.FLOOR_TILE_X), startPoint.y + (i * Floor.FLOOR_TILE_Y) - 1);
 				graphics.lineTo(endPoint.x - (i * Floor.FLOOR_TILE_X), endPoint.y + (i * Floor.FLOOR_TILE_Y) - 1);
 			}
-		}
-		
-		/********** Player UI-related -- Refactoring with IUi ****************/
-
-		
-		// call this when player-controlled part of the turn begins, to allow player to enter move
-		private function enableUi(newUi:IUi):void {
-			ui = newUi;
-			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
-			room.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
-			room.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
-			room.addEventListener(MouseEvent.CLICK, mouseClickListener);
-			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
-			//we're substituting ctrl-click.
-			//room.addEventListener(MouseEvent.RIGHT_CLICK, rightClickListener);
-			
-			newUi.enable();
-		}
-		
-		public function disableUi():void {
-			room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
-			room.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
-			room.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
-			room.removeEventListener(MouseEvent.CLICK, mouseClickListener);
-			//room.removeEventListener(MouseEvent.RIGHT_CLICK, rightClickListener);
-			
-			room.removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
-			room.stopDrag();
-			
-			ui.disable();
-		}
-		
-		// For God-only-knows what reason, the version of Keyboard class for Flex compilation is missing all
-		// of the letter-key constants.  The version in CS5 has them.  ?????
-		public static const KEYBOARD_C:uint = 67;
-		public static const KEYBOARD_V:uint = 86;
-		private function keyDownListener(event:KeyboardEvent):void {
-			switch (event.keyCode) {
-				case KEYBOARD_C:
-					room.changeModeTo(RoomExplore);
-				break;
-				
-				case KEYBOARD_V:
-					room.toggleVisibility();
-				break;
-				
-				default:
-					ui.keyDown(event.keyCode);
-				break;
-			}
-		}
-		
-		private function mouseMoveListener(event:MouseEvent):void {
-			ui.mouseMove(event.localX, event.localY, event.target as FloorTile);
-		}
-
-		private function mouseDownListener(event:MouseEvent):void {
-			if (event.shiftKey) {
-				room.addEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
-				room.startDrag();
-				dragging = true;
-			} else {
-				dragging = false;
-			}
-		}
-
-		private function mouseUpListener(event:MouseEvent):void {
-			room.removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
-			room.stopDrag();
-		}
-		
-		private function mouseClickListener(event:MouseEvent):void {
-			if (event.ctrlKey) {
-				// Temporary since Flash Projector doesn't support right-button events.
-				// If/when we switch to AIR this will be replaced with a real right click listener.
-				rightClickListener(event);
-				return;
-			}
-			if (!dragging && (event.target is FloorTile)) {
-				ui.mouseClick(event.target as FloorTile);
-			}
-		}
-		
-		private function rightClickListener(event:MouseEvent):void {
-			if (!(event.target is FloorTile)) {
-				return;
-			}
-			var tile:FloorTile = event.target as FloorTile;
-			var slices:Vector.<PieSlice> = ui.pieMenuForTile(tile);
-			
-			if (slices != null && slices.length > 0) {
-				var tileCenterOnStage:Point = room.floor.localToGlobal(Floor.centerOf(tile.location));
-				room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
-				var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices, pieDismissed);
-				room.stage.addChild(pie);
-			}
-		}
-		
-		private function pieDismissed():void {
-			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 		}
 		
 		/****************** Used by both player & NPCs during combat turns -- move segment *******************/
@@ -310,7 +209,7 @@ package angel.game {
 		private function finishedMovingListener(event:Event = null):void {
 			trace("fighter", iFighterTurnInProgress, "(", fighters[iFighterTurnInProgress].aaId, ") finished moving");
 			if (iFighterTurnInProgress == 0) {
-				enableUi(fireUi);
+				room.enableUi(fireUi);
 			} else {
 				//UNDONE: enemy fire
 				finishedFire();
@@ -329,7 +228,7 @@ package angel.game {
 					room.playerCharacter.centerRoomOnMe();
 				}
 				
-				enableUi(moveUi);
+				room.enableUi(moveUi);
 				return;
 			}
 			
