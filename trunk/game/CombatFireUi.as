@@ -1,4 +1,5 @@
 package angel.game {
+	import angel.common.Util;
 	import angel.game.PieSlice;
 	import angel.common.FloorTile;
 	import flash.ui.Keyboard;
@@ -6,12 +7,12 @@ package angel.game {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class CombatFireUi implements IUi {
-		private var combat:RoomCombat;
+	public class CombatFireUi implements IRoomUi {
 		private var room:Room;
+		private var combat:RoomCombat;
 		private var player:Entity;
 		
-		public function CombatFireUi(combat:RoomCombat, room:Room) {
+		public function CombatFireUi(room:Room, combat:RoomCombat) {
 			this.combat = combat;
 			this.room = room;
 			this.player = room.playerCharacter;
@@ -32,6 +33,10 @@ package angel.game {
 		
 		public function keyDown(keyCode:uint):void {
 			switch (keyCode) {
+				case Util.KEYBOARD_C:
+					room.changeModeTo(RoomExplore);
+				break;
+				
 				case Keyboard.BACKSPACE:
 					//UNDONE: cancel target selection
 				break;
@@ -69,7 +74,7 @@ package angel.game {
 		}
 		
 		private function doPlayerFire():void {
-			combat.disableUi();
+			room.disableUi();
 			combat.finishedFire();
 		}
 	

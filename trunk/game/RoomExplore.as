@@ -14,34 +14,23 @@ package angel.game {
 	public class RoomExplore implements RoomMode {
 		
 		private var room:Room;
-		public var playerMoveInProgress:Boolean = false;
-		private var dragging:Boolean = false;
+		private var exploreUi:ExploreUi;
 		
 		public function RoomExplore(room:Room) {
 			this.room = room;
-			room.addEventListener(MouseEvent.CLICK, exploreModeClickListener);
-			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
-			//we're substituting ctrl-click.
-			//room.addEventListener(MouseEvent.RIGHT_CLICK, launchPieMenu);
-			room.addEventListener(MouseEvent.MOUSE_DOWN, exploreModeMouseDownListener);
-			room.addEventListener(MouseEvent.MOUSE_MOVE, exploreModeMouseMoveListener);
-			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, exploreModeKeyDownListener);
 			room.addEventListener(Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
 			if (room.playerCharacter != null) {
 				room.scrollToCenter(room.playerCharacter.location, true);
 			}
 			room.forEachEntity(initEntityBrain);
+			
+			exploreUi = new ExploreUi(room, this);
+			room.enableUi(exploreUi);
 		}
 
 		public function cleanup():void {
-			room.removeEventListener(MouseEvent.CLICK, exploreModeClickListener);
-			room.removeEventListener(MouseEvent.MOUSE_DOWN, exploreModeMouseDownListener);
-			room.removeEventListener(MouseEvent.MOUSE_UP, exploreModeMouseUpListener);
-			room.removeEventListener(MouseEvent.MOUSE_MOVE, exploreModeMouseMoveListener);
-			room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, exploreModeKeyDownListener);
+			room.disableUi();
 			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
-			room.playerCharacter.removeEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
-			room.moveHilight(null, 0);
 			room.forEachEntity(endEntityBrain);
 			timeQueue = null;
 		}
@@ -54,111 +43,6 @@ package angel.game {
 		
 		private function endEntityBrain(entity:Entity):void {
 			entity.brain = null;
-		}
-		
-		// For God-only-knows what reason, the version of Keyboard class for Flex compilation is missing all
-		// of the letter-key constants.  The version in CS5 has them.  ?????
-		public static const KEYBOARD_C:uint = 67;
-		public static const KEYBOARD_V:uint = 86;
-		private function exploreModeKeyDownListener(event:KeyboardEvent):void {
-			switch (event.keyCode) {
-				case KEYBOARD_C:
-					if (playerMoveInProgress) {
-						Alert.show("Wait for move to finish before changing modes.");
-					} else {
-						room.changeModeTo(RoomCombat);
-					}
-				break;
-				case KEYBOARD_V:
-					room.toggleVisibility();
-				break;
-				case Keyboard.SPACE:
-					// if move in progress, stop moving as soon as possible.
-					if (playerMoveInProgress) {
-						room.playerCharacter.startMovingToward(room.playerCharacter.location);
-					}
-				break;
-				case Keyboard.BACKSPACE:
-					room.scrollToCenter(room.playerCharacter.location, true);
-				break;
-			}
-			
-		}
-
-		private function exploreModeMouseDownListener(event:MouseEvent):void {
-			if (event.shiftKey) {
-				room.addEventListener(MouseEvent.MOUSE_UP, exploreModeMouseUpListener);
-				room.startDrag();
-				dragging = true;
-			} else {
-				dragging = false;
-			}
-		}
-
-		private function exploreModeMouseUpListener(event:MouseEvent):void {
-			room.removeEventListener(MouseEvent.MOUSE_UP, exploreModeMouseUpListener);
-			room.stopDrag();
-		}
-		
-		private function exploreModeMouseMoveListener(event:MouseEvent):void {
-			if (event.target is FloorTile) {
-				var tile:FloorTile = event.target as FloorTile;
-				if (room.playerCharacter.tileBlocked(tile.location)) {
-					room.moveHilight(null, 0);
-				} else {
-					var pathToMouse:Vector.<Point> = room.playerCharacter.findPathTo(tile.location);
-					if (pathToMouse == null) {
-						room.moveHilight(null, 0);
-					} else {
-						room.moveHilight(tile, 0xffffff);;
-					}
-				}
-			}
-		}
-		
-		private function exploreModeClickListener(event:MouseEvent):void {
-			if (event.ctrlKey) {
-				// Temporary since Flash Projector doesn't support right-button events.
-				// If/when we switch to AIR this will be replaced with a real right click listener.
-				launchPieMenu(event);
-				return;
-			}
-			if (!dragging && event.target is FloorTile) {
-				var loc:Point = (event.target as FloorTile).location;
-				if (!loc.equals(room.playerCharacter.location) && !room.playerCharacter.tileBlocked(loc)) {
-					playerMoveInProgress = room.playerCharacter.startMovingToward(loc);
-					if (playerMoveInProgress) {
-						room.playerCharacter.addEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
-						if (!(Settings.testExploreScroll > 0)) {
-							room.scrollToCenter(loc);
-						}
-					}
-				}
-			}
-		}
-		
-		private function playerFinishedMoving(event:Event):void {
-			playerMoveInProgress = false;
-			room.playerCharacter.removeEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
-		}	
-		
-		private function launchPieMenu(event:MouseEvent):void {
-			if (event.target is FloorTile) {
-				room.stage.removeEventListener(KeyboardEvent.KEY_DOWN, exploreModeKeyDownListener);
-				var tile:FloorTile = event.target as FloorTile;
-				var tileCenterOnStage:Point = room.floor.localToGlobal(Floor.centerOf(tile.location));
-				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
-				// Pie-menu demo code, will be replaced once we have real functionality to put here
-				slices.push(new PieSlice(PieSlice.testIconData(), null));
-				slices.push(new PieSlice(null, null));
-				slices.push(new PieSlice(null, null));
-				var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices, pieMenuDismissed);
-				room.stage.addChild(pie);
-			}
-		}
-		
-		private function pieMenuDismissed():void {
-			room.stage.addEventListener(KeyboardEvent.KEY_DOWN, exploreModeKeyDownListener);
 		}
 		
 		/***************  TIMER STUFF  ****************/

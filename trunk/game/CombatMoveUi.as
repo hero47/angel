@@ -1,6 +1,7 @@
 package angel.game {
 	import angel.common.Assert;
 	import angel.common.FloorTile;
+	import angel.common.Util;
 	import angel.game.PieSlice;
 	import flash.geom.Point;
 	import flash.text.TextField;
@@ -12,14 +13,14 @@ package angel.game {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class CombatMoveUi implements IUi {
+	public class CombatMoveUi implements IRoomUi {
 		private var combat:RoomCombat;
 		private var room:Room;
 		private var player:Entity;
 		
 		private var movePointsDisplay:TextField;
 		
-		public function CombatMoveUi(combat:RoomCombat, room:Room) {
+		public function CombatMoveUi(room:Room, combat:RoomCombat) {
 			this.combat = combat;
 			this.room = room;
 			this.player = room.playerCharacter;
@@ -47,6 +48,10 @@ package angel.game {
 		
 		public function keyDown(keyCode:uint):void {
 			switch (keyCode) {
+				case Util.KEYBOARD_C:
+					room.changeModeTo(RoomExplore);
+				break;
+				
 				case Keyboard.BACKSPACE:
 					removeLastPathSegment();
 				break;
@@ -94,6 +99,7 @@ package angel.game {
 			return null;
 		}
 		
+		
 		/************ Private ****************/
 		
 		private function constructPieMenu():Vector.<PieSlice> {
@@ -118,7 +124,7 @@ package angel.game {
 		}
 		
 		private function doPlayerMove(gaitChoice:int = Entity.GAIT_UNSPECIFIED):void {
-			combat.disableUi();
+			room.disableUi();
 			
 			if (gaitChoice == Entity.GAIT_UNSPECIFIED) {
 				gaitChoice = player.gaitForDistance(combat.path.length);
