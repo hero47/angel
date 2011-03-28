@@ -43,6 +43,8 @@ package angel.game {
 		[Embed(source = '../../../EmbeddedAssets/combat_cursor_inactive.png')]
 		public static const CombatCursorInactive:Class;
 		
+		[Embed(source='../../../EmbeddedAssets/ReserveFire.png')]
+		public static const ReserveFireFloater:Class;
 		
 	}
 

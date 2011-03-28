@@ -102,8 +102,6 @@ package angel.game {
 			var sliceIndex:int = sliceIndexFromMouseEvent(event);
 			if (slices[sliceIndex].callback != null) {
 				slices[sliceIndex].callback();
-			} else {
-				Alert.show("Clicked slice " + sliceIndex + ", no code attached.");
 			}
 			dismiss(null);
 		}

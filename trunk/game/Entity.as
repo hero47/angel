@@ -101,6 +101,15 @@ package angel.game {
 			}
 		}
 		
+		public function isEnemy():Boolean {
+			//CONSIDER: is this true, or will we want to have civilians with combat behavior that are untargetable?
+			return (combatBrainClass != null);
+		}
+		
+		public function center():Point {
+			return new Point(this.width / 2 + this.x, this.height / 2 + this.y);
+		}
+		
 		//return true if moving, false if goal is unreachable or already there
 		public function startMovingToward(goal:Point, gait:int=GAIT_EXPLORE):Boolean {
 			moveGoal = goal;
