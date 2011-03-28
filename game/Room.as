@@ -106,7 +106,9 @@ package angel.game {
 			removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
 			stopDrag();
 			
-			ui.disable();
+			if (ui != null) {
+				ui.disable();
+			}
 		}
 		
 		
@@ -284,11 +286,11 @@ package angel.game {
 			}
 		}
 		
-		public function solid(location:Point):uint {
-			if ((location.x < 0) || (location.x >= size.x) || (location.y < 0) || (location.y >= size.y)) {
-				return Prop.HARD_SOLID;
+		public function solid(x:int, y:int):uint {
+			if ((x < 0) || (x >= size.x) || (y < 0) || (y >= size.y)) {
+				return Prop.OFF_MAP;
 			}
-			return cells[location.x][location.y].solid();
+			return cells[x][y].solid();
 		}
 		
 		private function enterFrameListener(event:Event):void {

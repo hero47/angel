@@ -11,14 +11,16 @@ package angel.common {
 	public class Prop extends Sprite {
 
 		// ORing together the solidity for everything on a tile must give solidity for the tile as a whole.
-		public static const GHOST:uint = 0x0;
-		public static const SOLID:uint = 0x1;	// normal solid object
+		public static const SOLID:uint = 0x1;	// normal solid object, prevents movement (default)
 		public static const HARD_CORNER:uint = 0x2; // prevent movement between two adjacent diagonals if both hard
-		public static const HARD_SOLID:uint = (SOLID | HARD_CORNER);
+		public static const TALL:uint = 0x4; // block line of sight (default) (optional "short" setting doesn't)
+		
+		public static const DEFAULT_SOLIDITY:uint = (SOLID | TALL);
+		public static const OFF_MAP:uint = (SOLID | HARD_CORNER | TALL);
 		
 		protected var imageBitmap:Bitmap;
 		protected var myLocation:Point = null;
-		public var solid:uint = GHOST;
+		public var solid:uint = Prop.DEFAULT_SOLIDITY;
 		
 		// Depth represents distance to the "camera" plane, in our orthogonal view
 		// The fractional part of depth indicates distance away from that line of cell-centers

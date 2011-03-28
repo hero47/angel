@@ -3,6 +3,7 @@ package angel.game {
 	import angel.common.Assert;
 	import angel.common.Floor;
 	import angel.common.FloorTile;
+	import angel.common.Prop;
 	import angel.common.Util;
 	import flash.display.Bitmap;
 	import flash.display.Graphics;
@@ -26,7 +27,6 @@ package angel.game {
 	public class RoomCombat implements RoomMode {
 		
 		public var room:Room;
-		private var playerMoveInProgress:Boolean = false;
 		private var iFighterTurnInProgress:int;
 		private var dragging:Boolean = false;
 		private var moveUi:CombatMoveUi;
@@ -53,6 +53,9 @@ package angel.game {
 		
 		private static const PAUSE_TO_VIEW_MOVE_TIME:int = 1000;
 		private static const PAUSE_TO_VIEW_FIRE_TIME:int = 1000;
+		
+		private var playerHealthDisplay:TextField;
+		private static const PLAYER_HEALTH_PREFIX:String = "Health: ";
 
 
 		// Trying to cleanup/organize this class, with possible refactoring on the horizon
@@ -77,6 +80,12 @@ package angel.game {
 			pauseToViewFire = new Timer(PAUSE_TO_VIEW_FIRE_TIME, 1);
 			pauseToViewFire.addEventListener(TimerEvent.TIMER_COMPLETE, fireTimerListener);
 			
+			playerHealthDisplay = createPlayerHealthTextField();
+			playerHealthDisplay.x = 10;
+			playerHealthDisplay.y = 10;
+			adjustPlayerHealthDisplay(room.playerCharacter.health);
+			room.stage.addChild(playerHealthDisplay);
+			
 			moveUi = new CombatMoveUi(room, this);
 			fireUi = new CombatFireUi(room, this);
 			room.enableUi(moveUi);
@@ -90,6 +99,8 @@ package angel.game {
 			
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
 			clearDots();
+			room.stage.removeChild(playerHealthDisplay);
+			
 			for (var i:int = 1; i < fighters.length; i++) { // player is fighters[0]
 				cleanupEntityFromCombat(fighters[i]);
 			}
@@ -135,6 +146,22 @@ package angel.game {
 				graphics.moveTo(startPoint.x - (i * Floor.FLOOR_TILE_X), startPoint.y + (i * Floor.FLOOR_TILE_Y) - 1);
 				graphics.lineTo(endPoint.x - (i * Floor.FLOOR_TILE_X), endPoint.y + (i * Floor.FLOOR_TILE_Y) - 1);
 			}
+		}
+		
+		private function createPlayerHealthTextField():TextField {
+			var myTextField:TextField = Util.textBox("", 80, 20, TextFormatAlign.CENTER, false);
+			myTextField.border = true;
+			myTextField.background = true;
+			myTextField.backgroundColor = 0xffffff;
+			return myTextField;
+		}
+		
+		private function adjustPlayerHealthDisplay(points:int):void {
+			playerHealthDisplay.text = PLAYER_HEALTH_PREFIX + String(points);
+		}
+		
+		private function playerDeathOk(button:String):void {
+			room.changeModeTo(RoomExplore);
 		}
 		
 		/****************** Used by both player & NPCs during combat turns *******************/
@@ -226,6 +253,8 @@ package angel.game {
 					shooter.centerRoomOnMe();
 				}
 			} else {
+				damage(target);
+				
 				var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(room.stage.frameRate);
 				uglyFireLineThatViolates3D.graphics.lineStyle(2, 0xff0000);
 				uglyFireLineThatViolates3D.graphics.moveTo(shooter.center().x, shooter.center().y);
@@ -242,8 +271,19 @@ package angel.game {
 			pauseToViewFire.reset();
 			pauseToViewFire.start();
 		}
+		
+		// To start, every hit deals 1 damage.  Later we'll complicate things; I don't know whether the
+		// calculations will end up here or elsewhere.
+		private function damage(entity:Entity):void {
+			entity.health--;
+			if (entity.isPlayerControlled) {
+				adjustPlayerHealthDisplay(entity.health);
+				if (entity.health <= 0) {
+					Alert.show("You have been taken out.", { callback:playerDeathOk } );
+				}
+			}
+		}
 
-		// Jack's line-of-sight algorithm
 		public function lineOfSight(entity:Entity, target:Point):Boolean {
 			var x0:int = entity.location.x;
 			var y0:int = entity.location.y;
@@ -270,7 +310,7 @@ package angel.game {
 
 			// original code went to n>0; I changed that so the target we're trying to shoot doesn't block itself
 			for (; n > 1; --n) {
-				if (entity.tileBlocked(new Point(x, y))) {
+				if (tileBlocksSight(x, y)) {
 					return false;
 				}
 
@@ -288,17 +328,8 @@ package angel.game {
 			return true;
 		} // end function lineOfSight
 		
-		// Line of sight calculations for the eight easy directions
-		private function straightLineOfSight(entity:Entity, target:Point):Boolean {
-			var step:Point = new Point(Util.sign(target.x - entity.location.x), Util.sign(target.y - entity.location.y));
-			var current:Point = entity.location;
-			while (!current.equals(target)) {
-				current = entity.checkBlockage(current, step);
-				if (current == null) {
-					return false;
-				}
-			}
-			return true;
+		public function tileBlocksSight(x:int, y:int):Boolean {
+			return (room.solid(x,y) & Prop.TALL) != 0;
 		}
 		
 		/*********** Turn-structure related **************/

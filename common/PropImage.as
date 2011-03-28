@@ -30,12 +30,11 @@ package angel.common {
 			myTextField.y = Prop.HEIGHT / 2;
 			imageData.draw(myTextField);
 			
-			if (entry.xml != null && entry.xml.@solid.length() > 0) {
-				solid = entry.xml.@solid;
-			} else {
-				solid = Prop.SOLID;
+			if (entry.xml != null) {
+				var solidString:String = entry.xml.@solid;
+				solid = (solidString == "" ? Prop.DEFAULT_SOLIDITY : uint(solidString));
+				entry.xml = null;
 			}
-			entry.xml = null;
 		}
 		
 		public function get catalogEntry():CatalogEntry {

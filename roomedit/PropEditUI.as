@@ -2,6 +2,7 @@ package angel.roomedit {
 	import angel.common.CatalogEntry;
 	import angel.common.Prop;
 	import angel.common.PropImage;
+	import fl.controls.CheckBox;
 	import fl.controls.ComboBox;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -17,12 +18,14 @@ package angel.roomedit {
 		private var propBitmap:Bitmap;
 		private var propCombo:ComboBox;
 		private var solidCombo:ComboBox;
+		private var shortCheck:CheckBox;
 		
 		private static const solidChoices:Array = [
-				{ label:"Ghost/Hologram", data:Prop.GHOST },
+				{ label:"Ghost/Hologram", data:0 },
 				{ label:"'Soft' Solid (normal)", data:Prop.SOLID },
-				{ label:"'Hard' Solid (adjacent corners block)", data:Prop.HARD_SOLID } 
+				{ label:"'Hard' Solid (adjacent corners block)", data:(Prop.SOLID | Prop.HARD_CORNER) } 
 		]
+		private static const SOLID_COMBO_MASK:uint = (Prop.SOLID | Prop.HARD_CORNER);
 		
 		private static const WIDTH:int = 220;
 		
@@ -44,9 +47,15 @@ package angel.roomedit {
 			for (var i:int = 0; i < solidChoices.length; i++) {
 				solidCombo.addItem(solidChoices[i]);
 			}
-			solidCombo.addEventListener(Event.CHANGE, changeSolid);
+			solidCombo.addEventListener(Event.CHANGE, changeSolidness);
 			solidCombo.y = propChooser.y + propCombo.height + 10;
 			addChild(solidCombo);
+			
+			shortCheck = new CheckBox();
+			shortCheck.label = "Short";
+			shortCheck.y = solidCombo.y + solidCombo.height + 10;
+			shortCheck.addEventListener(Event.CHANGE, changeSolidness);
+			addChild(shortCheck);
 
 			propCombo.selectedIndex = 0;
 			changeProp(null);
@@ -58,21 +67,28 @@ package angel.roomedit {
 			var propImage:PropImage = catalog.retrievePropImage(propId);
 			propBitmap.bitmapData = propImage.imageData;
 
+			var solidComboData:uint = propImage.solid & SOLID_COMBO_MASK;
 			for (var i:int = 0; i < solidChoices.length; i++) {
-				if (solidCombo.getItemAt(i).data == propImage.solid) {
+				if (solidCombo.getItemAt(i).data == solidComboData) {
 					solidCombo.selectedIndex = i;
 					break;
 				}
 			}
+			
+			shortCheck.selected = ((propImage.solid & Prop.TALL) == 0);
 		}
 		
-		private function changeSolid(event:Event):void {
+		private function changeSolidness(event:Event):void {
 			var propId:String = propCombo.selectedLabel;
-			var solid:uint = solidCombo.selectedItem.data;
-			if (solid == Prop.SOLID) {
+			var propImage:PropImage = catalog.retrievePropImage(propId);
+			propImage.solid = solidCombo.selectedItem.data;
+			if (!shortCheck.selected) {
+				propImage.solid |= Prop.TALL;
+			}
+			if (propImage.solid == Prop.DEFAULT_SOLIDITY) {
 				catalog.deleteXmlAttribute(propId, "solid");
 			} else {
-				catalog.changeXmlAttribute(propId, "solid", "0x" + solid.toString(16));
+				catalog.changeXmlAttribute(propId, "solid", "0x" + propImage.solid.toString(16));
 			}
 		}
 		
