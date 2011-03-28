@@ -19,6 +19,7 @@ package angel.game {
 		private var player:Entity;
 		
 		private var movePointsDisplay:TextField;
+		private static const MOVE_POINTS_PREFIX:String = "Move: ";
 		
 		public function CombatMoveUi(room:Room, combat:RoomCombat) {
 			this.combat = combat;
@@ -26,18 +27,16 @@ package angel.game {
 			this.player = room.playerCharacter;
 			
 			movePointsDisplay = createMovePointsTextField();
-			movePointsDisplay.text = String(player.combatMovePoints);
 			movePointsDisplay.x = 10;
-			movePointsDisplay.y = 10;
+			movePointsDisplay.y = 30;
 		}
 		
 		/* INTERFACE angel.game.IUi */
 		
 		public function enable():void {
 			trace("entering player move phase");
-			room.parent.addChild(movePointsDisplay);
-			movePointsDisplay.text = String(player.combatMovePoints);
-			
+			adjustMovePointsDisplay(player.combatMovePoints);
+			room.parent.addChild(movePointsDisplay);		
 		}
 		
 		public function disable():void {
@@ -84,7 +83,7 @@ package angel.game {
 					var pathToMouse:Vector.<Point> = player.findPathTo(loc, currentEnd);
 					if (pathToMouse != null && pathToMouse.length <= player.combatMovePoints - combat.path.length) {
 						combat.extendPath(player, pathToMouse);
-						movePointsDisplay.text = String(player.combatMovePoints - combat.path.length);
+						adjustMovePointsDisplay(player.combatMovePoints - combat.path.length);
 					}
 				}
 			}
@@ -153,7 +152,7 @@ package angel.game {
 		private function removePath():void {
 			combat.clearDots(0);
 			combat.path.length = 0;
-			movePointsDisplay.text = String(player.combatMovePoints);
+			adjustMovePointsDisplay(player.combatMovePoints);
 		}
 		
 		private function removeLastPathSegment():void {
@@ -163,25 +162,20 @@ package angel.game {
 				var clearFrom:int = (ends == 0 ? 0 : combat.endIndexes[ends - 1] + 1);
 				combat.clearDots(clearFrom);
 				combat.path.length = combat.dots.length;
-				movePointsDisplay.text = String(player.combatMovePoints - combat.path.length);
+				adjustMovePointsDisplay(player.combatMovePoints - combat.path.length);
 			}
 		}
 		
 		private function createMovePointsTextField():TextField {
-			var myTextField:TextField = new TextField();
-			myTextField.selectable = false;
-			myTextField.width = 40;
-			myTextField.height = 20;
-			var myTextFormat:TextFormat = new TextFormat();
-			myTextFormat.size = 16;
-			myTextFormat.align = TextFormatAlign.CENTER;
-			myTextField.defaultTextFormat = myTextFormat;
-			myTextField.type = TextFieldType.DYNAMIC;
+			var myTextField:TextField = Util.textBox("", 80, 20, TextFormatAlign.CENTER, false);
 			myTextField.border = true;
 			myTextField.background = true;
 			myTextField.backgroundColor = 0xffffff;
-			myTextField.textColor = 0x0;
 			return myTextField;
+		}
+		
+		private function adjustMovePointsDisplay(points:int):void {
+				movePointsDisplay.text = MOVE_POINTS_PREFIX + String(points);
 		}
 		
 	} // end class CombatMoveUi

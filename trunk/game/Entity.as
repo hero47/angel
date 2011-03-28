@@ -55,9 +55,11 @@ package angel.game {
 				new Point(1, 1), new Point(1, -1), new Point( -1, -1), new Point( -1, 1)
 			]);
 
+		
 		// Entity stats!  Eventually these will be initialized from data files.  They may go in a separate object.
 		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
 		public var combatMovePoints:int = Settings.combatMovePoints;
+		public var health:int = Settings.playerHealth;
 		public var exploreBrainClass:Class;
 		public var combatBrainClass:Class;
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
@@ -261,18 +263,18 @@ package angel.game {
 			return myPath;
 		}
 		
-		// If I'm not solid, I can go anywhere.  And I can always return to the tile I'm currently standing on
+		// If I'm not solid, I can go anywhere on map.  And I can always return to the tile I'm currently standing on
 		// as part of the same move (even if I somehow got accidentally placed onto another solid object) -- this
 		// avoids blocking my own move or getting stuck.
 		// Other than that, if I'm solid I can't move into a solid tile.
 		public function tileBlocked(loc:Point):Boolean {
-			if (loc.x < 0 || loc.x >= room.size.x || loc.y < 0 || loc.y >= room.size.y) {
-				return true;
-			}
-			if (!(solid & Prop.SOLID) || loc.equals(myLocation)) {
+			if (loc.equals(myLocation)) {
 				return false;
 			}
-			return (room.solid(loc) & Prop.SOLID) != 0;
+			if (!(solid & Prop.SOLID)) {
+				return (loc.x < 0 || loc.x >= room.size.x || loc.y < 0 || loc.y >= room.size.y)
+			}
+			return (room.solid(loc.x,loc.y) & Prop.SOLID) != 0;
 		}
 		
 		// step is a one-tile vector. Return from+step if legal, null if not
@@ -284,8 +286,8 @@ package angel.game {
 			if (step.x == 0 || step.y == 0) {
 				return target;
 			}
-			if ( (room.solid(new Point(from.x, from.y + step.y)) & Prop.HARD_CORNER) &&
-				 (room.solid(new Point(from.x + step.x, from.y)) & Prop.HARD_CORNER) ) {
+			if ( (room.solid(from.x, from.y + step.y) & Prop.HARD_CORNER) &&
+				 (room.solid(from.x + step.x, from.y) & Prop.HARD_CORNER) ) {
 				return null;
 			}
 			return target;

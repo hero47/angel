@@ -13,6 +13,7 @@ package angel.game {
 		public static var walkPoints:int;
 		public static var runPoints:int;
 		public static var sprintPoints:int;
+		public static var playerHealth:int = 10;
 		
 		public static var exploreSpeed:Number = DEFAULT_MOVE_SPEED;
 		public static var walkSpeed:Number = DEFAULT_MOVE_SPEED;
@@ -72,6 +73,10 @@ package angel.game {
 			}
 			if (xml.@sprintSpeed.length() > 0) {
 				sprintSpeed = xml.@sprintSpeed;
+			}
+			
+			if (xml.@playerHealth.length() > 0) {
+				playerHealth = xml.@playerHealth;
 			}
 			
 			showEnemyMoves = (String(xml.@showEnemyMoves) == "yes");

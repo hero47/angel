@@ -64,10 +64,10 @@ package angel.game {
 				var solid:uint = 0;
 				for (var i:int = 0; i < contents.length; i++) {
 					solid |= contents[i].solid;
-					return solid;
 				}
+				return solid;
 			}
-			return Prop.GHOST;
+			return 0;
 		}
 		
 	}
