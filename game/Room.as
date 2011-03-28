@@ -86,7 +86,7 @@ package angel.game {
 		public function enableUi(newUi:IRoomUi):void {
 			ui = newUi;
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
-			addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
+			stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
 			addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
 			addEventListener(MouseEvent.CLICK, mouseClickListener);
 			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
@@ -98,7 +98,7 @@ package angel.game {
 		
 		public function disableUi():void {
 			stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
-			removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
 			removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
 			removeEventListener(MouseEvent.CLICK, mouseClickListener);
 			//removeEventListener(MouseEvent.RIGHT_CLICK, rightClickListener);
@@ -123,7 +123,7 @@ package angel.game {
 		}
 		
 		private function mouseMoveListener(event:MouseEvent):void {
-			ui.mouseMove(event.localX, event.localY, event.target as FloorTile);
+			ui.mouseMove(event.target as FloorTile);
 		}
 
 		private function mouseDownListener(event:MouseEvent):void {
@@ -159,7 +159,12 @@ package angel.game {
 			}
 			var tile:FloorTile = event.target as FloorTile;
 			var slices:Vector.<PieSlice> = ui.pieMenuForTile(tile);
-			
+			launchPieMenu(tile, slices);
+		}
+		
+		// Separating this out into a public function because Wm has specced bringing up pie menu on something
+		// other than right-click in certain cases.  This is probably bad ui, but we'll see how it works out.
+		public function launchPieMenu(tile:FloorTile, slices:Vector.<PieSlice>):void {			
 			if (slices != null && slices.length > 0) {
 				var tileCenterOnStage:Point = floor.localToGlobal(Floor.centerOf(tile.location));
 				stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
@@ -225,16 +230,27 @@ package angel.game {
 			entity.addToRoom(this, location);
 		}
 		
-		public function forEachEntity(callWithEntity:Function):void {
+		public function forEachEntity(callWithEntity:Function, filter:Function = null):void {
 			for (var i:int = 0; i < size.x; i++) {
 				for (var j:int = 0; j < size.y; j++) {
 					for each (var prop:Prop in cells[i][j].contents) {
 						if (prop is Entity) {
+							if (filter != null && !filter(prop)) {
+								continue;
+							}
 							callWithEntity(prop);
 						}
 					}
 				}
 			}
+		}
+		
+		public function forEachEntityIn(location:Point, callWithEntity:Function, filter:Function = null):void {
+			cells[location.x][location.y].forEachEntity(callWithEntity, filter);
+		}
+		
+		public function firstEntityIn(location:Point, filter:Function = null):Entity {
+			return cells[location.x][location.y].firstEntity(filter);
 		}
 
 		public function addPlayerCharacter(entity:Entity, location:Point): void {

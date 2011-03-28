@@ -54,7 +54,7 @@ package angel.game {
 			}
 		}
 		
-		public function mouseMove(x:int, y:int, tile:FloorTile):void {
+		public function mouseMove(tile:FloorTile):void {
 			if (tile != null) {
 				if (player.tileBlocked(tile.location)) {
 					room.moveHilight(null, 0);

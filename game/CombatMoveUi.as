@@ -62,7 +62,7 @@ package angel.game {
 			}
 		}
 		
-		public function mouseMove(x:int, y:int, tile:FloorTile):void {
+		public function mouseMove(tile:FloorTile):void {
 			if (tile != null) {
 				var distance:int = 1000;
 				if (!player.tileBlocked(tile.location) && (combat.path.length < player.combatMovePoints)) {

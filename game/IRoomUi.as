@@ -15,8 +15,8 @@ package angel.game {
 		// Generic keys are handled by caller; this is just for the ones unique to this mode
 		function keyDown(keyCode:uint):void;
 		
-		// x & y in local coordinates, in case we're faking a cursor
-		function mouseMove(x:int, y:int, tile:FloorTile):void;
+		// WARNING: tile can be null on this one! (Because we use this for fake cursor, which we want to move outside floor)
+		function mouseMove(tile:FloorTile):void;
 		
 		function mouseClick(tile:FloorTile):void;
 		

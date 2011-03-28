@@ -6,34 +6,53 @@ package angel.game {
 	// square on the map, including any terrain properties.
 	public class Cell {
 		
-		public var contents:Vector.<Entity>;
+		public var contents:Vector.<Prop>;
 		
 		public function Cell() {
 			
 		}
 		
-		public function add(entity:Entity):void {
+		public function add(prop:Prop):void {
 			if (contents == null) {
-				contents = new Vector.<Entity>();
+				contents = new Vector.<Prop>();
 			}
-			contents.push(entity);
+			contents.push(prop);
 		}
 		
-		public function remove(entity:Entity):void {
-			Assert.assertTrue(contents != null && contents.indexOf(entity) >= 0, "Removing entity that's not there");
+		public function remove(prop:Prop):void {
+			Assert.assertTrue(contents != null && contents.indexOf(prop) >= 0, "Removing something that's not there");
 			if (contents != null) {
-				var i:int = contents.indexOf(entity);
+				var i:int = contents.indexOf(prop);
 				if (i >= 0) {
 					contents.splice(i, 1);
 				}
 			}
 		}
 		
-		public function firstOccupant():Entity {
-			if (!occupied()) {
+		public function firstEntity(filter:Function = null):Entity {
+			if (contents == null) {
 				return null;
 			}
-			return contents[0];
+			for each (var prop:Prop in contents) {
+				if (prop is Entity) {
+					if (filter != null && !filter(prop)) {
+						continue;
+					}
+					return prop as Entity;
+				}
+			}
+			return null;
+		}
+		
+		public function forEachEntity(callWithEntity:Function, filter:Function = null):void {
+			for each (var prop:Prop in contents) {
+				if (prop is Entity) {
+					if (filter != null && !filter(prop)) {
+						continue;
+					}
+					callWithEntity(prop);
+				}
+			}
 		}
 		
 		public function occupied():Boolean {

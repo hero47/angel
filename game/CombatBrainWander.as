@@ -31,6 +31,12 @@ package angel.game {
 			roomCombat.startEntityFollowingPath(me, gait);
 		}
 		
+		public function doFire():void {
+			trace(me.aaId, "do fire");
+			roomCombat.fire(me, roomCombat.room.playerCharacter);
+			
+		}
+		
 	}
 
 }

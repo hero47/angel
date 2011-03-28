@@ -4,9 +4,11 @@ package angel.game {
 	import angel.common.Floor;
 	import angel.common.FloorTile;
 	import angel.common.Util;
+	import flash.display.Bitmap;
 	import flash.display.Graphics;
 	import flash.display.Shape;
 	import flash.display.Sprite;
+	import flash.display.Stage;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
@@ -23,7 +25,7 @@ package angel.game {
 	
 	public class RoomCombat implements RoomMode {
 		
-		private var room:Room;
+		public var room:Room;
 		private var playerMoveInProgress:Boolean = false;
 		private var iFighterTurnInProgress:int;
 		private var dragging:Boolean = false;
@@ -33,7 +35,8 @@ package angel.game {
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
 		private var fighters:Vector.<Entity>;
 		
-		private var pauseBetweenMoves:Timer;
+		private var pauseToViewMove:Timer;
+		private var pauseToViewFire:Timer;
 		
 		// public because they're accessed by the CombatMoveUi and/or entity combat brains
 		public var dots:Vector.<Shape> = new Vector.<Shape>();
@@ -41,10 +44,16 @@ package angel.game {
 		public var path:Vector.<Point> = new Vector.<Point>();
 		
 		// Colors for movement dots/hilights
-		private static const walkColor:uint = 0x00ff00;
-		private static const runColor:uint = 0xffd800;
-		private static const sprintColor:uint = 0xff0000;
-		private static const outOfRangeColor:uint = 0x888888;
+		private static const WALK_COLOR:uint = 0x00ff00;
+		private static const RUN_COLOR:uint = 0xffd800;
+		private static const SPRINT_COLOR:uint = 0xff0000;
+		private static const OUT_OF_RANGE_COLOR:uint = 0x888888;
+		private static const ENEMY_MARKER_COLOR:uint = 0xff0000;
+		private static const GRID_COLOR:uint = 0xff0000;
+		
+		private static const PAUSE_TO_VIEW_MOVE_TIME:int = 1000;
+		private static const PAUSE_TO_VIEW_FIRE_TIME:int = 1000;
+
 
 		// Trying to cleanup/organize this class, with possible refactoring on the horizon
 		
@@ -63,8 +72,10 @@ package angel.game {
 			// between phases because it seemed a little cleaner that way, but I'm not certain.
 			room.addEventListener(Entity.MOVED, removeFirstDotOnPath);
 			room.addEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
-			pauseBetweenMoves = new Timer(2000, 1);
-			pauseBetweenMoves.addEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
+			pauseToViewMove = new Timer(PAUSE_TO_VIEW_MOVE_TIME, 1);
+			pauseToViewMove.addEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
+			pauseToViewFire = new Timer(PAUSE_TO_VIEW_FIRE_TIME, 1);
+			pauseToViewFire.addEventListener(TimerEvent.TIMER_COMPLETE, fireTimerListener);
 			
 			moveUi = new CombatMoveUi(room, this);
 			fireUi = new CombatFireUi(room, this);
@@ -75,22 +86,22 @@ package angel.game {
 			room.disableUi();
 			room.removeEventListener(Entity.MOVED, removeFirstDotOnPath);
 			room.removeEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
-			pauseBetweenMoves.removeEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
+			pauseToViewMove.removeEventListener(TimerEvent.TIMER_COMPLETE, enemyMoveTimerListener);
 			
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
 			clearDots();
-			for each (var entity:Entity in fighters) {
-				cleanupEntityFromCombat(entity);
+			for (var i:int = 1; i < fighters.length; i++) { // player is fighters[0]
+				cleanupEntityFromCombat(fighters[i]);
 			}
 		}
 		
 		private function initEntityForCombat(entity:Entity):void {
-			if (entity.combatBrainClass != null) {
+			if (entity.isEnemy()) {
 				fighters.push(entity);
 				entity.brain = new entity.combatBrainClass(entity, this);
 				
 				var enemyMarker:Shape = new Shape();
-				enemyMarker.graphics.lineStyle(4, 0xff0000);
+				enemyMarker.graphics.lineStyle(4, ENEMY_MARKER_COLOR, 0.7);
 				enemyMarker.graphics.drawCircle(0, 0, 15);
 				enemyMarker.graphics.drawCircle(0, 0, 30);
 				enemyMarker.graphics.drawCircle(0, 0, 45);
@@ -112,7 +123,7 @@ package angel.game {
 		//NOTE: grid lines are tweaked up by one pixel because the tile image bitmaps actually extend one pixel outside the
 		//tile boundaries, overlapping the previous row.
 		private function drawCombatGrid(graphics:Graphics):void {
-			graphics.lineStyle(0, 0xff0000, 1);
+			graphics.lineStyle(0, GRID_COLOR, 1);
 			var startPoint:Point = Floor.topCornerOf(new Point(0, 0));
 			var endPoint:Point = Floor.topCornerOf(new Point(0, room.size.y));
 			for (var i:int = 0; i <= room.size.x; i++) {
@@ -126,7 +137,7 @@ package angel.game {
 			}
 		}
 		
-		/****************** Used by both player & NPCs during combat turns -- move segment *******************/
+		/****************** Used by both player & NPCs during combat turns *******************/
 		
 		public function startEntityFollowingPath(entity:Entity, gait:int):void {
 			entity.startMovingAlongPath(path, gait); //CAUTION: this path now belongs to entity!
@@ -190,16 +201,46 @@ package angel.game {
 		public static function colorForGait(gait:int):uint {
 			switch (gait) {
 				case Entity.GAIT_WALK:
-					return walkColor;
+					return WALK_COLOR;
 				break;
 				case Entity.GAIT_RUN:
-					return runColor;
+					return RUN_COLOR;
 				break;
 				case Entity.GAIT_SPRINT:
-					return sprintColor;
+					return SPRINT_COLOR;
 				break;
 			}
-			return outOfRangeColor;
+			return OUT_OF_RANGE_COLOR;
+		}
+		
+		public function fire(shooter:Entity, target:Entity):void {
+			if (target == null) {
+				var reserveFireBitmap:Bitmap = new Icon.ReserveFireFloater();
+				var reserveFireSprite:TimedSprite = new TimedSprite(room.stage.frameRate);
+				reserveFireSprite.addChild(reserveFireBitmap);
+				reserveFireSprite.x = shooter.x;
+				reserveFireSprite.y = shooter.y - reserveFireSprite.height;
+				room.addChild(reserveFireSprite);
+				//UNDONE: Set whatever keeps track of reserved fire
+				if (shooter.isPlayerControlled || Settings.showEnemyMoves) {
+					shooter.centerRoomOnMe();
+				}
+			} else {
+				var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(room.stage.frameRate);
+				uglyFireLineThatViolates3D.graphics.lineStyle(2, 0xff0000);
+				uglyFireLineThatViolates3D.graphics.moveTo(shooter.center().x, shooter.center().y);
+				uglyFireLineThatViolates3D.graphics.lineTo(target.center().x, target.center().y);
+				room.addChild(uglyFireLineThatViolates3D);
+				if (shooter.isPlayerControlled || Settings.showEnemyMoves) {
+					target.centerRoomOnMe();
+				}
+			}
+			
+			
+			// Give the player some time to gaze at the fire graphic before continuing with turn.
+			// CONSIDER: For enemies, we may put up some sort of "enemy firing" overlay
+			pauseToViewFire.reset();
+			pauseToViewFire.start();
 		}
 
 		/*********** Turn-structure related **************/
@@ -211,23 +252,18 @@ package angel.game {
 			if (iFighterTurnInProgress == 0) {
 				room.enableUi(fireUi);
 			} else {
-				//UNDONE: enemy fire
-				finishedFire();
+				fighters[iFighterTurnInProgress].brain.doFire();
 			}
 		}
 		
-		// This will change to a listener if we want to hang around for a moment allowing player to see results
-		// of each shot before going to the next entity's move phase; Wm hasn't said that yet but it seems likely.
-		public function finishedFire():void {
+		// Called each time the timer for gazing at the fire graphic expires
+		private function fireTimerListener(event:TimerEvent):void {
 			trace("fighter", iFighterTurnInProgress, "(", fighters[iFighterTurnInProgress].aaId, ") finished fire");
 			++iFighterTurnInProgress;
 			if (iFighterTurnInProgress >= fighters.length) {
-				trace("All enemy turns have been processed, go back to player");
+				trace("All enemy turns have been processed, go back to player move");
 				iFighterTurnInProgress = 0;
-				if (Settings.showEnemyMoves) {
-					room.playerCharacter.centerRoomOnMe();
-				}
-				
+				room.playerCharacter.centerRoomOnMe();
 				room.enableUi(moveUi);
 				return;
 			}
@@ -236,14 +272,14 @@ package angel.game {
 				fighters[iFighterTurnInProgress].centerRoomOnMe();
 			}
 			
-			// Give the player 2 seconds to gaze at the enemy's move dots before continuing with turn.
+			// Give the player some time to gaze at the enemy's move dots before continuing with turn.
 			// (The timer will be running while enemy calculates move, so if that takes a while once we
 			// start complicating the AI, then there may be a delay before the move dots are drawn, but
 			// the total time between enemy's turn starting and enemy beginning to follow dots should
-			// stay at 2 seconds.)
-			// CONSIDER: We may put up some sort of "enemy processing turn" overlay
-			pauseBetweenMoves.reset();
-			pauseBetweenMoves.start();
+			// stay at that time unless we're really slow.)
+			// CONSIDER: We may put up some sort of "enemy moving" overlay
+			pauseToViewMove.reset();
+			pauseToViewMove.start();
 			
 			fighters[iFighterTurnInProgress].brain.chooseMoveAndDrawDots();
 		}
@@ -253,6 +289,7 @@ package angel.game {
 			trace("enemyMoveTimerListener for fighter #", iFighterTurnInProgress);
 			fighters[iFighterTurnInProgress].brain.doMove();
 		}
+		
 		
 	} // end class RoomCombat
 
