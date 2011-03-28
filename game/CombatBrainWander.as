@@ -6,12 +6,12 @@ package angel.game {
 	 */
 	public class CombatBrainWander {
 		private var me:Entity;
-		private var roomCombat:RoomCombat;
+		private var combat:RoomCombat;
 		private var gait:int;
 		
-		public function CombatBrainWander(entity:Entity, roomCombat:RoomCombat) {
+		public function CombatBrainWander(entity:Entity, combat:RoomCombat) {
 			me = entity;
-			this.roomCombat = roomCombat;
+			this.combat = combat;
 		}
 		
 		public function chooseMoveAndDrawDots():void {
@@ -22,18 +22,22 @@ package angel.game {
 			var path:Vector.<Point> = me.findPathTo(goal);
 			trace(me.aaId, "chose path:", path);
 			if (path != null) {
-				gait = roomCombat.extendPath(me, path);
+				gait = combat.extendPath(me, path);
 			}
 		}
 		
 		public function doMove():void {
 			trace(me.aaId, "do move");
-			roomCombat.startEntityFollowingPath(me, gait);
+			combat.startEntityFollowingPath(me, gait);
 		}
 		
 		public function doFire():void {
 			trace(me.aaId, "do fire");
-			roomCombat.fire(me, roomCombat.room.playerCharacter);
+			if (combat.lineOfSight(me, combat.room.playerCharacter.location)) {
+				combat.fire(me, combat.room.playerCharacter);
+			} else {
+				combat.fire(me, null);
+			}
 			
 		}
 		

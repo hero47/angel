@@ -25,6 +25,7 @@ package angel.game {
 		// Wm wants pressing space to alternate between centering on player and centering on target enemy
 		private var spaceLastCenteredOnPlayer:Boolean = false;
 		
+		private static const LOS_BLOCKED_TILE_HILIGHT_COLOR:uint = 0x000000;
 		private static const NO_TARGET_TILE_HILIGHT_COLOR:uint = 0xffffff;
 		private static const TARGET_TILE_HILIGHT_COLOR:uint = 0xff0000;
 		private static const TARGET_HILIGHT_COLOR:uint = 0xff0000;
@@ -94,7 +95,10 @@ package angel.game {
 		
 		public function mouseMove(tile:FloorTile):void {
 			if (tile != null) {
-				if (targetLocked) {
+				var lineOfSight:Boolean = combat.lineOfSight(player, tile.location);
+				if (!lineOfSight) {
+					room.moveHilight(tile, LOS_BLOCKED_TILE_HILIGHT_COLOR);
+				} else if (targetLocked) {
 					//NOTE: we'll probably add some behavior here once Wm tries this
 					room.moveHilight(tile, NO_TARGET_TILE_HILIGHT_COLOR);
 				} else {
@@ -152,7 +156,6 @@ package angel.game {
 		
 		private function doReserveFire():void {
 			room.disableUi();
-			//UNDONE whatever this actually does
 			combat.fire(player, null);
 		}
 		

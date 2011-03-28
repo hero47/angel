@@ -243,6 +243,64 @@ package angel.game {
 			pauseToViewFire.start();
 		}
 
+		// Jack's line-of-sight algorithm
+		public function lineOfSight(entity:Entity, target:Point):Boolean {
+			var x0:int = entity.location.x;
+			var y0:int = entity.location.y;
+			var x1:int = target.x;
+			var y1:int = target.y;
+			var dx:int = Math.abs(x1 - x0);
+			var dy:int = Math.abs(y1 - y0);
+			
+			// Ray-tracing on grid code, from http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
+			// NOTE: "Finally: The code [] does not always return the same set of squares if you swap the endpoints.
+			// When error is zero, the line is passing through a vertical grid line and a horizontal grid line
+			// simultaneously. In this case, the code currently will always move vertically (the else clause), then
+			// horizontally. If this is undesirable, you could make the if statement break ties differently when moving
+			// up vs. down; or you could have a third clause for error == 0 which considers both moves
+			// (horizontal-then-vertical and vertical-then-horizontal).
+			var x:int = x0;
+			var y:int = y0;
+			var n:int = 1 + dx + dy;
+			var x_inc:int = (x1 > x0) ? 1 : -1;
+			var y_inc:int = (y1 > y0) ? 1 : -1;
+			var error:int = dx - dy;
+			dx *= 2;
+			dy *= 2;
+
+			// original code went to n>0; I changed that so the target we're trying to shoot doesn't block itself
+			for (; n > 1; --n) {
+				if (entity.tileBlocked(new Point(x, y))) {
+					return false;
+				}
+
+				if (error > 0)
+				{
+					x += x_inc;
+					error -= dy;
+				}
+				else
+				{
+					y += y_inc;
+					error += dx;
+				}
+			}
+			return true;
+		} // end function lineOfSight
+		
+		// Line of sight calculations for the eight easy directions
+		private function straightLineOfSight(entity:Entity, target:Point):Boolean {
+			var step:Point = new Point(Util.sign(target.x - entity.location.x), Util.sign(target.y - entity.location.y));
+			var current:Point = entity.location;
+			while (!current.equals(target)) {
+				current = entity.checkBlockage(current, step);
+				if (current == null) {
+					return false;
+				}
+			}
+			return true;
+		}
+		
 		/*********** Turn-structure related **************/
 
 		// Called each time an entity (player or NPC) finishes its combat move
