@@ -28,6 +28,7 @@ package angel.game {
 		
 		public var room:Room;
 		private var iFighterTurnInProgress:int;
+		private var combatOver:Boolean = false;
 		private var dragging:Boolean = false;
 		private var moveUi:CombatMoveUi;
 		private var fireUi:CombatFireUi;
@@ -92,7 +93,6 @@ package angel.game {
 			enemyHealthDisplay = createHealthTextField();
 			enemyHealthDisplay.x = room.stage.stageWidth - enemyHealthDisplay.width - 10;
 			enemyHealthDisplay.y = 10;
-			trace("enemyHealthDisplay.y",enemyHealthDisplay.y);
 			adjustEnemyHealthDisplay(-1);
 			room.stage.addChild(enemyHealthDisplay);
 			
@@ -299,6 +299,7 @@ package angel.game {
 			if (entity.isPlayerControlled) {
 				adjustPlayerHealthDisplay(entity.health);
 				if (entity.health <= 0) {
+					combatOver = true;
 					Alert.show("You have been taken out.", { callback:playerDeathOk } );
 				}
 			}
@@ -368,6 +369,13 @@ package angel.game {
 		// Called each time the timer for gazing at the fire graphic expires
 		private function fireTimerListener(event:TimerEvent):void {
 			trace("fighter", iFighterTurnInProgress, "(", fighters[iFighterTurnInProgress].aaId, ") finished fire");
+			
+			if (combatOver) {
+				// don't allow next enemy to move, don't enable player UI, just wait for them to OK the message,
+				// which will end combat mode.
+				return;
+			}
+			
 			++iFighterTurnInProgress;
 			if (iFighterTurnInProgress >= fighters.length) {
 				trace("All enemy turns have been processed, go back to player move");
