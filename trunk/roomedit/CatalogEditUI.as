@@ -51,6 +51,13 @@ package angel.roomedit {
 			addChild(button);
 			left += button.width + 5;
 			
+			button = new SimplerButton("Edit NPCs", clickedEditNpc);
+			button.x = left;
+			button.y = 5;
+			button.width = 100;
+			addChild(button);
+			left += button.width + 5;
+			
 			button = new SimplerButton("Save Catalog", clickedSaveCatalog);
 			button.x = left;
 			button.y = 5;
@@ -160,9 +167,15 @@ package angel.roomedit {
 		private function clickedEditProp(event:Event):void {
 			KludgeDialogBox.init(stage);
 			var options:Object = { buttons:["Done"], inputs:[], customControl:new PropEditUI(catalog) };
-			var text:String = "Edit prop solidity";
+			var text:String = "Edit prop";
 			KludgeDialogBox.show(text, options);
-			
+		}
+		
+		private function clickedEditNpc(event:Event):void {
+			KludgeDialogBox.init(stage);
+			var options:Object = { buttons:["Done"], inputs:[], customControl:new NpcEditUI(catalog) };
+			var text:String = "Edit NPC";
+			KludgeDialogBox.show(text, options);
 		}
 		
 		private function clickedSaveCatalog(event:Event):void {

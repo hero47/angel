@@ -55,7 +55,9 @@ package angel.game {
 		private static const PAUSE_TO_VIEW_FIRE_TIME:int = 1000;
 		
 		private var playerHealthDisplay:TextField;
-		private static const PLAYER_HEALTH_PREFIX:String = "Health: ";
+		private static const PLAYER_HEALTH_PREFIX:String = "Health: ";		
+		private var enemyHealthDisplay:TextField;
+		private static const ENEMY_HEALTH_PREFIX:String = "Enemy: ";
 
 
 		// Trying to cleanup/organize this class, with possible refactoring on the horizon
@@ -80,11 +82,18 @@ package angel.game {
 			pauseToViewFire = new Timer(PAUSE_TO_VIEW_FIRE_TIME, 1);
 			pauseToViewFire.addEventListener(TimerEvent.TIMER_COMPLETE, fireTimerListener);
 			
-			playerHealthDisplay = createPlayerHealthTextField();
+			playerHealthDisplay = createHealthTextField();
 			playerHealthDisplay.x = 10;
 			playerHealthDisplay.y = 10;
 			adjustPlayerHealthDisplay(room.playerCharacter.health);
 			room.stage.addChild(playerHealthDisplay);
+			
+			enemyHealthDisplay = createHealthTextField();
+			enemyHealthDisplay.x = room.stage.stageWidth - enemyHealthDisplay.width - 10;
+			enemyHealthDisplay.y = 10;
+			trace("enemyHealthDisplay.y",enemyHealthDisplay.y);
+			adjustEnemyHealthDisplay(-1);
+			room.stage.addChild(enemyHealthDisplay);
 			
 			moveUi = new CombatMoveUi(room, this);
 			fireUi = new CombatFireUi(room, this);
@@ -148,7 +157,7 @@ package angel.game {
 			}
 		}
 		
-		private function createPlayerHealthTextField():TextField {
+		private function createHealthTextField():TextField {
 			var myTextField:TextField = Util.textBox("", 80, 20, TextFormatAlign.CENTER, false);
 			myTextField.border = true;
 			myTextField.background = true;
@@ -158,6 +167,15 @@ package angel.game {
 		
 		private function adjustPlayerHealthDisplay(points:int):void {
 			playerHealthDisplay.text = PLAYER_HEALTH_PREFIX + String(points);
+		}
+		
+		public function adjustEnemyHealthDisplay(points:int):void {
+			if (points < 0) {
+				enemyHealthDisplay.visible = false;
+			} else {
+				enemyHealthDisplay.text = ENEMY_HEALTH_PREFIX + String(points);
+				enemyHealthDisplay.visible = true;
+			}	
 		}
 		
 		private function playerDeathOk(button:String):void {

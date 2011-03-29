@@ -5,6 +5,7 @@ package angel.game {
 	import angel.common.PropImage;
 	import angel.common.Tileset;
 	import angel.common.Util;
+	import angel.common.WalkerImage;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
@@ -35,14 +36,11 @@ package angel.game {
 		public static const GAIT_SPRINT:int = 3;
 		public static const GAIT_TOO_FAR:int = 4;
 
-		// Facing == rotation/45 if we were in a top-down view.
-		// This will make it convenient if we ever want to determine facing from actual angles
-		public static const FACE_CAMERA:int = 1;
 		
 		
 		// This array maps from a one-tile movement to facing, with arbitrary "face camera" for center
 		public static const neighborToFacing:Vector.<Vector.<int>> = Vector.<Vector.<int>>([
-				Vector.<int>([5,4,3]), Vector.<int>([6,FACE_CAMERA,2]), Vector.<int>([7,0,1])
+				Vector.<int>([5,4,3]), Vector.<int>([6,WalkerImage.FACE_CAMERA,2]), Vector.<int>([7,0,1])
 			]);
 		public static const facingToNeighbor:Vector.<Point> = Vector.<Point>([
 				new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point( -1, 1),
