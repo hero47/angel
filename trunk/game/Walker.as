@@ -33,6 +33,10 @@ package angel.game {
 			imageBitmap.bitmapData = walkerImage.bitsFacing(facing);
 		}
 		
+		override public function initHealth():void {
+			this.health = (isPlayerControlled ? Settings.playerHealth : walkerImage.health);
+		}
+		
 	}
 
 }

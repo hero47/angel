@@ -67,8 +67,9 @@ package angel.game {
 			drawCombatGrid(room.decorationsLayer.graphics);
 			
 			fighters = new Vector.<Entity>();
-			room.forEachEntity(initEntityForCombat); // Add enemies to fighter list & init their combat brains
+			room.forEachEntity(initEnemyForCombat); // Add enemies to fighter list & init their combat brains
 			Util.shuffle(fighters); // enemy turn order is randomized at start of combat and stays the same thereafter
+			room.playerCharacter.initHealth();
 			fighters.splice(0, 0, room.playerCharacter); // player always goes first
 			iFighterTurnInProgress = 0;
 			
@@ -115,10 +116,11 @@ package angel.game {
 			}
 		}
 		
-		private function initEntityForCombat(entity:Entity):void {
+		private function initEnemyForCombat(entity:Entity):void {
 			if (entity.isEnemy()) {
 				fighters.push(entity);
 				entity.brain = new entity.combatBrainClass(entity, this);
+				entity.initHealth();
 				
 				var enemyMarker:Shape = new Shape();
 				enemyMarker.graphics.lineStyle(4, ENEMY_MARKER_COLOR, 0.7);

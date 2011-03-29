@@ -57,7 +57,7 @@ package angel.game {
 		// Entity stats!  Eventually these will be initialized from data files.  They may go in a separate object.
 		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
 		public var combatMovePoints:int = Settings.combatMovePoints;
-		public var health:int = Settings.playerHealth;
+		public var health:int;
 		public var exploreBrainClass:Class;
 		public var combatBrainClass:Class;
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
@@ -104,6 +104,12 @@ package angel.game {
 		public function isEnemy():Boolean {
 			//CONSIDER: is this true, or will we want to have civilians with combat behavior that are untargetable?
 			return (combatBrainClass != null);
+		}
+		
+		// Set health to catalog value at start of combat.
+		public function initHealth():void {
+			//  Currently only walkers have catalog entries for health.
+			this.health = 1;
 		}
 		
 		public function center():Point {
