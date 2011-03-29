@@ -98,6 +98,9 @@ package angel.game {
 				var lineOfSight:Boolean = combat.lineOfSight(player, tile.location);
 				if (!lineOfSight) {
 					room.moveHilight(tile, LOS_BLOCKED_TILE_HILIGHT_COLOR);
+					if (!targetLocked) {
+						moveTargetHilight(null);
+					}
 				} else if (targetLocked) {
 					//NOTE: we'll probably add some behavior here once Wm tries this
 					room.moveHilight(tile, NO_TARGET_TILE_HILIGHT_COLOR);
@@ -177,6 +180,7 @@ package angel.game {
 				var glow:GlowFilter = new GlowFilter(TARGET_HILIGHT_COLOR, 1, 20, 20, 2, 1, false, false);
 				targetEnemy.filters = [ glow ];
 			}
+			combat.adjustEnemyHealthDisplay(targetEnemy == null ? -1 : targetEnemy.health);
 		}
 	
 	} // end class CombatFireUi

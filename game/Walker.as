@@ -5,15 +5,16 @@ package angel.game {
 	
 	public class Walker extends Entity {
 		
-		private var images:WalkerImage;
+		private var walkerImage:WalkerImage;
 		private static const walkFrames:Vector.<int> = Vector.<int>([WalkerImage.LEFT, WalkerImage.STAND,
 			WalkerImage.RIGHT, WalkerImage.STAND, WalkerImage.LEFT, WalkerImage.STAND, WalkerImage.RIGHT, WalkerImage.STAND]);
 		
 		// id is for debugging use only
-		public function Walker(images:WalkerImage, id:String="") {
-			this.images = images;
-			facing = Entity.FACE_CAMERA;
-			super(new Bitmap(images.bitsFacing(facing)), id);
+		public function Walker(walkerImage:WalkerImage, id:String="") {
+			this.walkerImage = walkerImage;
+			facing = WalkerImage.FACE_CAMERA;
+			super(new Bitmap(walkerImage.bitsFacing(facing)), id);
+			this.health = walkerImage.health;
 		}
 
 		override protected function adjustImageForMove():void {
@@ -24,12 +25,12 @@ package angel.game {
 				var foot:int = frameOfMove * walkFrames.length / coordsForEachFrameOfMove.length;
 				step = walkFrames[foot];
 			}
-			imageBitmap.bitmapData = images.bitsFacing(facing, step);
+			imageBitmap.bitmapData = walkerImage.bitsFacing(facing, step);
 		}
 		
 		override public function turnToFacing(newFacing:int):void {
 			super.turnToFacing(newFacing);
-			imageBitmap.bitmapData = images.bitsFacing(facing);
+			imageBitmap.bitmapData = walkerImage.bitsFacing(facing);
 		}
 		
 	}

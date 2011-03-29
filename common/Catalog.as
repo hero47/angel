@@ -41,7 +41,10 @@ package angel.common {
 				}
 			}
 			for each (var walkerXml:XML in xml.walker) {
-				addCatalogEntry(walkerXml.@id, walkerXml.@file, CatalogEntry.WALKER, duplicateNames);
+				entry = addCatalogEntry(walkerXml.@id, walkerXml.@file, CatalogEntry.WALKER, duplicateNames);
+				if (entry != null) {
+					entry.xml = walkerXml;
+				}
 			}
 			for each (var tilesetXml:XML in xml.tileset) {
 				entry = addCatalogEntry(tilesetXml.@id, tilesetXml.@file, CatalogEntry.TILESET, duplicateNames);

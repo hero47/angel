@@ -10,6 +10,7 @@ package angel.common {
 	 */
 	
 	// UNDONE: This has expanded to more than just an image, and should be renamed at some point
+	// or the non-image stuff moved.  Same with WalkerImage.
 	public class PropImage implements ICatalogedResource {
 		
 		private var entry:CatalogEntry;

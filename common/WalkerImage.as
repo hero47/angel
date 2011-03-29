@@ -6,18 +6,25 @@ package angel.common {
 	import flash.geom.Rectangle;
 	import flash.text.TextField;
 
-	
+	// UNDONE: This has expanded to more than just an image, and should be renamed at some point
+	// or the non-image stuff moved.  Same with PropImage.
 	public class WalkerImage implements ICatalogedResource {
 		public static const STAND:int = 0;
 		public static const RIGHT:int = 1;
 		public static const LEFT:int = 2;
+		
+		// Facing == rotation/45 if we were in a top-down view.
+		// This will make it convenient if we ever want to determine facing from actual angles
+		public static const FACE_CAMERA:int = 1;
+		
+		public var health:int;
 		
 		[Embed(source = '../../../EmbeddedAssets/temp_default_walker.png')]
 		private var DefaultWalkerBitmap:Class;
 		
 		private var entry:CatalogEntry;
 		
-		//mapping from facing (rotation/45 if we were in a top-down view) to position on image sheet
+		//mapping from facing to position on image sheet
 		//(facing 8 == 360 degrees hold the attacking/death images)
 		private static const imageColumn:Vector.<int> = Vector.<int>([1, 0, 7, 6, 5, 4, 3, 2, 8]);
 		
@@ -50,6 +57,15 @@ package angel.common {
 				for (j = 0; j < 3; j++) {
 					bits[facing][j].draw(textField);
 				}
+			}
+			
+			health = 1;
+			if (entry.xml != null) {
+				var healthString:String = entry.xml.@health;
+				if (healthString != "") {
+					health = int(healthString);
+				}
+				entry.xml = null;
 			}
 		}
 		
