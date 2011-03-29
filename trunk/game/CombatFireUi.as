@@ -59,7 +59,9 @@ package angel.game {
 			trace("ending player fire phase");
 			room.moveHilight(null, 0);
 			moveTargetHilight(null);
-			room.removeChild(aimCursor);
+			if (aimCursor.parent != null) {
+				room.removeChild(aimCursor);
+			}
 			Mouse.show();
 		}
 		
@@ -165,6 +167,7 @@ package angel.game {
 		private function doCancelTarget():void {
 			targetLocked = false;
 			moveTargetHilight(null);
+			adjustAimCursorImage();
 		}
 		
 		private function filterIsEnemy(entity:Entity):Boolean {

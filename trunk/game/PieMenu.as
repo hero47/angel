@@ -110,11 +110,14 @@ package angel.game {
 			var sliceIndex:int = sliceIndexFromMouseEvent(event);
 			var newOverIcon:Bitmap = Bitmap(pie.getChildAt(sliceIndex));
 			adjustOverIcon(newOverIcon);
-			event.stopPropagation();
 		}
 		
 		private function mouseNotOverPie(event:MouseEvent):void {
-			adjustOverIcon(null);
+			if (event.target is PieMenu) {
+				//De-hilight the icon if we're only over the PieMenu (which occupies the full stage), but
+				//not over the sprite that forms the visual menu
+				adjustOverIcon(null);
+			}
 		}
 		
 		private function adjustOverIcon(newOverIcon:Bitmap):void {
