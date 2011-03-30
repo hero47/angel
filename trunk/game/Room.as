@@ -1,4 +1,5 @@
 package angel.game {
+	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.Floor;
 	import angel.common.FloorTile;
@@ -12,9 +13,11 @@ package angel.game {
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
+	import flash.events.TimerEvent;
 	import flash.filters.GlowFilter;
 	import flash.geom.Point;
 	import flash.ui.Keyboard;
+	import flash.utils.Timer;
 
 	public class Room extends Sprite {
 		static public const UNPAUSED_ENTER_FRAME:String = "unpausedEnterFrame"; // only triggers when not paused
@@ -35,7 +38,7 @@ package angel.game {
 
 		public var ui:IRoomUi;
 		private var dragging:Boolean = false;
-		private var paused:Boolean = false;
+		private var gameIsPaused:Boolean = false;
 		
 		private var tileWithFilter:FloorTile;
 		//private var entityWithFilter:Entity; // not yet, but will be needed for future story
@@ -80,8 +83,24 @@ package angel.game {
 			mode = new newModeClass(this);
 		}
 		
-		public function pause(value:Boolean):void {
-			paused = value;
+		public function pause(milliseconds:int, listener:Function = null):void {
+			Assert.assertTrue(!gameIsPaused, "Pause when already paused");
+			gameIsPaused = true;
+			
+			var timer:Timer = new Timer(milliseconds, 1);
+			timer.addEventListener(TimerEvent.TIMER_COMPLETE, function(event:TimerEvent):void {
+				Assert.assertTrue(gameIsPaused, "Something unpaused us before pause timer expired");
+				gameIsPaused = false;
+				timer = null;
+				if (listener != null) {
+					listener();
+				}
+			} );
+			timer.start();
+		}
+		
+		public function get paused():Boolean {
+			return gameIsPaused;
 		}
 		
 		/********** Player UI-related  ****************/
@@ -300,7 +319,7 @@ package angel.game {
 		
 		private function enterFrameListener(event:Event):void {
 			stage.focus = stage;
-			if (!paused) {
+			if (!gameIsPaused) {
 				dispatchEvent(new Event(UNPAUSED_ENTER_FRAME));
 			}
 			if (scrollingTo != null) {

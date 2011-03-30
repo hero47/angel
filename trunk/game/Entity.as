@@ -22,6 +22,7 @@ package angel.game {
 	public class Entity extends Prop {
 		// Events
 		public static const MOVED:String = "entityMoved";
+		public static const FINISHED_ONE_TILE_OF_MOVE:String = "entityFinishedTile";
 		public static const FINISHED_MOVING:String = "entityFinishedMoving";
 		
 		private static const PIXELS_FOR_ADJACENT_MOVE:int = Math.sqrt(Tileset.TILE_WIDTH * Tileset.TILE_WIDTH/4 + Tileset.TILE_HEIGHT * Tileset.TILE_HEIGHT/4);
@@ -224,6 +225,7 @@ package angel.game {
 				movingTo = null;
 				coordsForEachFrameOfMove = null;
 				adjustImageForMove(); // make sure we end up in "standing" posture even if move was ultra-fast
+				dispatchEvent(new Event(FINISHED_ONE_TILE_OF_MOVE, true));
 				if (path.length == 0) {
 					finishedMoving();
 				}
