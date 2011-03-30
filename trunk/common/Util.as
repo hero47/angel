@@ -73,6 +73,10 @@ package angel.common {
 			return (foo < 0 ? -1 : (foo > 0 ? 1 : 0));
 		}
 		
+		public static function chessDistance(a:Point, b:Point):int {
+			return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+		}
+		
 	} // end class Util
 
 }

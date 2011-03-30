@@ -60,15 +60,16 @@ package angel.game {
 		public var combatMovePoints:int = Settings.combatMovePoints;
 		public var health:int;
 		public var actionsRemaining:int;
+		public var mostRecentGait:int = GAIT_WALK;	// gait for move in progress, or last move if none in progress
 		public var exploreBrainClass:Class;
 		public var combatBrainClass:Class;
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
 		public var brain:Object;
+		public var isPlayerControlled:Boolean;
 
 		// if non-null, drawn on decorations layer
 		public var enemyMarker:Shape;
 		
-		public var isPlayerControlled:Boolean;
 		private var room:Room;
 		private var moveGoal:Point; // the tile we're trying to get to
 		private var path:Vector.<Point>; // the tiles we're trying to move through to get there
@@ -119,7 +120,8 @@ package angel.game {
 		}
 		
 		//return true if moving, false if goal is unreachable or already there
-		public function startMovingToward(goal:Point, gait:int=GAIT_EXPLORE):Boolean {
+		public function startMovingToward(goal:Point, gait:int = GAIT_EXPLORE):Boolean {
+			mostRecentGait = gait;
 			moveGoal = goal;
 			moveSpeed = gaitSpeeds[gait];
 			path = findPathTo(goal);
@@ -140,8 +142,8 @@ package angel.game {
 			// next time we get an ENTER_FRAME which is really asynchronous.
 			path = (newPath == null ? new Vector.<Point> : newPath);
 			moveGoal = (path.length > 0 ? path[path.length - 1] : myLocation);
-			gait = Math.min(gait, GAIT_SPRINT);
-			moveSpeed = gaitSpeeds[gait];
+			mostRecentGait = Math.min(gait, GAIT_SPRINT);
+			moveSpeed = gaitSpeeds[mostRecentGait];
 			room.addEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
 		}
 		
