@@ -34,9 +34,9 @@ package angel.game {
 		public function doFire():void {
 			trace(me.aaId, "do fire");
 			if (combat.lineOfSight(me, combat.room.playerCharacter.location)) {
-				combat.fire(me, combat.room.playerCharacter);
+				combat.fireAndAdvanceToNextPhase(me, combat.room.playerCharacter);
 			} else {
-				combat.fire(me, null);
+				combat.fireAndAdvanceToNextPhase(me, null);
 			}
 			
 		}
