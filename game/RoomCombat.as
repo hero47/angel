@@ -155,7 +155,7 @@ package angel.game {
 		}
 		
 		private function createHealthTextField():TextField {
-			var myTextField:TextField = Util.textBox("", 80, 20, TextFormatAlign.CENTER, false);
+			var myTextField:TextField = Util.textBox("", 100, 20, TextFormatAlign.CENTER, false);
 			myTextField.border = true;
 			myTextField.background = true;
 			myTextField.backgroundColor = 0xffffff;
@@ -297,6 +297,7 @@ package angel.game {
 		// calculations will end up here or elsewhere.
 		private function damage(entity:Entity):void {
 			entity.health--;
+			trace(entity.aaId, "damaged, health now", entity.health);
 			if (entity.isPlayerControlled) {
 				adjustPlayerHealthDisplay(entity.health);
 				if (entity.health <= 0) {
@@ -306,6 +307,7 @@ package angel.game {
 			}
 		}
 
+//private static var lastTarget:Point = new Point(-1,-1);
 		public function lineOfSight(entity:Entity, target:Point):Boolean {
 			var x0:int = entity.location.x;
 			var y0:int = entity.location.y;
@@ -314,13 +316,11 @@ package angel.game {
 			var dx:int = Math.abs(x1 - x0);
 			var dy:int = Math.abs(y1 - y0);
 			
+			
+//var traceIt:Boolean = !target.equals(lastTarget);
+//var path:Array = new Array();
+//lastTarget = target;
 			// Ray-tracing on grid code, from http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
-			// NOTE: "Finally: The code [] does not always return the same set of squares if you swap the endpoints.
-			// When error is zero, the line is passing through a vertical grid line and a horizontal grid line
-			// simultaneously. In this case, the code currently will always move vertically (the else clause), then
-			// horizontally. If this is undesirable, you could make the if statement break ties differently when moving
-			// up vs. down; or you could have a third clause for error == 0 which considers both moves
-			// (horizontal-then-vertical and vertical-then-horizontal).
 			var x:int = x0;
 			var y:int = y0;
 			var n:int = 1 + dx + dy;
@@ -329,24 +329,31 @@ package angel.game {
 			var error:int = dx - dy;
 			dx *= 2;
 			dy *= 2;
-
+			
 			// original code went to n>0; I changed that so the target we're trying to shoot doesn't block itself
 			for (; n > 1; --n) {
+//path.push(new Point(x, y));
 				if (tileBlocksSight(x, y)) {
+//if (traceIt) { trace("Blocked; path", path);}
 					return false;
 				}
 
-				if (error > 0)
-				{
+				if (error > 0) {
 					x += x_inc;
 					error -= dy;
 				}
-				else
-				{
+				else if (error < 0) {
 					y += y_inc;
 					error += dx;
+				} else { // special case when passing directly through vertex -- do a diagonal move, hitting one less tile
+					//CONSIDER: we may want to call this blocked if the tiles we're going between have "hard corners"
+					x += x_inc;
+					y += y_inc;
+					error = error - dy + dx;
+					--n;
 				}
 			}
+//if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
 			return true;
 		} // end function lineOfSight
 		
@@ -386,7 +393,7 @@ package angel.game {
 		private function isGoodTarget(shooter:Entity, target:Entity):Boolean {
 			var distance:int = Util.chessDistance(shooter.location, target.location);
 			var minDistance:int;
-			switch (shooter.mostRecentGait) {
+			switch (target.mostRecentGait) {
 				case Entity.GAIT_SPRINT:
 					minDistance = 6;
 				break;
@@ -447,6 +454,8 @@ package angel.game {
 			
 			if (Settings.showEnemyMoves) {
 				fighters[iFighterTurnInProgress].centerRoomOnMe();
+			} else {
+				room.playerCharacter.centerRoomOnMe();
 			}
 			
 			// Give the player some time to gaze at the enemy's move dots before continuing with turn.

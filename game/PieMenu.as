@@ -41,10 +41,12 @@ package angel.game {
 			pie.x = centerX;
 			pie.y = centerY;
 			addChild(pie);
+			
 			pie.addEventListener(MouseEvent.CLICK, clickedPie);
 			pie.addEventListener(MouseEvent.MOUSE_MOVE, mouseOverPie);
 			
-			addEventListener(MouseEvent.MOUSE_MOVE, mouseNotOverPie);
+			addEventListener(MouseEvent.CLICK, clickedAnywhere);
+			addEventListener(MouseEvent.MOUSE_MOVE, mouseAnywhere);
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
 		}
 		
@@ -54,9 +56,20 @@ package angel.game {
 			// Create an invisible fill covering the entire stage, in order to intercept all mouse-clicks
 			graphics.beginFill(0, 0);
 			graphics.drawRect(0, 0, stage.stageWidth, stage.stageHeight);
-			addEventListener(MouseEvent.CLICK, dismiss);
 			
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
+		}
+		
+		public function cleanup():void {
+			if (parent != null) {
+				stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
+				parent.removeChild(this);
+			}
+			removeEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
+			removeEventListener(MouseEvent.CLICK, clickedAnywhere);	
+			removeEventListener(MouseEvent.MOUSE_MOVE, mouseAnywhere);
+			pie.removeEventListener(MouseEvent.CLICK, clickedPie);
+			pie.removeEventListener(MouseEvent.MOUSE_MOVE, mouseOverPie);
 		}
 		
 		private function createPie():void {
@@ -85,16 +98,25 @@ package angel.game {
 			}
 		}
 		
-		private function dismiss(event:MouseEvent):void {
+		private function dismiss():void {
 			cleanup();
 			if (callbackAfterClose != null) {
 				callbackAfterClose();
 			}
 		}
 		
+		private function clickedAnywhere(event:MouseEvent):void {
+			if (event.target == this) {
+				//Dismiss if we're only over the PieMenu (which occupies the full stage), but
+				//not over the sprite that forms the visual menu. Clicks on the sprite are
+				//handled by the pie listener.
+				dismiss();
+			}
+		}
+		
 		private function keyDownListener(event:KeyboardEvent):void {
 			if (event.keyCode == Keyboard.BACKSPACE) {
-				dismiss(null);
+				dismiss();
 			}
 		}
 		
@@ -102,8 +124,10 @@ package angel.game {
 			var sliceIndex:int = sliceIndexFromMouseEvent(event);
 			if (slices[sliceIndex].callback != null) {
 				slices[sliceIndex].callback();
+				dismiss();
 			}
-			dismiss(null);
+			// Wm wants to put "informational" pie slices that have no callback and don't dismiss the menu
+			// if clicked.  I think not dismissing is a bad design choice, but doing it under protest.
 		}
 		
 		private function mouseOverPie(event:MouseEvent):void {
@@ -112,8 +136,8 @@ package angel.game {
 			adjustOverIcon(newOverIcon);
 		}
 		
-		private function mouseNotOverPie(event:MouseEvent):void {
-			if (event.target is PieMenu) {
+		private function mouseAnywhere(event:MouseEvent):void {
+			if (event.target == this) {
 				//De-hilight the icon if we're only over the PieMenu (which occupies the full stage), but
 				//not over the sprite that forms the visual menu
 				adjustOverIcon(null);
@@ -136,18 +160,6 @@ package angel.game {
 			var clickFacing:int = Util.findRotFacingVector(new Point(event.localX, event.localY));
 			var offsetFromFirstEdge:int = (clickFacing - facingFirstSliceEdge + 360) % 360;
 			return offsetFromFirstEdge / sliceDegrees;
-		}
-		
-		public function cleanup():void {
-			if (parent != null) {
-				stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
-				parent.removeChild(this);
-			}
-			removeEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
-			removeEventListener(MouseEvent.CLICK, dismiss);	
-			removeEventListener(MouseEvent.MOUSE_MOVE, mouseNotOverPie);
-			pie.removeEventListener(MouseEvent.CLICK, clickedPie);
-			pie.removeEventListener(MouseEvent.MOUSE_MOVE, mouseOverPie);
 		}
 		
 	}

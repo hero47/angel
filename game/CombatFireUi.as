@@ -156,7 +156,7 @@ package angel.game {
 		private function doPlayerFire():void {
 			var target:Entity = targetEnemy;
 			room.disableUi();
-			combat.fire(player, target);
+			combat.fireAndAdvanceToNextPhase(player, target);
 		}
 		
 		private function doReserveFire():void {
