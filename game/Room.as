@@ -35,6 +35,7 @@ package angel.game {
 
 		public var ui:IRoomUi;
 		private var dragging:Boolean = false;
+		private var paused:Boolean = false;
 		
 		private var tileWithFilter:FloorTile;
 		//private var entityWithFilter:Entity; // not yet, but will be needed for future story
@@ -77,6 +78,10 @@ package angel.game {
 				mode.cleanup();
 			}
 			mode = new newModeClass(this);
+		}
+		
+		public function pause(value:Boolean):void {
+			paused = value;
 		}
 		
 		/********** Player UI-related  ****************/
@@ -295,7 +300,9 @@ package angel.game {
 		
 		private function enterFrameListener(event:Event):void {
 			stage.focus = stage;
-			dispatchEvent(new Event(UNPAUSED_ENTER_FRAME));
+			if (!paused) {
+				dispatchEvent(new Event(UNPAUSED_ENTER_FRAME));
+			}
 			if (scrollingTo != null) {
 				var vector:Point = new Point(scrollingTo.x - this.x, scrollingTo.y - this.y);
 				if (vector.length <= SCROLL_SPEED) {

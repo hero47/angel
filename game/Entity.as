@@ -58,6 +58,7 @@ package angel.game {
 		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
 		public var combatMovePoints:int = Settings.combatMovePoints;
 		public var health:int;
+		public var actionsRemaining:int;
 		public var exploreBrainClass:Class;
 		public var combatBrainClass:Class;
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
@@ -199,8 +200,8 @@ package angel.game {
 				// Change the "real" location to the next tile.  Doing this on first frame of move rather than
 				// halfway through the move circumvents a whole host of problems!
 				room.changeEntityLocation(this, movingTo);
-				dispatchEvent(new Event(MOVED, true));
 				myLocation = movingTo;
+				dispatchEvent(new Event(MOVED, true));
 			}
 			adjustImageForMove();
 			x = coordsForEachFrameOfMove[frameOfMove].x;

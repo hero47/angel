@@ -161,7 +161,7 @@ package angel.game {
 		
 		private function doReserveFire():void {
 			room.disableUi();
-			combat.fire(player, null);
+			combat.fireAndAdvanceToNextPhase(player, null);
 		}
 		
 		private function doCancelTarget():void {
