@@ -375,13 +375,30 @@ package angel.game {
 		private function opportunityFire(shooter:Entity, target:Entity):Boolean {
 			trace("Checking", shooter.aaId, "for opportunity fire");
 			if (shooter.actionsRemaining > 0) {
-				//UNDONE: fire only if "good" target
-				if (lineOfSight(shooter, target.location)) {
+				if (isGoodTarget(shooter, target) && lineOfSight(shooter, target.location)) {
 					fire(shooter, target);
 					return true;
 				}
 			}
 			return false;
+		}
+		
+		private function isGoodTarget(shooter:Entity, target:Entity):Boolean {
+			var distance:int = Util.chessDistance(shooter.location, target.location);
+			var minDistance:int;
+			switch (shooter.mostRecentGait) {
+				case Entity.GAIT_SPRINT:
+					minDistance = 6;
+				break;
+				case Entity.GAIT_RUN:
+					minDistance = 8;
+				break;
+				default:
+					minDistance = 10;
+				break;
+			}
+			trace("isGoodTarget:", distance, minDistance);
+			return (distance <= minDistance);
 		}
 		
 		/*********** Turn-structure related **************/
