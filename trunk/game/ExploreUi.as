@@ -83,12 +83,7 @@ package angel.game {
 		}
 		
 		public function pieMenuForTile(tile:FloorTile):Vector.<PieSlice> {
-			var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
-			// Pie-menu demo code, will be replaced once we have real functionality to put here
-			slices.push(new PieSlice(PieSlice.testIconData(), null));
-			slices.push(new PieSlice(null, null));
-			slices.push(new PieSlice(null, null));
-			return slices;
+			return null;
 		}
 	
 		

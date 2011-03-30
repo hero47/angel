@@ -83,17 +83,19 @@ package angel.game {
 			mode = new newModeClass(this);
 		}
 		
-		public function pause(milliseconds:int, listener:Function = null):void {
+		public function pause(milliseconds:int, callback:Function = null):void {
+			trace("Pausing, callback = ", callback);
 			Assert.assertTrue(!gameIsPaused, "Pause when already paused");
 			gameIsPaused = true;
 			
 			var timer:Timer = new Timer(milliseconds, 1);
 			timer.addEventListener(TimerEvent.TIMER_COMPLETE, function(event:TimerEvent):void {
+				trace("Pause timer complete");
 				Assert.assertTrue(gameIsPaused, "Something unpaused us before pause timer expired");
 				gameIsPaused = false;
 				timer = null;
-				if (listener != null) {
-					listener();
+				if (callback != null) {
+					callback();
 				}
 			} );
 			timer.start();
