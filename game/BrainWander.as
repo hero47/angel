@@ -16,6 +16,7 @@ package angel.game {
 			me = entity;
 			// Set the first twitch opportunity to a random fraction of a second, so all the NPCs in
 			// the room aren't acting in unison.
+			// This is not a listener; it will automatically go away when room explore mode ends
 			roomExplore.addTimedEvent(Math.random(), twitchOpportunity);
 		}
 

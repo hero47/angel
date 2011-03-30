@@ -60,11 +60,12 @@ package angel.game {
 		// Trying to cleanup/organize this class, with possible refactoring on the horizon
 		
 		public function RoomCombat(room:Room) {
+			trace("***BEGINNING COMBAT***");
 			this.room = room;
 			drawCombatGrid(room.decorationsLayer.graphics);
 			
 			fighters = new Vector.<Entity>();
-			room.forEachEntity(initEnemyForCombat); // Add enemies to fighter list & init their combat brains
+			room.forEachEntity(initEntityForCombat); // init health; add enemies to fighter list & init their combat brains
 			Util.shuffle(fighters); // enemy turn order is randomized at start of combat and stays the same thereafter
 			room.playerCharacter.initHealth();
 			fighters.splice(0, 0, room.playerCharacter); // player always goes first
@@ -73,9 +74,9 @@ package angel.game {
 			// These listeners can only trigger in specific phases, and finishedMoving advances the phase.
 			// I'm keeping them around throughout combat rather than adding and removing them as we flip
 			// between phases because it seemed a little cleaner that way, but I'm not certain.
-			room.addEventListener(Entity.MOVED, entityMovingToNewTile);
-			room.addEventListener(Entity.FINISHED_ONE_TILE_OF_MOVE, entityStandingOnNewTile);
-			room.addEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
+			room.addEventListener(EntityEvent.MOVED, entityMovingToNewTile);
+			room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, entityStandingOnNewTile);
+			room.addEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
 			
 			playerHealthDisplay = createHealthTextField();
 			playerHealthDisplay.x = 10;
@@ -95,12 +96,13 @@ package angel.game {
 		}
 
 		public function cleanup():void {
+			trace("***ENDING COMBAT***");
 			Assert.assertTrue(!room.paused, "Closing down combat ui while pause timer active");
 			
 			room.disableUi();
-			room.removeEventListener(Entity.MOVED, entityMovingToNewTile);
-			room.removeEventListener(Entity.FINISHED_ONE_TILE_OF_MOVE, entityStandingOnNewTile);
-			room.removeEventListener(Entity.FINISHED_MOVING, finishedMovingListener);
+			room.removeEventListener(EntityEvent.MOVED, entityMovingToNewTile);
+			room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, entityStandingOnNewTile);
+			room.removeEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
 			
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
 			clearDots();
@@ -111,11 +113,11 @@ package angel.game {
 			}
 		}
 		
-		private function initEnemyForCombat(entity:Entity):void {
+		private function initEntityForCombat(entity:Entity):void {
+			entity.initHealth();
 			if (entity.isEnemy()) {
 				fighters.push(entity);
 				entity.brain = new entity.combatBrainClass(entity, this);
-				entity.initHealth();
 				
 				var enemyMarker:Shape = new Shape();
 				enemyMarker.graphics.lineStyle(4, ENEMY_MARKER_COLOR, 0.7);
@@ -233,16 +235,15 @@ package angel.game {
 		// (entity's location will have already changed to the new tile)
 		// The tile they're moving to should always be the one with the first dot on the path,
 		// if everything is working right.
-		// CONSIDER: If we create specialized EntityEvent and pass entity as part of event data,
-		// then this could assert that entity.location equals dot location
-		private function entityMovingToNewTile(event:Event):void {
+		private function entityMovingToNewTile(event:EntityEvent):void {
 			Assert.assertTrue(dots.length > 0, "Entity.MOVED with no dots remaining");
+			Assert.assertTrue(event.entity == fighters[iFighterTurnInProgress], "Wrong entity moving");
 			var dotToRemove:Shape = dots.shift();
 			room.decorationsLayer.removeChild(dotToRemove);
 		}
 		
-		private function entityStandingOnNewTile(event:Event):void {
-			checkForOpportunityFire();
+		private function entityStandingOnNewTile(event:EntityEvent):void {
+			checkForOpportunityFire(event.entity);
 		}
 		
 		public static function colorForGait(gait:int):uint {
@@ -268,7 +269,7 @@ package angel.game {
 			
 			// Give the player some time to gaze at the fire graphic before continuing with turn.
 			// CONSIDER: For enemies, we may put up some sort of "enemy firing" overlay
-			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFirePause);
+			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
 		}
 		
 		public function fire(shooter:Entity, target:Entity):void {
@@ -286,7 +287,7 @@ package angel.game {
 				damage(target);
 				
 				var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(room.stage.frameRate);
-				uglyFireLineThatViolates3D.graphics.lineStyle(2, 0xff0000);
+				uglyFireLineThatViolates3D.graphics.lineStyle(2, (shooter.isPlayerControlled ? 0xff0000 : 0xffa500));
 				uglyFireLineThatViolates3D.graphics.moveTo(shooter.center().x, shooter.center().y);
 				uglyFireLineThatViolates3D.graphics.lineTo(target.center().x, target.center().y);
 				room.addChild(uglyFireLineThatViolates3D);
@@ -300,9 +301,23 @@ package angel.game {
 			trace(entity.aaId, "damaged, health now", entity.health);
 			if (entity.isPlayerControlled) {
 				adjustPlayerHealthDisplay(entity.health);
-				if (entity.health <= 0) {
+			}
+			
+			if (entity.health <= 0) {
+				entity.startDeathAnimation();
+				if (entity.isPlayerControlled) {
 					combatOver = true;
 					Alert.show("You have been taken out.", { callback:playerDeathOk } );
+				} else {
+					cleanupEntityFromCombat(entity);
+					var iFighter:int = fighters.indexOf(entity);
+					Assert.assertTrue(iFighterTurnInProgress == 0 || iFighterTurnInProgress == iFighter,
+							"Enemy died during a different enemy's turn");
+					if (iFighter == iFighterTurnInProgress) {
+						clearDots();
+						--iFighterTurnInProgress;
+					}
+					fighters.splice(iFighter, 1);
 				}
 			}
 		}
@@ -361,10 +376,11 @@ package angel.game {
 			return (room.solid(x,y) & Prop.TALL) != 0;
 		}
 		
-		private function checkForOpportunityFire():void {
+		public function checkForOpportunityFire(entityMoving:Entity):void {
+			Assert.assertTrue(fighters[iFighterTurnInProgress] == entityMoving, "Wrong entity moving");
 			var someoneDidOpportunityFire:Boolean = false;
 			
-			if (iFighterTurnInProgress == 0) { // player just moved to a new tile, enemies might shoot
+			if (entityMoving.isPlayerControlled) { // player just moved to a new tile, enemies might shoot
 				for (var i:int = 1; i < fighters.length; ++i) {
 					someoneDidOpportunityFire ||= opportunityFire(fighters[i], room.playerCharacter);
 				}
@@ -373,7 +389,7 @@ package angel.game {
 			}
 			
 			if (someoneDidOpportunityFire) {
-				room.pause(PAUSE_TO_VIEW_FIRE_TIME, null);
+				room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedOpportunityFirePause);
 			}
 				
 		}
@@ -423,7 +439,13 @@ package angel.game {
 		// Called each time an entity (player or NPC) finishes its combat move
 		// (specifically, during ENTER_FRAME for last frame of movement)
 		// Advance to that entity's fire phase.
-		private function finishedMovingListener(event:Event = null):void {
+		private function finishedMovingListener(event:EntityEvent):void {
+			//event.entity won't match fighters[iFighterTurnInProgress] if moving entity was killed by opportunity fire
+			if (event.entity != fighters[iFighterTurnInProgress]) {
+				trace("fighter", iFighterTurnInProgress, "was killed, don't give them a fire phase");
+				finishedFire();
+				return;
+			}
 			trace("fighter", iFighterTurnInProgress, "(", fighters[iFighterTurnInProgress].aaId, ") finished moving");
 			fighters[iFighterTurnInProgress].actionsRemaining = 1; // everyone gets one action per turn, at least for now
 			if (iFighterTurnInProgress == 0) {
@@ -433,8 +455,9 @@ package angel.game {
 			}
 		}
 		
-		// Called each time the timer for gazing at the fire graphic expires
-		private function finishedFirePause():void {
+		// Called each time the timer for gazing at the fire graphic expires, or when an entity was killed by
+		// opportunity fire while moving and thus needs to skip their fire phase.
+		private function finishedFire():void {
 			trace("fighter", iFighterTurnInProgress, "(", fighters[iFighterTurnInProgress].aaId, ") finished fire");
 			
 			if (combatOver) {
@@ -464,15 +487,22 @@ package angel.game {
 			// the total time between enemy's turn starting and enemy beginning to follow dots should
 			// stay at that time unless we're really slow.)
 			// CONSIDER: We may put up some sort of "enemy moving" overlay
-			room.pause(PAUSE_TO_VIEW_MOVE_TIME, finishedEnemyMovePause);
+			room.pause(PAUSE_TO_VIEW_MOVE_TIME, finishedEnemyMove);
 			
 			fighters[iFighterTurnInProgress].brain.chooseMoveAndDrawDots();
 		}
 		
 		// Called each time the timer for gazing at the enemy's move dots expires
-		private function finishedEnemyMovePause():void {
+		private function finishedEnemyMove():void {
 			trace("enemyMoveTimerListener for fighter #", iFighterTurnInProgress, fighters[iFighterTurnInProgress].aaId);
 			fighters[iFighterTurnInProgress].brain.doMove();
+		}
+		
+		// Called each time the timer for gazing at opportunity fire
+		private function finishedOpportunityFirePause():void {
+			//Usually this doesn't need to do anything, the entity that was moving will automatically continue
+			//moving once the room unpauses.
+			//Maybe now it never needs to do anything, let's see if this works
 		}
 		
 	} // end class RoomCombat

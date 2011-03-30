@@ -1,5 +1,6 @@
 package angel.game {
 	import angel.common.Alert;
+	import angel.common.Assert;
 	import angel.common.Util;
 	import angel.game.PieSlice;
 	import angel.common.FloorTile;
@@ -30,7 +31,7 @@ package angel.game {
 		
 		public function disable():void {
 			room.moveHilight(null, 0);
-			room.playerCharacter.removeEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
+			room.playerCharacter.removeEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
 		}
 		
 		public function keyDown(keyCode:uint):void {
@@ -74,7 +75,7 @@ package angel.game {
 			if (!loc.equals(player.location) && !player.tileBlocked(loc)) {
 				playerIsMoving = player.startMovingToward(loc);
 				if (playerIsMoving) {
-					player.addEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
+					player.addEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
 					if (!(Settings.testExploreScroll > 0)) {
 						room.scrollToCenter(loc);
 					}
@@ -89,9 +90,10 @@ package angel.game {
 		
 		/************ Private ****************/
 		
-		private function playerFinishedMoving(event:Event):void {
+		private function playerFinishedMoving(event:EntityEvent):void {
+			Assert.assertTrue(event.entity.isPlayerControlled, "playerFinishedMoving called for NPC");
 			playerIsMoving = false;
-			room.playerCharacter.removeEventListener(Entity.FINISHED_MOVING, playerFinishedMoving);
+			room.playerCharacter.removeEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
 		}
 		
 	} // end class ExploreUi

@@ -20,10 +20,6 @@ package angel.game {
 	// A physical object in the game world -- we aren't yet distinguishing between pc/npc/mobile/immobile.
 	
 	public class Entity extends Prop {
-		// Events
-		public static const MOVED:String = "entityMoved";
-		public static const FINISHED_ONE_TILE_OF_MOVE:String = "entityFinishedTile";
-		public static const FINISHED_MOVING:String = "entityFinishedMoving";
 		
 		private static const PIXELS_FOR_ADJACENT_MOVE:int = Math.sqrt(Tileset.TILE_WIDTH * Tileset.TILE_WIDTH/4 + Tileset.TILE_HEIGHT * Tileset.TILE_HEIGHT/4);
 		private static const PIXELS_FOR_VERT_MOVE:int = Tileset.TILE_HEIGHT;
@@ -106,7 +102,7 @@ package angel.game {
 		
 		public function isEnemy():Boolean {
 			//CONSIDER: is this true, or will we want to have civilians with combat behavior that are untargetable?
-			return (combatBrainClass != null);
+			return (combatBrainClass != null && health > 0);
 		}
 		
 		// Set health to catalog value at start of combat.
@@ -117,6 +113,10 @@ package angel.game {
 		
 		public function center():Point {
 			return new Point(this.width / 2 + this.x, this.height / 2 + this.y);
+		}
+		
+		public function startDeathAnimation():void {
+			// Does nothing for standard entity
 		}
 		
 		//return true if moving, false if goal is unreachable or already there
@@ -189,11 +189,17 @@ package angel.game {
 		}
 		
 		protected function moveOneFrameAlongPath(event:Event):void {
+			if (health <= 0) {
+				finishedMoving();
+				return;
+			}
+			
 			if (movingTo == null) {
 				movingTo = path.shift();
+				// If path was empty, movingTo will still be null; in that case we're finished moving.
 				// Someone may have moved onto my path in the time since I plotted it.  If so, abort move.
-				// If my brain wants to do something special in this case, it will need to remember its goal,
-				// listen for FINISHED_MOVING event, compare location to goal, and take appropriate action.
+				// (If my brain wants to do something special in this case, it will need to remember its goal,
+				// listen for FINISHED_MOVING event, compare location to goal, and take appropriate action.)
 				if (movingTo == null || tileBlocked(movingTo)) {
 					finishedMoving();
 					return;
@@ -204,7 +210,7 @@ package angel.game {
 				// halfway through the move circumvents a whole host of problems!
 				room.changeEntityLocation(this, movingTo);
 				myLocation = movingTo;
-				dispatchEvent(new Event(MOVED, true));
+				dispatchEvent(new EntityEvent(EntityEvent.MOVED, true, false, this));
 			}
 			adjustImageForMove();
 			x = coordsForEachFrameOfMove[frameOfMove].x;
@@ -227,10 +233,7 @@ package angel.game {
 				movingTo = null;
 				coordsForEachFrameOfMove = null;
 				adjustImageForMove(); // make sure we end up in "standing" posture even if move was ultra-fast
-				dispatchEvent(new Event(FINISHED_ONE_TILE_OF_MOVE, true));
-				if (path.length == 0) {
-					finishedMoving();
-				}
+				dispatchEvent(new EntityEvent(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, true, false, this));
 			}
 		}
 		
@@ -239,7 +242,11 @@ package angel.game {
 			path = null;
 			coordsForEachFrameOfMove = null;
 			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
-			dispatchEvent(new Event(FINISHED_MOVING, true));
+			dispatchEvent(new EntityEvent(EntityEvent.FINISHED_MOVING, true, false, this));
+		}
+		
+		public function get moving():Boolean {
+			return (path != null);
 		}
 		
 		// if from is null, find path from current location

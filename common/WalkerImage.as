@@ -16,6 +16,7 @@ package angel.common {
 		// Facing == rotation/45 if we were in a top-down view.
 		// This will make it convenient if we ever want to determine facing from actual angles
 		public static const FACE_CAMERA:int = 1;
+		public static const FACE_DYING:int = 8;
 		
 		public var health:int;
 		
@@ -25,7 +26,7 @@ package angel.common {
 		private var entry:CatalogEntry;
 		
 		//mapping from facing to position on image sheet
-		//(facing 8 == 360 degrees hold the attacking/death images)
+		//(facing 8 == DYING holds the death images)
 		private static const imageColumn:Vector.<int> = Vector.<int>([1, 0, 7, 6, 5, 4, 3, 2, 8]);
 		
 		private var bits:Vector.<Vector.<BitmapData>>;
