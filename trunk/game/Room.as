@@ -76,11 +76,33 @@ package angel.game {
 		}
 		*/
 		
+		
+		private var changingModeTo:Class;
 		public function changeModeTo(newModeClass:Class):void {
 			if (mode != null) {
 				mode.cleanup();
 			}
-			mode = new newModeClass(this);
+			changingModeTo = newModeClass;
+			ensureMovementFinishedThenChangeMode();
+		}
+		
+		private function ensureMovementFinishedThenChangeMode(event:TimerEvent = null):void {
+			if (event != null) {
+				(event.target as Timer).removeEventListener(TimerEvent.TIMER_COMPLETE, ensureMovementFinishedThenChangeMode);
+			}
+			var someoneIsMoving:Boolean = false;
+			forEachEntity(function(entity:Entity):void {
+				someoneIsMoving ||= entity.moving;
+			} );
+			
+			if (someoneIsMoving) {
+				trace("Someone is moving, delay mode change");
+				var timer:Timer = new Timer(1000, 1);
+				timer.addEventListener(TimerEvent.TIMER_COMPLETE, ensureMovementFinishedThenChangeMode);
+				timer.start();
+			} else {
+				mode = new changingModeTo(this);
+			}
 		}
 		
 		public function pause(milliseconds:int, callback:Function = null):void {
@@ -93,7 +115,6 @@ package angel.game {
 				trace("Pause timer complete");
 				Assert.assertTrue(gameIsPaused, "Something unpaused us before pause timer expired");
 				gameIsPaused = false;
-				timer = null;
 				if (callback != null) {
 					callback();
 				}

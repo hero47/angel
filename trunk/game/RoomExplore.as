@@ -22,7 +22,7 @@ package angel.game {
 			if (room.playerCharacter != null) {
 				room.scrollToCenter(room.playerCharacter.location, true);
 			}
-			room.forEachEntity(initEntityBrain);
+			room.forEachEntity(initEntityForExplore);
 			
 			exploreUi = new ExploreUi(room, this);
 			room.enableUi(exploreUi);
@@ -31,17 +31,18 @@ package angel.game {
 		public function cleanup():void {
 			room.disableUi();
 			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
-			room.forEachEntity(endEntityBrain);
+			room.forEachEntity(cleanupEntityFromExplore);
 			timeQueue = null;
 		}
 		
-		private function initEntityBrain(entity:Entity):void {
+		private function initEntityForExplore(entity:Entity):void {
+			entity.initHealth();
 			if (entity.exploreBrainClass != null) {
 				entity.brain = new entity.exploreBrainClass(entity, this);
 			}
 		}
 		
-		private function endEntityBrain(entity:Entity):void {
+		private function cleanupEntityFromExplore(entity:Entity):void {
 			entity.brain = null;
 		}
 		
