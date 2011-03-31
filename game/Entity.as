@@ -105,6 +105,41 @@ package angel.game {
 			return (combatBrainClass != null && health > 0);
 		}
 		
+		public function weaponDamage():int {
+			var speedPenalty:int;
+			switch (mostRecentGait) {
+				case GAIT_SPRINT:
+					speedPenalty = 4;
+				break;
+				case GAIT_RUN:
+					speedPenalty = 3;
+				break;
+				case GAIT_WALK:
+					speedPenalty = 2;
+				break;
+			}
+			return Settings.baseDamage - speedPenalty;
+		}
+		
+		// This number is subtracted from any damage this entity receives
+		public function defense():int {
+			// These numbers are currently the same as speedPenalty to damage, but are unlikely to remain the same
+			// Also, we'll probably have armor or other defense at some point.
+			var speedBonus:int;
+			switch (mostRecentGait) {
+				case GAIT_SPRINT:
+					speedBonus = 4;
+				break;
+				case GAIT_RUN:
+					speedBonus = 3;
+				break;
+				case GAIT_WALK:
+					speedBonus = 2;
+				break;
+			}
+			return speedBonus;
+		}
+		
 		// Set health to catalog value at start of combat.
 		public function initHealth():void {
 			//  Currently only walkers have catalog entries for health.

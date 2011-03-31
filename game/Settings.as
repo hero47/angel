@@ -13,7 +13,9 @@ package angel.game {
 		public static var walkPoints:int;
 		public static var runPoints:int;
 		public static var sprintPoints:int;
-		public static var playerHealth:int = 10;
+		public static var playerHealth:int = 100;
+		public static var baseDamage:int = 10;
+		public static var minForOpportunity:int = 4;
 		
 		public static var exploreSpeed:Number = DEFAULT_MOVE_SPEED;
 		public static var walkSpeed:Number = DEFAULT_MOVE_SPEED;
@@ -77,6 +79,12 @@ package angel.game {
 			
 			if (xml.@playerHealth.length() > 0) {
 				playerHealth = xml.@playerHealth;
+			}
+			if (xml.@baseDamage.length() > 0) {
+				baseDamage = xml.@baseDamage;
+			}
+			if (xml.@minForOpportunity.length() > 0) {
+				minForOpportunity = xml.@minForOpportunity;
 			}
 			
 			showEnemyMoves = (String(xml.@showEnemyMoves) == "yes");
