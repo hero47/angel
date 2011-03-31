@@ -284,7 +284,7 @@ package angel.game {
 			} else {
 				trace(shooter.aaId, "firing at", target.aaId, target.location);
 				--shooter.actionsRemaining;
-				damage(target);
+				damage(target, shooter.weaponDamage() - target.defense());
 				
 				var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(room.stage.frameRate);
 				uglyFireLineThatViolates3D.graphics.lineStyle(2, (shooter.isPlayerControlled ? 0xff0000 : 0xffa500));
@@ -294,10 +294,8 @@ package angel.game {
 			}
 		}
 		
-		// To start, every hit deals 1 damage.  Later we'll complicate things; I don't know whether the
-		// calculations will end up here or elsewhere.
-		private function damage(entity:Entity):void {
-			entity.health--;
+		private function damage(entity:Entity, points:int):void {
+			entity.health -= points;
 			trace(entity.aaId, "damaged, health now", entity.health);
 			if (entity.isPlayerControlled) {
 				adjustPlayerHealthDisplay(entity.health);
@@ -407,6 +405,7 @@ package angel.game {
 		}
 		
 		private function isGoodTarget(shooter:Entity, target:Entity):Boolean {
+			/*
 			var distance:int = Util.chessDistance(shooter.location, target.location);
 			var minDistance:int;
 			switch (target.mostRecentGait) {
@@ -420,8 +419,10 @@ package angel.game {
 					minDistance = 10;
 				break;
 			}
-			trace("isGoodTarget:", distance, minDistance);
 			return (distance <= minDistance);
+			*/
+			var expectedDamage:int = shooter.weaponDamage() - target.defense();
+			return (expectedDamage >= Settings.minForOpportunity);
 		}
 		
 		/*********** Turn-structure related **************/
