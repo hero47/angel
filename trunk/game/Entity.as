@@ -430,6 +430,56 @@ package angel.game {
 			}
 		}
 		
+		// Fill a grid with the number of steps to all reachable points within a given range
+		// (Used by NPC brains when choosing move)
+		// Mostly matches findShortestPathTo(), just different enough to make them tough to merge ;)
+		public function findReachableTiles(from:Point, range:int):Vector.<Vector.<int>> {
+			// 0 = unvisited. -1 = blocked.  other number = distance counting start point as 1
+			var steps:Vector.<Vector.<int>> = new Vector.<Vector.<int>>(room.size.x);
+			for (var i:int = 0; i < room.size.x; i++) {
+				steps[i] = new Vector.<int>(room.size.y);
+			}
+			var edge:Vector.<Point> = new Vector.<Point>();
+			edge.push(from);
+			steps[from.x][from.y] = 1;
+
+			while (edge.length > 0) {
+				var current:Point = edge.shift();
+				var stepsFromStart:int = steps[current.x][current.y] + 1;
+				if (stepsFromStart == range + 1) {
+					trace("Search ended, some tiles out of range");
+					traceStepGrid(steps);
+					return steps;
+				}
+				Assert.assertTrue(stepsFromStart != 0, "Edge contains blocked cell");
+				for (i = 0; i < neighborCheck.length; i++) {
+					var stepToNextNeighbor:Point = neighborCheck[i];
+					var xNext:int = current.x + stepToNextNeighbor.x;
+					var yNext:int = current.y + stepToNextNeighbor.y;
+					if ((xNext < 0) || (xNext >= room.size.x) || (yNext < 0) || (yNext >= room.size.y)) {
+						continue;
+					}
+					if (steps[xNext][yNext] != 0) {
+						continue;
+					}
+					
+					var neighbor:Point = checkBlockage(current, stepToNextNeighbor);
+					if (neighbor == null) {
+						if (tileBlocked(new Point(xNext, yNext))) {
+							steps[xNext][yNext] = -1;
+						}
+					} else {
+						steps[xNext][yNext] = stepsFromStart;
+						edge.push(neighbor);
+					}
+				}
+
+			} // end while edge.length > 0
+					trace("Search ended, all other tiles blocked");
+					traceStepGrid(steps);
+			return steps;
+		}
+		
 		private function scrollRoomToKeepPlayerWithinBox(distanceFromEdge:int):void {
 			var xOffset:int = 0;
 			var yOffset:int = 0;
