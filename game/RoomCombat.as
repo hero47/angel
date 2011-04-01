@@ -117,6 +117,7 @@ package angel.game {
 			entity.initHealth();
 			if (entity.isEnemy()) {
 				fighters.push(entity);
+				entity.actionsRemaining = 0;
 				entity.brain = new entity.combatBrainClass(entity, this);
 				
 				var enemyMarker:Shape = new Shape();
