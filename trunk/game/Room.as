@@ -32,7 +32,7 @@ package angel.game {
 
 		private var contentsLayer:Sprite;
 		public var cells:Vector.<Vector.<Cell>>;
-		public var playerCharacter:Entity;
+		public var mainPlayerCharacter:Entity;
 		public var size:Point;
 		public var mode:RoomMode;
 
@@ -130,7 +130,7 @@ package angel.game {
 		// CONSIDER: Move this into a class, have the things that now implement IRoomUi subclass it?
 		
 		// call this when player-controlled part of the turn begins, to allow player to enter move
-		public function enableUi(newUi:IRoomUi):void {
+		public function enableUi(newUi:IRoomUi, player:Entity):void {
 			ui = newUi;
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 			stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
@@ -140,7 +140,7 @@ package angel.game {
 			//we're substituting ctrl-click.
 			//addEventListener(MouseEvent.RIGHT_CLICK, rightClickListener);
 			
-			newUi.enable();
+			newUi.enable(player);
 		}
 		
 		public function disableUi():void {
@@ -303,12 +303,11 @@ package angel.game {
 		}
 
 		public function addPlayerCharacter(entity:Entity, location:Point): void {
-			if (playerCharacter != null) {
-				playerCharacter.isPlayerControlled = false;
+			if (mainPlayerCharacter == null) {
+				mainPlayerCharacter = entity;
 			}
 			addEntity(entity, location);
-			playerCharacter = entity;
-			playerCharacter.isPlayerControlled = true;
+			entity.isPlayerControlled = true;
 		}
 		
 		// This will generally be called by the entity as it crosses the boundary between one floor tile
@@ -316,7 +315,7 @@ package angel.game {
 		public function changeEntityLocation(entity:Entity, newLocation:Point):void {
 			cells[entity.location.x][entity.location.y].remove(entity);
 			cells[newLocation.x][newLocation.y].add(entity);
-			moveEnemyMarkerIfNeeded(entity, newLocation);
+			moveMarkerIfNeeded(entity, newLocation);
 			/*
 			if (entityWithFilter == entity) {
 				entityWithFilter.filters = [];
@@ -325,11 +324,11 @@ package angel.game {
 			*/
 		}
 		
-		public function moveEnemyMarkerIfNeeded(entity:Entity, newLocation:Point = null):void {
-			if (entity.enemyMarker != null) {
+		public function moveMarkerIfNeeded(entity:Entity, newLocation:Point = null):void {
+			if (entity.marker != null) {
 				var tileCenter:Point = Floor.centerOf(newLocation == null ? entity.location : newLocation);
-				entity.enemyMarker.x = tileCenter.x;
-				entity.enemyMarker.y = tileCenter.y;
+				entity.marker.x = tileCenter.x;
+				entity.marker.y = tileCenter.y;
 			}
 		}
 		
@@ -386,7 +385,6 @@ package angel.game {
 		
 		public function addWalkerByName(catalog:Catalog, id:String, location:Point):Walker {
 			var entity:Walker = new Walker(catalog.retrieveWalkerImage(id), id);
-			entity.solid = Prop.SOLID;
 			addEntity(entity, location);
 			return entity;
 		}

@@ -1,5 +1,6 @@
 package angel.game {
 	import angel.common.Assert;
+	import angel.common.Prop;
 	import angel.common.WalkerImage;
 	import flash.display.Bitmap;
 	import flash.events.Event;
@@ -21,11 +22,12 @@ package angel.game {
 			this.walkerImage = walkerImage;
 			facing = WalkerImage.FACE_CAMERA;
 			super(new Bitmap(walkerImage.bitsFacing(facing)), id);
-			this.health = walkerImage.health;
+			this.maxHealth = this.currentHealth = walkerImage.health;
+			this.solid = Prop.DEFAULT_SOLIDITY; // no ghostly/short characters... at least, not yet
 		}
 
 		override protected function adjustImageForMove():void {
-			Assert.assertTrue(health >= 0, "Dead entity " + aaId + " moving");
+			Assert.assertTrue(currentHealth >= 0, "Dead entity " + aaId + " moving");
 			stopDying();
 			var step:int;
 			if (coordsForEachFrameOfMove == null) {
@@ -37,16 +39,16 @@ package angel.game {
 			imageBitmap.bitmapData = walkerImage.bitsFacing(facing, step);
 		}
 		override public function turnToFacing(newFacing:int):void {
-			Assert.assertTrue(health >= 0, "Dead entity " + aaId + " turning");
+			Assert.assertTrue(currentHealth >= 0, "Dead entity " + aaId + " turning");
 			stopDying();
 			super.turnToFacing(newFacing);
 			imageBitmap.bitmapData = walkerImage.bitsFacing(facing);
 		}
 		
 		override public function initHealth():void {
+			super.initHealth();
 			stopDying();
 			imageBitmap.bitmapData = walkerImage.bitsFacing(facing); // stand back up if we were dead
-			this.health = (isPlayerControlled ? Settings.playerHealth : walkerImage.health);
 		}
 		
 		private function stopDying():void {

@@ -5,6 +5,7 @@ package angel.game {
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.filters.GlowFilter;
+	import flash.geom.ColorTransform;
 	import flash.geom.Point;
 	import flash.ui.Keyboard;
 	import flash.ui.Mouse;
@@ -16,6 +17,7 @@ package angel.game {
 		private var room:Room;
 		private var combat:RoomCombat;
 		private var player:Entity;
+		private var oldMarkerColorTransform:ColorTransform;
 		private var aimCursor:Sprite;
 		private var aimCursorBitmap:Bitmap;
 		
@@ -33,7 +35,6 @@ package angel.game {
 		public function CombatFireUi(room:Room, combat:RoomCombat) {
 			this.combat = combat;
 			this.room = room;
-			this.player = room.playerCharacter;
 			aimCursorBitmap = new Bitmap(Icon.bitmapData(Icon.CombatCursorActive));
 			aimCursorBitmap.x = -aimCursorBitmap.width / 2;
 			aimCursorBitmap.y = -aimCursorBitmap.height / 2;
@@ -44,8 +45,11 @@ package angel.game {
 		
 		/* INTERFACE angel.game.IUi */
 		
-		public function enable():void {
-			trace("entering player fire phase");
+		public function enable(player:Entity):void {
+			trace("entering player fire phase for", player.aaId);
+			this.player = player;
+			oldMarkerColorTransform = player.marker.transform.colorTransform;
+			player.marker.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
 			targetEnemy = null;
 			targetLocked = false;
 			adjustAimCursorImage();
@@ -56,7 +60,9 @@ package angel.game {
 		}
 		
 		public function disable():void {
-			trace("ending player fire phase");
+			trace("ending player fire phase for", player.aaId);
+			player.marker.transform.colorTransform = oldMarkerColorTransform;
+			this.player = null;
 			room.moveHilight(null, 0);
 			moveTargetHilight(null);
 			if (aimCursor.parent != null) {
@@ -155,13 +161,15 @@ package angel.game {
 		
 		private function doPlayerFire():void {
 			var target:Entity = targetEnemy;
+			var playerFiring:Entity = player;
 			room.disableUi();
-			combat.fireAndAdvanceToNextPhase(player, target);
+			combat.fireAndAdvanceToNextPhase(playerFiring, target);
 		}
 		
 		private function doReserveFire():void {
+			var playerFiring:Entity = player;
 			room.disableUi();
-			combat.fireAndAdvanceToNextPhase(player, null);
+			combat.fireAndAdvanceToNextPhase(playerFiring, null);
 		}
 		
 		private function doCancelTarget():void {
@@ -183,7 +191,7 @@ package angel.game {
 				var glow:GlowFilter = new GlowFilter(TARGET_HILIGHT_COLOR, 1, 20, 20, 2, 1, false, false);
 				targetEnemy.filters = [ glow ];
 			}
-			combat.adjustEnemyHealthDisplay(targetEnemy == null ? -1 : targetEnemy.health);
+			combat.adjustEnemyHealthDisplay(targetEnemy == null ? -1 : targetEnemy.currentHealth);
 		}
 	
 	} // end class CombatFireUi

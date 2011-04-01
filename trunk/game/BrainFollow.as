@@ -1,0 +1,37 @@
+package angel.game {
+	import flash.geom.Point;
+	/**
+	 * ...
+	 * @author Beth Moursund
+	 */
+	
+	// Follow routine for non-main-character PCs in explore mode. Thrown together just to see how it looks.
+	// Every INTERVAL seconds (starting at random interval so they don't all move at the same time) pc will check
+	// whether it's standing next to the character it's trying to follow, and if not, try to move to a spot that is.
+	// Of course, the other character may move again while this one is catching up.
+	 
+	public class BrainFollow {
+		private var me:Entity;
+		
+		private static const INTERVAL:int = 2;
+		
+		public function BrainFollow(entity:Entity, roomExplore:RoomExplore) {
+			me = entity;
+			roomExplore.addTimedEvent(Math.random()*INTERVAL, twitchOpportunity);
+		}
+
+		private function twitchOpportunity(roomExplore:RoomExplore):void {
+			if ((me.bestFriend != null) && !me.moving) {
+				var path:Vector.<Point> = me.findPathTo(me.bestFriend.location);
+				if ((path != null) && (path.length > 1)) {
+					path.length = path.length - 1;
+					me.startMovingAlongPath(path);
+				}
+			}
+			roomExplore.addTimedEvent(INTERVAL, twitchOpportunity);
+		}
+		
+		
+	}
+
+}

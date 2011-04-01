@@ -41,6 +41,8 @@ package angel.game {
 				return;
 			}
 			Settings.initFromXml(xmlData.settings);
+			Settings.initPlayerFromXml(xmlData.player, catalog);
+			
 			startLoc = new Point(xmlData.room.@startX, xmlData.room.@startY);
 			LoaderWithErrorCatching.LoadFile(xmlData.room, roomXmlLoaded);
 		}
@@ -69,16 +71,18 @@ package angel.game {
 			
 			room.fillContentsFromXml(catalog, contentsXml);
 			
-			var entity:Walker = new Walker(catalog.retrieveWalkerImage(Settings.playerId), "PLAYER");
-			entity.solid = Prop.SOLID;
-			room.addPlayerCharacter(entity, startLoc);
+			var previousPc:Entity = null;
+			for each (var entity:Entity in Settings.pcs) {
+				// UNDONE: start followers near main PC instead of stacked on top
+				room.addPlayerCharacter(entity, startLoc);
+				if (previousPc != null) {
+					entity.bestFriend = previousPc;
+					entity.exploreBrainClass = BrainFollow;
+				}
+				previousPc = entity;
+			}
 			
 			room.changeModeTo(RoomExplore);
-		}
-		
-		// we take new size in parameters rather than retrieving from floor in case floor hasn't
-		// finished loading yet when this is called
-		public function initContentsFromXml(xml:XML):void {
 		}
 		
 		

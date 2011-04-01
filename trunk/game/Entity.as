@@ -54,7 +54,8 @@ package angel.game {
 		// Entity stats!  Eventually these will be initialized from data files.  They may go in a separate object.
 		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
 		public var combatMovePoints:int = Settings.combatMovePoints;
-		public var health:int;
+		public var maxHealth:int = 1;
+		public var currentHealth:int;
 		public var actionsRemaining:int;
 		public var mostRecentGait:int = GAIT_WALK;	// gait for move in progress, or last move if none in progress
 		public var exploreBrainClass:Class;
@@ -62,9 +63,10 @@ package angel.game {
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
 		public var brain:Object;
 		public var isPlayerControlled:Boolean;
+		public var bestFriend:Entity; // for use by brain, persists through mode transitions
 
 		// if non-null, drawn on decorations layer
-		public var enemyMarker:Shape;
+		public var marker:Shape;
 		
 		private var room:Room;
 		private var moveGoal:Point; // the tile we're trying to get to
@@ -87,6 +89,11 @@ package angel.game {
 			aaId = id + "-" + String(totalEntitiesCreated);
 		}
 		
+		override public function toString():String {
+			var foo:String = super.toString();
+			return aaId + foo;
+		}
+		
 		public static function createFromPropImage(propImage:PropImage, id:String = ""):Entity {
 			var entity:Entity = new Entity(new Bitmap(propImage.imageData), id);
 			entity.solid = propImage.solid;
@@ -102,7 +109,7 @@ package angel.game {
 		
 		public function isEnemy():Boolean {
 			//CONSIDER: is this true, or will we want to have civilians with combat behavior that are untargetable?
-			return (combatBrainClass != null && health > 0);
+			return (combatBrainClass != null && currentHealth > 0);
 		}
 		
 		public function weaponDamage():int {
@@ -140,10 +147,9 @@ package angel.game {
 			return speedBonus;
 		}
 		
-		// Set health to catalog value at start of combat.
+		// Reset health at start and end of combat.
 		public function initHealth():void {
-			//  Currently only walkers have catalog entries for health.
-			this.health = 1;
+			currentHealth = maxHealth;
 		}
 		
 		public function center():Point {
@@ -224,7 +230,7 @@ package angel.game {
 		}
 		
 		protected function moveOneFrameAlongPath(event:Event):void {
-			if (health <= 0) {
+			if (currentHealth <= 0) {
 				finishedMoving();
 				return;
 			}
@@ -285,30 +291,15 @@ package angel.game {
 		}
 		
 		// if from is null, find path from current location
+		// NOTE: does not check whether the goal tile itself is occupied!
 		public function findPathTo(goal:Point, from:Point = null):Vector.<Point> {
 			if (from == null) {
 				from = new Point(myLocation.x, myLocation.y);
 			}
 			var myPath:Vector.<Point> = new Vector.<Point>();
-			var nextStep:Point = from;
-			var blocked:Boolean = false;
 			
-			// First, see if we can just take the default path without hitting an obstacle
-			while (!nextStep.equals(goal)) {
-				var step:Point = new Point(Util.sign(goal.x - nextStep.x), Util.sign(goal.y - nextStep.y));
-				nextStep = checkBlockage(nextStep, step);
-				if (nextStep == null) {
-					blocked = true;
-					break;
-				}
-				myPath.push(nextStep);
-			}
-			
-			if (blocked) {
-				myPath.length = 0;
-				if (!findShortestPathTo(from, goal, myPath)) {
-					return null;
-				}
+			if (!findShortestPathTo(from, goal, myPath)) {
+				return null;
 			}
 			
 			return myPath;
@@ -345,6 +336,7 @@ package angel.game {
 		}
 		
 		// Fill in path.  Return false if there is no path
+		// NOTE: Does not check whether the goal tile itself is blocked!
 		private function findShortestPathTo(from:Point, goal:Point, path:Vector.<Point>):Boolean {
 			// 0 = unvisited. -1 = blocked.  other number = steps to reach goal, counting goal itself as 1.
 			var steps:Vector.<Vector.<int>> = new Vector.<Vector.<int>>(room.size.x);
@@ -447,8 +439,6 @@ package angel.game {
 				var current:Point = edge.shift();
 				var stepsFromStart:int = steps[current.x][current.y] + 1;
 				if (stepsFromStart == range + 1) {
-					trace("Search ended, some tiles out of range");
-					traceStepGrid(steps);
 					return steps;
 				}
 				Assert.assertTrue(stepsFromStart != 0, "Edge contains blocked cell");
@@ -475,8 +465,6 @@ package angel.game {
 				}
 
 			} // end while edge.length > 0
-					trace("Search ended, all other tiles blocked");
-					traceStepGrid(steps);
 			return steps;
 		}
 		

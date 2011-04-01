@@ -3,6 +3,7 @@ package angel.game {
 	import angel.common.FloorTile;
 	import angel.common.Util;
 	import angel.game.PieSlice;
+	import flash.geom.ColorTransform;
 	import flash.geom.Point;
 	import flash.text.TextField;
 	import flash.text.TextFieldType;
@@ -17,6 +18,7 @@ package angel.game {
 		private var combat:RoomCombat;
 		private var room:Room;
 		private var player:Entity;
+		private var oldMarkerColorTransform:ColorTransform;
 		
 		private var movePointsDisplay:TextField;
 		private static const MOVE_POINTS_PREFIX:String = "Move: ";
@@ -24,7 +26,6 @@ package angel.game {
 		public function CombatMoveUi(room:Room, combat:RoomCombat) {
 			this.combat = combat;
 			this.room = room;
-			this.player = room.playerCharacter;
 			
 			movePointsDisplay = createMovePointsTextField();
 			movePointsDisplay.x = 10;
@@ -33,14 +34,19 @@ package angel.game {
 		
 		/* INTERFACE angel.game.IUi */
 		
-		public function enable():void {
-			trace("entering player move phase");
+		public function enable(player:Entity):void {
+			trace("entering player move phase for", player.aaId);
+			this.player = player;
+			oldMarkerColorTransform = player.marker.transform.colorTransform;
+			player.marker.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
 			adjustMovePointsDisplay(player.combatMovePoints);
 			room.parent.addChild(movePointsDisplay);		
 		}
 		
 		public function disable():void {
-			trace("ending player move phase");
+			trace("ending player move phase for", player.aaId);
+			player.marker.transform.colorTransform = oldMarkerColorTransform;
+			this.player = null;
 			room.parent.removeChild(movePointsDisplay);
 			room.moveHilight(null, 0);
 		}
@@ -123,13 +129,14 @@ package angel.game {
 		}
 		
 		private function doPlayerMove(gaitChoice:int = Entity.GAIT_UNSPECIFIED):void {
+			var playerMoving:Entity = player;
 			room.disableUi();
 			
 			if (gaitChoice == Entity.GAIT_UNSPECIFIED) {
-				gaitChoice = player.gaitForDistance(combat.path.length);
+				gaitChoice = playerMoving.gaitForDistance(combat.path.length);
 			}
-			room.playerCharacter.centerRoomOnMe();
-			combat.startEntityFollowingPath(player, gaitChoice);
+			playerMoving.centerRoomOnMe();
+			combat.startEntityFollowingPath(playerMoving, gaitChoice);
 		}
 		
 		private function doPlayerMoveStay():void {
