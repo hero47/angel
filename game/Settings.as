@@ -1,5 +1,6 @@
 package angel.game {
 	import angel.common.Alert;
+	import angel.common.Catalog;
 
 	
 	public class Settings {
@@ -13,7 +14,6 @@ package angel.game {
 		public static var walkPoints:int;
 		public static var runPoints:int;
 		public static var sprintPoints:int;
-		public static var playerHealth:int = 100;
 		public static var baseDamage:int = 10;
 		public static var minForOpportunity:int = 4;
 		
@@ -22,7 +22,7 @@ package angel.game {
 		public static var runSpeed:Number = DEFAULT_MOVE_SPEED;
 		public static var sprintSpeed:Number = DEFAULT_MOVE_SPEED;
 		
-		public static var playerId:String = "Player";
+		public static var pcs:Vector.<Entity> = new Vector.<Entity>();
 		
 		public function Settings() {
 			
@@ -30,6 +30,11 @@ package angel.game {
 		
 		public static function initFromXml(xml:XMLList):void {
 			var temp:String;
+			
+			if (xml.@player.length() > 0 || xml.@playerHealth.length() > 0) {
+				Alert.show("player or playerHealth found in 'Settings'.\nPlayer is now a separate entry in init file.\nSee Dev Notes!");
+			}
+			
 			Settings.testExploreScroll = (xml.@testExploreScroll);
 			if (xml.@combatMovePoints.length() > 0) {
 				combatMovePoints = xml.@combatMovePoints;
@@ -60,10 +65,6 @@ package angel.game {
 			runPoints += walkPoints;
 			sprintPoints += runPoints;
 			
-			if (xml.@player.length() > 0) {
-				playerId = xml.@player;
-			}
-			
 			if (xml.@exploreSpeed.length() > 0) {
 				exploreSpeed = xml.@exploreSpeed;
 			}
@@ -76,10 +77,6 @@ package angel.game {
 			if (xml.@sprintSpeed.length() > 0) {
 				sprintSpeed = xml.@sprintSpeed;
 			}
-			
-			if (xml.@playerHealth.length() > 0) {
-				playerHealth = xml.@playerHealth;
-			}
 			if (xml.@baseDamage.length() > 0) {
 				baseDamage = xml.@baseDamage;
 			}
@@ -88,6 +85,35 @@ package angel.game {
 			}
 			
 			showEnemyMoves = (String(xml.@showEnemyMoves) == "yes");
+		}
+		
+		// This part will probably be going away or moving eventually -- identity of main PC and followers will be
+		// script-controlled and stats will carry over from one scene to the next
+		public static function initPlayerFromXml(xml:XMLList, catalog:Catalog):void {
+			var entity:Walker;
+			if (xml.length() == 0) {
+				entity = new Walker(catalog.retrieveWalkerImage("PLAYER"), "PLAYER");
+				entity.currentHealth = 100;
+				pcs.push(entity);
+				return;
+			}
+			
+			var i:int = 1;
+			for each (var pc:XML in xml.pc) {
+				var id:String = pc.@id;
+				if (id == "") {
+					id = "PLAYER-" + i;
+				}
+				++i;
+				entity = new Walker(catalog.retrieveWalkerImage(id), "PC-" + id);
+				entity.exploreBrainClass = entity.combatBrainClass = null;
+				if (pc.@health.length() > 0) {
+					entity.maxHealth = entity.currentHealth = pc.@health;
+				}
+				pcs.push(entity);
+			}
+			
+			
 		}
 		
 	}

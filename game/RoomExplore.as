@@ -1,5 +1,6 @@
 package angel.game {
 	import angel.common.Alert;
+	import angel.common.Assert;
 	import angel.common.Floor;
 	import angel.common.FloorTile;
 	import flash.events.Event;
@@ -19,13 +20,12 @@ package angel.game {
 		public function RoomExplore(room:Room) {
 			this.room = room;
 			room.addEventListener(Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
-			if (room.playerCharacter != null) {
-				room.scrollToCenter(room.playerCharacter.location, true);
-			}
 			room.forEachEntity(initEntityForExplore);
 			
 			exploreUi = new ExploreUi(room, this);
-			room.enableUi(exploreUi);
+			Assert.assertTrue(room.mainPlayerCharacter != null, "Main player character undefined!");
+			room.scrollToCenter(room.mainPlayerCharacter.location, true);
+			room.enableUi(exploreUi, room.mainPlayerCharacter);
 		}
 
 		public function cleanup():void {

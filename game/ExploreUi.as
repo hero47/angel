@@ -20,18 +20,18 @@ package angel.game {
 		public function ExploreUi(room:Room, explore:RoomExplore) {
 			this.explore = explore;
 			this.room = room;
-			this.player = room.playerCharacter;
 		}
 		
 		/* INTERFACE angel.game.IUi */
 		
-		public function enable():void {
-			
+		public function enable(player:Entity):void {
+			this.player = player;
 		}
 		
 		public function disable():void {
 			room.moveHilight(null, 0);
-			room.playerCharacter.removeEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
+			player.removeEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
+			this.player = null;
 		}
 		
 		public function keyDown(keyCode:uint):void {
@@ -93,7 +93,7 @@ package angel.game {
 		private function playerFinishedMoving(event:EntityEvent):void {
 			Assert.assertTrue(event.entity.isPlayerControlled, "playerFinishedMoving called for NPC");
 			playerIsMoving = false;
-			room.playerCharacter.removeEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
+			player.removeEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
 		}
 		
 	} // end class ExploreUi

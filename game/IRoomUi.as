@@ -9,7 +9,7 @@ package angel.game {
 		
 		// listeners from IUi are enabled/disabled by caller; this enable/disable are just for the extra
 		// bits unique to this particular UI
-		function enable():void;
+		function enable(player:Entity):void;
 		function disable():void;
 		
 		// Generic keys are handled by caller; this is just for the ones unique to this mode

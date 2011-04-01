@@ -33,7 +33,7 @@ package angel.game {
 		private var fireUi:CombatFireUi;
 		
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
-		private var fighters:Vector.<Entity>;
+		public var fighters:Vector.<Entity>;
 		
 		// public because they're accessed by the CombatMoveUi and/or entity combat brains
 		public var dots:Vector.<Shape> = new Vector.<Shape>();
@@ -46,6 +46,7 @@ package angel.game {
 		private static const SPRINT_COLOR:uint = 0xff0000;
 		private static const OUT_OF_RANGE_COLOR:uint = 0x888888;
 		private static const ENEMY_MARKER_COLOR:uint = 0xff0000;
+		private static const PLAYER_MARKER_COLOR:uint = 0x0000ff;
 		private static const GRID_COLOR:uint = 0xff0000;
 		
 		private static const PAUSE_TO_VIEW_MOVE_TIME:int = 1000;
@@ -67,9 +68,12 @@ package angel.game {
 			fighters = new Vector.<Entity>();
 			room.forEachEntity(initEntityForCombat); // init health; add enemies to fighter list & init their combat brains
 			Util.shuffle(fighters); // enemy turn order is randomized at start of combat and stays the same thereafter
-			room.playerCharacter.initHealth();
-			fighters.splice(0, 0, room.playerCharacter); // player always goes first
 			iFighterTurnInProgress = 0;
+			
+			// Move main player character to position 0 -- she always goes first.
+			fighters.splice(fighters.indexOf(room.mainPlayerCharacter), 1);
+			fighters.splice(0, 0, room.mainPlayerCharacter);
+			trace(fighters);
 			
 			// These listeners can only trigger in specific phases, and finishedMoving advances the phase.
 			// I'm keeping them around throughout combat rather than adding and removing them as we flip
@@ -81,7 +85,7 @@ package angel.game {
 			playerHealthDisplay = createHealthTextField();
 			playerHealthDisplay.x = 10;
 			playerHealthDisplay.y = 10;
-			adjustPlayerHealthDisplay(room.playerCharacter.health);
+			adjustPlayerHealthDisplay(room.mainPlayerCharacter.currentHealth);
 			room.stage.addChild(playerHealthDisplay);
 			
 			enemyHealthDisplay = createHealthTextField();
@@ -92,7 +96,7 @@ package angel.game {
 			
 			moveUi = new CombatMoveUi(room, this);
 			fireUi = new CombatFireUi(room, this);
-			room.enableUi(moveUi);
+			room.enableUi(moveUi, room.mainPlayerCharacter);
 		}
 
 		public function cleanup():void {
@@ -115,29 +119,37 @@ package angel.game {
 		
 		private function initEntityForCombat(entity:Entity):void {
 			entity.initHealth();
-			if (entity.isEnemy()) {
+			entity.actionsRemaining = 0;
+			
+			if (entity.isPlayerControlled) {
 				fighters.push(entity);
-				entity.actionsRemaining = 0;
+				createCombatMarker(entity, PLAYER_MARKER_COLOR);
+			} else if (entity.isEnemy()) {
+				fighters.push(entity);
 				entity.brain = new entity.combatBrainClass(entity, this);
-				
-				var enemyMarker:Shape = new Shape();
-				enemyMarker.graphics.lineStyle(4, ENEMY_MARKER_COLOR, 0.7);
-				enemyMarker.graphics.drawCircle(0, 0, 15);
-				enemyMarker.graphics.drawCircle(0, 0, 30);
-				enemyMarker.graphics.drawCircle(0, 0, 45);
-				// TAG tile-width-is-twice-height: aspect will be off if tiles no longer follow this rule!
-				enemyMarker.scaleY = 0.5;
-				room.decorationsLayer.addChild(enemyMarker);
-				
-				entity.enemyMarker = enemyMarker;
-				room.moveEnemyMarkerIfNeeded(entity);
+				createCombatMarker(entity, ENEMY_MARKER_COLOR);
 			}
 		}
 		
+		private function createCombatMarker(entity:Entity, color:uint):void {
+			var marker:Shape = new Shape();
+			marker.graphics.lineStyle(4, color, 0.7);
+			marker.graphics.drawCircle(0, 0, 15);
+			marker.graphics.drawCircle(0, 0, 30);
+			marker.graphics.drawCircle(0, 0, 45);
+			// TAG tile-width-is-twice-height: aspect will be off if tiles no longer follow this rule!
+			marker.scaleY = 0.5;
+			room.decorationsLayer.addChild(marker);
+			
+			entity.marker = marker;
+			room.moveMarkerIfNeeded(entity);
+		}
+		
+		
 		private function cleanupEntityFromCombat(entity:Entity):void {
 			entity.brain = null;
-			room.decorationsLayer.removeChild(entity.enemyMarker);
-			entity.enemyMarker = null;
+			room.decorationsLayer.removeChild(entity.marker);
+			entity.marker = null;
 		}
 		
 		//NOTE: grid lines are tweaked up by one pixel because the tile image bitmaps actually extend one pixel outside the
@@ -296,24 +308,24 @@ package angel.game {
 		}
 		
 		private function damage(entity:Entity, points:int):void {
-			entity.health -= points;
-			trace(entity.aaId, "damaged, health now", entity.health);
+			entity.currentHealth -= points;
+			trace(entity.aaId, "damaged, health now", entity.currentHealth);
 			if (entity.isPlayerControlled) {
-				adjustPlayerHealthDisplay(entity.health);
+				adjustPlayerHealthDisplay(entity.currentHealth);
 			}
 			
-			if (entity.health <= 0) {
+			if (entity.currentHealth <= 0) {
 				entity.startDeathAnimation();
-				if (entity.isPlayerControlled) {
+				if (entity == room.mainPlayerCharacter) {
 					combatOver = true;
 					Alert.show("You have been taken out.", { callback:playerDeathOk } );
 				} else {
 					cleanupEntityFromCombat(entity);
 					var iFighter:int = fighters.indexOf(entity);
-					Assert.assertTrue(iFighterTurnInProgress == 0 || iFighterTurnInProgress == iFighter,
-							"Enemy died during a different enemy's turn");
 					if (iFighter == iFighterTurnInProgress) {
 						clearDots();
+					}
+					if (iFighter <= iFighterTurnInProgress) {
 						--iFighterTurnInProgress;
 					}
 					fighters.splice(iFighter, 1);
@@ -321,7 +333,9 @@ package angel.game {
 			}
 		}
 
-//private static var lastTarget:Point = new Point(-1,-1);
+//Outdented lines are for debugging, delete them eventually
+private var debugLOS:Boolean = false;
+private static var lastTarget:Point = new Point(-1,-1);
 		public function lineOfSight(entity:Entity, target:Point):Boolean {
 			var x0:int = entity.location.x;
 			var y0:int = entity.location.y;
@@ -330,10 +344,9 @@ package angel.game {
 			var dx:int = Math.abs(x1 - x0);
 			var dy:int = Math.abs(y1 - y0);
 			
-			
-//var traceIt:Boolean = !target.equals(lastTarget);
-//var path:Array = new Array();
-//lastTarget = target;
+var traceIt:Boolean = debugLOS && !target.equals(lastTarget);
+var path:Array = new Array();
+lastTarget = target;
 			// Ray-tracing on grid code, from http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
 			var x:int = x0;
 			var y:int = y0;
@@ -344,13 +357,9 @@ package angel.game {
 			dx *= 2;
 			dy *= 2;
 			
-			// original code went to n>0; I changed that so the target we're trying to shoot doesn't block itself
-			for (; n > 1; --n) {
-//path.push(new Point(x, y));
-				if (tileBlocksSight(x, y)) {
-//if (traceIt) { trace("Blocked; path", path);}
-					return false;
-				}
+			// original code looped for (; n>0; --n) -- I changed it so the shooter & target don't block themselves
+			for (; n > 2; --n) {
+path.push(new Point(x, y));
 
 				if (error > 0) {
 					x += x_inc;
@@ -365,9 +374,17 @@ package angel.game {
 					y += y_inc;
 					error = error - dy + dx;
 					--n;
+					if (n <= 2) {
+						break;
+					}
+				}
+				// moved this check to end of loop so we're not checking the shooter's own tile
+				if (tileBlocksSight(x, y)) {
+if (traceIt) { trace("Blocked; path", path);}
+					return false;
 				}
 			}
-//if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
+if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
 			return true;
 		} // end function lineOfSight
 		
@@ -379,16 +396,17 @@ package angel.game {
 			Assert.assertTrue(fighters[iFighterTurnInProgress] == entityMoving, "Wrong entity moving");
 			var someoneDidOpportunityFire:Boolean = false;
 			
-			if (entityMoving.isPlayerControlled) { // player just moved to a new tile, enemies might shoot
-				for (var i:int = 1; i < fighters.length; ++i) {
-					someoneDidOpportunityFire ||= opportunityFire(fighters[i], room.playerCharacter);
+			//NOTE: This assumes only two factions. If we add civilians and want the enemy NPCs
+			//to be able to shoot them (or the PCs to avoid shooting them) it will need revision.
+			for (var i:int = 0; i < fighters.length; ++i) {
+				if (fighters[i].isPlayerControlled != entityMoving.isPlayerControlled) {
+					// WARNING: using ||= prevents it from executing the function if it's already true!
+					someoneDidOpportunityFire = (opportunityFire(fighters[i], entityMoving) || someoneDidOpportunityFire);
 				}
-			} else { // an enemy just moved to a new tile, player might shoot
-				someoneDidOpportunityFire = opportunityFire(room.playerCharacter, fighters[iFighterTurnInProgress]);
 			}
 			
 			if (someoneDidOpportunityFire) {
-				room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedOpportunityFirePause);
+				room.pause(PAUSE_TO_VIEW_FIRE_TIME, null);
 			}
 				
 		}
@@ -450,8 +468,8 @@ package angel.game {
 			}
 			trace("fighter", iFighterTurnInProgress, "(", fighters[iFighterTurnInProgress].aaId, ") finished moving");
 			fighters[iFighterTurnInProgress].actionsRemaining = 1; // everyone gets one action per turn, at least for now
-			if (iFighterTurnInProgress == 0) {
-				room.enableUi(fireUi);
+			if (fighters[iFighterTurnInProgress].isPlayerControlled) {
+				room.enableUi(fireUi, fighters[iFighterTurnInProgress]);
 			} else {
 				fighters[iFighterTurnInProgress].brain.doFire();
 			}
@@ -470,41 +488,36 @@ package angel.game {
 			
 			++iFighterTurnInProgress;
 			if (iFighterTurnInProgress >= fighters.length) {
-				trace("All enemy turns have been processed, go back to player move");
+				trace("All turns have been processed, go back to first player");
 				iFighterTurnInProgress = 0;
-				room.playerCharacter.centerRoomOnMe();
-				room.enableUi(moveUi);
-				return;
 			}
 			
-			if (Settings.showEnemyMoves) {
+			if (Settings.showEnemyMoves || fighters[iFighterTurnInProgress].isPlayerControlled) {
 				fighters[iFighterTurnInProgress].centerRoomOnMe();
 			} else {
-				room.playerCharacter.centerRoomOnMe();
+				room.mainPlayerCharacter.centerRoomOnMe();
 			}
 			
-			// Give the player some time to gaze at the enemy's move dots before continuing with turn.
-			// (The timer will be running while enemy calculates move, so if that takes a while once we
-			// start complicating the AI, then there may be a delay before the move dots are drawn, but
-			// the total time between enemy's turn starting and enemy beginning to follow dots should
-			// stay at that time unless we're really slow.)
-			// CONSIDER: We may put up some sort of "enemy moving" overlay
-			room.pause(PAUSE_TO_VIEW_MOVE_TIME, finishedEnemyMove);
 			
-			fighters[iFighterTurnInProgress].brain.chooseMoveAndDrawDots();
+			if (fighters[iFighterTurnInProgress].isPlayerControlled) {
+				room.enableUi(moveUi, fighters[iFighterTurnInProgress]);
+			} else {
+				// Give the player some time to gaze at the enemy's move dots before continuing with turn.
+				// (The timer will be running while enemy calculates move, so if that takes a while once we
+				// start complicating the AI, then there may be a delay before the move dots are drawn, but
+				// the total time between enemy's turn starting and enemy beginning to follow dots should
+				// stay at that time unless we're really slow.)
+				// CONSIDER: We may put up some sort of "enemy moving" overlay
+				room.pause(PAUSE_TO_VIEW_MOVE_TIME, finishedEnemyMove);
+				
+				fighters[iFighterTurnInProgress].brain.chooseMoveAndDrawDots();
+			}
 		}
 		
 		// Called each time the timer for gazing at the enemy's move dots expires
 		private function finishedEnemyMove():void {
 			trace("enemyMoveTimerListener for fighter #", iFighterTurnInProgress, fighters[iFighterTurnInProgress].aaId);
 			fighters[iFighterTurnInProgress].brain.doMove();
-		}
-		
-		// Called each time the timer for gazing at opportunity fire
-		private function finishedOpportunityFirePause():void {
-			//Usually this doesn't need to do anything, the entity that was moving will automatically continue
-			//moving once the room unpauses.
-			//Maybe now it never needs to do anything, let's see if this works
 		}
 		
 	} // end class RoomCombat

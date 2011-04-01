@@ -49,12 +49,15 @@ package angel.game {
 		
 		public function doFire():void {
 			trace(me.aaId, "do fire");
-			if (combat.lineOfSight(me, combat.room.playerCharacter.location)) {
-				combat.fireAndAdvanceToNextPhase(me, combat.room.playerCharacter);
-			} else {
-				combat.fireAndAdvanceToNextPhase(me, null);
+			var target:Entity = null;
+			for (var i:int = 0; i < combat.fighters.length; i++) {
+				var fighter:Entity = combat.fighters[i];
+				if (fighter.isPlayerControlled && combat.lineOfSight(me, fighter.location)) {
+					target = fighter;
+					break;
+				}
 			}
-			
+			combat.fireAndAdvanceToNextPhase(me, target);
 		}
 		
 		// return total number of reachable tiles
