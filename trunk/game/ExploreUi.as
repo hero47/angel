@@ -17,6 +17,9 @@ package angel.game {
 		private var player:Entity;
 		private var playerIsMoving:Boolean = false;
 		
+		private static const MOVE_COLOR:uint = 0xffffff;
+		private static const FROB_COLOR:uint = 0x0000ff;
+		
 		public function ExploreUi(room:Room, explore:RoomExplore) {
 			this.explore = explore;
 			this.room = room;
@@ -58,13 +61,18 @@ package angel.game {
 		public function mouseMove(tile:FloorTile):void {
 			if (tile != null) {
 				if (player.tileBlocked(tile.location)) {
-					room.moveHilight(null, 0);
+					var target:Entity = room.firstEntityIn(tile.location);
+					if (target != null && target.frobOk(player)) {
+						room.moveHilight(tile, FROB_COLOR);
+					} else {
+						room.moveHilight(null, 0);
+					}
 				} else {
 					var pathToMouse:Vector.<Point> = player.findPathTo(tile.location);
 					if (pathToMouse == null) {
 						room.moveHilight(null, 0);
 					} else {
-						room.moveHilight(tile, 0xffffff);;
+						room.moveHilight(tile, MOVE_COLOR);
 					}
 				}
 			}
@@ -72,6 +80,15 @@ package angel.game {
 		
 		public function mouseClick(tile:FloorTile):void {
 			var loc:Point = tile.location;
+			
+			if (player.tileBlocked(tile.location)) {
+				var target:Entity = room.firstEntityIn(tile.location);
+				if (target != null && target.frobOk(player)) {
+					target.frob(player);
+					return;
+				}
+			}
+			
 			if (!loc.equals(player.location) && !player.tileBlocked(loc)) {
 				playerIsMoving = player.startMovingToward(loc);
 				if (playerIsMoving) {
