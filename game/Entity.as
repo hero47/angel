@@ -1,4 +1,5 @@
 package angel.game {
+	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.Floor;
 	import angel.common.Prop;
@@ -89,15 +90,26 @@ package angel.game {
 			aaId = id + "-" + String(totalEntitiesCreated);
 		}
 		
+		public static function createFromPropImage(propImage:PropImage, id:String = ""):Entity {
+			var entity:Entity = new Entity(new Bitmap(propImage.imageData), id);
+			entity.solid = propImage.solid;
+			return entity;
+		}
+		
 		override public function toString():String {
 			var foo:String = super.toString();
 			return aaId + foo;
 		}
 		
-		public static function createFromPropImage(propImage:PropImage, id:String = ""):Entity {
-			var entity:Entity = new Entity(new Bitmap(propImage.imageData), id);
-			entity.solid = propImage.solid;
-			return entity;
+		public function frobOk(player:Entity):Boolean {
+			// Later, Wm has indicated that NPCs will be frobbable from a greater distance, and there may be other
+			// special cases.  Also, some entities may not be frobbable at all.
+			return Util.chessDistance(player.location, this.location) == 1;
+		}
+		
+		public function frob(player:Entity):void {
+			// Eventually, entity properties and/or scripting will control what happens when entity is frobbed
+			Alert.show("Player character " + player.aaId + " frobbed " + aaId);
 		}
 		
 		public function addToRoom(room:Room, newLocation:Point = null):void {

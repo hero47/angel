@@ -304,6 +304,10 @@ package angel.game {
 				uglyFireLineThatViolates3D.graphics.moveTo(shooter.center().x, shooter.center().y);
 				uglyFireLineThatViolates3D.graphics.lineTo(target.center().x, target.center().y);
 				room.addChild(uglyFireLineThatViolates3D);
+				
+				if (!shooter.isPlayerControlled) {
+					target.centerRoomOnMe();
+				}
 			}
 		}
 		
