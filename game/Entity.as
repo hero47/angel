@@ -27,16 +27,15 @@ package angel.game {
 		private static const PIXELS_FOR_HORZ_MOVE:int = Tileset.TILE_WIDTH;
 		
 		public static const GAIT_EXPLORE:int = 0;
-		public static const GAIT_UNSPECIFIED:int = 0;
 		//NOTE: if distance allows walking, gait can be walk/run/sprint; if distance allows running, can be run/sprint
+		//NOTE: code depends on these being a zero-based enumeration, not just arbitrary ints
+		public static const GAIT_UNSPECIFIED:int = 0;
 		public static const GAIT_WALK:int = 1;
 		public static const GAIT_RUN:int = 2;
 		public static const GAIT_SPRINT:int = 3;
 		public static const GAIT_TOO_FAR:int = 4;
 
-		
-		
-		// This array maps from a one-tile movement to facing, with arbitrary "face camera" for center
+		// This array maps from a one-tile movement (offset by one) to facing, with arbitrary "face camera" for center
 		public static const neighborToFacing:Vector.<Vector.<int>> = Vector.<Vector.<int>>([
 				Vector.<int>([5,4,3]), Vector.<int>([6,WalkerImage.FACE_CAMERA,2]), Vector.<int>([7,0,1])
 			]);
@@ -63,6 +62,7 @@ package angel.game {
 		public var combatBrainClass:Class;
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
 		public var brain:Object;
+		
 		public var isPlayerControlled:Boolean;
 		public var bestFriend:Entity; // for use by brain, persists through mode transitions
 
@@ -102,9 +102,9 @@ package angel.game {
 		}
 		
 		public function frobOk(player:Entity):Boolean {
-			// Later, Wm has indicated that NPCs will be frobbable from a greater distance, and there may be other
+			// Later, Wm has indicated that NPCs will be frobbable ("hail") from a greater distance, and there may be other
 			// special cases.  Also, some entities may not be frobbable at all.
-			return Util.chessDistance(player.location, this.location) == 1;
+			return Util.chessDistance(player.location, myLocation) == 1;
 		}
 		
 		public function frob(player:Entity):void {
@@ -112,6 +112,8 @@ package angel.game {
 			Alert.show("Player character " + player.aaId + " frobbed " + aaId);
 		}
 		
+		//NOTE: indetermined yet whether it will be meaningful or useful to have an entity "in" a room but not
+		//on the map. If we do support this, their location will be null.
 		public function addToRoom(room:Room, newLocation:Point = null):void {
 			this.room = room;
 			if (newLocation != null) {
@@ -125,7 +127,7 @@ package angel.game {
 		}
 		
 		public function weaponDamage():int {
-			var speedPenalty:int;
+			var speedPenalty:int = 0;
 			switch (mostRecentGait) {
 				case GAIT_SPRINT:
 					speedPenalty = 4;
@@ -144,7 +146,7 @@ package angel.game {
 		public function defense():int {
 			// These numbers are currently the same as speedPenalty to damage, but are unlikely to remain the same
 			// Also, we'll probably have armor or other defense at some point.
-			var speedBonus:int;
+			var speedBonus:int = 0;
 			switch (mostRecentGait) {
 				case GAIT_SPRINT:
 					speedBonus = 4;
@@ -174,12 +176,9 @@ package angel.game {
 		
 		//return true if moving, false if goal is unreachable or already there
 		public function startMovingToward(goal:Point, gait:int = GAIT_EXPLORE):Boolean {
-			mostRecentGait = gait;
-			moveGoal = goal;
-			moveSpeed = gaitSpeeds[gait];
-			path = findPathTo(goal);
-			if (path != null) {
-				room.addEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
+			var newPath:Vector.<Point> = findPathTo(goal);
+			if (newPath != null) {
+				startMovingAlongPath(newPath, gait);
 				return true;
 			}
 			return false;
