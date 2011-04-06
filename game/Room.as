@@ -32,7 +32,7 @@ package angel.game {
 
 		private var contentsLayer:Sprite;
 		public var cells:Vector.<Vector.<Cell>>;
-		public var mainPlayerCharacter:Entity;
+		public var mainPlayerCharacter:ComplexEntity;
 		public var size:Point;
 		public var mode:RoomMode;
 
@@ -91,7 +91,7 @@ package angel.game {
 				(event.target as Timer).removeEventListener(TimerEvent.TIMER_COMPLETE, ensureMovementFinishedThenChangeMode);
 			}
 			var someoneIsMoving:Boolean = false;
-			forEachEntity(function(entity:Entity):void {
+			forEachComplexEntity(function(entity:ComplexEntity):void {
 				someoneIsMoving ||= entity.moving;
 			} );
 			
@@ -130,7 +130,7 @@ package angel.game {
 		// CONSIDER: Move this into a class, have the things that now implement IRoomUi subclass it?
 		
 		// call this when player-controlled part of the turn begins, to allow player to enter move
-		public function enableUi(newUi:IRoomUi, player:Entity):void {
+		public function enableUi(newUi:IRoomUi, player:ComplexEntity):void {
 			ui = newUi;
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 			stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
@@ -228,17 +228,6 @@ package angel.game {
 
 		/********************* end general ui **********************/
 		
-		public function scrollToCenter(tileLoc:Point, instant:Boolean=false):void {
-			var desiredCenter:Point = Floor.centerOf(tileLoc);
-			scrollingTo = new Point(stage.stageWidth / 2 - desiredCenter.x - Floor.FLOOR_TILE_X/2, 
-									stage.stageHeight / 2 - desiredCenter.y - Floor.FLOOR_TILE_Y / 2 );
-			if (instant) {
-				this.x = scrollingTo.x;
-				this.y = scrollingTo.y;
-				scrollingTo = null;
-			}
-		}
-	
 		public function moveHilight(tile:FloorTile, color:uint):void {
 			if (tileWithFilter != null) {
 				tileWithFilter.filters = [];
@@ -273,20 +262,21 @@ package angel.game {
 		
 		//CONSIDER: should entity.addToRoom add itself to the contentsLayer, or do we want the ability to
 		//be in the room but not yet on stage?
-		public function addEntity(entity:Entity, location:Point):void {
+		public function addEntity(entity:SimpleEntity, location:Point):void {
 			cells[location.x][location.y].add(entity);
 			contentsLayer.addChild(entity);
 			entity.addToRoom(this, location);
 		}
-		
-		public function forEachEntity(callWithEntity:Function, filter:Function = null):void {
+
+		public function addEntityUsingItsLocation(entity:SimpleEntity):void {
+			addEntity(entity, entity.location);
+		}
+
+		public function forEachComplexEntity(callWithEntity:Function, filter:Function = null):void {
 			for (var i:int = 0; i < size.x; i++) {
 				for (var j:int = 0; j < size.y; j++) {
 					for each (var prop:Prop in cells[i][j].contents) {
-						if (prop is Entity) {
-							if (filter != null && !filter(prop)) {
-								continue;
-							}
+						if ((prop is ComplexEntity) && ((filter == null) || (filter(prop)))) {
 							callWithEntity(prop);
 						}
 					}
@@ -298,11 +288,15 @@ package angel.game {
 			cells[location.x][location.y].forEachEntity(callWithEntity, filter);
 		}
 		
-		public function firstEntityIn(location:Point, filter:Function = null):Entity {
+		public function firstEntityIn(location:Point, filter:Function = null):SimpleEntity {
 			return cells[location.x][location.y].firstEntity(filter);
 		}
 
-		public function addPlayerCharacter(entity:Entity, location:Point): void {
+		public function firstComplexEntityIn(location:Point, filter:Function = null):ComplexEntity {
+			return cells[location.x][location.y].firstComplexEntity(filter);
+		}
+
+		public function addPlayerCharacter(entity:ComplexEntity, location:Point): void {
 			if (mainPlayerCharacter == null) {
 				mainPlayerCharacter = entity;
 			}
@@ -312,7 +306,7 @@ package angel.game {
 		
 		// This will generally be called by the entity as it crosses the boundary between one floor tile
 		// and another during movement.
-		public function changeEntityLocation(entity:Entity, newLocation:Point):void {
+		public function changeEntityLocation(entity:ComplexEntity, newLocation:Point):void {
 			cells[entity.location.x][entity.location.y].remove(entity);
 			cells[newLocation.x][newLocation.y].add(entity);
 			moveMarkerIfNeeded(entity, newLocation);
@@ -324,7 +318,7 @@ package angel.game {
 			*/
 		}
 		
-		public function moveMarkerIfNeeded(entity:Entity, newLocation:Point = null):void {
+		public function moveMarkerIfNeeded(entity:ComplexEntity, newLocation:Point = null):void {
 			if (entity.marker != null) {
 				var tileCenter:Point = Floor.centerOf(newLocation == null ? entity.location : newLocation);
 				entity.marker.x = tileCenter.x;
@@ -344,6 +338,10 @@ package angel.game {
 			if (!gameIsPaused) {
 				dispatchEvent(new Event(UNPAUSED_ENTER_FRAME));
 			}
+			handleScrolling();
+		}						
+			
+		private function handleScrolling():void {
 			if (scrollingTo != null) {
 				var vector:Point = new Point(scrollingTo.x - this.x, scrollingTo.y - this.y);
 				if (vector.length <= SCROLL_SPEED) {
@@ -358,9 +356,37 @@ package angel.game {
 			}
 		}
 		
-		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander };
-		private static const combatBrain:Object = { wander:CombatBrainWander };
+		public function scrollToCenter(tileLoc: Point):void {
+			scrollingTo = PositionOfRoomToCenterTile(tileLoc);
+		}
+
+		public function moveToCenter(tileLoc: Point):void {
+			scrollingTo = null;
+			var whereToMove: Point = PositionOfRoomToCenterTile(tileLoc);
+			this.x = whereToMove.x;
+			this.y = whereToMove.y;
+		}
+	
+		private function PositionOfRoomToCenterTile(tileLoc: Point): Point {
+			var desiredTileCenter:Point = Floor.centerOf(tileLoc);
+			return new Point(stage.stageWidth / 2 - desiredTileCenter.x - Floor.FLOOR_TILE_X / 2, 
+							 stage.stageHeight / 2 - desiredTileCenter.y - Floor.FLOOR_TILE_Y / 2 );
+		}
 		
+//		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander };
+//		private static const combatBrain:Object = { wander:CombatBrainWander };
+
+		public function fillContentsFromXml(catalog:Catalog, contentsXml: XML):void {
+			for each (var propXml: XML in contentsXml.prop) {
+				addEntityUsingItsLocation(SimpleEntity.loadFromXml(propXml, catalog));
+			}
+			for each (var walkerXml: XML in contentsXml.walker) {
+				addEntityUsingItsLocation(Walker.loadFromXml(walkerXml, catalog));
+			}
+		}
+		
+		
+		/*
 		public function fillContentsFromXml(catalog:Catalog, contentsXml:XML):void {
 			for each (var propXml:XML in contentsXml.prop) {
 				var propName:String = propXml;
@@ -374,7 +400,6 @@ package angel.game {
 				var combatSetting:String = walkerXml.@combat;
 				walker.combatBrainClass = combatBrain[combatSetting];
 			}
-			
 		}
 		
 		public function addPropByName(catalog:Catalog, id:String, location:Point):void {
@@ -388,6 +413,7 @@ package angel.game {
 			addEntity(entity, location);
 			return entity;
 		}
+		*/
 		
 	} // end class Room
 

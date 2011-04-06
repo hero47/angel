@@ -14,7 +14,7 @@ package angel.game {
 	public class ExploreUi implements IRoomUi {
 		private var room:Room;
 		private var explore:RoomExplore;
-		private var player:Entity;
+		private var player:ComplexEntity;
 		private var playerIsMoving:Boolean = false;
 		
 		private static const MOVE_COLOR:uint = 0xffffff;
@@ -27,7 +27,7 @@ package angel.game {
 		
 		/* INTERFACE angel.game.IUi */
 		
-		public function enable(player:Entity):void {
+		public function enable(player:ComplexEntity):void {
 			this.player = player;
 		}
 		
@@ -53,7 +53,7 @@ package angel.game {
 					}
 				break;
 				case Keyboard.BACKSPACE:
-					room.scrollToCenter(player.location, true);
+					room.moveToCenter(player.location);
 				break;
 			}
 		}
@@ -61,7 +61,7 @@ package angel.game {
 		public function mouseMove(tile:FloorTile):void {
 			if (tile != null) {
 				if (player.tileBlocked(tile.location)) {
-					var target:Entity = room.firstEntityIn(tile.location);
+					var target:SimpleEntity = room.firstEntityIn(tile.location);
 					if (target != null && target.frobOk(player)) {
 						room.moveHilight(tile, FROB_COLOR);
 					} else {
@@ -82,7 +82,7 @@ package angel.game {
 			var loc:Point = tile.location;
 			
 			if (player.tileBlocked(tile.location)) {
-				var target:Entity = room.firstEntityIn(tile.location);
+				var target:SimpleEntity = room.firstEntityIn(tile.location);
 				if (target != null && target.frobOk(player)) {
 					target.frob(player);
 					return;
@@ -108,7 +108,7 @@ package angel.game {
 		/************ Private ****************/
 		
 		private function playerFinishedMoving(event:EntityEvent):void {
-			Assert.assertTrue(event.entity.isPlayerControlled, "playerFinishedMoving called for NPC");
+			Assert.assertTrue((event.entity == player), "Got a playerFinishedMoving event, but with an entity other than our player");
 			playerIsMoving = false;
 			player.removeEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
 		}

@@ -20,7 +20,7 @@ package angel.common {
 		
 		protected var imageBitmap:Bitmap;
 		protected var myLocation:Point = null;
-		public var solid:uint = Prop.DEFAULT_SOLIDITY;
+		public var solidness:uint = Prop.DEFAULT_SOLIDITY;
 		
 		// Depth represents distance to the "camera" plane, in our orthogonal view
 		// The fractional part of depth indicates distance away from that line of cell-centers
@@ -52,7 +52,7 @@ package angel.common {
 		
 
 		public function get location():Point {
-			Assert.assertTrue(parent != null, "Getting location of an entity not on stage");
+			//Assert.assertTrue(parent != null, "Getting location of an entity not on stage");
 			return myLocation;
 		}
 		
@@ -62,7 +62,7 @@ package angel.common {
 			var pixels:Point = pixelLocStandingOnTile(newLocation);
 			this.x = pixels.x;
 			this.y = pixels.y;
-			Assert.assertTrue(parent != null, "Setting location of an entity not on stage");
+			//Assert.assertTrue(parent != null, "Setting location of an entity not on stage");
 			if (parent != null) {
 				adjustDrawOrder();
 			}
@@ -104,7 +104,6 @@ package angel.common {
 			}
 
 		}
-
 		
 	}
 

@@ -6,17 +6,17 @@ package angel.game {
 	 * @author Beth Moursund
 	 */
 	public class CombatBrainWander {
-		private var me:Entity;
+		private var me:ComplexEntity;
 		private var combat:RoomCombat;
 		private var gait:int;
 		
 		// reachable[gait] will hold all points reachable by moving at that gait
 		private var reachable:Vector.<Vector.<Point>> = new Vector.<Vector.<Point>>();
 		
-		public function CombatBrainWander(entity:Entity, combat:RoomCombat) {
+		public function CombatBrainWander(entity:ComplexEntity, combat:RoomCombat) {
 			me = entity;
 			this.combat = combat;
-			for (var i:int = 0; i <= Entity.GAIT_SPRINT; ++i) {
+			for (var i:int = 0; i <= ComplexEntity.GAIT_SPRINT; ++i) {
 				reachable.push(new Vector.<Point>());
 			}
 		}
@@ -30,7 +30,7 @@ package angel.game {
 			}
 			var randomGait:int;
 			do {
-				randomGait = Math.floor(Math.random() * Entity.GAIT_SPRINT) + 1;
+				randomGait = Math.floor(Math.random() * ComplexEntity.GAIT_SPRINT) + 1;
 			} while (reachable[randomGait].length == 0);
 			var goal:Point = reachable[randomGait][Math.floor(Math.random() * reachable[randomGait].length)];
 			
@@ -49,24 +49,26 @@ package angel.game {
 		
 		public function doFire():void {
 			trace(me.aaId, "do fire");
-			var target:Entity = null;
+			combat.fireAndAdvanceToNextPhase(me, getFirstAvailableTarget());
+		}
+		
+		private function getFirstAvailableTarget():ComplexEntity {
 			for (var i:int = 0; i < combat.fighters.length; i++) {
-				var fighter:Entity = combat.fighters[i];
+				var fighter:ComplexEntity = combat.fighters[i];
 				if (fighter.isPlayerControlled && combat.lineOfSight(me, fighter.location)) {
-					target = fighter;
-					break;
+					return fighter;
 				}
 			}
-			combat.fireAndAdvanceToNextPhase(me, target);
+			return null;
 		}
 		
 		// return total number of reachable tiles
 		private function fillListWithReachableTiles():int {
-			for (var i:int = 0; i <= Entity.GAIT_SPRINT; ++i) {
+			for (var i:int = 0; i <= ComplexEntity.GAIT_SPRINT; ++i) {
 				reachable[i].length = 0;
 			}
 			var count:int = 0;
-			var steps:Vector.<Vector.<int>> = me.findReachableTiles(me.location, me.gaitSpeeds[Entity.GAIT_SPRINT]);
+			var steps:Vector.<Vector.<int>> = me.findReachableTiles(me.location, me.gaitSpeeds[ComplexEntity.GAIT_SPRINT]);
 			for (var x:int = 0; x < combat.room.size.x; ++x) {
 				for (var y:int = 0; y < combat.room.size.y; ++y) {
 					if (steps[x][y] > 0) {

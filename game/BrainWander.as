@@ -10,9 +10,9 @@ package angel.game {
 	 */
 	
 	public class BrainWander {
-		private var me:Entity;
+		private var me:ComplexEntity;
 		
-		public function BrainWander(entity:Entity, roomExplore:RoomExplore) {
+		public function BrainWander(entity:ComplexEntity, roomExplore:RoomExplore) {
 			me = entity;
 			// Set the first twitch opportunity to a random fraction of a second, so all the NPCs in
 			// the room aren't acting in unison.
@@ -38,7 +38,7 @@ package angel.game {
 			var facing:int;
 			var choices:Vector.<Point> = new Vector.<Point>;
 			for (facing = 0; facing < 8; ++facing) {
-				var goal:Point = me.location.add(Entity.facingToNeighbor[facing]);
+				var goal:Point = me.location.add(ComplexEntity.facingToNeighbor[facing]);
 				if (!me.tileBlocked(goal)) {
 					choices.push(goal);
 				}

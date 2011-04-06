@@ -4,7 +4,6 @@ package angel.roomedit {
 	import angel.common.Prop;
 	import angel.common.Util;
 	import angel.common.WalkerImage;
-	import angel.game.Entity;
 	import fl.controls.ComboBox;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;

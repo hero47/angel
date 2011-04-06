@@ -16,12 +16,12 @@ package angel.game {
 	public class CombatFireUi implements IRoomUi {
 		private var room:Room;
 		private var combat:RoomCombat;
-		private var player:Entity;
+		private var player:ComplexEntity;
 		private var oldMarkerColorTransform:ColorTransform;
 		private var aimCursor:Sprite;
 		private var aimCursorBitmap:Bitmap;
 		
-		private var targetEnemy:Entity;
+		private var targetEnemy:ComplexEntity;
 		private var targetLocked:Boolean = false;
 		
 		// Wm wants pressing space to alternate between centering on player and centering on target enemy
@@ -45,7 +45,7 @@ package angel.game {
 		
 		/* INTERFACE angel.game.IUi */
 		
-		public function enable(player:Entity):void {
+		public function enable(player:ComplexEntity):void {
 			trace("entering player fire phase for", player.aaId);
 			this.player = player;
 			oldMarkerColorTransform = player.marker.transform.colorTransform;
@@ -91,10 +91,10 @@ package angel.game {
 				
 				case Keyboard.SPACE:
 					if (spaceLastCenteredOnPlayer && targetEnemy != null) {
-						room.scrollToCenter(targetEnemy.location, true);
+						room.moveToCenter(targetEnemy.location);
 						spaceLastCenteredOnPlayer = false;
 					} else {
-						room.scrollToCenter(player.location, true);
+						room.moveToCenter(player.location);
 						spaceLastCenteredOnPlayer = true;
 					}
 				break;
@@ -113,7 +113,7 @@ package angel.game {
 					//NOTE: we'll probably add some behavior here once Wm tries this
 					room.moveHilight(tile, NO_TARGET_TILE_HILIGHT_COLOR);
 				} else {
-					var enemy:Entity = room.firstEntityIn(tile.location, filterIsEnemy);
+					var enemy:ComplexEntity = room.firstComplexEntityIn(tile.location, filterIsEnemy);
 					room.moveHilight(tile, (enemy == null ? NO_TARGET_TILE_HILIGHT_COLOR : TARGET_TILE_HILIGHT_COLOR));
 					moveTargetHilight(enemy);
 				}
@@ -160,14 +160,14 @@ package angel.game {
 		}
 		
 		private function doPlayerFire():void {
-			var target:Entity = targetEnemy;
-			var playerFiring:Entity = player;
+			var target:ComplexEntity = targetEnemy;
+			var playerFiring:ComplexEntity = player;
 			room.disableUi();
 			combat.fireAndAdvanceToNextPhase(playerFiring, target);
 		}
 		
 		private function doReserveFire():void {
-			var playerFiring:Entity = player;
+			var playerFiring:ComplexEntity = player;
 			room.disableUi();
 			combat.fireAndAdvanceToNextPhase(playerFiring, null);
 		}
@@ -178,11 +178,11 @@ package angel.game {
 			adjustAimCursorImage();
 		}
 		
-		private function filterIsEnemy(entity:Entity):Boolean {
+		private function filterIsEnemy(entity:ComplexEntity):Boolean {
 			return entity.isEnemy();
 		}
 		
-		private function moveTargetHilight(target:Entity):void {
+		private function moveTargetHilight(target:ComplexEntity):void {
 			if (targetEnemy != null) {
 				targetEnemy.filters = [];
 			}

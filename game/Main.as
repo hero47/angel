@@ -12,7 +12,6 @@ package angel.game {
 	public class Main extends Sprite {
 		private var catalog:Catalog;
 		private var floor:Floor;
-		private var testEntity:Entity;
 		private var room:Room;
 		private var startLoc:Point;
 		
@@ -67,12 +66,12 @@ package angel.game {
 			floor.removeEventListener(Event.INIT, mapLoadedListener);
 			room = new Room(floor);
 			addChild(room);
-			room.scrollToCenter(startLoc, true);
+			room.moveToCenter(startLoc);
 			
 			room.fillContentsFromXml(catalog, contentsXml);
 			
-			var previousPc:Entity = null;
-			for each (var entity:Entity in Settings.pcs) {
+			var previousPc:ComplexEntity = null;
+			for each (var entity:ComplexEntity in Settings.pcs) {
 				// UNDONE: start followers near main PC instead of stacked on top
 				room.addPlayerCharacter(entity, startLoc);
 				if (previousPc != null) {
