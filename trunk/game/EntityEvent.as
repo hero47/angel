@@ -10,12 +10,12 @@ package angel.game {
 		public static const FINISHED_ONE_TILE_OF_MOVE:String = "entityFinishedTile";
 		public static const FINISHED_MOVING:String = "entityFinishedMoving";
 		
-		public var entity:Entity;
+		public var entity:SimpleEntity;
 		
 		public function EntityEvent(type:String,
 									bubbles:Boolean = false,
 									cancelable:Boolean = false,
-									entity:Entity = null
+									entity:SimpleEntity = null
 									) { 
 			super(type, bubbles, cancelable);
 			this.entity = entity;

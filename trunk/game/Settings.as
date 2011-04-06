@@ -22,7 +22,7 @@ package angel.game {
 		public static var runSpeed:Number = DEFAULT_MOVE_SPEED;
 		public static var sprintSpeed:Number = DEFAULT_MOVE_SPEED;
 		
-		public static var pcs:Vector.<Entity> = new Vector.<Entity>();
+		public static var pcs:Vector.<ComplexEntity> = new Vector.<ComplexEntity>();
 		
 		public function Settings() {
 			

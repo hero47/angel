@@ -20,30 +20,28 @@ package angel.game {
 		public function RoomExplore(room:Room) {
 			this.room = room;
 			room.addEventListener(Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
-			room.forEachEntity(initEntityForExplore);
+			room.forEachComplexEntity(initEntityForExplore);
 			
 			exploreUi = new ExploreUi(room, this);
 			Assert.assertTrue(room.mainPlayerCharacter != null, "Main player character undefined!");
-			room.scrollToCenter(room.mainPlayerCharacter.location, true);
+			room.moveToCenter(room.mainPlayerCharacter.location);
 			room.enableUi(exploreUi, room.mainPlayerCharacter);
 		}
 
 		public function cleanup():void {
 			room.disableUi();
 			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
-			room.forEachEntity(cleanupEntityFromExplore);
+			room.forEachComplexEntity(cleanupEntityFromExplore);
 			timeQueue = null;
 		}
 		
-		private function initEntityForExplore(entity:Entity):void {
+		private function initEntityForExplore(entity:ComplexEntity):void {
 			entity.initHealth();
-			if (entity.exploreBrainClass != null) {
-				entity.brain = new entity.exploreBrainClass(entity, this);
-			}
+			entity.joinExplore(this);
 		}
 		
-		private function cleanupEntityFromExplore(entity:Entity):void {
-			entity.brain = null;
+		private function cleanupEntityFromExplore(entity:ComplexEntity):void {
+			entity.exitCurrentMode();
 		}
 		
 		/***************  TIMER STUFF  ****************/

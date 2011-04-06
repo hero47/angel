@@ -29,16 +29,21 @@ package angel.game {
 			}
 		}
 		
-		public function firstEntity(filter:Function = null):Entity {
+		public function firstEntity(filter:Function = null):SimpleEntity {
+			return firstEntityOfType(SimpleEntity, filter);
+		}
+		
+		public function firstComplexEntity(filter:Function = null):ComplexEntity {
+			return firstEntityOfType(ComplexEntity, filter) as ComplexEntity;
+		}
+		
+		private function firstEntityOfType(type:Class, filter:Function = null): SimpleEntity {
 			if (contents == null) {
 				return null;
 			}
 			for each (var prop:Prop in contents) {
-				if (prop is Entity) {
-					if (filter != null && !filter(prop)) {
-						continue;
-					}
-					return prop as Entity;
+				if ((prop is type) && ((filter == null) || (filter(prop)))) {
+					return prop as SimpleEntity;
 				}
 			}
 			return null;
@@ -46,10 +51,7 @@ package angel.game {
 		
 		public function forEachEntity(callWithEntity:Function, filter:Function = null):void {
 			for each (var prop:Prop in contents) {
-				if (prop is Entity) {
-					if (filter != null && !filter(prop)) {
-						continue;
-					}
+				if ((prop is SimpleEntity) && ((filter == null) || filter(prop))) {
 					callWithEntity(prop);
 				}
 			}
@@ -63,7 +65,7 @@ package angel.game {
 			if (contents != null) {
 				var solid:uint = 0;
 				for (var i:int = 0; i < contents.length; i++) {
-					solid |= contents[i].solid;
+					solid |= contents[i].solidness;
 				}
 				return solid;
 			}

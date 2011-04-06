@@ -11,11 +11,11 @@ package angel.game {
 	// Of course, the other character may move again while this one is catching up.
 	 
 	public class BrainFollow {
-		private var me:Entity;
+		private var me:ComplexEntity;
 		
 		private static const INTERVAL:int = 2;
 		
-		public function BrainFollow(entity:Entity, roomExplore:RoomExplore) {
+		public function BrainFollow(entity:ComplexEntity, roomExplore:RoomExplore) {
 			me = entity;
 			roomExplore.addTimedEvent(Math.random()*INTERVAL, twitchOpportunity);
 		}

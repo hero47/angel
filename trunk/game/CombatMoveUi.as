@@ -17,7 +17,7 @@ package angel.game {
 	public class CombatMoveUi implements IRoomUi {
 		private var combat:RoomCombat;
 		private var room:Room;
-		private var player:Entity;
+		private var player:ComplexEntity;
 		private var oldMarkerColorTransform:ColorTransform;
 		
 		private var movePointsDisplay:TextField;
@@ -34,7 +34,7 @@ package angel.game {
 		
 		/* INTERFACE angel.game.IUi */
 		
-		public function enable(player:Entity):void {
+		public function enable(player:ComplexEntity):void {
 			trace("entering player move phase for", player.aaId);
 			this.player = player;
 			oldMarkerColorTransform = player.marker.transform.colorTransform;
@@ -116,10 +116,10 @@ package angel.game {
 			slices.push(new PieSlice(Icon.bitmapData(Icon.Stay), doPlayerMoveStay));
 			if (combat.path.length > 0) {
 				var minGait:int = player.gaitForDistance(combat.path.length);
-				if (minGait <= Entity.GAIT_WALK) {
+				if (minGait <= ComplexEntity.GAIT_WALK) {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doPlayerMoveWalk));
 				}
-				if (minGait <= Entity.GAIT_RUN) {
+				if (minGait <= ComplexEntity.GAIT_RUN) {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.Run), doPlayerMoveRun));
 				}
 				slices.push(new PieSlice(Icon.bitmapData(Icon.Sprint), doPlayerMoveSprint));
@@ -128,11 +128,11 @@ package angel.game {
 			return slices;
 		}
 		
-		private function doPlayerMove(gaitChoice:int = Entity.GAIT_UNSPECIFIED):void {
-			var playerMoving:Entity = player;
+		private function doPlayerMove(gaitChoice:int = ComplexEntity.GAIT_UNSPECIFIED):void {
+			var playerMoving:ComplexEntity = player;
 			room.disableUi();
 			
-			if (gaitChoice == Entity.GAIT_UNSPECIFIED) {
+			if (gaitChoice == ComplexEntity.GAIT_UNSPECIFIED) {
 				gaitChoice = playerMoving.gaitForDistance(combat.path.length);
 			}
 			playerMoving.centerRoomOnMe();
@@ -141,19 +141,19 @@ package angel.game {
 		
 		private function doPlayerMoveStay():void {
 			removePath();
-			doPlayerMove(Entity.GAIT_WALK);
+			doPlayerMove(ComplexEntity.GAIT_WALK);
 		}
 		
 		private function doPlayerMoveWalk():void {
-			doPlayerMove(Entity.GAIT_WALK);
+			doPlayerMove(ComplexEntity.GAIT_WALK);
 		}
 		
 		private function doPlayerMoveRun():void {
-			doPlayerMove(Entity.GAIT_RUN);
+			doPlayerMove(ComplexEntity.GAIT_RUN);
 		}
 		
 		private function doPlayerMoveSprint():void {
-			doPlayerMove(Entity.GAIT_SPRINT);
+			doPlayerMove(ComplexEntity.GAIT_SPRINT);
 		}
 		
 		private function removePath():void {

@@ -8,9 +8,9 @@ package angel.game {
 	 * of a second between chances to turn; and no more than ¼ of the time will they move."
 	 */
 	public class BrainFidget {
-		private var me:Entity;
+		private var me:ComplexEntity;
 		
-		public function BrainFidget(entity:Entity, roomExplore:RoomExplore) {
+		public function BrainFidget(entity:ComplexEntity, roomExplore:RoomExplore) {
 			me = entity;
 			me.turnToFacing(Math.random() * 8);
 			// Set the first twitch opportunity to a random fraction of a second, so all the NPCs in

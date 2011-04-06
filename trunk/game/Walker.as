@@ -1,5 +1,6 @@
 package angel.game {
 	import angel.common.Assert;
+	import angel.common.Catalog;
 	import angel.common.Prop;
 	import angel.common.WalkerImage;
 	import flash.display.Bitmap;
@@ -8,7 +9,7 @@ package angel.game {
 	import flash.geom.Point;
 	import flash.utils.Timer;
 	
-	public class Walker extends Entity {
+	public class Walker extends ComplexEntity {
 		
 		private var walkerImage:WalkerImage;
 		private var deathTimer:Timer;
@@ -23,7 +24,7 @@ package angel.game {
 			facing = WalkerImage.FACE_CAMERA;
 			super(new Bitmap(walkerImage.bitsFacing(facing)), id);
 			this.maxHealth = this.currentHealth = walkerImage.health;
-			this.solid = Prop.DEFAULT_SOLIDITY; // no ghostly/short characters... at least, not yet
+			this.solidness = Prop.DEFAULT_SOLIDITY; // no ghostly/short characters... at least, not yet
 		}
 
 		override protected function adjustImageForMove():void {
@@ -75,6 +76,20 @@ package angel.game {
 				deathTimer.removeEventListener(TimerEvent.TIMER, advanceDeathAnimation);
 				deathTimer = null;
 			}
+		}
+
+		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander };
+		private static const combatBrain:Object = { wander:CombatBrainWander };
+
+		public static function loadFromXml(walkerXml:XML, catalog:Catalog):Walker {
+			var id:String = walkerXml;
+			var walker:Walker = new Walker(catalog.retrieveWalkerImage(id), id);
+			walker.myLocation = new Point(walkerXml.@x, walkerXml.@y);
+			var exploreSetting:String = walkerXml.@explore;
+			walker.exploreBrainClass = exploreBrain[exploreSetting];
+			var combatSetting:String = walkerXml.@combat;
+			walker.combatBrainClass = combatBrain[combatSetting];
+			return walker;
 		}
 		
 	} // end class Walker
