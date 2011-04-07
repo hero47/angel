@@ -111,6 +111,21 @@ package angel.roomedit {
 			return all;
 		}
 		
+		// throw away the cached data for this id, so it will be reloaded from file when requested, and set its catalog xml
+		// to match current in-memory catalog xml
+		// NOTE: this is not resource manager, just a quick-and-dirty for editor!  I'm not even looking at possible memory leaks.
+		public function discardCachedData(id:String):void {
+			var entry:CatalogEntry = lookup[id];
+			if (entry != null) {
+				entry.data = null;
+				var tag:String = CatalogEntry.xmlTag[entry.type];
+				var current:XMLList = catalogXml[tag].(@id == id);
+				entry.xml = current[0];
+				trace(entry.xml);
+			}
+			
+		}
+		
 	}
 
 }

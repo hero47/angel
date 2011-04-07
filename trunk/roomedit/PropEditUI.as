@@ -29,7 +29,7 @@ package angel.roomedit {
 		
 		private static const WIDTH:int = 220;
 		
-		public function PropEditUI(catalog:CatalogEdit) {
+		public function PropEditUI(catalog:CatalogEdit, startId:String = null) {
 			this.catalog = catalog;
 			
 			propBitmap = new Bitmap(new BitmapData(Prop.WIDTH, Prop.HEIGHT));
@@ -57,7 +57,17 @@ package angel.roomedit {
 			shortCheck.addEventListener(Event.CHANGE, changeSolidness);
 			addChild(shortCheck);
 
-			propCombo.selectedIndex = 0;
+			if (startId == null) {
+				propCombo.selectedIndex = 0;
+			} else {
+				for (i = 0; i < propCombo.length; i++) {
+					if (propCombo.getItemAt(i).label == startId) {
+						propCombo.selectedIndex = i;
+						break;
+					}
+				}
+			}
+
 			changeProp(null);
 		}
 		

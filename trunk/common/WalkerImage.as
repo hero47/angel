@@ -18,7 +18,8 @@ package angel.common {
 		public static const FACE_CAMERA:int = 1;
 		public static const FACE_DYING:int = 8;
 		
-		public var health:int;
+		public var health:int = 1;
+		public var unusedPixelsAtTopOfCell:int = 0;
 		
 		[Embed(source = '../../../EmbeddedAssets/temp_default_walker.png')]
 		private var DefaultWalkerBitmap:Class;
@@ -38,36 +39,27 @@ package angel.common {
 		public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry):void {
 			this.entry = entry;
 			
-			bits = new Vector.<Vector.<BitmapData>>(9);
-			bits.fixed = true;
-			for (var facing:int = 0; facing < 9; facing++) {
-				bits[facing] = new Vector.<BitmapData>(3);
-				bits[facing].fixed = true;
-				for (var j:int = 0; j < 3; j++) {
-					bits[facing][j] = new BitmapData(Prop.WIDTH, Prop.HEIGHT);
-				}
-			}
-			
-			var bitmap:Bitmap = new DefaultWalkerBitmap();
-			copyBitsFromImagePane(bitmap.bitmapData);
-			
-			var textField:TextField = new TextField();
-			textField.text = id;
-			textField.y = Prop.HEIGHT / 2;
-			for (facing = 0; facing < 9; facing++) {
-				for (j = 0; j < 3; j++) {
-					bits[facing][j].draw(textField);
-				}
-			}
-			
-			health = 1;
+			parseAndDeleteCatalogXml(entry);	
+			createPlaceholderImages(id);
+		}
+		
+		private function parseAndDeleteCatalogXml(entry:CatalogEntry):void {
 			if (entry.xml != null) {
-				var healthString:String = entry.xml.@health;
-				if (healthString != "") {
-					health = int(healthString);
+				var value:String;
+				
+				value = entry.xml.@health;
+				if (value != "") {
+					health = int(value);
 				}
+				
+				value = entry.xml.@top;
+				if (value != "") {
+					unusedPixelsAtTopOfCell = int(value);
+				}
+				
 				entry.xml = null;
 			}
+		
 		}
 		
 		public function get catalogEntry():CatalogEntry {
@@ -79,6 +71,31 @@ package angel.common {
 			copyBitsFromImagePane(bitmapData);
 			bitmapData.dispose();
 		}
+		
+		private function createPlaceholderImages(id:String):void {
+			createBlankBits();
+			copyBitsFromImagePane((new DefaultWalkerBitmap()).bitmapData);
+			
+			var textField:TextField = new TextField();
+			textField.text = id;
+			for (var facing:int = 0; facing < 9; facing++) {
+				for (var foot:int = 0; foot < 3; foot++) {
+					bits[facing][foot].draw(textField);
+				}
+			}
+		}
+		
+		private function createBlankBits():void {
+			bits = new Vector.<Vector.<BitmapData>>(9);
+			bits.fixed = true;
+			for (var facing:int = 0; facing < 9; facing++) {
+				bits[facing] = new Vector.<BitmapData>(3);
+				bits[facing].fixed = true;
+				for (var foot:int = 0; foot < 3; foot++) {
+					bits[facing][foot] = new BitmapData(Prop.WIDTH, Prop.HEIGHT - unusedPixelsAtTopOfCell);
+				}
+			}
+		}
 
 		private function copyBitsFromImagePane(bitmapData:BitmapData):void {
 			var fullPane:Boolean = true;
@@ -88,15 +105,14 @@ package angel.common {
 				fullPane = false;
 			}
 			var zerozero:Point = new Point(0, 0);
-			var sourceRect:Rectangle = new Rectangle(0, 0, Prop.WIDTH, Prop.HEIGHT);
+			var sourceRect:Rectangle = new Rectangle(0, 0, Prop.WIDTH, Prop.HEIGHT - unusedPixelsAtTopOfCell); // x,y will change as we loop
 			for (var facing:int = 0; facing < 9; facing++) {
-				for (var j:int = 0; j < 3; j++) {
+				for (var foot:int = 0; foot < 3; foot++) {
 					if (fullPane) {
 						sourceRect.x = imageColumn[facing] * Prop.WIDTH;
-						sourceRect.y = j * Prop.HEIGHT;
+						sourceRect.y = (foot * Prop.HEIGHT) + unusedPixelsAtTopOfCell;
 					}
-					bits[facing][j].fillRect(bits[facing][j].rect, 0);
-					bits[facing][j].copyPixels(bitmapData, sourceRect, zerozero);
+					bits[facing][foot].copyPixels(bitmapData, sourceRect, zerozero);
 				}
 			}
 		}
@@ -106,6 +122,19 @@ package angel.common {
 			return bits[facing][step];
 		}
 		
+		// for use in editor only
+		public function increaseTop(additionalTop:int):void {
+			unusedPixelsAtTopOfCell += additionalTop;
+			var zerozero:Point = new Point(0, 0);
+			var sourceRect:Rectangle = new Rectangle(0, additionalTop, Prop.WIDTH, Prop.HEIGHT - unusedPixelsAtTopOfCell);
+			var clearRect:Rectangle = new Rectangle(0, bits[0][0].rect.height - additionalTop, Prop.WIDTH, additionalTop);
+			for (var facing:int = 0; facing < 9; facing++) {
+				for (var foot:int = 0; foot < 3; foot++) {
+					bits[facing][foot].copyPixels(bits[facing][foot], sourceRect, zerozero);
+					bits[facing][foot].fillRect(clearRect, 0xffffffff);
+				}
+			}
+		}
 		
 	}
 

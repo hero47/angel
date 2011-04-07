@@ -4,7 +4,9 @@ package angel.roomedit {
 	import angel.common.KludgeDialogBox;
 	import angel.common.SimplerButton;
 	import angel.common.Tileset;
+	import angel.common.WalkerImage;
 	import fl.controls.ComboBox;
+	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.text.TextField;
@@ -20,7 +22,7 @@ package angel.roomedit {
 		
 		private var finishedEditNamesButton:SimplerButton;
 		
-		private var newTilesetFilename:String;
+		private var newFilename:String;
 		private var tilesetId:String;
 		private var propId:String;
 		
@@ -42,9 +44,23 @@ package angel.roomedit {
 			button.y = 5;
 			button.width = 100;
 			addChild(button);
+			left += button.width + 20;
+			
+			button = new SimplerButton("Add Prop", clickedAddProp);
+			button.x = left;
+			button.y = 5;
+			button.width = 100;
+			addChild(button);
 			left += button.width + 5;
 			
 			button = new SimplerButton("Edit props", clickedEditProp);
+			button.x = left;
+			button.y = 5;
+			button.width = 100;
+			addChild(button);
+			left += button.width + 20;
+			
+			button = new SimplerButton("Add NPC", clickedAddNpc);
 			button.x = left;
 			button.y = 5;
 			button.width = 100;
@@ -56,7 +72,7 @@ package angel.roomedit {
 			button.y = 5;
 			button.width = 100;
 			addChild(button);
-			left += button.width + 5;
+			left += button.width + 20;
 			
 			button = new SimplerButton("Save Catalog", clickedSaveCatalog);
 			button.x = left;
@@ -86,14 +102,32 @@ package angel.roomedit {
 		}
 		
 		private function userSelectedNewTilesetFile(filename:String):void {
-			newTilesetFilename = filename;
-			launchTilesetIdDialog();
+			newFilename = filename;
+			launchIdDialog("tileset", userEnteredNameForNewTileset);
 		}
 		
-		public function launchTilesetIdDialog(previousError:String = null):void {
+		private function clickedAddNpc(event:Event):void {
+			new FileChooser(userSelectedNewNpcFile, null, false);
+		}
+		
+		private function userSelectedNewNpcFile(filename:String):void {
+			newFilename = filename;
+			launchIdDialog("NPC", userEnteredNameForNewNpc);
+		}
+		
+		private function clickedAddProp(event:Event):void {
+			new FileChooser(userSelectedNewPropFile, null, false);
+		}
+		
+		private function userSelectedNewPropFile(filename:String):void {
+			newFilename = filename;
+			launchIdDialog("prop", userEnteredNameForNewProp);
+		}
+		
+		public function launchIdDialog(idForWhat:String, callback:Function, previousError:String = null):void {
 			//var filename:String = newlyLoadedTileset.catalogEntry.filename;
 			//var defaultIdBase:String = filename.slice(0, filename.lastIndexOf("."));
-			var defaultIdBase:String = newTilesetFilename.slice(0, newTilesetFilename.lastIndexOf("."));
+			var defaultIdBase:String = newFilename.slice(0, newFilename.lastIndexOf("."));
 			var defaultId:String = defaultIdBase;
 			var num:int = 1;
 			while (catalog.entry(defaultId) != null) {
@@ -104,8 +138,8 @@ package angel.roomedit {
 			options.buttons = ["OK", "Cancel"];
 			options.inputs = ["id:"];
 			options.defaultValues = [defaultId];
-			options.callback = userEnteredNameForNewTileset;
-			var text:String = "Enter catalog id for tileset";
+			options.callback = callback;
+			var text:String = "Enter catalog id for " + idForWhat;
 			if (previousError != null) {
 				text = previousError + "\n" + text;
 			}
@@ -116,8 +150,8 @@ package angel.roomedit {
 			if (buttonClicked != "OK") {
 				return;
 			}
-			if (!catalog.addCatalogEntry(values[0], newTilesetFilename, CatalogEntry.TILESET)) {
-				launchTilesetIdDialog("Error -- id '" + values[0] + "' already in use.");
+			if (!catalog.addCatalogEntry(values[0], newFilename, CatalogEntry.TILESET)) {
+				launchIdDialog("tileset", userEnteredNameForNewTileset, "Error -- id '" + values[0] + "' already in use.");
 				return;
 			}
 			tilesetId = values[0];
@@ -128,6 +162,46 @@ package angel.roomedit {
 			var xml:XML = tileset.renderAsXml(tilesetId);
 			catalog.appendXml(xml);
 			displayTilesForEditNames();
+		}
+		
+		private function userEnteredNameForNewNpc(buttonClicked:String, values:Array):void {
+			if (buttonClicked != "OK") {
+				return;
+			}
+			
+			var id:String = values[0];
+			
+			if (!catalog.addCatalogEntry(id, newFilename, CatalogEntry.WALKER)) {
+				launchIdDialog("NPC", userEnteredNameForNewNpc, "Error -- id '" + id + "' already in use.");
+				return;
+			}
+			
+			var xml:XML = <walker/>;
+			xml.@file = newFilename;
+			xml.@id = id;
+			catalog.appendXml(xml);
+			
+			showEditNpcDialog(id);
+		}
+		
+		private function userEnteredNameForNewProp(buttonClicked:String, values:Array):void {
+			if (buttonClicked != "OK") {
+				return;
+			}
+			
+			var id:String = values[0];
+			
+			if (!catalog.addCatalogEntry(id, newFilename, CatalogEntry.PROP)) {
+				launchIdDialog("prop", userEnteredNameForNewNpc, "Error -- id '" + id + "' already in use.");
+				return;
+			}
+			
+			var xml:XML = <prop/>;
+			xml.@file = newFilename;
+			xml.@id = id;
+			catalog.appendXml(xml);
+			
+			showEditPropDialog(id);
 		}
 		
 		private var tilesetCombo:ComboBox;
@@ -165,15 +239,23 @@ package angel.roomedit {
 		}
 		
 		private function clickedEditProp(event:Event):void {
+			showEditPropDialog();
+		}
+		
+		private function showEditPropDialog(id:String = null):void {
 			KludgeDialogBox.init(stage);
-			var options:Object = { buttons:["Done"], inputs:[], customControl:new PropEditUI(catalog) };
+			var options:Object = { buttons:["Done"], inputs:[], customControl:new PropEditUI(catalog, id) };
 			var text:String = "Edit prop";
 			KludgeDialogBox.show(text, options);
 		}
 		
 		private function clickedEditNpc(event:Event):void {
+			showEditNpcDialog();
+		}
+		
+		private function showEditNpcDialog(id:String = null):void {
 			KludgeDialogBox.init(stage);
-			var options:Object = { buttons:["Done"], inputs:[], customControl:new NpcEditUI(catalog) };
+			var options:Object = { buttons:["Done"], inputs:[], customControl:new NpcEditUI(catalog, id) };
 			var text:String = "Edit NPC";
 			KludgeDialogBox.show(text, options);
 		}

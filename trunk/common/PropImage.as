@@ -15,7 +15,7 @@ package angel.common {
 		
 		private var entry:CatalogEntry;
 		public var imageData:BitmapData;
-		public var solid:uint;
+		public var solid:uint = Prop.DEFAULT_SOLIDITY;
 		
 		public function PropImage() {
 			

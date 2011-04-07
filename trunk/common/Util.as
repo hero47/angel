@@ -24,6 +24,7 @@ package angel.common {
 					editable:Boolean=false, textColor:uint = 0):TextField {
 			var myTextField:TextField = new TextField();
 			myTextField.textColor = textColor;
+			myTextField.backgroundColor = (textColor > 0x880000 ? 0 : 0xffffff); // but won't be visible unless you set background=true
 			myTextField.selectable = editable;
 			myTextField.width = width;
 			myTextField.height = height;
