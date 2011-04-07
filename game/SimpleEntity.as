@@ -23,7 +23,7 @@ package angel.game {
 			aaId = id + "-" + String(totalEntitiesCreated);
 		}
 	
-		public static function loadFromXml(propXml: XML, catalog:Catalog) : SimpleEntity {
+		public static function createFromRoomContentsXml(propXml: XML, catalog:Catalog) : SimpleEntity {
 			var id:String = propXml;
 			var propImage:PropImage = catalog.retrievePropImage(id);
 			var simpleEntity:SimpleEntity = new SimpleEntity(new Bitmap(propImage.imageData), propImage.solid, id);

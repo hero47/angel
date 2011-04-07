@@ -81,7 +81,7 @@ package angel.game {
 		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander };
 		private static const combatBrain:Object = { wander:CombatBrainWander };
 
-		public static function loadFromXml(walkerXml:XML, catalog:Catalog):Walker {
+		public static function createFromRoomContentsXml(walkerXml:XML, catalog:Catalog):Walker {
 			var id:String = walkerXml;
 			var walker:Walker = new Walker(catalog.retrieveWalkerImage(id), id);
 			walker.myLocation = new Point(walkerXml.@x, walkerXml.@y);

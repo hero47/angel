@@ -120,6 +120,8 @@ package angel.game {
 		private function initEntityForCombat(entity:ComplexEntity):void {
 			entity.initHealth();
 			entity.actionsRemaining = 0;
+
+			entity.setTextOverHead(String(entity.currentHealth));
 			
 			if (entity.isPlayerControlled) {
 				fighters.push(entity);
@@ -150,6 +152,8 @@ package angel.game {
 			entity.exitCurrentMode();
 			room.decorationsLayer.removeChild(entity.marker);
 			entity.marker = null;
+
+			entity.setTextOverHead(null);
 		}
 		
 		//NOTE: grid lines are tweaked up by one pixel because the tile image bitmaps actually extend one pixel outside the
@@ -313,6 +317,8 @@ package angel.game {
 		
 		private function damage(entity:ComplexEntity, points:int):void {
 			entity.currentHealth -= points;
+			entity.setTextOverHead(String(entity.currentHealth));
+
 			trace(entity.aaId, "damaged, health now", entity.currentHealth);
 			if (entity.isPlayerControlled) {
 				adjustPlayerHealthDisplay(entity.currentHealth);

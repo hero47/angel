@@ -378,10 +378,10 @@ package angel.game {
 
 		public function fillContentsFromXml(catalog:Catalog, contentsXml: XML):void {
 			for each (var propXml: XML in contentsXml.prop) {
-				addEntityUsingItsLocation(SimpleEntity.loadFromXml(propXml, catalog));
+				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXml(propXml, catalog));
 			}
 			for each (var walkerXml: XML in contentsXml.walker) {
-				addEntityUsingItsLocation(Walker.loadFromXml(walkerXml, catalog));
+				addEntityUsingItsLocation(Walker.createFromRoomContentsXml(walkerXml, catalog));
 			}
 		}
 		

@@ -17,6 +17,10 @@ package angel.game {
 	import flash.filters.GlowFilter;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.text.TextField;
+	import flash.text.TextFieldAutoSize;
+	import flash.text.TextFormat;
+	import flash.text.TextFormatAlign;
 
 	// A physical object in the game world -- we aren't yet distinguishing between pc/npc/mobile/immobile.
 	
@@ -25,6 +29,8 @@ package angel.game {
 		private static const PIXELS_FOR_ADJACENT_MOVE:int = Math.sqrt(Tileset.TILE_WIDTH * Tileset.TILE_WIDTH/4 + Tileset.TILE_HEIGHT * Tileset.TILE_HEIGHT/4);
 		private static const PIXELS_FOR_VERT_MOVE:int = Tileset.TILE_HEIGHT;
 		private static const PIXELS_FOR_HORZ_MOVE:int = Tileset.TILE_WIDTH;
+		
+		private static const TEXT_OVER_HEAD_HEIGHT:int = 20;
 		
 		public static const GAIT_EXPLORE:int = 0;
 		//NOTE: if distance allows walking, gait can be walk/run/sprint; if distance allows running, can be run/sprint
@@ -69,6 +75,8 @@ package angel.game {
 		// if non-null, drawn on decorations layer
 		public var marker:Shape;
 		
+		private var textOverHead:TextField;
+		
 		private var moveGoal:Point; // the tile we're trying to get to
 		private var path:Vector.<Point>; // the tiles we're trying to move through to get there
 		private var movingTo:Point; // the tile we're immediately in the process of moving onto
@@ -80,7 +88,7 @@ package angel.game {
 		
 		// id is for debugging use only
 		public function ComplexEntity(image:Bitmap, id:String = "") {
-			super(image, Prop.DEFAULT_SOLIDITY, id);			
+			super(image, Prop.DEFAULT_SOLIDITY, id);
 		}
 						
 		public function isEnemy():Boolean {
@@ -140,6 +148,22 @@ package angel.game {
 		// Reset health at start and end of combat.
 		public function initHealth():void {
 			currentHealth = maxHealth;
+		}
+		
+		public function setTextOverHead(value:String):void {
+			if ((value == null) && (textOverHead != null)) {
+				textOverHead.visible = false;
+			} else if (value != null) {
+				if (textOverHead == null) {
+					textOverHead = Util.textBox("", Prop.WIDTH, TEXT_OVER_HEAD_HEIGHT, TextFormatAlign.CENTER);
+					textOverHead.background = true;
+					textOverHead.autoSize = TextFieldAutoSize.CENTER;
+					textOverHead.y = imageBitmap.y - TEXT_OVER_HEAD_HEIGHT - 2;
+					addChild(textOverHead);
+				}
+				textOverHead.visible = true;
+				textOverHead.text = value;
+			}
 		}
 				
 		public function startDeathAnimation():void {

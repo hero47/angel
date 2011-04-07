@@ -27,17 +27,15 @@ package angel.common {
 		protected var myDepth:Number = -Infinity;
 		
 		// Size of art assets for prop
+		// NOTE: the prop itself may be shorter than this!
 		public static const WIDTH:int = 64;
 		public static const HEIGHT:int = 128;
 		
-		// offsets from top corner of a tile's bounding box, to top corner of prop's bounding box when standing on it
-		private static const OFFSET_X:int = 0;
-		private static const OFFSET_Y:int = -96;
-		
-		
 		public function Prop(bitmap:Bitmap = null) {
 			imageBitmap = bitmap;
-			if (bitmap != null) {
+			if (imageBitmap != null) {
+				 // for convenience, make 0,0 of prop be the same location as 0,0 of the tile it's standing on
+				imageBitmap.y = -imageBitmap.height + Tileset.TILE_HEIGHT;
 				addChild(imageBitmap);
 			}
 		}
@@ -70,7 +68,7 @@ package angel.common {
 		
 		protected function pixelLocStandingOnTile(tileLoc:Point):Point {
 			var tilePixelLoc:Point = Floor.tileBoxCornerOf(tileLoc);
-			return new Point(tilePixelLoc.x + OFFSET_X, tilePixelLoc.y + OFFSET_Y);
+			return new Point(tilePixelLoc.x, tilePixelLoc.y);
 		}
 		
 		protected function get depth():Number {
