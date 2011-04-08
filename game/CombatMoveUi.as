@@ -20,16 +20,10 @@ package angel.game {
 		private var player:ComplexEntity;
 		private var oldMarkerColorTransform:ColorTransform;
 		
-		private var movePointsDisplay:TextField;
-		private static const MOVE_POINTS_PREFIX:String = "Move: ";
 		
 		public function CombatMoveUi(room:Room, combat:RoomCombat) {
 			this.combat = combat;
 			this.room = room;
-			
-			movePointsDisplay = createMovePointsTextField();
-			movePointsDisplay.x = 10;
-			movePointsDisplay.y = 30;
 		}
 		
 		/* INTERFACE angel.game.IUi */
@@ -39,15 +33,14 @@ package angel.game {
 			this.player = player;
 			oldMarkerColorTransform = player.marker.transform.colorTransform;
 			player.marker.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
-			adjustMovePointsDisplay(player.combatMovePoints);
-			room.parent.addChild(movePointsDisplay);		
+			combat.statDisplay.adjustMovePointsDisplay(player.combatMovePoints);
 		}
 		
 		public function disable():void {
 			trace("ending player move phase for", player.aaId);
 			player.marker.transform.colorTransform = oldMarkerColorTransform;
 			this.player = null;
-			room.parent.removeChild(movePointsDisplay);
+			combat.statDisplay.adjustMovePointsDisplay(-1);
 			room.moveHilight(null, 0);
 		}
 		
@@ -89,7 +82,7 @@ package angel.game {
 					var pathToMouse:Vector.<Point> = player.findPathTo(loc, currentEnd);
 					if (pathToMouse != null && pathToMouse.length <= player.combatMovePoints - combat.path.length) {
 						combat.extendPath(player, pathToMouse);
-						adjustMovePointsDisplay(player.combatMovePoints - combat.path.length);
+						combat.statDisplay.adjustMovePointsDisplay(player.combatMovePoints - combat.path.length);
 					}
 				}
 			}
@@ -159,7 +152,7 @@ package angel.game {
 		private function removePath():void {
 			combat.clearDots(0);
 			combat.path.length = 0;
-			adjustMovePointsDisplay(player.combatMovePoints);
+			combat.statDisplay.adjustMovePointsDisplay(player.combatMovePoints);
 		}
 		
 		private function removeLastPathSegment():void {
@@ -169,20 +162,8 @@ package angel.game {
 				var clearFrom:int = (ends == 0 ? 0 : combat.endIndexes[ends - 1] + 1);
 				combat.clearDots(clearFrom);
 				combat.path.length = combat.dots.length;
-				adjustMovePointsDisplay(player.combatMovePoints - combat.path.length);
+				combat.statDisplay.adjustMovePointsDisplay(player.combatMovePoints - combat.path.length);
 			}
-		}
-		
-		private function createMovePointsTextField():TextField {
-			var myTextField:TextField = Util.textBox("", 80, 20, TextFormatAlign.CENTER, false);
-			myTextField.border = true;
-			myTextField.background = true;
-			myTextField.backgroundColor = 0xffffff;
-			return myTextField;
-		}
-		
-		private function adjustMovePointsDisplay(points:int):void {
-				movePointsDisplay.text = MOVE_POINTS_PREFIX + String(points);
 		}
 		
 	} // end class CombatMoveUi

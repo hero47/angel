@@ -13,6 +13,7 @@ package angel.game {
 		
 		private var walkerImage:WalkerImage;
 		private var deathTimer:Timer;
+		private var solidnessWhenAlive:uint;
 		
 		private static const DEATH_DURATION:int = 500; // milliseconds
 		private static const WALK_FRAMES:Vector.<int> = Vector.<int>([WalkerImage.LEFT, WalkerImage.STAND,
@@ -24,7 +25,7 @@ package angel.game {
 			facing = WalkerImage.FACE_CAMERA;
 			super(new Bitmap(walkerImage.bitsFacing(facing)), id);
 			this.maxHealth = this.currentHealth = walkerImage.health;
-			this.solidness = Prop.DEFAULT_SOLIDITY; // no ghostly/short characters... at least, not yet
+			solidness = solidnessWhenAlive = Prop.DEFAULT_SOLIDITY; // no ghostly/short characters... at least, not yet
 		}
 
 		override protected function adjustImageForMove():void {
@@ -49,6 +50,7 @@ package angel.game {
 		override public function initHealth():void {
 			super.initHealth();
 			stopDying();
+			solidness = solidnessWhenAlive;
 			imageBitmap.bitmapData = walkerImage.bitsFacing(facing); // stand back up if we were dead
 		}
 		

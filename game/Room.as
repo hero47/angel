@@ -301,7 +301,7 @@ package angel.game {
 				mainPlayerCharacter = entity;
 			}
 			addEntity(entity, location);
-			entity.isPlayerControlled = true;
+			entity.makePlayerControlled();
 		}
 		
 		// This will generally be called by the entity as it crosses the boundary between one floor tile
