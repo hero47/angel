@@ -69,7 +69,7 @@ package angel.game {
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
 		public var brain:Object;
 		
-		public var isPlayerControlled:Boolean;
+		private var playerControlled:Boolean;
 		public var bestFriend:ComplexEntity; // for use by brain, persists through mode transitions
 
 		// if non-null, drawn on decorations layer
@@ -89,6 +89,17 @@ package angel.game {
 		// id is for debugging use only
 		public function ComplexEntity(image:Bitmap, id:String = "") {
 			super(image, Prop.DEFAULT_SOLIDITY, id);
+			gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed *2, Settings.runSpeed*2, Settings.sprintSpeed*2]);
+		
+		}
+		
+		public function makePlayerControlled():void {
+			playerControlled = true;
+			gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
+		}
+		
+		public function get isPlayerControlled():Boolean {
+			return playerControlled;
 		}
 						
 		public function isEnemy():Boolean {
@@ -203,6 +214,12 @@ package angel.game {
 			facing = newFacing;
 		}
 		
+		// Turn to the facing that closest approximates that direction
+		public function turnToFaceTile(loc:Point):void {
+			var angle:int = Util.findRotFacingVector(loc.subtract(myLocation)) + 360 + 22;
+			turnToFacing((angle / 45) % 8);
+		}
+		
 		// fills in coordsForEachFrameOfMove, depthChangePerFrame, and facing
 		// This is a horrid name but I haven't been able to think of a better one or a better refactoring
 		private function calculateStuffForMovementFrames():void {
@@ -267,11 +284,11 @@ package angel.game {
 			adjustDrawOrder();
 			
 			if (room.mode is RoomExplore) {
-				if (isPlayerControlled && (Settings.testExploreScroll > 0)) {
+				if (playerControlled && (Settings.testExploreScroll > 0)) {
 					scrollRoomToKeepPlayerWithinBox(Settings.testExploreScroll);
 				}
 			} else {
-				if (isPlayerControlled || Settings.showEnemyMoves) {
+				if (playerControlled || Settings.showEnemyMoves) {
 					centerRoomOnMe();
 				}
 			}

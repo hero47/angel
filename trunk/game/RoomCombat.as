@@ -49,11 +49,18 @@ package angel.game {
 		private static const PLAYER_MARKER_COLOR:uint = 0x0000ff;
 		private static const GRID_COLOR:uint = 0xff0000;
 		
+		private static const PLAYER_MOVE:String = "Move";
+		private static const ENEMY_MOVE:String = "Enemy Action";
+		private static const PLAYER_FIRE:String = "Attack";
+		private static const ENEMY_FIRE:String = "Enemy Action";
+		
 		private static const PAUSE_TO_VIEW_MOVE_TIME:int = 1000;
 		private static const PAUSE_TO_VIEW_FIRE_TIME:int = 1000;
 		
-		private var playerHealthDisplay:TextField;
-		private static const PLAYER_HEALTH_PREFIX:String = "Health: ";		
+		public var statDisplay:CombatStatDisplay;
+		private var modeLabel:TextField;
+		private var enemyTurnOverlay:Shape;
+		
 		private var enemyHealthDisplay:TextField;
 		private static const ENEMY_HEALTH_PREFIX:String = "Enemy: ";
 
@@ -76,21 +83,31 @@ package angel.game {
 			room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, entityStandingOnNewTile);
 			room.addEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
 			
-			playerHealthDisplay = createHealthTextField();
-			playerHealthDisplay.x = 10;
-			playerHealthDisplay.y = 10;
-			adjustPlayerHealthDisplay(room.mainPlayerCharacter.currentHealth);
-			room.stage.addChild(playerHealthDisplay);
+			statDisplay = new CombatStatDisplay();
+			room.stage.addChild(statDisplay);
 			
-			enemyHealthDisplay = createHealthTextField();
+			enemyTurnOverlay = new Shape();
+			enemyTurnOverlay.graphics.beginFill(0x4E7DB1, 0.3); // color to match alert, no clue where that number came from, heh
+			enemyTurnOverlay.graphics.drawRect(0, 0, room.stage.stageWidth, room.stage.stageHeight);
+			enemyTurnOverlay.graphics.endFill();
+			
+			enemyHealthDisplay = CombatStatDisplay.createHealthTextField();
 			enemyHealthDisplay.x = room.stage.stageWidth - enemyHealthDisplay.width - 10;
 			enemyHealthDisplay.y = 10;
 			adjustEnemyHealthDisplay(-1);
 			room.stage.addChild(enemyHealthDisplay);
 			
+			modeLabel = Util.textBox("", 300, 60, TextFormatAlign.CENTER, false, 0xffffff);
+			modeLabel.mouseEnabled = false;
+			//modeLabel.background = true;
+			modeLabel.x = (room.stage.stageWidth - modeLabel.width) / 2;
+			modeLabel.y = 5;
+			room.stage.addChild(modeLabel);
+			
 			moveUi = new CombatMoveUi(room, this);
 			fireUi = new CombatFireUi(room, this);
-			room.enableUi(moveUi, room.mainPlayerCharacter);
+			
+			beginTurnForCurrentFighter();
 		}
 
 		private function makeMainPlayerGoFirst():void {			
@@ -110,7 +127,8 @@ package angel.game {
 			
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
 			clearDots();
-			room.stage.removeChild(playerHealthDisplay);
+			room.stage.removeChild(statDisplay);
+			room.stage.removeChild(modeLabel);
 			
 			for (var i:int = 0; i < fighters.length; i++) {
 				cleanupEntityFromCombat(fighters[i]);
@@ -150,8 +168,10 @@ package angel.game {
 		
 		private function cleanupEntityFromCombat(entity:ComplexEntity):void {
 			entity.exitCurrentMode();
-			room.decorationsLayer.removeChild(entity.marker);
-			entity.marker = null;
+			if (entity.marker != null) {
+				room.decorationsLayer.removeChild(entity.marker);
+				entity.marker = null;
+			}
 
 			entity.setTextOverHead(null);
 		}
@@ -171,19 +191,7 @@ package angel.game {
 				graphics.moveTo(startPoint.x - (i * Floor.FLOOR_TILE_X), startPoint.y + (i * Floor.FLOOR_TILE_Y) - 1);
 				graphics.lineTo(endPoint.x - (i * Floor.FLOOR_TILE_X), endPoint.y + (i * Floor.FLOOR_TILE_Y) - 1);
 			}
-		}
-		
-		private function createHealthTextField():TextField {
-			var myTextField:TextField = Util.textBox("", 100, 20, TextFormatAlign.CENTER, false);
-			myTextField.border = true;
-			myTextField.background = true;
-			myTextField.backgroundColor = 0xffffff;
-			return myTextField;
-		}
-		
-		private function adjustPlayerHealthDisplay(points:int):void {
-			playerHealthDisplay.text = PLAYER_HEALTH_PREFIX + String(points);
-		}
+		}		
 		
 		public function adjustEnemyHealthDisplay(points:int):void {
 			if (points < 0) {
@@ -300,6 +308,9 @@ package angel.game {
 				room.addChild(reserveFireSprite);
 			} else {
 				trace(shooter.aaId, "firing at", target.aaId, target.location);
+				
+				shooter.turnToFaceTile(target.location);
+				
 				--shooter.actionsRemaining;
 				damage(target, shooter.weaponDamage() - target.defense());
 				
@@ -320,11 +331,14 @@ package angel.game {
 			entity.setTextOverHead(String(entity.currentHealth));
 
 			trace(entity.aaId, "damaged, health now", entity.currentHealth);
-			if (entity.isPlayerControlled) {
-				adjustPlayerHealthDisplay(entity.currentHealth);
+			
+			//Current stat display is an ugly grab-bag of misc. bits with no coherence
+			if (entity.isPlayerControlled && (entity == currentFighter())) {
+				statDisplay.adjustCombatStatDisplay(entity);
 			}
 			
 			if (entity.currentHealth <= 0) {
+				entity.solidness ^= Prop.TALL; // Dead entities are short, by fiat.
 				entity.startDeathAnimation();
 				if (entity == room.mainPlayerCharacter) {
 					combatOver = true;
@@ -404,6 +418,11 @@ if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
 				if (fighters[i].isPlayerControlled != entityMoving.isPlayerControlled) {
 					// WARNING: using ||= prevents it from executing the function if it's already true!
 					someoneDidOpportunityFire = (opportunityFire(fighters[i], entityMoving) || someoneDidOpportunityFire);
+					if (entityMoving.currentHealth <= 0) {
+						// If the target is dead, it will have been removed from fighters
+						// and this loop is no longer valid!
+						break;
+					}
 				}
 			}
 			
@@ -472,8 +491,10 @@ if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
 			currentFighter().actionsRemaining = 1; // everyone gets one action per turn, at least for now
 			if (currentFighter().isPlayerControlled) {
 				room.enableUi(fireUi, currentFighter());
+				modeLabel.text = PLAYER_FIRE;
 			} else {
 				currentFighter().brain.doFire();
+				modeLabel.text = ENEMY_FIRE;
 			}
 		}
 		
@@ -496,26 +517,38 @@ if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
 				room.mainPlayerCharacter.centerRoomOnMe();
 			}
 			
-			
-			if (currentFighter().isPlayerControlled) {
-				room.enableUi(moveUi, currentFighter());
+			beginTurnForCurrentFighter();
+		}
+		
+		// Called each time the timer for gazing at the enemy's move dots expires
+		private function doPlottedEnemyMove():void {
+			trace("enemyMoveTimerListener for fighter #", iFighterTurnInProgress, currentFighter().aaId);
+			currentFighter().brain.doMove();
+		}
+		
+		private function beginTurnForCurrentFighter():void {
+			var fighter:ComplexEntity = currentFighter();
+			if (fighter.isPlayerControlled) {
+				if (enemyTurnOverlay.parent != null) {
+					enemyTurnOverlay.parent.removeChild(enemyTurnOverlay);
+				}
+				statDisplay.adjustCombatStatDisplay(fighter);
+				room.enableUi(moveUi, fighter);
+				modeLabel.text = PLAYER_MOVE;
 			} else {
+				room.stage.addChild(enemyTurnOverlay);
+				statDisplay.adjustCombatStatDisplay(null);
+				modeLabel.text = ENEMY_MOVE;
+				
 				// Give the player some time to gaze at the enemy's move dots before continuing with turn.
 				// (The timer will be running while enemy calculates move, so if that takes a while once we
 				// start complicating the AI, then there may be a delay before the move dots are drawn, but
 				// the total time between enemy's turn starting and enemy beginning to follow dots should
 				// stay at that time unless we're really slow.)
-				// CONSIDER: We may put up some sort of "enemy moving" overlay
-				room.pause(PAUSE_TO_VIEW_MOVE_TIME, finishedEnemyMove);
+				room.pause(PAUSE_TO_VIEW_MOVE_TIME, doPlottedEnemyMove);
 				
-				currentFighter().brain.chooseMoveAndDrawDots();
+				fighter.brain.chooseMoveAndDrawDots();
 			}
-		}
-		
-		// Called each time the timer for gazing at the enemy's move dots expires
-		private function finishedEnemyMove():void {
-			trace("enemyMoveTimerListener for fighter #", iFighterTurnInProgress, currentFighter().aaId);
-			currentFighter().brain.doMove();
 		}
 		
 		private function currentFighter():ComplexEntity {
@@ -531,15 +564,16 @@ if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
 		}
 		
 		private function removeFighterFromCombat(deadFighter:ComplexEntity):void {
-			cleanupEntityFromCombat(deadFighter);
 			var indexOfDeadFighter:int = fighters.indexOf(deadFighter);
+			Assert.assertTrue(indexOfDeadFighter >= 0, "Removing fighter that's already removed: " + deadFighter.aaId);
 			if (indexOfDeadFighter == iFighterTurnInProgress) {
 				clearDots();
 			}
 			if (indexOfDeadFighter <= iFighterTurnInProgress) {
 				--iFighterTurnInProgress;
 			}
-			fighters.splice(indexOfDeadFighter, 1);			
+			fighters.splice(indexOfDeadFighter, 1);
+			cleanupEntityFromCombat(deadFighter);
 		}
 		
 	} // end class RoomCombat

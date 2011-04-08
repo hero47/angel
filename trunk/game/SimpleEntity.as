@@ -56,7 +56,7 @@ package angel.game {
 		}
 		
 		public function center():Point {
-			return new Point(this.width / 2 + this.x, this.height / 2 + this.y);
+			return new Point(this.width / 2 + this.x, imageBitmap.height / 2 + imageBitmap.y + this.y);
 		}
 
 	}	

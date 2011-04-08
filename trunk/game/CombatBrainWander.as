@@ -68,7 +68,7 @@ package angel.game {
 				reachable[i].length = 0;
 			}
 			var count:int = 0;
-			var steps:Vector.<Vector.<int>> = me.findReachableTiles(me.location, me.gaitSpeeds[ComplexEntity.GAIT_SPRINT]);
+			var steps:Vector.<Vector.<int>> = me.findReachableTiles(me.location, me.combatMovePoints);
 			for (var x:int = 0; x < combat.room.size.x; ++x) {
 				for (var y:int = 0; y < combat.room.size.y; ++y) {
 					if (steps[x][y] > 0) {
