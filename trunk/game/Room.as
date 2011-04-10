@@ -155,6 +155,7 @@ package angel.game {
 			
 			if (ui != null) {
 				ui.disable();
+				ui = null;
 			}
 		}
 		
