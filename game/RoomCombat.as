@@ -202,7 +202,7 @@ package angel.game {
 			}	
 		}
 		
-		private function playerDeathOk(button:String):void {
+		private function combatOverOk(button:String):void {
 			room.changeModeTo(RoomExplore);
 		}
 		
@@ -342,9 +342,14 @@ package angel.game {
 				entity.startDeathAnimation();
 				if (entity == room.mainPlayerCharacter) {
 					combatOver = true;
-					Alert.show("You have been taken out.", { callback:playerDeathOk } );
+					Alert.show("You have been taken out.", { callback:combatOverOk } );
 				} else {
 					removeFighterFromCombat(entity);
+					if (allEnemiesAreDead()) {
+						combatOver = true;
+						Alert.show("You won.", { callback:combatOverOk } );
+						
+					}
 				}
 			}
 		}
@@ -481,6 +486,12 @@ if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
 		// (specifically, during ENTER_FRAME for last frame of movement)
 		// Advance to that entity's fire phase.
 		private function finishedMovingListener(event:EntityEvent):void {
+			if (combatOver) {
+				// don't allow next enemy to fire, don't enable player UI, just wait for them to OK the message,
+				// which will end combat mode.
+				return;
+			}
+			
 			//event.entity won't match currentFighter() if moving entity was killed by opportunity fire
 			if (event.entity != currentFighter()) {
 				trace("fighter", iFighterTurnInProgress, "was killed, don't give them a fire phase");
@@ -574,6 +585,15 @@ if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
 			}
 			fighters.splice(indexOfDeadFighter, 1);
 			cleanupEntityFromCombat(deadFighter);
+		}
+		
+		private function allEnemiesAreDead():Boolean {
+			for (var i:int = 0; i < fighters.length; i++) {
+				if (!fighters[i].isPlayerControlled) {
+					return false;
+				}
+			}
+			return true;
 		}
 		
 	} // end class RoomCombat
