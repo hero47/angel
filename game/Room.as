@@ -129,6 +129,11 @@ package angel.game {
 		/********** Player UI-related  ****************/
 		// CONSIDER: Move this into a class, have the things that now implement IRoomUi subclass it?
 		
+		// It appears that under hard-to-reproduce conditions, we can have a UI event pending, disable the UI, and
+		// then go on to process the UI event.  To avoid this, all of these UI listeners are going to check for
+		// null ui.  Yuck.
+		
+		
 		// call this when player-controlled part of the turn begins, to allow player to enter move
 		public function enableUi(newUi:IRoomUi, player:ComplexEntity):void {
 			ui = newUi;
@@ -161,6 +166,9 @@ package angel.game {
 		
 		
 		private function keyDownListener(event:KeyboardEvent):void {
+			if (ui == null) {
+				return;
+			}
 			switch (event.keyCode) {
 				case Util.KEYBOARD_V:
 					toggleVisibility();
@@ -173,10 +181,16 @@ package angel.game {
 		}
 		
 		private function mouseMoveListener(event:MouseEvent):void {
+			if (ui == null) {
+				return;
+			}
 			ui.mouseMove(event.target as FloorTile);
 		}
 
 		private function mouseDownListener(event:MouseEvent):void {
+			if (ui == null) {
+				return;
+			}
 			if (event.shiftKey) {
 				addEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
 				startDrag();
@@ -187,11 +201,17 @@ package angel.game {
 		}
 
 		private function mouseUpListener(event:MouseEvent):void {
+			if (ui == null) {
+				return;
+			}
 			removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
 			stopDrag();
 		}
 		
 		private function mouseClickListener(event:MouseEvent):void {
+			if (ui == null) {
+				return;
+			}
 			if (event.ctrlKey) {
 				// Temporary since Flash Projector doesn't support right-button events.
 				// If/when we switch to AIR this will be replaced with a real right click listener.
@@ -204,6 +224,9 @@ package angel.game {
 		}
 		
 		private function rightClickListener(event:MouseEvent):void {
+			if (ui == null) {
+				return;
+			}
 			if (!(event.target is FloorTile)) {
 				return;
 			}
