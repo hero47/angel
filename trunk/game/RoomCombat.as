@@ -74,7 +74,7 @@ package angel.game {
 			Util.shuffle(fighters); // enemy turn order is randomized at start of combat and stays the same thereafter
 			
 			makeMainPlayerGoFirst();
-			trace(fighters);
+			adjustAllEnemyVisibility();
 
 			// These listeners can only trigger in specific phases, and finishedMoving advances the phase.
 			// I'm keeping them around throughout combat rather than adding and removing them as we flip
@@ -129,6 +129,9 @@ package angel.game {
 			clearDots();
 			room.stage.removeChild(statDisplay);
 			room.stage.removeChild(modeLabel);
+			if (enemyTurnOverlay.parent != null) {
+				enemyTurnOverlay.parent.removeChild(enemyTurnOverlay);
+			}
 			
 			for (var i:int = 0; i < fighters.length; i++) {
 				cleanupEntityFromCombat(fighters[i]);
@@ -174,6 +177,7 @@ package angel.game {
 			}
 
 			entity.setTextOverHead(null);
+			entity.visible = true;
 		}
 		
 		//NOTE: grid lines are tweaked up by one pixel because the tile image bitmaps actually extend one pixel outside the
@@ -252,6 +256,11 @@ package angel.game {
 				if (isEnd) {
 					++endIndexIndex;
 				}
+				if (!entity.isPlayerControlled && !losFromAnyPlayer(path[i])) {
+					// This is a major kludge and makes me wince.  It works, but this whole movement dot thing
+					// is getting messier and uglier.
+					dots[i].visible = false;
+				}
 			}
 			return gait;
 		}
@@ -265,6 +274,13 @@ package angel.game {
 			Assert.assertTrue(event.entity == currentFighter(), "Wrong entity moving");
 			var dotToRemove:Shape = dots.shift();
 			room.decorationsLayer.removeChild(dotToRemove);
+			
+			var entity:ComplexEntity = (event.entity as ComplexEntity);
+			if (entity.isPlayerControlled) {
+				adjustAllEnemyVisibility();
+			} else {
+				adjustVisibilityOfEnemy(entity);
+			}
 		}
 		
 		private function entityStandingOnNewTile(event:EntityEvent):void {
@@ -293,19 +309,15 @@ package angel.game {
 			}
 			
 			// Give the player some time to gaze at the fire graphic before continuing with turn.
-			// CONSIDER: For enemies, we may put up some sort of "enemy firing" overlay
 			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
 		}
 		
 		public function fire(shooter:ComplexEntity, target:ComplexEntity):void {
 			if (target == null) {
 				trace(shooter.aaId, "reserve fire");
-				var reserveFireBitmap:Bitmap = new Icon.ReserveFireFloater();
-				var reserveFireSprite:TimedSprite = new TimedSprite(room.stage.frameRate);
-				reserveFireSprite.addChild(reserveFireBitmap);
-				reserveFireSprite.x = shooter.x;
-				reserveFireSprite.y = shooter.y - reserveFireSprite.height;
-				room.addChild(reserveFireSprite);
+				if (shooter.isPlayerControlled || losFromAnyPlayer(shooter.location)) {
+					displayReserveFireGraphic(shooter);
+				}
 			} else {
 				trace(shooter.aaId, "firing at", target.aaId, target.location);
 				
@@ -325,6 +337,16 @@ package angel.game {
 				}
 			}
 		}
+		
+		private function displayReserveFireGraphic(shooter:ComplexEntity):void {
+			var reserveFireBitmap:Bitmap = new Icon.ReserveFireFloater();
+			var reserveFireSprite:TimedSprite = new TimedSprite(room.stage.frameRate);
+			reserveFireSprite.addChild(reserveFireBitmap);
+			reserveFireSprite.x = shooter.x;
+			reserveFireSprite.y = shooter.y - reserveFireSprite.height;
+			room.addChild(reserveFireSprite);
+		}
+		
 		
 		private function damage(entity:ComplexEntity, points:int):void {
 			entity.currentHealth -= points;
@@ -348,69 +370,12 @@ package angel.game {
 					if (allEnemiesAreDead()) {
 						combatOver = true;
 						Alert.show("You won.", { callback:combatOverOk } );
-						
+					}
+					if (entity.isPlayerControlled) {
+						adjustAllEnemyVisibility();
 					}
 				}
 			}
-		}
-
-//Outdented lines are for debugging, delete them eventually
-private var debugLOS:Boolean = false;
-private static var lastTarget:Point = new Point(-1,-1);
-		public function lineOfSight(entity:ComplexEntity, target:Point):Boolean {
-			var x0:int = entity.location.x;
-			var y0:int = entity.location.y;
-			var x1:int = target.x;
-			var y1:int = target.y;
-			var dx:int = Math.abs(x1 - x0);
-			var dy:int = Math.abs(y1 - y0);
-			
-var traceIt:Boolean = debugLOS && !target.equals(lastTarget);
-var path:Array = new Array();
-lastTarget = target;
-			// Ray-tracing on grid code, from http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
-			var x:int = x0;
-			var y:int = y0;
-			var n:int = 1 + dx + dy;
-			var x_inc:int = (x1 > x0) ? 1 : -1;
-			var y_inc:int = (y1 > y0) ? 1 : -1;
-			var error:int = dx - dy;
-			dx *= 2;
-			dy *= 2;
-			
-			// original code looped for (; n>0; --n) -- I changed it so the shooter & target don't block themselves
-			for (; n > 2; --n) {
-path.push(new Point(x, y));
-
-				if (error > 0) {
-					x += x_inc;
-					error -= dy;
-				}
-				else if (error < 0) {
-					y += y_inc;
-					error += dx;
-				} else { // special case when passing directly through vertex -- do a diagonal move, hitting one less tile
-					//CONSIDER: we may want to call this blocked if the tiles we're going between have "hard corners"
-					x += x_inc;
-					y += y_inc;
-					error = error - dy + dx;
-					--n;
-					if (n <= 2) {
-						break;
-					}
-				}
-				// moved this check to end of loop so we're not checking the shooter's own tile
-				if (tileBlocksSight(x, y)) {
-if (traceIt) { trace("Blocked; path", path);}
-					return false;
-				}
-			}
-if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
-			return true;
-		} // end function lineOfSight
-		
-		public function tileBlocksSight(x:int, y:int):Boolean {
-			return (room.solid(x,y) & Prop.TALL) != 0;
 		}
 		
 		public function checkForOpportunityFire(entityMoving:ComplexEntity):void {
@@ -468,6 +433,89 @@ if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
 			*/
 			var expectedDamage:int = shooter.weaponDamage() - target.defense();
 			return (expectedDamage >= Settings.minForOpportunity);
+		}
+		
+		/*********** Line of sight / fog of war, I don't know where I want to put this stuff *************/
+		
+		public function losFromAnyPlayer(target:Point):Boolean {
+			for (var i:int = 0; i < fighters.length; i++) {
+				if (fighters[i].isPlayerControlled && lineOfSight(fighters[i], target)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+//Outdented lines are for debugging, delete them eventually
+private var debugLOS:Boolean = false;
+private var lastTarget:Point = new Point(-1,-1);
+		public function lineOfSight(entity:ComplexEntity, target:Point):Boolean {
+			var x0:int = entity.location.x;
+			var y0:int = entity.location.y;
+			var x1:int = target.x;
+			var y1:int = target.y;
+			var dx:int = Math.abs(x1 - x0);
+			var dy:int = Math.abs(y1 - y0);
+			
+var traceIt:Boolean = debugLOS && !target.equals(lastTarget);
+var path:Array = new Array();
+lastTarget = target;
+			// Ray-tracing on grid code, from http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
+			var x:int = x0;
+			var y:int = y0;
+			var n:int = 1 + dx + dy;
+			var x_inc:int = (x1 > x0) ? 1 : -1;
+			var y_inc:int = (y1 > y0) ? 1 : -1;
+			var error:int = dx - dy;
+			dx *= 2;
+			dy *= 2;
+			
+			// original code looped for (; n>0; --n) -- I changed it so the shooter & target don't block themselves
+			for (; n > 2; --n) {
+path.push(new Point(x, y));
+
+				if (error > 0) {
+					x += x_inc;
+					error -= dy;
+				}
+				else if (error < 0) {
+					y += y_inc;
+					error += dx;
+				} else { // special case when passing directly through vertex -- do a diagonal move, hitting one less tile
+					//CONSIDER: we may want to call this blocked if the tiles we're going between have "hard corners"
+					x += x_inc;
+					y += y_inc;
+					error = error - dy + dx;
+					--n;
+					if (n <= 2) {
+						break;
+					}
+				}
+				// moved this check to end of loop so we're not checking the shooter's own tile
+				if (tileBlocksSight(x, y)) {
+if (traceIt) { trace("Blocked; path", path);}
+					return false;
+				}
+			}
+if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
+			return true;
+		} // end function lineOfSight
+		
+		public function tileBlocksSight(x:int, y:int):Boolean {
+			return (room.solid(x,y) & Prop.TALL) != 0;
+		}
+		
+		private function adjustAllEnemyVisibility():void {
+			for (var i:int = 0; i < fighters.length; i++) {
+				var target:ComplexEntity = fighters[i];
+				if (!target.isPlayerControlled) {
+					adjustVisibilityOfEnemy(target);
+				}
+			}
+		}
+		
+		private function adjustVisibilityOfEnemy(enemy:ComplexEntity):void {
+			enemy.visible = enemy.marker.visible = losFromAnyPlayer(enemy.location);
 		}
 		
 		/*********** Turn-structure related **************/
