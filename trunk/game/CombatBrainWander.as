@@ -37,14 +37,14 @@ package angel.game {
 			var path:Vector.<Point> = me.findPathTo(goal);
 			trace(me.aaId, "chose path:", path);
 			if (path != null) {
-				gait = combat.extendPath(me, path);
+				gait = me.combatMover.extendPath(path);
 				Assert.assertTrue(gait == randomGait, "path didn't match planned gait");
 			}
 		}
 		
 		public function doMove():void {
 			trace(me.aaId, "do move");
-			combat.startEntityFollowingPath(me, gait);
+			me.combatMover.startEntityFollowingPath(gait);
 		}
 		
 		public function doFire():void {

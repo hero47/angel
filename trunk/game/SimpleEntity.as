@@ -8,7 +8,7 @@ package angel.game {
 	import flash.geom.Point;
 	
 	public class SimpleEntity extends Prop {
-		protected var room:Room;
+		public var room:Room;
 
 		
 		public var aaId:String; // catalog id + arbitrary index, for debugging, at top of alphabet for easy seeing!

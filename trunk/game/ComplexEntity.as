@@ -77,6 +77,7 @@ package angel.game {
 		
 		private var textOverHead:TextField;
 		
+		public var combatMover:CombatMover; // Encapsulates movement rules & path display
 		private var moveGoal:Point; // the tile we're trying to get to
 		private var path:Vector.<Point>; // the tiles we're trying to move through to get there
 		private var movingTo:Point; // the tile we're immediately in the process of moving onto
@@ -90,7 +91,7 @@ package angel.game {
 		public function ComplexEntity(image:Bitmap, id:String = "") {
 			super(image, Prop.DEFAULT_SOLIDITY, id);
 			gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed *2, Settings.runSpeed*2, Settings.sprintSpeed*2]);
-		
+			combatMover = new CombatMover(this);
 		}
 		
 		public function makePlayerControlled():void {

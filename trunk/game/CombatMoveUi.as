@@ -33,14 +33,14 @@ package angel.game {
 			this.player = player;
 			oldMarkerColorTransform = player.marker.transform.colorTransform;
 			player.marker.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
-			combat.statDisplay.adjustMovePointsDisplay(player.combatMovePoints);
+			adjustMovePointsDisplay();
 		}
 		
 		public function disable():void {
 			trace("ending player move phase for", player.aaId);
 			player.marker.transform.colorTransform = oldMarkerColorTransform;
 			this.player = null;
-			combat.statDisplay.adjustMovePointsDisplay(-1);
+			adjustMovePointsDisplay(false);
 			room.moveHilight(null, 0);
 		}
 		
@@ -62,35 +62,17 @@ package angel.game {
 		
 		public function mouseMove(tile:FloorTile):void {
 			if (tile != null) {
-				var distance:int = 1000;
-				if (!player.tileBlocked(tile.location) && (combat.path.length < player.combatMovePoints)) {
-					var pathToMouse:Vector.<Point> = player.findPathTo(tile.location, 
-							(combat.path.length == 0 ? null : combat.path[combat.path.length-1]) );
-					if (pathToMouse != null) {
-						distance = combat.path.length + pathToMouse.length;
-					}
-				}
-				room.moveHilight(tile, RoomCombat.colorForGait(player.gaitForDistance(distance)));
+				room.moveHilight(tile, player.combatMover.dotColorIfExtendPathTo(tile.location));
 			}
 		}
 		
 		public function mouseClick(tile:FloorTile):void {
-			var loc:Point = tile.location;
-			if (!player.tileBlocked(loc)) {
-				var currentEnd:Point = (combat.path.length == 0 ? player.location : combat.path[combat.path.length - 1]);
-				if (!loc.equals(currentEnd)) {
-					var pathToMouse:Vector.<Point> = player.findPathTo(loc, currentEnd);
-					if (pathToMouse != null && pathToMouse.length <= player.combatMovePoints - combat.path.length) {
-						combat.extendPath(player, pathToMouse);
-						combat.statDisplay.adjustMovePointsDisplay(player.combatMovePoints - combat.path.length);
-					}
-				}
-			}
+			player.combatMover.extendPathIfLegalMove(tile.location);
+			adjustMovePointsDisplay();
 		}
 		
 		public function pieMenuForTile(tile:FloorTile):Vector.<PieSlice> {
-			if (tile.location.equals(player.location) ||
-						(combat.path.length > 0 && tile.location.equals(combat.path[combat.path.length - 1]))) {
+			if (tile.location.equals(player.location) || tile.location.equals(player.combatMover.endOfCurrentPath())) {
 				return constructPieMenu();
 			}
 			
@@ -103,12 +85,12 @@ package angel.game {
 		private function constructPieMenu():Vector.<PieSlice> {
 			var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
 			
-			if (combat.path.length > 0) {
+			if (player.combatMover.path.length > 0) {
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CancelMove), removePath));
 			}
 			slices.push(new PieSlice(Icon.bitmapData(Icon.Stay), doPlayerMoveStay));
-			if (combat.path.length > 0) {
-				var minGait:int = player.gaitForDistance(combat.path.length);
+			if (player.combatMover.path.length > 0) {
+				var minGait:int = player.combatMover.minimumGaitForPath();
 				if (minGait <= ComplexEntity.GAIT_WALK) {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doPlayerMoveWalk));
 				}
@@ -126,10 +108,10 @@ package angel.game {
 			room.disableUi();
 			
 			if (gaitChoice == ComplexEntity.GAIT_UNSPECIFIED) {
-				gaitChoice = playerMoving.gaitForDistance(combat.path.length);
+				gaitChoice = playerMoving.combatMover.minimumGaitForPath();
 			}
 			playerMoving.centerRoomOnMe();
-			combat.startEntityFollowingPath(playerMoving, gaitChoice);
+			playerMoving.combatMover.startEntityFollowingPath(gaitChoice);
 		}
 		
 		private function doPlayerMoveStay():void {
@@ -150,20 +132,17 @@ package angel.game {
 		}
 		
 		private function removePath():void {
-			combat.clearDots(0);
-			combat.path.length = 0;
-			combat.statDisplay.adjustMovePointsDisplay(player.combatMovePoints);
+			player.combatMover.clearPath();
+			adjustMovePointsDisplay();
 		}
 		
 		private function removeLastPathSegment():void {
-			if (combat.dots.length > 0) {
-				combat.endIndexes.pop();
-				var ends:int = combat.endIndexes.length;
-				var clearFrom:int = (ends == 0 ? 0 : combat.endIndexes[ends - 1] + 1);
-				combat.clearDots(clearFrom);
-				combat.path.length = combat.dots.length;
-				combat.statDisplay.adjustMovePointsDisplay(player.combatMovePoints - combat.path.length);
-			}
+			player.combatMover.removeLastPathSegment();
+			adjustMovePointsDisplay();
+		}
+		
+		private function adjustMovePointsDisplay(show:Boolean = true):void {
+			combat.statDisplay.adjustMovePointsDisplay(show ? player.combatMover.unusedMovePoints() : -1);
 		}
 		
 	} // end class CombatMoveUi
