@@ -31,6 +31,7 @@ package angel.game {
 		private var combatOver:Boolean = false;
 		private var moveUi:CombatMoveUi;
 		private var fireUi:CombatFireUi;
+		public var mover:CombatMover;
 		
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
 		public var fighters:Vector.<ComplexEntity>;
@@ -97,6 +98,7 @@ package angel.game {
 			
 			moveUi = new CombatMoveUi(room, this);
 			fireUi = new CombatFireUi(room, this);
+			mover = new CombatMover(this);
 			
 			beginTurnForCurrentFighter();
 		}
@@ -117,6 +119,7 @@ package angel.game {
 			room.removeEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
 			
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
+			mover.clearPath();
 			room.stage.removeChild(statDisplay);
 			room.stage.removeChild(modeLabel);
 			if (enemyTurnOverlay.parent != null) {
@@ -161,7 +164,6 @@ package angel.game {
 		
 		private function cleanupEntityFromCombat(entity:ComplexEntity):void {
 			entity.exitCurrentMode();
-			entity.combatMover.clearPath();
 			if (entity.marker != null) {
 				room.decorationsLayer.removeChild(entity.marker);
 				entity.marker = null;
@@ -211,7 +213,7 @@ package angel.game {
 			Assert.assertTrue(event.entity == currentFighter(), "Wrong entity moving");
 			
 			var entity:ComplexEntity = (event.entity as ComplexEntity);
-			entity.combatMover.adjustDisplayAsEntityLeavesATile();
+			mover.adjustDisplayAsEntityLeavesATile();
 			if (entity.isPlayerControlled) {
 				adjustAllEnemyVisibility();
 			} else {
@@ -546,6 +548,9 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 		private function removeFighterFromCombat(deadFighter:ComplexEntity):void {
 			var indexOfDeadFighter:int = fighters.indexOf(deadFighter);
 			Assert.assertTrue(indexOfDeadFighter >= 0, "Removing fighter that's already removed: " + deadFighter.aaId);
+			if (indexOfDeadFighter == iFighterTurnInProgress) {
+				mover.clearPath();
+			}
 			if (indexOfDeadFighter <= iFighterTurnInProgress) {
 				--iFighterTurnInProgress;
 			}

@@ -77,7 +77,6 @@ package angel.game {
 		
 		private var textOverHead:TextField;
 		
-		public var combatMover:CombatMover; // Encapsulates movement rules & path display
 		private var moveGoal:Point; // the tile we're trying to get to
 		private var path:Vector.<Point>; // the tiles we're trying to move through to get there
 		private var movingTo:Point; // the tile we're immediately in the process of moving onto
@@ -91,7 +90,6 @@ package angel.game {
 		public function ComplexEntity(image:Bitmap, id:String = "") {
 			super(image, Prop.DEFAULT_SOLIDITY, id);
 			gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed *2, Settings.runSpeed*2, Settings.sprintSpeed*2]);
-			combatMover = new CombatMover(this);
 		}
 		
 		public function makePlayerControlled():void {
@@ -219,6 +217,20 @@ package angel.game {
 		public function turnToFaceTile(loc:Point):void {
 			var angle:int = Util.findRotFacingVector(loc.subtract(myLocation)) + 360 + 22;
 			turnToFacing((angle / 45) % 8);
+		}
+		
+		// NOTE: At some point entities will probably have their own individual move points & gait percentages;
+		// when that happens this will need to reference entity stats rather than Settings
+		public function gaitForDistance(distance:int):int {
+			if (distance<= Settings.walkPoints) {
+				return ComplexEntity.GAIT_WALK;
+			} else if (distance <= Settings.runPoints) {
+				return ComplexEntity.GAIT_RUN;
+			} else if (distance <= Settings.sprintPoints) {
+				return ComplexEntity.GAIT_SPRINT;
+			} else {
+				return ComplexEntity.GAIT_TOO_FAR;
+			}
 		}
 		
 		// fills in coordsForEachFrameOfMove, depthChangePerFrame, and facing
