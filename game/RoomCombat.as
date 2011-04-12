@@ -35,16 +35,7 @@ package angel.game {
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
 		public var fighters:Vector.<ComplexEntity>;
 		
-		// public because they're accessed by the CombatMoveUi and/or entity combat brains
-		public var dots:Vector.<Shape> = new Vector.<Shape>();
-		public var endIndexes:Vector.<int> = new Vector.<int>();
-		public var path:Vector.<Point> = new Vector.<Point>();
-		
 		// Colors for movement dots/hilights
-		private static const WALK_COLOR:uint = 0x00ff00;
-		private static const RUN_COLOR:uint = 0xffd800;
-		private static const SPRINT_COLOR:uint = 0xff0000;
-		private static const OUT_OF_RANGE_COLOR:uint = 0x888888;
 		private static const ENEMY_MARKER_COLOR:uint = 0xff0000;
 		private static const PLAYER_MARKER_COLOR:uint = 0x0000ff;
 		private static const GRID_COLOR:uint = 0xff0000;
@@ -126,7 +117,6 @@ package angel.game {
 			room.removeEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
 			
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
-			clearDots();
 			room.stage.removeChild(statDisplay);
 			room.stage.removeChild(modeLabel);
 			if (enemyTurnOverlay.parent != null) {
@@ -171,6 +161,7 @@ package angel.game {
 		
 		private function cleanupEntityFromCombat(entity:ComplexEntity):void {
 			entity.exitCurrentMode();
+			entity.combatMover.clearDots();
 			if (entity.marker != null) {
 				room.decorationsLayer.removeChild(entity.marker);
 				entity.marker = null;
@@ -212,70 +203,15 @@ package angel.game {
 		
 		/****************** Used by both player & NPCs during combat turns *******************/
 		
-		public function startEntityFollowingPath(entity:ComplexEntity, gait:int):void {
-			entity.startMovingAlongPath(path, gait); //CAUTION: this path now belongs to entity!
-			path = new Vector.<Point>();
-			endIndexes.length = 0;
-		}
-		
-		// Remove dots at the end of the path, starting from index startFrom (default == remove all)
-		public function clearDots(startFrom:int = 0):void {
-			for (var i:int = startFrom; i < dots.length; i++) {
-				room.decorationsLayer.removeChild(dots[i]);
-			}
-			dots.length = startFrom;
-		}
-		
-		// TAG tile-width-is-twice-height: dots will not have correct aspect if tiles no longer follow this rule!
-		private static const DOT_X_RADIUS:int = 12;
-		private static const DOT_Y_RADIUS:int = 6;
-		private function dot(color:uint, center:Point, isEnd:Boolean = false):Shape {
-			var dotShape:Shape = new Shape;
-			if (isEnd) {
-				dotShape.graphics.lineStyle(2, 0x0000ff)
-			}
-			dotShape.graphics.beginFill(color, 1);
-			dotShape.graphics.drawEllipse(center.x - DOT_X_RADIUS, center.y - DOT_Y_RADIUS, DOT_X_RADIUS * 2, DOT_Y_RADIUS * 2);
-			return dotShape;
-		}
-		
-		// entity's move settings are used to determine dot color
-		// return minimum gait required for this path length
-		public function extendPath(entity:ComplexEntity, pathFromCurrentEndToNewEnd:Vector.<Point>):int {
-			clearDots();
-			path = path.concat(pathFromCurrentEndToNewEnd);
-			endIndexes.push(path.length - 1);
-			dots.length = path.length;
-			var endIndexIndex:int = 0;
-			var gait:int = entity.gaitForDistance(path.length);
-			var color:uint = colorForGait(gait);
-			for (var i:int = 0; i < path.length; i++) {
-				var isEnd:Boolean = (i == endIndexes[endIndexIndex]);
-				dots[i] = dot(color, Floor.centerOf(path[i]), isEnd );
-				room.decorationsLayer.addChild(dots[i]);
-				if (isEnd) {
-					++endIndexIndex;
-				}
-				if (!entity.isPlayerControlled && !losFromAnyPlayer(path[i])) {
-					// This is a major kludge and makes me wince.  It works, but this whole movement dot thing
-					// is getting messier and uglier.
-					dots[i].visible = false;
-				}
-			}
-			return gait;
-		}
-		
 		// Called by event listener each time an entity begins moving to a new tile during combat.
 		// (entity's location will have already changed to the new tile)
 		// The tile they're moving to should always be the one with the first dot on the path,
 		// if everything is working right.
 		private function entityMovingToNewTile(event:EntityEvent):void {
-			Assert.assertTrue(dots.length > 0, "Entity.MOVED with no dots remaining");
 			Assert.assertTrue(event.entity == currentFighter(), "Wrong entity moving");
-			var dotToRemove:Shape = dots.shift();
-			room.decorationsLayer.removeChild(dotToRemove);
 			
 			var entity:ComplexEntity = (event.entity as ComplexEntity);
+			entity.combatMover.adjustDisplayAsEntityLeavesATile();
 			if (entity.isPlayerControlled) {
 				adjustAllEnemyVisibility();
 			} else {
@@ -285,21 +221,6 @@ package angel.game {
 		
 		private function entityStandingOnNewTile(event:EntityEvent):void {
 			checkForOpportunityFire(event.entity as ComplexEntity);
-		}
-		
-		public static function colorForGait(gait:int):uint {
-			switch (gait) {
-				case ComplexEntity.GAIT_WALK:
-					return WALK_COLOR;
-				break;
-				case ComplexEntity.GAIT_RUN:
-					return RUN_COLOR;
-				break;
-				case ComplexEntity.GAIT_SPRINT:
-					return SPRINT_COLOR;
-				break;
-			}
-			return OUT_OF_RANGE_COLOR;
 		}
 		
 		public function fireAndAdvanceToNextPhase(shooter:ComplexEntity, target:ComplexEntity):void {
@@ -458,7 +379,7 @@ private var lastTarget:Point = new Point(-1,-1);
 			var dy:int = Math.abs(y1 - y0);
 			
 var traceIt:Boolean = debugLOS && !target.equals(lastTarget);
-var path:Array = new Array();
+var losPath:Array = new Array();
 lastTarget = target;
 			// Ray-tracing on grid code, from http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
 			var x:int = x0;
@@ -472,7 +393,7 @@ lastTarget = target;
 			
 			// original code looped for (; n>0; --n) -- I changed it so the shooter & target don't block themselves
 			for (; n > 2; --n) {
-path.push(new Point(x, y));
+losPath.push(new Point(x, y));
 
 				if (error > 0) {
 					x += x_inc;
@@ -493,11 +414,11 @@ path.push(new Point(x, y));
 				}
 				// moved this check to end of loop so we're not checking the shooter's own tile
 				if (tileBlocksSight(x, y)) {
-if (traceIt) { trace("Blocked; path", path);}
+if (traceIt) { trace("Blocked; path", losPath);}
 					return false;
 				}
 			}
-if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
+if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath); }
 			return true;
 		} // end function lineOfSight
 		
@@ -625,9 +546,6 @@ if (traceIt) { path.push(new Point(x, y));  trace("LOS clear; path", path); }
 		private function removeFighterFromCombat(deadFighter:ComplexEntity):void {
 			var indexOfDeadFighter:int = fighters.indexOf(deadFighter);
 			Assert.assertTrue(indexOfDeadFighter >= 0, "Removing fighter that's already removed: " + deadFighter.aaId);
-			if (indexOfDeadFighter == iFighterTurnInProgress) {
-				clearDots();
-			}
 			if (indexOfDeadFighter <= iFighterTurnInProgress) {
 				--iFighterTurnInProgress;
 			}
