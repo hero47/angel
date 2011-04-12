@@ -521,19 +521,6 @@ package angel.game {
 			room.y = (stage.stageHeight / 2) - this.y - this.height/2;
 		}
 		
-		// NOTE: At some point entities will probably have their own individual move points & gait percentages.
-		public function gaitForDistance(distance:int):int {
-			if (distance<= Settings.walkPoints) {
-				return ComplexEntity.GAIT_WALK;
-			} else if (distance <= Settings.runPoints) {
-				return ComplexEntity.GAIT_RUN;
-			} else if (distance <= Settings.sprintPoints) {
-				return ComplexEntity.GAIT_SPRINT;
-			} else {
-				return ComplexEntity.GAIT_TOO_FAR;
-			}
-		}
-		
 
 		
 	} // end class ComplexEntity

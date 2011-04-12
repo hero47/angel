@@ -161,7 +161,7 @@ package angel.game {
 		
 		private function cleanupEntityFromCombat(entity:ComplexEntity):void {
 			entity.exitCurrentMode();
-			entity.combatMover.clearDots();
+			entity.combatMover.clearPath();
 			if (entity.marker != null) {
 				room.decorationsLayer.removeChild(entity.marker);
 				entity.marker = null;
