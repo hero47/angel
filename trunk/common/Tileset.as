@@ -22,8 +22,8 @@ package angel.common {
 		public static const TILES_IN_SET:int = (TILESET_X_TILES * TILESET_Y_TILES);
 		public static const TILESET_X:int = 256;
 		public static const TILESET_Y:int = 160;
-		public static const TILE_WIDTH:int = TILESET_X / TILESET_X_TILES;
-		public static const TILE_HEIGHT:int = TILESET_Y / TILESET_Y_TILES;
+		public static const TILE_WIDTH:int = TILESET_X / TILESET_X_TILES;	// 64
+		public static const TILE_HEIGHT:int = TILESET_Y / TILESET_Y_TILES;	// 32
 		
 		private static var defaultTileData:BitmapData = null;
 		

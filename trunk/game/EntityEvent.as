@@ -9,6 +9,8 @@ package angel.game {
 		public static const MOVED:String = "entityMoved";
 		public static const FINISHED_ONE_TILE_OF_MOVE:String = "entityFinishedTile";
 		public static const FINISHED_MOVING:String = "entityFinishedMoving";
+		public static const START_TURN:String = "entityStartTurn";
+		public static const DEATH:String = "entityDied";
 		
 		public var entity:SimpleEntity;
 		
