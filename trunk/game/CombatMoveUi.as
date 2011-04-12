@@ -62,17 +62,19 @@ package angel.game {
 		
 		public function mouseMove(tile:FloorTile):void {
 			if (tile != null) {
-				room.moveHilight(tile, player.combatMover.dotColorIfExtendPathTo(tile.location));
+				room.moveHilight(tile, combat.mover.dotColorIfExtendPathTo(player, tile.location));
 			}
 		}
 		
 		public function mouseClick(tile:FloorTile):void {
-			player.combatMover.extendPathIfLegalMove(tile.location);
+			combat.mover.extendPathIfLegalMove(player, tile.location);
 			adjustMovePointsDisplay();
 		}
 		
 		public function pieMenuForTile(tile:FloorTile):Vector.<PieSlice> {
-			if (tile.location.equals(player.location) || tile.location.equals(player.combatMover.endOfCurrentPath())) {
+			var endOfCurrentPath:Point = combat.mover.endOfCurrentPath();
+			if (tile.location.equals(player.location) || 
+							(endOfCurrentPath != null && tile.location.equals(endOfCurrentPath))) {
 				return constructPieMenu();
 			}
 			
@@ -85,12 +87,12 @@ package angel.game {
 		private function constructPieMenu():Vector.<PieSlice> {
 			var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
 			
-			if (player.combatMover.path.length > 0) {
+			if (combat.mover.hasPath()) {
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CancelMove), removePath));
 			}
 			slices.push(new PieSlice(Icon.bitmapData(Icon.Stay), doPlayerMoveStay));
-			if (player.combatMover.path.length > 0) {
-				var minGait:int = player.combatMover.minimumGaitForPath();
+			if (combat.mover.hasPath()) {
+				var minGait:int = combat.mover.minimumGaitForPath(player);
 				if (minGait <= ComplexEntity.GAIT_WALK) {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doPlayerMoveWalk));
 				}
@@ -108,10 +110,10 @@ package angel.game {
 			room.disableUi();
 			
 			if (gaitChoice == ComplexEntity.GAIT_UNSPECIFIED) {
-				gaitChoice = playerMoving.combatMover.minimumGaitForPath();
+				gaitChoice = combat.mover.minimumGaitForPath(playerMoving);
 			}
 			playerMoving.centerRoomOnMe();
-			playerMoving.combatMover.startEntityFollowingPath(gaitChoice);
+			combat.mover.startEntityFollowingPath(playerMoving, gaitChoice);
 		}
 		
 		private function doPlayerMoveStay():void {
@@ -132,17 +134,17 @@ package angel.game {
 		}
 		
 		private function removePath():void {
-			player.combatMover.clearPath();
+			combat.mover.clearPath();
 			adjustMovePointsDisplay();
 		}
 		
 		private function removeLastPathSegment():void {
-			player.combatMover.removeLastPathSegment();
+			combat.mover.removeLastPathSegment(player);
 			adjustMovePointsDisplay();
 		}
 		
 		private function adjustMovePointsDisplay(show:Boolean = true):void {
-			combat.statDisplay.adjustMovePointsDisplay(show ? player.combatMover.unusedMovePoints() : -1);
+			combat.statDisplay.adjustMovePointsDisplay(show ? combat.mover.unusedMovePoints(player) : -1);
 		}
 		
 	} // end class CombatMoveUi
