@@ -72,7 +72,7 @@ package angel.game {
 			for (var x:int = 0; x < combat.room.size.x; ++x) {
 				for (var y:int = 0; y < combat.room.size.y; ++y) {
 					if (steps[x][y] > 0) {
-						reachable[me.gaitForDistance(steps[x][y] - 1)].push(new Point(x, y));
+						reachable[me.combatMover.gaitForDistance(steps[x][y] - 1)].push(new Point(x, y));
 						++count;
 					}
 				}

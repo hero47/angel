@@ -47,13 +47,11 @@ package angel.game {
 			return dotShape;
 		}
 		
-		
-		// Remove dots at the end of the path, starting from index startFrom (default == remove all)
-		public function clearDots(startFrom:int = 0):void {
-			for (var i:int = startFrom; i < dots.length; i++) {
+		public function clearDots():void {
+			for (var i:int = 0; i < dots.length; i++) {
 				entity.room.decorationsLayer.removeChild(dots[i]);
 			}
-			dots.length = startFrom;
+			dots.length = 0;
 		}
 		
 		public function adjustDisplayAsEntityLeavesATile():void {
@@ -90,25 +88,42 @@ package angel.game {
 					distance = path.length + nextSegment.length;
 				}
 			}
-			return colorForGait(entity.gaitForDistance(distance));
+			return colorForGait(gaitForDistance(distance));
 		}
 		
 		public function minimumGaitForPath():int {
-			return entity.gaitForDistance(path.length);
+			return gaitForDistance(path.length);
+		}
+		
+		// NOTE: At some point entities will probably have their own individual move points & gait percentages;
+		// when that happens this will need to reference entity stats rather than Settings
+		public function gaitForDistance(distance:int):int {
+			if (distance<= Settings.walkPoints) {
+				return ComplexEntity.GAIT_WALK;
+			} else if (distance <= Settings.runPoints) {
+				return ComplexEntity.GAIT_RUN;
+			} else if (distance <= Settings.sprintPoints) {
+				return ComplexEntity.GAIT_SPRINT;
+			} else {
+				return ComplexEntity.GAIT_TOO_FAR;
+			}
 		}
 		
 		/******** Routines sharing elements of actual movement & visual elements **********/
 		
 		
-		// entity's move settings are used to determine dot color
-		// return minimum gait required for this path length
+		// Add a segment to the end of current path. Calculate minimum gait for this path; redraw movement dots
+		// in that color (using entity's movement points/percentages to determine gait & color) and return gait.
+		// If extension is null, just calculate gait, redraw movement dots in appropriate color, and return gait
 		public function extendPath(pathFromCurrentEndToNewEnd:Vector.<Point>):int {
 			clearDots();
-			path = path.concat(pathFromCurrentEndToNewEnd);
-			endIndexes.push(path.length - 1);
+			if (pathFromCurrentEndToNewEnd != null) {
+				path = path.concat(pathFromCurrentEndToNewEnd);
+				endIndexes.push(path.length - 1);
+			}
 			dots.length = path.length;
 			var endIndexIndex:int = 0;
-			var gait:int = entity.gaitForDistance(path.length);
+			var gait:int = gaitForDistance(path.length);
 			for (var i:int = 0; i < path.length; i++) {
 				var isEnd:Boolean = (i == endIndexes[endIndexIndex]);
 				dots[i] = dot(colorForGait(gait), Floor.centerOf(path[i]), isEnd );
@@ -140,17 +155,16 @@ package angel.game {
 		}
 		
 		public function clearPath():void {
-			clearDots(0);
+			clearDots();
 			path.length = 0;
 		}
 		
 		public function removeLastPathSegment():void {
-			if (dots.length > 0) {
+			if (path.length > 0) {
 				endIndexes.pop();
 				var ends:int = endIndexes.length;
-				var clearFrom:int = (ends == 0 ? 0 : endIndexes[ends - 1] + 1);
-				clearDots(clearFrom);
-				path.length = dots.length;
+				path.length = (ends == 0 ? 0 : endIndexes[ends - 1] + 1);
+				extendPath(null); // clear dots; redraw the ones that should still be there in appropriate color for current length
 			}
 		}
 		
