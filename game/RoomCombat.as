@@ -31,6 +31,7 @@ package angel.game {
 		private var combatOver:Boolean = false;
 		private var moveUi:CombatMoveUi;
 		private var fireUi:CombatFireUi;
+		private var minimap:Minimap;
 		public var mover:CombatMover;
 		
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
@@ -89,6 +90,11 @@ package angel.game {
 			adjustEnemyHealthDisplay(-1);
 			room.stage.addChild(enemyHealthDisplay);
 			
+			minimap = new Minimap(this); // WARNING: must be created after enemy visibility set!
+			minimap.x = room.stage.stageWidth - minimap.width - 20;
+			minimap.y = room.stage.stageHeight - minimap.height - 20;
+			room.stage.addChild(minimap);
+			
 			modeLabel = Util.textBox("", 300, 60, TextFormatAlign.CENTER, false, 0xffffff);
 			modeLabel.mouseEnabled = false;
 			//modeLabel.background = true;
@@ -117,6 +123,8 @@ package angel.game {
 			room.removeEventListener(EntityEvent.MOVED, entityMovingToNewTile);
 			room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, entityStandingOnNewTile);
 			room.removeEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
+			
+			minimap.cleanup();
 			
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
 			mover.clearPath();
@@ -285,6 +293,7 @@ package angel.game {
 			if (entity.currentHealth <= 0) {
 				entity.solidness ^= Prop.TALL; // Dead entities are short, by fiat.
 				entity.startDeathAnimation();
+				entity.dispatchEvent(new EntityEvent(EntityEvent.DEATH, true, false, entity));
 				if (entity == room.mainPlayerCharacter) {
 					combatOver = true;
 					Alert.show("You have been taken out.", { callback:combatOverOk } );
@@ -510,6 +519,7 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 		
 		private function beginTurnForCurrentFighter():void {
 			var fighter:ComplexEntity = currentFighter();
+			fighter.dispatchEvent(new EntityEvent(EntityEvent.START_TURN, true, false, fighter));
 			if (fighter.isPlayerControlled) {
 				if (enemyTurnOverlay.parent != null) {
 					enemyTurnOverlay.parent.removeChild(enemyTurnOverlay);
