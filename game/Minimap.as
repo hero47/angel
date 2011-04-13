@@ -18,8 +18,10 @@ package angel.game {
 	 * property.
 	 * Currently (4/12/11) the visibility is adjusted as an entity begins moving to a new tile (EntityEvent.MOVED)
 	 * and the minimap updates as an entity finishes moving to a new tile (EntityEvent.FINISHED_ONE_TILE_OF_MOVE) so
-	 * this works out nicely.  If those ever get changed to listen for the same event, then we will need to fiddle
-	 * with listener priorities to make sure that things are processed in the correct order!
+	 * this works out nicely.  However, opportunity fire also happens on EntityEvent.FINISHED_ONE_TILE_OF_MOVE; this
+	 * can generate EntityEvent.DEATH, which the minimap also listens for.  Need to be careful that the entity doesn't
+	 * spring back to life on the minimap as a result of processing the move event if it's already processed a death
+	 * event.  I've prioritized the listeners so the RoomCombat will go first on any that they're both listening for.
 	 */
 	 
 	public class Minimap extends Sprite {
@@ -41,7 +43,7 @@ package angel.game {
 		private static const enemyDownBitmap:Class;
 		[Embed(source = '../../../EmbeddedAssets/combat_minimap_PCDown.png')]
 		private static const playerDownBitmap:Class;
-		[Embed(source = '../../../EmbeddedAssets/combat_minimap_enemyLastSeen.png')]
+		[Embed(source = '../../../EmbeddedAssets/combat_minimap_enemyLastSeen2.png')]
 		private static const enemyLastSeenBitmap:Class;
 		
 		
@@ -63,8 +65,14 @@ package angel.game {
 		private var activeEntityMarker:Bitmap = new activeBitmap();
 		
 		public function Minimap(combat:RoomCombat) {
+			
+			// Wm wants it mouse-transparent and non-draggable.  I disagree, so just commenting out the
+			// dragging stuff for the time being.
+			this.mouseEnabled = false;
+			this.mouseChildren = false;
+			
 			this.combat = combat;
-			addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
+			//addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
 			addEventListener(Event.ENTER_FRAME, scrollRoomSpriteToMatchRealRoom);
 			combat.room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, someoneMoved);
 			combat.room.addEventListener(EntityEvent.START_TURN, someoneStartedTurn);
@@ -82,6 +90,19 @@ package angel.game {
 			graphics.beginFill(0x0, .75);
 			graphics.drawRoundRect(0, 0, WIDTH, HEIGHT, WIDTH/10);
 			graphics.endFill();
+			
+			var tempPoint:Point;
+			roomSprite.graphics.lineStyle(1, 0xff0000, 0.5);
+			tempPoint = Floor.topCornerOf(new Point(0, 0));
+			roomSprite.graphics.moveTo(tempPoint.x / SCALE + offsetX, tempPoint.y / SCALE + offsetY);
+			tempPoint = Floor.topCornerOf(new Point(combat.room.size.x, 0));
+			roomSprite.graphics.lineTo(tempPoint.x / SCALE + offsetX, tempPoint.y / SCALE + offsetY);
+			tempPoint = Floor.topCornerOf(combat.room.size);
+			roomSprite.graphics.lineTo(tempPoint.x / SCALE + offsetX, tempPoint.y / SCALE + offsetY);
+			tempPoint = Floor.topCornerOf(new Point(0, combat.room.size.y));
+			roomSprite.graphics.lineTo(tempPoint.x / SCALE + offsetX, tempPoint.y / SCALE + offsetY);
+			tempPoint = Floor.topCornerOf(new Point(0, 0));
+			roomSprite.graphics.lineTo(tempPoint.x / SCALE + offsetX, tempPoint.y / SCALE + offsetY);
 			
 			mapMask = new Shape();
 			mapMask.graphics.beginFill(0xffffff, 1);
@@ -119,8 +140,8 @@ package angel.game {
 		}
 		
 		public function cleanup():void {
-			removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
-			removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
+			//removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
+			//removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
 			removeEventListener(Event.ENTER_FRAME, scrollRoomSpriteToMatchRealRoom);
 			combat.room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, someoneMoved);
 			combat.room.removeEventListener(EntityEvent.START_TURN, someoneStartedTurn);
@@ -142,30 +163,33 @@ package angel.game {
 			activeEntityMarker.y = activeEntityIcon.y;
 		}
 		
-		private function adjustEnemyIconsForVisibility():void {
+		private function adjustEnemyIcon(enemy:SimpleEntity):void {
+			var icon:Bitmap = entityToMapIcon[enemy];
+			if (enemy.visible) {
+				if (icon.bitmapData == enemyLastSeenBitmapData) {
+					//NOTE: don't change icon if it's enemyDead!
+					icon.bitmapData = enemyBitmapData;
+				}
+				setIconPositionFromEntityLocation(icon, enemy);
+			} else {
+				icon.bitmapData = enemyLastSeenBitmapData;
+			}
+		}
+		
+		private function adjustAllEnemyIconsForVisibility():void {
 			for each (var entity:ComplexEntity in combat.fighters) {
 				if (!entity.isPlayerControlled) {
-					var icon:Bitmap = entityToMapIcon[entity];
-					if (entity.visible) {
-						icon.bitmapData = enemyBitmapData;
-						setIconPositionFromEntityLocation(icon, entity);
-					} else {
-						icon.bitmapData = enemyLastSeenBitmapData;
-					}
+					adjustEnemyIcon(entity);
 				}
 			}
-			
 		}
 		
 		public function someoneMoved(event:EntityEvent):void {
-			var icon:Bitmap = entityToMapIcon[event.entity];
 			if (ComplexEntity(event.entity).isPlayerControlled) {
-				setIconPositionFromEntityLocation(icon, event.entity);
-				adjustEnemyIconsForVisibility();
-			} else if (event.entity.visible) {
-				setIconPositionFromEntityLocation(icon, event.entity);
+				setIconPositionFromEntityLocation(entityToMapIcon[event.entity], event.entity);
+				adjustAllEnemyIconsForVisibility();
 			} else {
-				icon.bitmapData = enemyLastSeenBitmapData;
+				adjustEnemyIcon(event.entity);
 			}
 			
 			if (event.entity == activeEntity) {
@@ -188,6 +212,7 @@ package angel.game {
 			roomSprite.y = Math.floor(combat.room.y / SCALE);
 		}
 		
+		/*
 		public function mouseDownListener(event:MouseEvent):void {
 			addEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
 			startDrag();
@@ -197,6 +222,7 @@ package angel.game {
 			removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
 			stopDrag();
 		}
+		*/
 		
 	}
 
