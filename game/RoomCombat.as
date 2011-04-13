@@ -4,6 +4,7 @@ package angel.game {
 	import angel.common.Floor;
 	import angel.common.FloorTile;
 	import angel.common.Prop;
+	import angel.common.Tileset;
 	import angel.common.Util;
 	import flash.display.Bitmap;
 	import flash.display.Graphics;
@@ -21,6 +22,7 @@ package angel.game {
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
 	import flash.ui.Keyboard;
+	import flash.utils.Dictionary;
 	import flash.utils.Timer;
 
 	
@@ -53,6 +55,12 @@ package angel.game {
 		public var statDisplay:CombatStatDisplay;
 		private var modeLabel:TextField;
 		private var enemyTurnOverlay:Shape;
+		
+		// We will keep one of these markers for every enemy at all times, and make it visible when the enemy
+		// goes out of sight.  That seems cleaner than tracking 'previous position' of the moving enemy and creating
+		// and deleting markers, though probably a bit less efficient.
+		private var lastSeenMarkers:Dictionary = new Dictionary(); // map from entity to LastSeen
+		private static const LAST_SEEN_MARKER_TURNS:int = 2; // markers remain visible this long after sighting
 		
 		private var enemyHealthDisplay:TextField;
 		private static const ENEMY_HEALTH_PREFIX:String = "Enemy: ";
@@ -152,6 +160,32 @@ package angel.game {
 				fighters.push(entity);
 				entity.joinCombat(this);
 				createCombatMarker(entity, ENEMY_MARKER_COLOR);
+				createLastSeenMarker(entity);
+			}
+		}
+		
+		private function createLastSeenMarker(entity:ComplexEntity):void {
+			// I think this should be visible for out-of-sight enemies when first entering combat from explore,
+			// but Wm disagrees.  To change that, just remove the line setting age to LAST_SEEN_MARKER_TURNS.
+			var lastSeen:LastSeen = new LastSeen();
+			room.decorationsLayer.addChild(lastSeen);
+			lastSeenMarkers[entity] = lastSeen;
+			updateLastSeenLocation(entity);
+			lastSeen.age = LAST_SEEN_MARKER_TURNS;
+		}	
+		
+		private function updateLastSeenLocation(entity:ComplexEntity):void {
+			var loc:Point = Floor.tileBoxCornerOf(entity.location);
+			var lastSeen:LastSeen = lastSeenMarkers[entity];
+			if (entity.visible) {
+				lastSeen.visible = false;
+				lastSeen.age = 0;
+				lastSeen.x = loc.x;
+				lastSeen.y = loc.y;
+				trace("Adjusting visibility for", entity.aaId, "currently visible, set marker age 0 and hide");
+			} else {
+				lastSeen.visible = (lastSeen.age < LAST_SEEN_MARKER_TURNS);
+				trace("Adjusting visibility for", entity.aaId, "currently out of sight, marker age", lastSeenMarkers[entity].age, "set visible", lastSeenMarkers[entity].visible);
 			}
 		}
 		
@@ -168,7 +202,6 @@ package angel.game {
 			entity.marker = marker;
 			room.moveMarkerIfNeeded(entity);
 		}
-		
 		
 		private function cleanupEntityFromCombat(entity:ComplexEntity):void {
 			entity.exitCurrentMode();
@@ -452,6 +485,7 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 		
 		private function adjustVisibilityOfEnemy(enemy:ComplexEntity):void {
 			enemy.visible = enemy.marker.visible = losFromAnyPlayer(enemy.location);
+			updateLastSeenLocation(enemy);
 		}
 		
 		/*********** Turn-structure related **************/
@@ -536,6 +570,9 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 				statDisplay.adjustCombatStatDisplay(null);
 				modeLabel.text = ENEMY_MOVE;
 				
+				trace("Begin turn for", fighter.aaId, "marker age", lastSeenMarkers[fighter].age);
+				++lastSeenMarkers[fighter].age;
+				
 				// Give the player some time to gaze at the enemy's move dots before continuing with turn.
 				// (The timer will be running while enemy calculates move, so if that takes a while once we
 				// start complicating the AI, then there may be a delay before the move dots are drawn, but
@@ -583,4 +620,23 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 		
 	} // end class RoomCombat
 
+}
+
+import angel.common.Tileset;
+import flash.display.DisplayObject;
+import flash.display.Shape;
+
+class LastSeen extends Shape {
+	public var age:int;
+	public function LastSeen(age:int = 0) {
+		this.age = age;
+		
+		var w:int = Tileset.TILE_WIDTH / 3;
+		var h:int = Tileset.TILE_HEIGHT / 3;
+		graphics.lineStyle(4, 0x0, 1);
+		graphics.moveTo(w, h);
+		graphics.lineTo(Tileset.TILE_WIDTH - w, Tileset.TILE_HEIGHT - h);
+		graphics.moveTo(w, Tileset.TILE_HEIGHT - h);
+		graphics.lineTo(Tileset.TILE_WIDTH - w, h);
+	}
 }
