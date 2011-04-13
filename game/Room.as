@@ -118,7 +118,7 @@ package angel.game {
 				if (callback != null) {
 					callback();
 				}
-			} );
+			}, false, 0, true );
 			timer.start();
 		}
 		
