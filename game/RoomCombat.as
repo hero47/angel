@@ -198,6 +198,10 @@ package angel.game {
 			}
 		}		
 		
+		public function toggleMinimap():void {
+			minimap.visible = !minimap.visible;
+		}
+		
 		public function adjustEnemyHealthDisplay(points:int):void {
 			if (points < 0) {
 				enemyHealthDisplay.visible = false;
