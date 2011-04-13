@@ -77,6 +77,10 @@ package angel.game {
 					room.changeModeTo(RoomExplore);
 				break;
 				
+				case Util.KEYBOARD_M:
+					combat.toggleMinimap();
+				break;
+				
 				case Keyboard.BACKSPACE:
 					doCancelTarget();
 				break;
