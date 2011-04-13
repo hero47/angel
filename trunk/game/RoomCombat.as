@@ -72,9 +72,9 @@ package angel.game {
 			// These listeners can only trigger in specific phases, and finishedMoving advances the phase.
 			// I'm keeping them around throughout combat rather than adding and removing them as we flip
 			// between phases because it seemed a little cleaner that way, but I'm not certain.
-			room.addEventListener(EntityEvent.MOVED, entityMovingToNewTile);
-			room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, entityStandingOnNewTile);
-			room.addEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
+			room.addEventListener(EntityEvent.MOVED, entityMovingToNewTile, false, 100);
+			room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, entityStandingOnNewTile, false, 100);
+			room.addEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener, false, 100);
 			
 			statDisplay = new CombatStatDisplay();
 			room.stage.addChild(statDisplay);
@@ -91,8 +91,8 @@ package angel.game {
 			room.stage.addChild(enemyHealthDisplay);
 			
 			minimap = new Minimap(this); // WARNING: must be created after enemy visibility set!
-			minimap.x = room.stage.stageWidth - minimap.width - 20;
-			minimap.y = room.stage.stageHeight - minimap.height - 20;
+			minimap.x = room.stage.stageWidth - minimap.width - 5;
+			minimap.y = room.stage.stageHeight - minimap.height - 5;
 			room.stage.addChild(minimap);
 			
 			modeLabel = Util.textBox("", 300, 60, TextFormatAlign.CENTER, false, 0xffffff);
@@ -293,7 +293,6 @@ package angel.game {
 			if (entity.currentHealth <= 0) {
 				entity.solidness ^= Prop.TALL; // Dead entities are short, by fiat.
 				entity.startDeathAnimation();
-				entity.dispatchEvent(new EntityEvent(EntityEvent.DEATH, true, false, entity));
 				if (entity == room.mainPlayerCharacter) {
 					combatOver = true;
 					Alert.show("You have been taken out.", { callback:combatOverOk } );
@@ -307,6 +306,7 @@ package angel.game {
 						adjustAllEnemyVisibility();
 					}
 				}
+				entity.dispatchEvent(new EntityEvent(EntityEvent.DEATH, true, false, entity));
 			}
 		}
 		
