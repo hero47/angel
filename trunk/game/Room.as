@@ -36,7 +36,9 @@ package angel.game {
 		public var size:Point;
 		public var mode:RoomMode;
 
-		public var ui:IRoomUi;
+		public var activeUi:IRoomUi;
+		private var disabledUi:IRoomUi;
+		private var lastUiPlayer:ComplexEntity;
 		private var dragging:Boolean = false;
 		private var gameIsPaused:Boolean = false;
 		
@@ -126,6 +128,11 @@ package angel.game {
 			return gameIsPaused;
 		}
 		
+		public function startConversation(entity:SimpleEntity):void {
+			var conversation:Conversation = new Conversation(entity);
+			stage.addChild(conversation); // Conversation takes over ui when added to stage, removes itself & restores when finished
+		}
+		
 		/********** Player UI-related  ****************/
 		// CONSIDER: Move this into a class, have the things that now implement IRoomUi subclass it?
 		
@@ -136,7 +143,8 @@ package angel.game {
 		
 		// call this when player-controlled part of the turn begins, to allow player to enter move
 		public function enableUi(newUi:IRoomUi, player:ComplexEntity):void {
-			ui = newUi;
+			activeUi = newUi;
+			lastUiPlayer = player;
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 			stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
 			addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
@@ -158,15 +166,21 @@ package angel.game {
 			removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
 			stopDrag();
 			
-			if (ui != null) {
-				ui.disable();
-				ui = null;
+			if (activeUi != null) {
+				disabledUi = activeUi;
+				activeUi.disable();
+				activeUi = null;
 			}
+		}
+		
+		public function restoreLastUi():void {
+			enableUi(disabledUi, lastUiPlayer);
+			disabledUi = null;
 		}
 		
 		
 		private function keyDownListener(event:KeyboardEvent):void {
-			if (ui == null) {
+			if (activeUi == null) {
 				return;
 			}
 			switch (event.keyCode) {
@@ -175,20 +189,20 @@ package angel.game {
 				break;
 				
 				default:
-					ui.keyDown(event.keyCode);
+					activeUi.keyDown(event.keyCode);
 				break;
 			}
 		}
 		
 		private function mouseMoveListener(event:MouseEvent):void {
-			if (ui == null) {
+			if (activeUi == null) {
 				return;
 			}
-			ui.mouseMove(event.target as FloorTile);
+			activeUi.mouseMove(event.target as FloorTile);
 		}
 
 		private function mouseDownListener(event:MouseEvent):void {
-			if (ui == null) {
+			if (activeUi == null) {
 				return;
 			}
 			if (event.shiftKey) {
@@ -201,7 +215,7 @@ package angel.game {
 		}
 
 		private function mouseUpListener(event:MouseEvent):void {
-			if (ui == null) {
+			if (activeUi == null) {
 				return;
 			}
 			removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
@@ -209,7 +223,7 @@ package angel.game {
 		}
 		
 		private function mouseClickListener(event:MouseEvent):void {
-			if (ui == null) {
+			if (activeUi == null) {
 				return;
 			}
 			if (event.ctrlKey) {
@@ -219,19 +233,19 @@ package angel.game {
 				return;
 			}
 			if (!dragging && (event.target is FloorTile)) {
-				ui.mouseClick(event.target as FloorTile);
+				activeUi.mouseClick(event.target as FloorTile);
 			}
 		}
 		
 		private function rightClickListener(event:MouseEvent):void {
-			if (ui == null) {
+			if (activeUi == null) {
 				return;
 			}
 			if (!(event.target is FloorTile)) {
 				return;
 			}
 			var tile:FloorTile = event.target as FloorTile;
-			var slices:Vector.<PieSlice> = ui.pieMenuForTile(tile);
+			var slices:Vector.<PieSlice> = activeUi.pieMenuForTile(tile);
 			launchPieMenu(tile, slices);
 		}
 		
@@ -384,7 +398,7 @@ package angel.game {
 			scrollingTo = PositionOfRoomToCenterTile(tileLoc);
 		}
 
-		public function moveToCenter(tileLoc: Point):void {
+		public function snapToCenter(tileLoc: Point):void {
 			scrollingTo = null;
 			var whereToMove: Point = PositionOfRoomToCenterTile(tileLoc);
 			this.x = whereToMove.x;
@@ -397,9 +411,6 @@ package angel.game {
 							 stage.stageHeight / 2 - desiredTileCenter.y - Floor.FLOOR_TILE_Y / 2 );
 		}
 		
-//		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander };
-//		private static const combatBrain:Object = { wander:CombatBrainWander };
-
 		public function fillContentsFromXml(catalog:Catalog, contentsXml: XML):void {
 			for each (var propXml: XML in contentsXml.prop) {
 				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXml(propXml, catalog));
@@ -408,36 +419,6 @@ package angel.game {
 				addEntityUsingItsLocation(Walker.createFromRoomContentsXml(walkerXml, catalog));
 			}
 		}
-		
-		
-		/*
-		public function fillContentsFromXml(catalog:Catalog, contentsXml:XML):void {
-			for each (var propXml:XML in contentsXml.prop) {
-				var propName:String = propXml;
-				addPropByName(catalog, propName, new Point(propXml.@x, propXml.@y));
-			}
-			for each (var walkerXml:XML in contentsXml.walker) {
-				var walkerName:String = walkerXml;
-				var walker:Walker = addWalkerByName(catalog, walkerName, new Point(walkerXml.@x, walkerXml.@y));
-				var exploreSetting:String = walkerXml.@explore;
-				walker.exploreBrainClass = exploreBrain[exploreSetting];
-				var combatSetting:String = walkerXml.@combat;
-				walker.combatBrainClass = combatBrain[combatSetting];
-			}
-		}
-		
-		public function addPropByName(catalog:Catalog, id:String, location:Point):void {
-			var propImage:PropImage = catalog.retrievePropImage(id);
-			var prop:Entity = Entity.createFromPropImage(propImage, id);
-			addEntity(prop, location);
-		}
-		
-		public function addWalkerByName(catalog:Catalog, id:String, location:Point):Walker {
-			var entity:Walker = new Walker(catalog.retrieveWalkerImage(id), id);
-			addEntity(entity, location);
-			return entity;
-		}
-		*/
 		
 	} // end class Room
 

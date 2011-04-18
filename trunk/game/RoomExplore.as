@@ -24,7 +24,7 @@ package angel.game {
 			
 			exploreUi = new ExploreUi(room, this);
 			Assert.assertTrue(room.mainPlayerCharacter != null, "Main player character undefined!");
-			room.moveToCenter(room.mainPlayerCharacter.location);
+			room.snapToCenter(room.mainPlayerCharacter.location);
 			room.enableUi(exploreUi, room.mainPlayerCharacter);
 		}
 

@@ -25,7 +25,7 @@ package angel.game {
 			this.room = room;
 		}
 		
-		/* INTERFACE angel.game.IUi */
+		/* INTERFACE angel.game.IRoomUi */
 		
 		public function enable(player:ComplexEntity):void {
 			this.player = player;
@@ -53,7 +53,7 @@ package angel.game {
 					}
 				break;
 				case Keyboard.BACKSPACE:
-					room.moveToCenter(player.location);
+					room.snapToCenter(player.location);
 				break;
 			}
 		}

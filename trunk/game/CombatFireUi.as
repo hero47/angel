@@ -43,7 +43,7 @@ package angel.game {
 			aimCursor.addChild(aimCursorBitmap);		
 		}
 		
-		/* INTERFACE angel.game.IUi */
+		/* INTERFACE angel.game.IRoomUi */
 		
 		public function enable(player:ComplexEntity):void {
 			trace("entering player fire phase for", player.aaId);
@@ -95,10 +95,10 @@ package angel.game {
 				
 				case Keyboard.SPACE:
 					if (spaceLastCenteredOnPlayer && targetEnemy != null) {
-						room.moveToCenter(targetEnemy.location);
+						room.snapToCenter(targetEnemy.location);
 						spaceLastCenteredOnPlayer = false;
 					} else {
-						room.moveToCenter(player.location);
+						room.snapToCenter(player.location);
 						spaceLastCenteredOnPlayer = true;
 					}
 				break;
