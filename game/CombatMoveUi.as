@@ -26,7 +26,7 @@ package angel.game {
 			this.room = room;
 		}
 		
-		/* INTERFACE angel.game.IUi */
+		/* INTERFACE angel.game.IRoomUi */
 		
 		public function enable(player:ComplexEntity):void {
 			trace("entering player move phase for", player.aaId);

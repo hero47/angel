@@ -66,7 +66,7 @@ package angel.game {
 			floor.removeEventListener(Event.INIT, mapLoadedListener);
 			room = new Room(floor);
 			addChild(room);
-			room.moveToCenter(startLoc);
+			room.snapToCenter(startLoc);
 			
 			room.fillContentsFromXml(catalog, contentsXml);
 			

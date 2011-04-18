@@ -7,7 +7,7 @@ package angel.game {
 	 */
 	public interface IRoomUi {
 		
-		// listeners from IUi are enabled/disabled by caller; this enable/disable are just for the extra
+		// listeners from IRoomUi are enabled/disabled by caller; this enable/disable are just for the extra
 		// bits unique to this particular UI
 		function enable(player:ComplexEntity):void;
 		function disable():void;

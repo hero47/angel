@@ -41,9 +41,13 @@ package angel.game {
 			return Util.chessDistance(player.location, myLocation) == 1;
 		}
 		
+		// Eventually, entity properties and/or scripting will control what happens when entity is frobbed
 		public function frob(player:ComplexEntity):void {
-			// Eventually, entity properties and/or scripting will control what happens when entity is frobbed
-			Alert.show("Player character " + player.aaId + " frobbed " + aaId);
+			if (this is Walker) {
+				room.startConversation(this);
+			} else {
+				Alert.show("Player character " + player.aaId + " frobbed object " + aaId);
+			}
 		}
 		
 		//NOTE: indetermined yet whether it will be meaningful or useful to have an entity "in" a room but not
