@@ -19,6 +19,7 @@ package angel.common {
 		public static const FACE_DYING:int = 8;
 		
 		public var health:int = 1;
+		public var movePoints:int = 10;
 		public var unusedPixelsAtTopOfCell:int = 0;
 		
 		[Embed(source = '../../../EmbeddedAssets/temp_default_walker.png')]
@@ -45,21 +46,19 @@ package angel.common {
 		
 		private function parseAndDeleteCatalogXml(entry:CatalogEntry):void {
 			if (entry.xml != null) {
-				var value:String;
-				
-				value = entry.xml.@health;
-				if (value != "") {
-					health = int(value);
-				}
-				
-				value = entry.xml.@top;
-				if (value != "") {
-					unusedPixelsAtTopOfCell = int(value);
-				}
-				
+				setIntFromXml(this, "health", entry, "health");
+				setIntFromXml(this, "unusedPixelsAtTopOfCell", entry, "top");
+				setIntFromXml(this, "movePoints", entry, "movePoints");
 				entry.xml = null;
 			}
+		}
 		
+		private function setIntFromXml(setInto:Object, objectPropertyName:String, entry:CatalogEntry, xmlPropertyName:String):void
+		{
+			var valueAsString:String = entry.xml.attribute(xmlPropertyName);
+			if (valueAsString != "") {
+				setInto[objectPropertyName] = int(valueAsString);
+			}
 		}
 		
 		public function get catalogEntry():CatalogEntry {
