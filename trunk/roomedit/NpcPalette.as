@@ -44,15 +44,15 @@ package angel.roomedit {
 			walkerFacingFront.y = 10;
 			addChild(walkerFacingFront);
 			
-			var walkerChooser:Sprite = catalog.createChooser(CatalogEntry.WALKER, EditorSettings.PALETTE_XSIZE - 10);
+			var walkerChooser:ComboHolder = catalog.createChooser(CatalogEntry.WALKER, EditorSettings.PALETTE_XSIZE - 10);
 			walkerChooser.x = (this.width - walkerChooser.width) / 2;
 			walkerChooser.y = Prop.HEIGHT + 20;
 			addChild(walkerChooser);
-			walkerCombo = ComboBox(walkerChooser.getChildAt(0));
+			walkerCombo = walkerChooser.comboBox;
 			walkerCombo.addEventListener(Event.CHANGE, changeWalker);
 			
 			locationText = Util.textBox("", EditorSettings.PALETTE_XSIZE, Util.DEFAULT_TEXT_HEIGHT, TextFormatAlign.CENTER);
-			locationText.y = walkerChooser.y + walkerCombo.height + 10;
+			locationText.y = walkerChooser.y + walkerChooser.height + 10;
 			addChild(locationText);
 			
 			attributeDisplay = createAttributeDisplay();

@@ -23,6 +23,7 @@ package angel.roomedit {
 		private var propBitmap:Bitmap;
 		private var propCombo:ComboBox;
 		private var healthTextField:TextField;
+		private var movePointsTextField:TextField;
 		
 		private static const WIDTH:int = 220;
 		
@@ -49,21 +50,17 @@ package angel.roomedit {
 			propBitmap.y = 1;
 			addChild(propBitmap);
 			
-			var propChooser:Sprite = catalog.createChooser(CatalogEntry.WALKER, WIDTH);
-			propCombo = ComboBox(propChooser.getChildAt(0));
-			propCombo.addEventListener(Event.CHANGE, changeProp);
+			var propChooser:ComboHolder = catalog.createChooser(CatalogEntry.WALKER, WIDTH);
+			propChooser.comboBox.addEventListener(Event.CHANGE, changeProp);
 			propChooser.y = propBitmap.y + propBitmap.height + 10;
+			propCombo = propChooser.comboBox;
 			addChild(propChooser);
 			
-			var label:TextField = Util.textBox("Health:", 50, 20);
-			label.y = propChooser.y + propCombo.height + 10;
-			addChild(label);
-			healthTextField = Util.textBox("", 40, 20, TextFormatAlign.LEFT, true);
-			healthTextField.x = label.x + label.width + 5;
-			healthTextField.y = label.y;
-			healthTextField.addEventListener(Event.CHANGE, changeHealth);
-			addChild(healthTextField);
-
+			healthTextField = Util.addTextEditControl(this, propChooser, "Health", 50,
+					function(event:Event):void { changeWalkerImageIntProperty(event.target.text, "health") });
+			movePointsTextField = Util.addTextEditControl(this, healthTextField, "Move Points", 100,
+					function(event:Event):void { changeWalkerImageIntProperty(event.target.text, "movePoints") } );
+			
 			if (startId == null) {
 				propCombo.selectedIndex = 0;
 			} else {
@@ -85,16 +82,18 @@ package angel.roomedit {
 			propBitmap.bitmapData = walkerImage.bitsFacing(WalkerImage.FACE_CAMERA);
 			
 			healthTextField.text = String(walkerImage.health);
+			movePointsTextField.text = String(walkerImage.movePoints);
 		}
-		
-		private function changeHealth(event:Event):void {
+				
+		private function changeWalkerImageIntProperty(newValueAsString:String, propertyName:String):void {
 			var walkerId:String = propCombo.selectedLabel;
 			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
 			
-			walkerImage.health = int(healthTextField.text);
-			catalog.changeXmlAttribute(walkerId, "health", String(walkerImage.health));
+			var newValue:int = int(newValueAsString);
+			walkerImage[propertyName] = newValue;
+			catalog.changeXmlAttribute(walkerId, propertyName, String(newValue));
 		}
-		
+
 		private function setTopByPixelScan(event:Event):void {
 			var walkerId:String = propCombo.selectedLabel;
 			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
