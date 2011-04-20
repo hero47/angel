@@ -1,7 +1,9 @@
 package angel.roomedit {
 	import angel.common.Catalog;
 	import angel.common.CatalogEntry;
+	import angel.common.LoaderWithErrorCatching;
 	import fl.controls.ComboBox;
+	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.net.FileReference;
@@ -114,7 +116,22 @@ package angel.roomedit {
 				entry.xml = current[0];
 				trace(entry.xml);
 			}
-			
+		}
+		
+		// NOTE: this is not resource manager, just a quick-and-dirty for editor!  I'm not even looking at possible memory leaks.
+		public function changeFilename(id:String, newFilename:String):void {
+			var entry:CatalogEntry = lookup[id];
+			if (entry != null) {
+				changeXmlAttribute(id, "file", newFilename);
+				entry.filename = newFilename;
+				LoaderWithErrorCatching.LoadBytesFromFile(entry.filename,
+					function(event:Event):void {
+						var bitmap:Bitmap = event.target.content;
+						warnIfBitmapIsWrongSize(entry, bitmap.bitmapData);
+						entry.data.dataFinishedLoading(bitmap.bitmapData);
+					}
+				);
+			}
 		}
 		
 	}

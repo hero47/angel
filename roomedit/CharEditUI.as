@@ -40,11 +40,17 @@ package angel.roomedit {
 			topButton.width = 50;
 			topButton.x = imageX + Prop.WIDTH + 5;
 			addChild(topButton);
-			var resetTopButton:SimplerButton = new SimplerButton("Reset", resetTop);
-			resetTopButton.width = topButton.width;
+			var resetTopButton:SimplerButton = new SimplerButton("Reset Top", resetTop);
+			resetTopButton.width = 70;
 			resetTopButton.x = topButton.x;
 			resetTopButton.y = Prop.HEIGHT - resetTopButton.height;
 			addChild(resetTopButton);
+			
+			var changeImageFileButton:SimplerButton = new SimplerButton("New Image", changeImage, 0x880000);
+			changeImageFileButton.width = 80;
+			changeImageFileButton.x = 0;
+			changeImageFileButton.y = 0; // resetTopButton.y;
+			addChild(changeImageFileButton);
 			
 			propBitmap = new Bitmap(new BitmapData(Prop.WIDTH, Prop.HEIGHT));
 			propBitmap.x = imageX;
@@ -126,6 +132,15 @@ package angel.roomedit {
 			catalog.deleteXmlAttribute(walkerId, "top");
 			catalog.discardCachedData(walkerId);
 			changeProp(null);
+		}
+		
+		private function changeImage(event:Event):void {
+			new FileChooser(userSelectedNewCharFile, null, false);
+		}
+		
+		private function userSelectedNewCharFile(filename:String):void {
+			var walkerId:String = propCombo.selectedLabel;
+			catalog.changeFilename(walkerId, filename);
 		}
 		
 		
