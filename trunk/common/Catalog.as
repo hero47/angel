@@ -130,7 +130,7 @@ package angel.common {
 			return entry.data;
 		}
 		
-		private function warnIfBitmapIsWrongSize(entry:CatalogEntry, bitmapData:BitmapData):void {
+		protected function warnIfBitmapIsWrongSize(entry:CatalogEntry, bitmapData:BitmapData):void {
 			var typeName:String;
 			var correctWidth:int;
 			var correctHeight:int;

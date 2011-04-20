@@ -182,10 +182,8 @@ package angel.game {
 				lastSeen.age = 0;
 				lastSeen.x = loc.x;
 				lastSeen.y = loc.y;
-				trace("Adjusting visibility for", entity.aaId, "currently visible, set marker age 0 and hide");
 			} else {
 				lastSeen.visible = (lastSeen.age < LAST_SEEN_MARKER_TURNS);
-				trace("Adjusting visibility for", entity.aaId, "currently out of sight, marker age", lastSeenMarkers[entity].age, "set visible", lastSeenMarkers[entity].visible);
 			}
 		}
 		
