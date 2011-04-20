@@ -17,17 +17,18 @@ package angel.roomedit {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class NpcEditUI extends Sprite {
+	public class CharEditUI extends Sprite {
 
 		private var catalog:CatalogEdit;
 		private var propBitmap:Bitmap;
 		private var propCombo:ComboBox;
 		private var healthTextField:TextField;
 		private var movePointsTextField:TextField;
+		private var nameTextField:TextField;
 		
 		private static const WIDTH:int = 220;
 		
-		public function NpcEditUI(catalog:CatalogEdit, startId:String = null) {
+		public function CharEditUI(catalog:CatalogEdit, startId:String = null) {
 			this.catalog = catalog;
 			
 			var imageX:int = (WIDTH - Prop.WIDTH) / 2;
@@ -56,10 +57,12 @@ package angel.roomedit {
 			propCombo = propChooser.comboBox;
 			addChild(propChooser);
 			
-			healthTextField = Util.addTextEditControl(this, propChooser, "Health", 50,
-					function(event:Event):void { changeWalkerImageIntProperty(event.target.text, "health") });
-			movePointsTextField = Util.addTextEditControl(this, healthTextField, "Move Points", 100,
-					function(event:Event):void { changeWalkerImageIntProperty(event.target.text, "movePoints") } );
+			nameTextField = Util.addTextEditControl(this, propChooser, "Display Name", 100, 100,
+					function(event:Event):void { changeWalkerImageProperty(event.target.text, "displayName") });
+			healthTextField = Util.addTextEditControl(this, nameTextField, "Hits", 100, 40,
+					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "health") });
+			movePointsTextField = Util.addTextEditControl(this, healthTextField, "Move Points", 100, 40,
+					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "movePoints") } );
 			
 			if (startId == null) {
 				propCombo.selectedIndex = 0;
@@ -81,15 +84,15 @@ package angel.roomedit {
 			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
 			propBitmap.bitmapData = walkerImage.bitsFacing(WalkerImage.FACE_CAMERA);
 			
+			nameTextField.text = walkerImage.displayName;
 			healthTextField.text = String(walkerImage.health);
 			movePointsTextField.text = String(walkerImage.movePoints);
 		}
-				
-		private function changeWalkerImageIntProperty(newValueAsString:String, propertyName:String):void {
+		
+		private function changeWalkerImageProperty(newValue:*, propertyName:String):void {
 			var walkerId:String = propCombo.selectedLabel;
 			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
 			
-			var newValue:int = int(newValueAsString);
 			walkerImage[propertyName] = newValue;
 			catalog.changeXmlAttribute(walkerId, propertyName, String(newValue));
 		}

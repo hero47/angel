@@ -22,12 +22,12 @@ package angel.common {
 			
 		}
 
-		public static function addTextEditControl(parent:Sprite, previousControl:DisplayObject, labelText:String, labelWidth:int, changeHandler:Function):TextField
+		public static function addTextEditControl(parent:Sprite, previousControl:DisplayObject, labelText:String, labelWidth:int, fieldWidth:int, changeHandler:Function):TextField
 		{
 			var label:TextField = Util.textBox(labelText + ":", labelWidth, 20);
 			label.y = previousControl.y + previousControl.height + 10;
 			parent.addChild(label);
-			var textField:TextField = Util.textBox("", 40, 20, TextFormatAlign.LEFT, true);
+			var textField:TextField = Util.textBox("", fieldWidth, 20, TextFormatAlign.LEFT, true);
 			textField.x = label.x + label.width + 5;
 			textField.y = label.y;
 			textField.addEventListener(Event.CHANGE, changeHandler);

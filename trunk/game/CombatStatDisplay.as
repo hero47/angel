@@ -70,7 +70,7 @@ package angel.game {
 				visible = false;
 			} else {
 				visible = true;
-				displayName.text = entity.aaId;	// Temporary until we have a real display name
+				displayName.text = entity.displayName;
 				health.text = PLAYER_HEALTH_PREFIX + String(entity.currentHealth);
 			}
 		}
