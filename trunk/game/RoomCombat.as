@@ -103,7 +103,7 @@ package angel.game {
 			minimap.y = room.stage.stageHeight - minimap.height - 5;
 			room.stage.addChild(minimap);
 			
-			modeLabel = Util.textBox("", 300, 60, TextFormatAlign.CENTER, false, 0xffffff);
+			modeLabel = Util.textBox("", 350, 60, TextFormatAlign.CENTER, false, 0xffffff);
 			modeLabel.mouseEnabled = false;
 			//modeLabel.background = true;
 			modeLabel.x = (room.stage.stageWidth - modeLabel.width) / 2;
@@ -135,7 +135,6 @@ package angel.game {
 			minimap.cleanup();
 			
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
-			cleanupLastSeenMarkers();
 			mover.clearPath();
 			room.stage.removeChild(statDisplay);
 			room.stage.removeChild(modeLabel);
@@ -175,13 +174,6 @@ package angel.game {
 			lastSeen.age = LAST_SEEN_MARKER_TURNS;
 		}
 		
-		private function cleanupLastSeenMarkers():void {
-			for each (var lastSeen:LastSeen in lastSeenMarkers) {
-				room.decorationsLayer.removeChild(lastSeen);
-			}
-			lastSeenMarkers = null;
-		}
-		
 		private function updateLastSeenLocation(entity:ComplexEntity):void {
 			var loc:Point = Floor.tileBoxCornerOf(entity.location);
 			var lastSeen:LastSeen = lastSeenMarkers[entity];
@@ -195,6 +187,13 @@ package angel.game {
 				lastSeen.visible = (lastSeen.age < LAST_SEEN_MARKER_TURNS);
 				trace("Adjusting visibility for", entity.aaId, "currently out of sight, marker age", lastSeenMarkers[entity].age, "set visible", lastSeenMarkers[entity].visible);
 			}
+		}
+		
+		// Rather than just making it invisible, remove the marker entirely (for an entity who leaves combat)
+		private function deleteLastSeenLocation(entity:ComplexEntity):void {
+			var lastSeen:LastSeen = lastSeenMarkers[entity];
+			delete lastSeenMarkers[entity];
+			room.decorationsLayer.removeChild(lastSeen);
 		}
 		
 		private function createCombatMarker(entity:ComplexEntity, color:uint):void {
@@ -220,6 +219,9 @@ package angel.game {
 
 			entity.setTextOverHead(null);
 			entity.visible = true;
+			if (!entity.isPlayerControlled) {
+				deleteLastSeenLocation(entity);
+			}
 		}
 		
 		//NOTE: grid lines are tweaked up by one pixel because the tile image bitmaps actually extend one pixel outside the
