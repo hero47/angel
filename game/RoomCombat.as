@@ -135,6 +135,7 @@ package angel.game {
 			minimap.cleanup();
 			
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
+			cleanupLastSeenMarkers();
 			mover.clearPath();
 			room.stage.removeChild(statDisplay);
 			room.stage.removeChild(modeLabel);
@@ -172,7 +173,14 @@ package angel.game {
 			lastSeenMarkers[entity] = lastSeen;
 			updateLastSeenLocation(entity);
 			lastSeen.age = LAST_SEEN_MARKER_TURNS;
-		}	
+		}
+		
+		private function cleanupLastSeenMarkers():void {
+			for each (var lastSeen:LastSeen in lastSeenMarkers) {
+				room.decorationsLayer.removeChild(lastSeen);
+			}
+			lastSeenMarkers = null;
+		}
 		
 		private function updateLastSeenLocation(entity:ComplexEntity):void {
 			var loc:Point = Floor.tileBoxCornerOf(entity.location);
