@@ -330,18 +330,11 @@ package angel.game {
 			if (entity.currentHealth <= 0) {
 				entity.solidness ^= Prop.TALL; // Dead entities are short, by fiat.
 				entity.startDeathAnimation();
-				if (entity == room.mainPlayerCharacter) {
-					combatOver = true;
-					Alert.show("You have been taken out.", { callback:combatOverOk } );
-				} else {
-					removeFighterFromCombat(entity);
-					if (allEnemiesAreDead()) {
-						combatOver = true;
-						Alert.show("You won.", { callback:combatOverOk } );
-					}
-					if (entity.isPlayerControlled) {
-						adjustAllEnemyVisibility();
-					}
+				removeFighterFromCombat(entity);
+				checkForCombatOver();
+				
+				if (entity.isPlayerControlled) {
+					adjustAllEnemyVisibility();
 				}
 				entity.dispatchEvent(new EntityEvent(EntityEvent.DEATH, true, false, entity));
 			}
@@ -604,6 +597,9 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 			}
 			if (indexOfDeadFighter <= iFighterTurnInProgress) {
 				--iFighterTurnInProgress;
+				if (iFighterTurnInProgress < 0) {
+					iFighterTurnInProgress = fighters.length - 1;
+				}
 			}
 			fighters.splice(indexOfDeadFighter, 1);
 			cleanupEntityFromCombat(deadFighter);
@@ -616,6 +612,27 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 				}
 			}
 			return true;
+		}
+		
+		private function checkForCombatOver():void {
+			var playerAlive:Boolean = false;
+			var enemyAlive:Boolean = false;
+			
+			for (var i:int = 0; i < fighters.length; i++) {
+				if (fighters[i].isPlayerControlled) {
+					playerAlive = true;
+				} else {
+					enemyAlive = true;
+				}
+			}
+			if (playerAlive && enemyAlive) {
+				return;
+			}
+			combatOver = true;
+			// This boring message will certainly be replaced with something more dramatic, and game state will
+			// alter in some scripted fashion. But for now, we just drop back to explore mode and everyone comes
+			// back to life.
+			Alert.show(playerAlive ? "You won." : "You have been taken out.", { callback:combatOverOk } );
 		}
 		
 	} // end class RoomCombat

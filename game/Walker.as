@@ -25,6 +25,8 @@ package angel.game {
 			facing = WalkerImage.FACE_CAMERA;
 			super(new Bitmap(walkerImage.bitsFacing(facing)), id);
 			this.maxHealth = this.currentHealth = walkerImage.health;
+			this.displayName = walkerImage.displayName;
+			setMovePoints(walkerImage.movePoints);
 			solidness = solidnessWhenAlive = Prop.DEFAULT_SOLIDITY; // no ghostly/short characters... at least, not yet
 		}
 

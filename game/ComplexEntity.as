@@ -52,8 +52,12 @@ package angel.game {
 
 		
 		// Entity stats!  Eventually these will be initialized from data files.  They may go in a separate object.
+		public var displayName:String;
 		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
-		public var combatMovePoints:int = Settings.combatMovePoints;
+		public var combatMovePoints:int;
+		public var walkPoints:int;
+		public var runPoints:int;
+		public var sprintPoints:int;
 		public var maxHealth:int = 1;
 		public var currentHealth:int;
 		public var actionsRemaining:int;
@@ -83,6 +87,7 @@ package angel.game {
 		// id is for debugging use only
 		public function ComplexEntity(image:Bitmap, id:String = "") {
 			super(image, Prop.DEFAULT_SOLIDITY, id);
+			setMovePoints(Settings.DEFAULT_MOVE_POINTS);
 			gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed *2, Settings.runSpeed*2, Settings.sprintSpeed*2]);
 		}
 		
@@ -98,6 +103,33 @@ package angel.game {
 		public function isEnemy():Boolean {
 			//CONSIDER: is this true, or will we want to have civilians with combat behavior that are untargetable?
 			return (combatBrainClass != null && currentHealth > 0);
+		}
+		
+		public function setMovePoints(points:int):void {		
+			// Init file gives us settings for two of the three percents.  We want to set movement points for those
+			// two speeds based on percent of total points, then give the third one whatever's left (so rounding
+			// errors fall into the unspecified one).
+			// Then, once that's figured out, convert them to totals.
+			combatMovePoints = points;
+			walkPoints = combatMovePoints * Settings.walkPercent/100;
+			runPoints = combatMovePoints * Settings.runPercent/100;
+			sprintPoints = combatMovePoints * Settings.sprintPercent/100;
+			if (walkPoints + runPoints + sprintPoints == 0) {
+				walkPoints = runPoints = combatMovePoints / 3;
+			}
+			
+			if (walkPoints == 0) {
+				walkPoints = combatMovePoints - runPoints - sprintPoints;
+			}
+			if (runPoints == 0) {
+				runPoints = combatMovePoints - walkPoints - sprintPoints;
+			}
+			if (sprintPoints == 0) {
+				sprintPoints = combatMovePoints - walkPoints - runPoints;
+			}
+			
+			runPoints += walkPoints;
+			sprintPoints += runPoints;
 		}
 		
 		public function joinCombat(roomCombat:RoomCombat):void {
@@ -213,14 +245,12 @@ package angel.game {
 			turnToFacing((angle / 45) % 8);
 		}
 		
-		// NOTE: At some point entities will probably have their own individual move points & gait percentages;
-		// when that happens this will need to reference entity stats rather than Settings
 		public function gaitForDistance(distance:int):int {
-			if (distance<= Settings.walkPoints) {
+			if (distance <= walkPoints) {
 				return ComplexEntity.GAIT_WALK;
-			} else if (distance <= Settings.runPoints) {
+			} else if (distance <= runPoints) {
 				return ComplexEntity.GAIT_RUN;
-			} else if (distance <= Settings.sprintPoints) {
+			} else if (distance <= sprintPoints) {
 				return ComplexEntity.GAIT_SPRINT;
 			} else {
 				return ComplexEntity.GAIT_TOO_FAR;

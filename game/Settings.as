@@ -7,13 +7,13 @@ package angel.game {
 		
 		public static const FRAMES_PER_SECOND:int = 30;
 		public static const DEFAULT_MOVE_SPEED:Number = 2; // speeds in adjacent-tiles-per-second
+		public static const DEFAULT_MOVE_POINTS:int = 10;
 		
 		public static var testExploreScroll:int = 0;
 		public static var showEnemyMoves:Boolean = false;
-		public static var combatMovePoints:int = 10;
-		public static var walkPoints:int;
-		public static var runPoints:int;
-		public static var sprintPoints:int;
+		public static var walkPercent:int;
+		public static var runPercent:int;
+		public static var sprintPercent:int;
 		public static var baseDamage:int = 10;
 		public static var minForOpportunity:int = 4;
 		
@@ -35,35 +35,18 @@ package angel.game {
 				Alert.show("player or playerHealth found in 'Settings'.\nPlayer is now a separate entry in init file.\nSee Dev Notes!");
 			}
 			
-			Settings.testExploreScroll = (xml.@testExploreScroll);
 			if (xml.@combatMovePoints.length() > 0) {
-				combatMovePoints = xml.@combatMovePoints;
+				Alert.show("Warning: combatMovePoints found in 'Settings'.\nThis is no longer used; move points are set independently\nfor each character in character editor.");
 			}
 			
-			// XML should contain settings for two of the three percents.  We want to set movement points for those
-			// two speeds based on percent of total points, then give the third one whatever's left (so rounding
-			// errors fall into the unspecified one).
-			// Then, once that's figured out, convert them to totals.
-			walkPoints = combatMovePoints * int(xml.@walkPercent)/100;
-			runPoints = combatMovePoints * int(xml.@runPercent)/100;
-			sprintPoints = combatMovePoints * int(xml.@sprintPercent) / 100;
-			if (walkPoints + runPoints + sprintPoints == 0) {
-				walkPoints = runPoints = combatMovePoints / 3;
+			Settings.testExploreScroll = (xml.@testExploreScroll);
+			
+			walkPercent = int(xml.@walkPercent);
+			runPercent = int(xml.@runPercent);
+			sprintPercent = int(xml.@sprintPercent);
+			if (walkPercent != 0 && runPercent != 0 && sprintPercent != 0) {
+				Alert.show("One of walk/run/sprintPercent should be 0 or omitted; that one gets the leftover points after rounding.");
 			}
-			if (walkPoints == 0) {
-				walkPoints = combatMovePoints - runPoints - sprintPoints;
-			}
-			if (runPoints == 0) {
-				runPoints = combatMovePoints - walkPoints - sprintPoints;
-			}
-			if (sprintPoints == 0) {
-				sprintPoints = combatMovePoints - walkPoints - runPoints;
-			}
-			if (walkPoints + runPoints + sprintPoints != combatMovePoints) {
-				Alert.show("Bad walk/run/sprint values in init");
-			}
-			runPoints += walkPoints;
-			sprintPoints += runPoints;
 			
 			if (xml.@exploreSpeed.length() > 0) {
 				exploreSpeed = xml.@exploreSpeed;

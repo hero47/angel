@@ -60,17 +60,17 @@ package angel.roomedit {
 			addChild(button);
 			left += button.width + 20;
 			
-			button = new SimplerButton("Add NPC", clickedAddNpc);
+			button = new SimplerButton("Add Character", clickedAddChar);
 			button.x = left;
 			button.y = 5;
 			button.width = 100;
 			addChild(button);
 			left += button.width + 5;
 			
-			button = new SimplerButton("Edit NPCs", clickedEditNpc);
+			button = new SimplerButton("Edit Characters", clickedEditChar);
 			button.x = left;
 			button.y = 5;
-			button.width = 100;
+			button.width = 105;
 			addChild(button);
 			left += button.width + 20;
 			
@@ -106,13 +106,13 @@ package angel.roomedit {
 			launchIdDialog("tileset", userEnteredNameForNewTileset);
 		}
 		
-		private function clickedAddNpc(event:Event):void {
-			new FileChooser(userSelectedNewNpcFile, null, false);
+		private function clickedAddChar(event:Event):void {
+			new FileChooser(userSelectedNewCharFile, null, false);
 		}
 		
-		private function userSelectedNewNpcFile(filename:String):void {
+		private function userSelectedNewCharFile(filename:String):void {
 			newFilename = filename;
-			launchIdDialog("NPC", userEnteredNameForNewNpc);
+			launchIdDialog("character", userEnteredNameForNewChar);
 		}
 		
 		private function clickedAddProp(event:Event):void {
@@ -164,7 +164,7 @@ package angel.roomedit {
 			displayTilesForEditNames();
 		}
 		
-		private function userEnteredNameForNewNpc(buttonClicked:String, values:Array):void {
+		private function userEnteredNameForNewChar(buttonClicked:String, values:Array):void {
 			if (buttonClicked != "OK") {
 				return;
 			}
@@ -172,7 +172,7 @@ package angel.roomedit {
 			var id:String = values[0];
 			
 			if (!catalog.addCatalogEntry(id, newFilename, CatalogEntry.WALKER)) {
-				launchIdDialog("NPC", userEnteredNameForNewNpc, "Error -- id '" + id + "' already in use.");
+				launchIdDialog("character", userEnteredNameForNewChar, "Error -- id '" + id + "' already in use.");
 				return;
 			}
 			
@@ -181,7 +181,7 @@ package angel.roomedit {
 			xml.@id = id;
 			catalog.appendXml(xml);
 			
-			showEditNpcDialog(id);
+			showEditCharDialog(id);
 		}
 		
 		private function userEnteredNameForNewProp(buttonClicked:String, values:Array):void {
@@ -192,7 +192,7 @@ package angel.roomedit {
 			var id:String = values[0];
 			
 			if (!catalog.addCatalogEntry(id, newFilename, CatalogEntry.PROP)) {
-				launchIdDialog("prop", userEnteredNameForNewNpc, "Error -- id '" + id + "' already in use.");
+				launchIdDialog("prop", userEnteredNameForNewProp, "Error -- id '" + id + "' already in use.");
 				return;
 			}
 			
@@ -249,14 +249,14 @@ package angel.roomedit {
 			KludgeDialogBox.show(text, options);
 		}
 		
-		private function clickedEditNpc(event:Event):void {
-			showEditNpcDialog();
+		private function clickedEditChar(event:Event):void {
+			showEditCharDialog();
 		}
 		
-		private function showEditNpcDialog(id:String = null):void {
+		private function showEditCharDialog(id:String = null):void {
 			KludgeDialogBox.init(stage);
-			var options:Object = { buttons:["Done"], inputs:[], customControl:new NpcEditUI(catalog, id) };
-			var text:String = "Edit NPC";
+			var options:Object = { buttons:["Done"], inputs:[], customControl:new CharEditUI(catalog, id) };
+			var text:String = "Edit Character";
 			KludgeDialogBox.show(text, options);
 		}
 		

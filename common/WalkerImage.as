@@ -20,6 +20,7 @@ package angel.common {
 		
 		public var health:int = 1;
 		public var movePoints:int = 10;
+		public var displayName:String = "Anonymous";
 		public var unusedPixelsAtTopOfCell:int = 0;
 		
 		[Embed(source = '../../../EmbeddedAssets/temp_default_walker.png')]
@@ -49,15 +50,22 @@ package angel.common {
 				setIntFromXml(this, "health", entry, "health");
 				setIntFromXml(this, "unusedPixelsAtTopOfCell", entry, "top");
 				setIntFromXml(this, "movePoints", entry, "movePoints");
+				setTextFromXml(this, "displayName", entry, "displayName");
 				entry.xml = null;
 			}
 		}
 		
-		private function setIntFromXml(setInto:Object, objectPropertyName:String, entry:CatalogEntry, xmlPropertyName:String):void
-		{
+		private static function setIntFromXml(setInto:Object, objectPropertyName:String, entry:CatalogEntry, xmlPropertyName:String):void {
 			var valueAsString:String = entry.xml.attribute(xmlPropertyName);
 			if (valueAsString != "") {
 				setInto[objectPropertyName] = int(valueAsString);
+			}
+		}
+		
+		private static function setTextFromXml(setInto:Object, objectPropertyName:String, entry:CatalogEntry, xmlPropertyName:String):void {
+			var valueAsString:String = entry.xml.attribute(xmlPropertyName);
+			if (valueAsString != "") {
+				setInto[objectPropertyName] = valueAsString;
 			}
 		}
 		

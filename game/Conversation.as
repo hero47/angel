@@ -44,7 +44,7 @@ package angel.game {
 			npcBox.addEventListener(Event.COMPLETE, npcBoxComplete);
 			
 			// Placeholder text, obviously
-			npcBox.text = "This text doesn't show up if I try to use embedded font. Let's make this long enough to wrap.";
+			npcBox.text = "My prime function is as a information utility.\nI would be more than happy to answer any questions you have, officer.";
 			
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
 			
@@ -62,7 +62,7 @@ package angel.game {
 			pcBox.y = 300;
 			pcBox.addEventListener(Event.COMPLETE, pcBoxComplete);
 			
-			pcBox.text = "Some text for the PC. Nice long text so that it will also wrap so Wm can see where the text goes."		
+			pcBox.text = "I do have a lot of questions, actually--there’s a lot here that just doesn’t add up, and I hope you can help me make sense of it."		
 		}
 		
 		private function pcBoxComplete(event:Event):void {
