@@ -183,7 +183,7 @@ package angel.game {
 		}
 		
 		private function filterIsEnemy(entity:ComplexEntity):Boolean {
-			return entity.isEnemy();
+			return (entity.isEnemy() || Settings.controlEnemies);
 		}
 		
 		private function moveTargetHilight(target:ComplexEntity):void {

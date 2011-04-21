@@ -97,6 +97,10 @@ package angel.game {
 		}
 		
 		public function get isPlayerControlled():Boolean {
+			return (playerControlled || Settings.controlEnemies);
+		}
+		
+		public function get isReallyPlayer():Boolean {
 			return playerControlled;
 		}
 						

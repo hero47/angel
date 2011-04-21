@@ -17,6 +17,8 @@ package angel.game {
 		public static var baseDamage:int = 10;
 		public static var minForOpportunity:int = 4;
 		
+		public static var controlEnemies:Boolean = false;
+		
 		public static var exploreSpeed:Number = DEFAULT_MOVE_SPEED;
 		public static var walkSpeed:Number = DEFAULT_MOVE_SPEED;
 		public static var runSpeed:Number = DEFAULT_MOVE_SPEED;
@@ -68,6 +70,7 @@ package angel.game {
 			}
 			
 			showEnemyMoves = (String(xml.@showEnemyMoves) == "yes");
+			controlEnemies = (String(xml.@controlEnemies) == "yes");
 		}
 		
 		// This part will probably be going away or moving eventually -- identity of main PC and followers will be
