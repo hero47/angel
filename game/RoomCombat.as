@@ -355,7 +355,7 @@ package angel.game {
 			//NOTE: This assumes only two factions. If we add civilians and want the enemy NPCs
 			//to be able to shoot them (or the PCs to avoid shooting them) it will need revision.
 			for (var i:int = 0; i < fighters.length; ++i) {
-				if (fighters[i].isPlayerControlled != entityMoving.isPlayerControlled) {
+				if (fighters[i].isReallyPlayer != entityMoving.isReallyPlayer) {
 					// WARNING: using ||= prevents it from executing the function if it's already true!
 					someoneDidOpportunityFire = (opportunityFire(fighters[i], entityMoving) || someoneDidOpportunityFire);
 					if (entityMoving.currentHealth <= 0) {
@@ -623,6 +623,11 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 		}
 		
 		private function checkForCombatOver():void {
+			if (Settings.controlEnemies) {
+				// If we're in the "control enemies" test mode, then there are no non-players and so combat is never over.
+				return;
+			}
+			
 			var playerAlive:Boolean = false;
 			var enemyAlive:Boolean = false;
 			
@@ -632,9 +637,9 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 				} else {
 					enemyAlive = true;
 				}
-			}
-			if (playerAlive && enemyAlive) {
-				return;
+				if (playerAlive && enemyAlive) {
+					return;
+				}
 			}
 			combatOver = true;
 			// This boring message will certainly be replaced with something more dramatic, and game state will
