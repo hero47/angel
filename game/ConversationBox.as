@@ -1,4 +1,5 @@
 package angel.game {
+	import angel.common.Alert;
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -6,6 +7,7 @@ package angel.game {
 	import flash.events.MouseEvent;
 	import flash.text.Font;
 	import flash.text.TextField;
+	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFieldType;
 	import flash.text.TextFormat;
 	import flash.ui.Keyboard;
@@ -39,7 +41,9 @@ package angel.game {
 		private var Ariel:Class;
 		*/
 		
-		private var textField:TextField;
+		private var textX:int;
+		private var textFields:Vector.<TextField> = new Vector.<TextField>();
+		private var mySegments:Vector.<ConversationSegment>;
 		
 		// Currently taking bitmap, but this is likely to change to use a cataloged resource at some point
 		public function ConversationBox(portraitBitmap:Bitmap, pc:Boolean) {
@@ -51,11 +55,7 @@ package angel.game {
 			actionBox.x = -actionBox.width/2;
 			actionBox.y = BOX_HEIGHT - (actionBox.height / 2);
 			addChild(actionBox);
-			
-			textField = chatTextField();
-			textField.width = BOX_WIDTH - TEXT_PORTRAIT_MARGIN - TEXT_OTHER_MARGIN;
-			textField.height = BOX_HEIGHT - (actionBox.height / 2);
-			addChild(textField);
+				//textField.height = BOX_HEIGHT - (actionBox.height / 2);
 			
 			var actionIcon:Bitmap;
 			
@@ -64,11 +64,11 @@ package angel.game {
 			if (pc) {
 				portraitBitmap.x = (BOX_WIDTH - portraitBitmap.width) / 2;
 				actionIcon = new PcActionIcon();
-				textField.x = -BOX_WIDTH/2 + TEXT_OTHER_MARGIN;
+				textX = -BOX_WIDTH/2 + TEXT_OTHER_MARGIN;
 			} else {
 				portraitBitmap.x = -(BOX_WIDTH + portraitBitmap.width) / 2;
 				actionIcon = new NpcActionIcon();
-				textField.x = -BOX_WIDTH/2 + TEXT_PORTRAIT_MARGIN;
+				textX = -BOX_WIDTH/2 + TEXT_PORTRAIT_MARGIN;
 			}
 			actionIcon.x = actionBox.x;
 			actionIcon.y = actionBox.y;
@@ -83,26 +83,73 @@ package angel.game {
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 		}
 		
-		private function finished():void {
+		private function finished(selected:ConversationSegment):void {
 			removeEventListener(MouseEvent.CLICK, clickListener);
 			stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
-			dispatchEvent(new Event(Event.COMPLETE));
+			dispatchEvent(new ConversationEvent(ConversationEvent.SEGMENT_FINISHED, selected, true));
 		}
 		
-		public function set text(value:String):void {
-			textField.text = value;
+		public function set segments(rawSegments:Vector.<ConversationSegment>):void {
+			mySegments = new Vector.<ConversationSegment>();
+			for (var i:int = 0; i < rawSegments.length; i++) {
+				if (rawSegments[i].haveAllNeededFlags()) {
+					mySegments.push(rawSegments[i]);
+				}
+			}
+			
+			for (i = 0; i < mySegments.length; i++) {
+				var segment:ConversationSegment = mySegments[i];
+				var textField:TextField = chatTextField();
+				textField.width = BOX_WIDTH - TEXT_PORTRAIT_MARGIN - TEXT_OTHER_MARGIN;
+				textField.wordWrap = true;
+				textField.autoSize = TextFieldAutoSize.LEFT;
+				textField.text = (mySegments.length > 1 ? String(i + 1) + ") " + segment.text : segment.text);
+				textField.x = textX;
+				if (i > 0) {
+					textField.y = textFields[i - 1].y + textFields[i - 1].height;
+				}
+				addChild(textField);
+				textFields.push(textField);
+			}
+			if (mySegments.length == 0) {
+				Alert.show("Error! No valid choice for conversation box.");
+			} else if (mySegments.length > 9) {
+				Alert.show("Error! Too many valid choices in conversation box.");
+			}
 		}
 		
+		// If there's only one choice, they can click anywhere in the box.
+		// If there are multiple choices, they must click on the text for their choice; other clicks are ignored.
 		private function clickListener(event:MouseEvent):void {
-			finished();
+			if (mySegments.length == 0) {
+				finished(null);
+			} else if (mySegments.length < 2) {
+				finished(mySegments[0]);
+			} else {
+				var i:int = textFields.indexOf(event.target);
+				if (i >= 0) {
+					finished(mySegments[i]);
+				}
+			}
 		}
 		
 		private function keyDownListener(event:KeyboardEvent):void {
-			switch (event.keyCode) {
-				case Keyboard.SPACE:
-				case Keyboard.ENTER:
-					finished();
-				break;
+			if (mySegments.length >= 2) {
+				var i:int = event.charCode - "1".charCodeAt(0);
+				if (i >= 0 && i < mySegments.length) {
+					finished(mySegments[i]);
+				}
+			} else {
+				switch (event.keyCode) {
+					case Keyboard.SPACE:
+					case Keyboard.ENTER:
+						if (mySegments.length == 0) {
+							finished(null);
+						} else {
+							finished(mySegments[0]);
+						}
+					break;
+				}
 			}
 		}
 		

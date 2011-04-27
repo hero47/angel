@@ -10,8 +10,6 @@ package angel.common {
 	// Initially, this will permanently cache each BitmapData created from the files.
 	// Later, we'll want some sort of resource management to count usage and unload when no longer needed.
 	public class Catalog extends EventDispatcher {
-		public static const CATALOG_LOADED_EVENT:String = "catalogLoaded";
-		
 		public var loaded:Boolean = false;
 		
 		protected var lookup:Object = new Object(); // associative array mapping name to CatalogEntry
@@ -56,7 +54,7 @@ package angel.common {
 				message("WARNING: Duplicate name(s) in catalog:\n" + duplicateNames);
 			}
 			loaded = true;
-			dispatchEvent(new Event(CATALOG_LOADED_EVENT));
+			dispatchEvent(new Event(Event.COMPLETE));
 		}
 		
 		protected function message(text:String):void {
