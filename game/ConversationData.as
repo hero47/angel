@@ -11,7 +11,7 @@ package angel.game {
 		private var topics:Object = new Object; // associative array mapping topic id to topic
 		
 		private var currentTopic:Topic;
-		private var currentEntry:Entry;
+		private var currentEntry:ConversationEntry;
 		
 		public function ConversationData() {
 			
@@ -39,34 +39,16 @@ package angel.game {
 				
 				topic.entries = new Object();
 				for each (var entryXml:XML in topicXml.entry) {
-					topic.entries[entryXml.@id] = makeEntryFromXml(entryXml);
+					topic.entries[entryXml.@id] = ConversationEntry.createFromXml(entryXml);
 				}
 				if (topic.entries["start"] == null) {
 					Alert.show("Error: topic " + topicId + " has no start entry.");
-					topic.entries["start"] = makeEntryFromXml(topicXml.entry[0]);
+					topic.entries["start"] = ConversationEntry.createFromXml(topicXml.entry[0]);
 				}
 				
 				topics[topicId] = topic;
 			}
 		}
-		
-		private function makeEntryFromXml(entryXml:XML):Entry {
-			var entry:Entry = new Entry();
-			var npcSegmentXmlList:XMLList = entryXml.npc;
-			Assert.assertTrue(npcSegmentXmlList.length() <= 1, "Multiple NPC segments:\n" + entryXml);
-			if (npcSegmentXmlList.length() > 0) {
-				entry.npcSegment = ConversationSegment.createFromXml(npcSegmentXmlList[0]);
-			}
-			
-			entry.pcSegments = new Vector.<ConversationSegment>();
-			for each (var pcSegmentXml:XML in entryXml.pc) {
-				entry.pcSegments.push(ConversationSegment.createFromXml(pcSegmentXml));
-			}
-			
-			return entry;
-		}
-		
-		
 		
 		private function findValidTopic():Topic {
 			var max:int = -1;
@@ -102,13 +84,7 @@ package angel.game {
 			currentEntry = currentTopic.entries["start"];
 			
 			ui.addEventListener(ConversationEvent.SEGMENT_FINISHED, segmentFinished);
-			ui.startSegment(currentEntry.npcSegment, currentEntry.pcSegments);
-			if (currentEntry.npcSegment != null) {
-				var illegalGoto:String = currentEntry.npcSegment.doActionsAndGetNextEntryId();
-				if (illegalGoto != null) {
-					Alert.show("Error! NPC segment contains goto id " + illegalGoto);
-				}
-			}
+			currentEntry.start(ui);
 		}
 		
 		private function segmentFinished(event:ConversationEvent):void {
@@ -119,17 +95,26 @@ package angel.game {
 				return;
 			}
 			var ui:ConversationInterface = ConversationInterface(event.currentTarget);
-			var nextEntryId:String = event.choice.doActionsAndGetNextEntryId();
-			currentEntry = (nextEntryId == null ? null : currentTopic.entries[nextEntryId]);
+			var nextEntryReference:Object = event.choice.doActionsAndGetNextEntryId();
+			currentEntry = null;
+			if (nextEntryReference != null) {
+				if (nextEntryReference.topic != null) {
+					currentTopic = topics[nextEntryReference.topic];
+					if (currentTopic == null) {
+						Alert.show("Error: Missing topic id " + nextEntryReference.topic);
+					}
+				}
+				currentEntry = currentTopic.entries[nextEntryReference.id];
+				if (currentEntry == null) {
+					Alert.show("Error: Missing entry id " + nextEntryReference.id);
+				}
+			}
 			
 			if (currentEntry == null) {
-				if (nextEntryId != null) {
-					Alert.show("Error! Missing entry id " + nextEntryId);
-				}
 				ui.removeEventListener(ConversationEvent.SEGMENT_FINISHED, segmentFinished);
 				ui.cleanup();
 			} else {
-				ui.startSegment(currentEntry.npcSegment, currentEntry.pcSegments);
+				currentEntry.start(ui);
 			}
 		}
 		
@@ -140,10 +125,4 @@ package angel.game {
 class Topic {
 	public var need:Vector.<String>; // must have these flags
 	public var entries:Object; // associative array mapping entry id to entry
-}
-
-import angel.game.ConversationSegment;
-class Entry {
-	public var npcSegment:ConversationSegment;
-	public var pcSegments:Vector.<ConversationSegment>;
 }
