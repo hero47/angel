@@ -17,19 +17,25 @@ package angel.game {
 		
 		public function Main() {
 			stage.scaleMode = "noScale";
-
 			Alert.init(stage);
+			
 			initFromXml();
 		}
 	
 		private function initFromXml():void {
 			catalog = new Catalog();
-			catalog.addEventListener(Catalog.CATALOG_LOADED_EVENT, catalogLoadedListener);
+			catalog.addEventListener(Event.COMPLETE, catalogLoadedListener);
 			catalog.loadFromXmlFile("AngelCatalog.xml");
 		}
 		
 		private function catalogLoadedListener(event:Event):void {
-			catalog.removeEventListener(Catalog.CATALOG_LOADED_EVENT, catalogLoadedListener);
+			catalog.removeEventListener(Event.COMPLETE, catalogLoadedListener);
+			Flags.loader.addEventListener(Event.COMPLETE, flagsLoadedListener);
+			Flags.loadFlagListFromXmlFile();
+		}
+		
+		private function flagsLoadedListener(event:Event):void {
+			Flags.loader.removeEventListener(Event.COMPLETE, flagsLoadedListener);
 			LoaderWithErrorCatching.LoadFile("AngelInit.xml", xmlLoadedForInit);
 		}
 
@@ -39,8 +45,10 @@ package angel.game {
 				Alert.show("ERROR: Bad init file!");
 				return;
 			}
+			
 			Settings.initFromXml(xmlData.settings);
 			Settings.initPlayerFromXml(xmlData.player, catalog);
+			Flags.initFlagsFromXml(xmlData.setFlag);
 			
 			startLoc = new Point(xmlData.room.@startX, xmlData.room.@startY);
 			LoaderWithErrorCatching.LoadFile(xmlData.room, roomXmlLoaded);

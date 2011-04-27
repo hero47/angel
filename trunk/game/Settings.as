@@ -31,8 +31,6 @@ package angel.game {
 		}
 		
 		public static function initFromXml(xml:XMLList):void {
-			var temp:String;
-			
 			if (xml.@player.length() > 0 || xml.@playerHealth.length() > 0) {
 				Alert.show("player or playerHealth found in 'Settings'.\nPlayer is now a separate entry in init file.\nSee Dev Notes!");
 			}

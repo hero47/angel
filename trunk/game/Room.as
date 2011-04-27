@@ -45,8 +45,16 @@ package angel.game {
 		private var tileWithFilter:FloorTile;
 		//private var entityWithFilter:Entity; // not yet, but will be needed for future story
 		private var scrollingTo:Point = null;
+		
+		//TEMP DEBUG: Soon each NPC will have its own.
+		public var conversationData:ConversationData;
 				
 		public function Room(floor:Floor) {
+			
+			//TEMP DEBUG
+			conversationData = new ConversationData();
+			conversationData.loadFromXmlFile("AngelConversations.xml");
+			
 			this.floor = floor;
 			addChild(floor);
 			
@@ -129,7 +137,7 @@ package angel.game {
 		}
 		
 		public function startConversation(entity:SimpleEntity):void {
-			var conversation:Conversation = new Conversation(entity);
+			var conversation:ConversationInterface = new ConversationInterface(entity, conversationData);
 			stage.addChild(conversation); // Conversation takes over ui when added to stage, removes itself & restores when finished
 		}
 		
