@@ -134,6 +134,14 @@ package angel.roomedit {
 			}
 		}
 		
+		public function getFilenameFromId(id:String):String {
+			var entry:CatalogEntry = lookup[id];
+			if (entry == null) {
+				return null;
+			}
+			return entry.filename;
+		}
+		
 	}
 
 }

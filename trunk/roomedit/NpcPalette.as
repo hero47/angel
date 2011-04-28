@@ -26,6 +26,7 @@ package angel.roomedit {
 		private var attributeDisplay:Sprite;
 		private var exploreCombo:ComboBox;
 		private var combatCombo:ComboBox;
+		private var talkFile:FilenameControl;
 		
 		private var locationOfCurrentSelection:Point;
 		
@@ -84,6 +85,11 @@ package angel.roomedit {
 			combatCombo.addEventListener(Event.CHANGE, changeCombat);
 			holder.addChild(combatCombo);
 			
+			var talkLabel:TextField = Util.textBox("Conversation file:", EditorSettings.PALETTE_XSIZE-20);
+			talkLabel.y = combatCombo.y + combatCombo.height + 10;
+			holder.addChild(talkLabel);
+			talkFile = FilenameControl.add(holder, talkLabel, true, null, 0, EditorSettings.PALETTE_XSIZE-20, changeTalk );
+			
 			return holder;
 		}
 		
@@ -108,12 +114,16 @@ package angel.roomedit {
 				if (attributes == null) {
 					exploreCombo.selectedIndex = 0;
 					combatCombo.selectedIndex = 0;
+					talkFile.text = "";
 				} else {
 					exploreCombo.selectedIndex = indexInChoices(exploreChoices, attributes["explore"]);
 					combatCombo.selectedIndex = indexInChoices(combatChoices, attributes["combat"]);
+					talkFile.text = attributes["talk"];
 				}
 			}
 		}
+		
+		// UNDONE: Refactor and merge these!
 		
 		private function changeExplore(event:Event):void {
 			var attributes:Object = room.attributesOfItemAt(locationOfCurrentSelection);
@@ -130,6 +140,15 @@ package angel.roomedit {
 				attributes = new Object();
 			}
 			attributes["combat"] = combatCombo.selectedLabel;
+			room.setAttributesOfItemAt(locationOfCurrentSelection, attributes);
+		}
+		
+		private function changeTalk(event:Event):void {
+			var attributes:Object = room.attributesOfItemAt(locationOfCurrentSelection);
+			if (attributes == null) {
+				attributes = new Object();
+			}
+			attributes["talk"] = talkFile.text;
 			room.setAttributesOfItemAt(locationOfCurrentSelection, attributes);
 		}
 

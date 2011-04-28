@@ -22,8 +22,7 @@ package angel.common {
 			
 		}
 
-		public static function addTextEditControl(parent:Sprite, previousControl:DisplayObject, labelText:String, labelWidth:int, fieldWidth:int, changeHandler:Function):TextField
-		{
+		public static function addTextEditControl(parent:Sprite, previousControl:DisplayObject, labelText:String, labelWidth:int, fieldWidth:int, changeHandler:Function):TextField {
 			var label:TextField = Util.textBox(labelText + ":", labelWidth, 20);
 			label.y = previousControl.y + previousControl.height + 10;
 			parent.addChild(label);

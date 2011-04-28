@@ -18,12 +18,12 @@ package angel.roomedit {
 		public function Main():void {
 			Alert.init(stage);
 			catalog = new CatalogEdit();
-			catalog.addEventListener(Catalog.CATALOG_LOADED_EVENT, catalogLoadedListener);
+			catalog.addEventListener(Event.COMPLETE, catalogLoadedListener);
 			catalog.loadFromXmlFile("AngelCatalog.xml");
 		}
 		
 		private function catalogLoadedListener(event:Event):void {
-			catalog.removeEventListener(Catalog.CATALOG_LOADED_EVENT, catalogLoadedListener);
+			catalog.removeEventListener(Event.COMPLETE, catalogLoadedListener);
 			roomUI = new RoomEditUI(catalog);
 			addChild(roomUI);
 			catalogUI = new CatalogEditUI(catalog);

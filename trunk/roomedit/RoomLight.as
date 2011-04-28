@@ -117,14 +117,15 @@ package angel.roomedit {
 			addContentItem(prop, CatalogEntry.PROP, id, location);
 		}
 		
-		public function addWalkerByName(id:String, location:Point, exploreBehavior:String, combatBehavior:String):void {
+		public function addWalkerByName(id:String, location:Point, exploreBehavior:String, combatBehavior:String, talk:String):void {
 			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(id);
 			var prop:Prop = Prop.createFromBitmapData(walkerImage.bitsFacing(1));
 			var attributes:Object = null;
-			if (exploreBehavior != "" || combatBehavior != "") {
+			if (exploreBehavior != "" || combatBehavior != "" || talk != "") {
 				attributes = new Object();
 				attributes["explore"] = exploreBehavior;
 				attributes["combat"] = combatBehavior;
+				attributes["talk"] = talk;
 			}
 			addContentItem(prop, CatalogEntry.WALKER, id, location, attributes);
 		}
@@ -200,7 +201,7 @@ package angel.roomedit {
 			}
 			for each (var walkerXml:XML in xml.walker) {
 				id = walkerXml;
-				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml.@explore, walkerXml.@combat);
+				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml.@explore, walkerXml.@combat, walkerXml.@talk);
 			}
 		}
 		

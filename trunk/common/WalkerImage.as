@@ -18,10 +18,10 @@ package angel.common {
 		public static const FACE_CAMERA:int = 1;
 		public static const FACE_DYING:int = 8;
 		
-		public var health:int = 1;
-		public var movePoints:int = 10;
-		public var displayName:String = "Anonymous";
-		public var unusedPixelsAtTopOfCell:int = 0;
+		public var health:int = Defaults.HEALTH;
+		public var movePoints:int = Defaults.MOVE_POINTS;
+		public var displayName:String = Defaults.DISPLAY_NAME;
+		public var unusedPixelsAtTopOfCell:int = Defaults.TOP;
 		
 		[Embed(source = '../../../EmbeddedAssets/temp_default_walker.png')]
 		private var DefaultWalkerBitmap:Class;
