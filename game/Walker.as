@@ -1,4 +1,5 @@
 package angel.game {
+	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.Prop;
@@ -14,6 +15,8 @@ package angel.game {
 		private var walkerImage:WalkerImage;
 		private var deathTimer:Timer;
 		private var solidnessWhenAlive:uint;
+		
+		public var conversationData:ConversationData; // This will probably migrate to SimpleEntity someday, or maybe ComplexEntity
 		
 		private static const DEATH_DURATION:int = 500; // milliseconds
 		private static const WALK_FRAMES:Vector.<int> = Vector.<int>([WalkerImage.LEFT, WalkerImage.STAND,
@@ -81,6 +84,15 @@ package angel.game {
 				deathTimer = null;
 			}
 		}
+		
+		// Eventually, entity properties and/or scripting will control what happens when entity is frobbed
+		override public function frob(player:ComplexEntity):void {
+			if (conversationData != null) {
+				room.startConversation(this, conversationData);
+			} else {
+				Alert.show(this.displayName + " ignores you.");
+			}
+		}
 
 		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander };
 		private static const combatBrain:Object = { wander:CombatBrainWander };
@@ -93,6 +105,13 @@ package angel.game {
 			walker.exploreBrainClass = exploreBrain[exploreSetting];
 			var combatSetting:String = walkerXml.@combat;
 			walker.combatBrainClass = combatBrain[combatSetting];
+			
+			var talk:String = walkerXml.@talk;
+			if (talk != "") {
+				walker.conversationData = new ConversationData();
+				walker.conversationData.loadFromXmlFile(talk);
+			}
+			
 			return walker;
 		}
 		

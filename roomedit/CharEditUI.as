@@ -1,5 +1,6 @@
 package angel.roomedit {
 	import angel.common.CatalogEntry;
+	import angel.common.Defaults;
 	import angel.common.Prop;
 	import angel.common.PropImage;
 	import angel.common.SimplerButton;
@@ -25,6 +26,7 @@ package angel.roomedit {
 		private var healthTextField:TextField;
 		private var movePointsTextField:TextField;
 		private var nameTextField:TextField;
+		private var changeImageControl:FilenameControl;
 		
 		private static const WIDTH:int = 220;
 		
@@ -46,12 +48,6 @@ package angel.roomedit {
 			resetTopButton.y = Prop.HEIGHT - resetTopButton.height;
 			addChild(resetTopButton);
 			
-			var changeImageFileButton:SimplerButton = new SimplerButton("New Image", changeImage, 0x880000);
-			changeImageFileButton.width = 80;
-			changeImageFileButton.x = 0;
-			changeImageFileButton.y = 0; // resetTopButton.y;
-			addChild(changeImageFileButton);
-			
 			propBitmap = new Bitmap(new BitmapData(Prop.WIDTH, Prop.HEIGHT));
 			propBitmap.x = imageX;
 			propBitmap.y = 1;
@@ -64,11 +60,16 @@ package angel.roomedit {
 			addChild(propChooser);
 			
 			nameTextField = Util.addTextEditControl(this, propChooser, "Display Name", 100, 100,
-					function(event:Event):void { changeWalkerImageProperty(event.target.text, "displayName") });
+					function(event:Event):void { changeWalkerImageProperty(event.target.text, "displayName", Defaults.DISPLAY_NAME) });
 			healthTextField = Util.addTextEditControl(this, nameTextField, "Hits", 100, 40,
-					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "health") });
+					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "health", Defaults.HEALTH) });
 			movePointsTextField = Util.addTextEditControl(this, healthTextField, "Move Points", 100, 40,
-					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "movePoints") } );
+					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "movePoints", Defaults.MOVE_POINTS) } );
+			changeImageControl = FilenameControl.add(this, movePointsTextField, false, "Image", 0, 220,
+					function(event:Event):void { 
+							var walkerId:String = propCombo.selectedLabel;
+							catalog.changeFilename(walkerId, changeImageControl.text);
+					} );
 			
 			if (startId == null) {
 				propCombo.selectedIndex = 0;
@@ -93,14 +94,19 @@ package angel.roomedit {
 			nameTextField.text = walkerImage.displayName;
 			healthTextField.text = String(walkerImage.health);
 			movePointsTextField.text = String(walkerImage.movePoints);
+			changeImageControl.text = catalog.getFilenameFromId(walkerId);
 		}
 		
-		private function changeWalkerImageProperty(newValue:*, propertyName:String):void {
+		private function changeWalkerImageProperty(newValue:*, propertyName:String, defaultValue:* = null):void {
 			var walkerId:String = propCombo.selectedLabel;
 			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
 			
 			walkerImage[propertyName] = newValue;
-			catalog.changeXmlAttribute(walkerId, propertyName, String(newValue));
+			if (newValue == defaultValue) {
+				catalog.deleteXmlAttribute(walkerId, propertyName);
+			} else {
+				catalog.changeXmlAttribute(walkerId, propertyName, String(newValue));
+			}
 		}
 
 		private function setTopByPixelScan(event:Event):void {
@@ -111,7 +117,6 @@ package angel.roomedit {
 			walkerImage.increaseTop(blankRows);
 			
 			catalog.changeXmlAttribute(walkerId, "top", String(walkerImage.unusedPixelsAtTopOfCell));
-			trace("new top", walkerImage.unusedPixelsAtTopOfCell);
 		}
 		
 		private function countBlankRowsAtTop(walkerImage:WalkerImage):int {

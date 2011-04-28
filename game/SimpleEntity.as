@@ -43,11 +43,7 @@ package angel.game {
 		
 		// Eventually, entity properties and/or scripting will control what happens when entity is frobbed
 		public function frob(player:ComplexEntity):void {
-			if (this is Walker) {
-				room.startConversation(this);
-			} else {
-				Alert.show("Player character " + player.aaId + " frobbed object " + aaId);
-			}
+			Alert.show("It ignores you.");
 		}
 		
 		//NOTE: indetermined yet whether it will be meaningful or useful to have an entity "in" a room but not

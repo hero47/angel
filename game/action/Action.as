@@ -16,8 +16,6 @@ package angel.game.action {
 		
 		public static function createFromXml(actionXml:XML):IAction {
 			var name:String = actionXml.name();
-			trace(name);
-			trace(actionNameToClass[name]);
 			if (actionNameToClass[name] == null) {
 				Alert.show("Bad action " + name);
 				return null;
@@ -25,12 +23,6 @@ package angel.game.action {
 			
 			var actionClass:Class = actionNameToClass[name];
 			return actionClass.createFromXml(actionXml);
-		}
-		
-		// returns id if action is "goto"
-		public function doAction():String {
-			Assert.assertTrue(true, "Should never be called");
-			return null;
 		}
 		
 	}
