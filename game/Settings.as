@@ -1,28 +1,36 @@
 package angel.game {
 	import angel.common.Alert;
 	import angel.common.Catalog;
+	import angel.common.Defaults;
 
 	
 	public class Settings {
 		
 		public static const FRAMES_PER_SECOND:int = 30;
-		public static const DEFAULT_MOVE_SPEED:Number = 2; // speeds in adjacent-tiles-per-second
-		public static const DEFAULT_MOVE_POINTS:int = 10;
 		
-		public static var testExploreScroll:int = 0;
-		public static var showEnemyMoves:Boolean = false;
+		public static var testExploreScroll:int;
+		public static var showEnemyMoves:Boolean;
 		public static var walkPercent:int;
 		public static var runPercent:int;
 		public static var sprintPercent:int;
-		public static var baseDamage:int = 10;
-		public static var minForOpportunity:int = 4;
+		public static var baseDamage:int;
+		public static var minForOpportunity:int;
 		
-		public static var controlEnemies:Boolean = false;
+		public static var controlEnemies:Boolean;
 		
-		public static var exploreSpeed:Number = DEFAULT_MOVE_SPEED;
-		public static var walkSpeed:Number = DEFAULT_MOVE_SPEED;
-		public static var runSpeed:Number = DEFAULT_MOVE_SPEED;
-		public static var sprintSpeed:Number = DEFAULT_MOVE_SPEED;
+		public static var exploreSpeed:Number;
+		public static var walkSpeed:Number;
+		public static var runSpeed:Number;
+		public static var sprintSpeed:Number;
+		
+		public static var penaltyWalk:int;
+		public static var penaltyRun:int;
+		public static var penaltySprint:int;
+		public static var defenseWalk:int;
+		public static var defenseRun:int;
+		public static var defenseSprint:int;
+		public static var speedPenalties:Vector.<int>;
+		public static var speedDefenses:Vector.<int>;
 		
 		public static var pcs:Vector.<ComplexEntity> = new Vector.<ComplexEntity>();
 		
@@ -48,27 +56,39 @@ package angel.game {
 				Alert.show("One of walk/run/sprintPercent should be 0 or omitted; that one gets the leftover points after rounding.");
 			}
 			
-			if (xml.@exploreSpeed.length() > 0) {
-				exploreSpeed = xml.@exploreSpeed;
-			}
-			if (xml.@walkSpeed.length() > 0) {
-				walkSpeed = xml.@walkSpeed;
-			}
-			if (xml.@runSpeed.length() > 0) {
-				runSpeed = xml.@runSpeed;
-			}
-			if (xml.@sprintSpeed.length() > 0) {
-				sprintSpeed = xml.@sprintSpeed;
-			}
-			if (xml.@baseDamage.length() > 0) {
-				baseDamage = xml.@baseDamage;
-			}
-			if (xml.@minForOpportunity.length() > 0) {
-				minForOpportunity = xml.@minForOpportunity;
-			}
+			setNumberFromXml("exploreSpeed", Defaults.MOVE_SPEED, xml.@exploreSpeed);
+			setNumberFromXml("walkSpeed", Defaults.MOVE_SPEED, xml.@walkSpeed);
+			setNumberFromXml("runSpeed", Defaults.MOVE_SPEED, xml.@runSpeed);
+			setNumberFromXml("sprintSpeed", Defaults.MOVE_SPEED, xml.@sprintSpeed);
+			setIntFromXml("baseDamage", Defaults.BASE_DAMAGE, xml.@baseDamage);
+			setIntFromXml("penaltyWalk", Defaults.PENALTY_WALK, xml.@penaltyWalk);
+			setIntFromXml("penaltyRun", Defaults.PENALTY_RUN, xml.@penaltyRun);
+			setIntFromXml("penaltySprint", Defaults.PENALTY_SPRINT, xml.@penaltySprint);
+			speedPenalties = Vector.<int>([0, penaltyWalk, penaltyRun, penaltySprint]);
+			setIntFromXml("defenseWalk", Defaults.DEFENSE_WALK, xml.@defenseWalk);
+			setIntFromXml("defenseRun", Defaults.DEFENSE_RUN, xml.@defenseRun);
+			setIntFromXml("defenseSprint", Defaults.DEFENSE_SPRINT, xml.@defenseSprint);
+			speedDefenses = Vector.<int>([0, defenseWalk, defenseRun, defenseSprint]);
+			setIntFromXml("minForOpportunity", Defaults.MIN_FOR_OPPORTUNITY, xml.@minForOpportunity);
 			
-			showEnemyMoves = (String(xml.@showEnemyMoves) == "yes");
-			controlEnemies = (String(xml.@controlEnemies) == "yes");
+			setBooleanFromXml("showEnemyMoves", false, xml.@showEnemyMoves);
+			setBooleanFromXml("controlEnemies", false, xml.@controlEnemies);
+		}
+		
+		private static function setIntFromXml(propertyName:String, defaultValue:int, xmlValue:String):void {
+			Settings[propertyName] = (xmlValue == "" ? defaultValue : int(xmlValue));
+		}
+		
+		private static function setNumberFromXml(propertyName:String, defaultValue:Number, xmlValue:String):void {
+			Settings[propertyName] = (xmlValue == "" ? defaultValue : Number(xmlValue));
+		}
+		
+		private static function setStringFromXml(propertyName:String, defaultValue:String, xmlValue:String):void {
+			Settings[propertyName] = (xmlValue == "" ? defaultValue : xmlValue);
+		}
+		
+		private static function setBooleanFromXml(propertyName:String, defaultValue:Boolean, xmlValue:String):void {
+			Settings[propertyName] = (defaultValue ? xmlValue != "no" : xmlValue == "yes");
 		}
 		
 		// This part will probably be going away or moving eventually -- identity of main PC and followers will be

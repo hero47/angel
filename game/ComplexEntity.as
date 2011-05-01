@@ -1,6 +1,7 @@
 package angel.game {
 	import angel.common.Alert;
 	import angel.common.Assert;
+	import angel.common.Defaults;
 	import angel.common.Floor;
 	import angel.common.Prop;
 	import angel.common.PropImage;
@@ -33,9 +34,10 @@ package angel.game {
 		private static const TEXT_OVER_HEAD_HEIGHT:int = 20;
 		
 		public static const GAIT_EXPLORE:int = 0;
+		public static const GAIT_UNSPECIFIED:int = 0;
 		//NOTE: if distance allows walking, gait can be walk/run/sprint; if distance allows running, can be run/sprint
 		//NOTE: code depends on these being a zero-based enumeration, not just arbitrary ints
-		public static const GAIT_UNSPECIFIED:int = 0;
+		public static const GAIT_NO_MOVE:int = 0;
 		public static const GAIT_WALK:int = 1;
 		public static const GAIT_RUN:int = 2;
 		public static const GAIT_SPRINT:int = 3;
@@ -49,7 +51,6 @@ package angel.game {
 				new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point( -1, 1),
 				new Point( -1, 0), new Point( -1, -1), new Point(0, -1), new Point( -1, -1)
 			]);
-
 		
 		// Entity stats!  Eventually these will be initialized from data files.  They may go in a separate object.
 		public var displayName:String;
@@ -87,7 +88,7 @@ package angel.game {
 		// id is for debugging use only
 		public function ComplexEntity(image:Bitmap, id:String = "") {
 			super(image, Prop.DEFAULT_SOLIDITY, id);
-			setMovePoints(Settings.DEFAULT_MOVE_POINTS);
+			setMovePoints(Defaults.MOVE_POINTS);
 			gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed *2, Settings.runSpeed*2, Settings.sprintSpeed*2]);
 		}
 		
@@ -151,38 +152,15 @@ package angel.game {
 		}
 		
 		public function weaponDamage():int {
-			var speedPenalty:int = 0;
-			switch (mostRecentGait) {
-				case GAIT_SPRINT:
-					speedPenalty = 4;
-				break;
-				case GAIT_RUN:
-					speedPenalty = 3;
-				break;
-				case GAIT_WALK:
-					speedPenalty = 2;
-				break;
-			}
-			return Settings.baseDamage - speedPenalty;
+			trace("shooter gait", mostRecentGait, "base damage", Settings.baseDamage, "penalty", Settings.speedPenalties[mostRecentGait], "weaponDamage", Settings.baseDamage * (100 - Settings.speedPenalties[mostRecentGait]) / 100);
+			return Settings.baseDamage * (100 - Settings.speedPenalties[mostRecentGait]) / 100;
 		}
 		
-		// This number is subtracted from any damage this entity receives
-		public function defense():int {
-			// These numbers are currently the same as speedPenalty to damage, but are unlikely to remain the same
-			// Also, we'll probably have armor or other defense at some point.
-			var speedBonus:int = 0;
-			switch (mostRecentGait) {
-				case GAIT_SPRINT:
-					speedBonus = 4;
-				break;
-				case GAIT_RUN:
-					speedBonus = 3;
-				break;
-				case GAIT_WALK:
-					speedBonus = 2;
-				break;
-			}
-			return speedBonus;
+		// This percent is subtracted from any damage this entity receives
+		public function defensePercent():int {
+			// We'll probably have armor or other defense at some point that will enhance this.
+			trace("target gait", mostRecentGait, "defensePercent", Settings.speedDefenses[mostRecentGait]);
+			return Settings.speedDefenses[mostRecentGait];
 		}
 		
 		// Reset health at start and end of combat.
@@ -250,7 +228,9 @@ package angel.game {
 		}
 		
 		public function gaitForDistance(distance:int):int {
-			if (distance <= walkPoints) {
+			if (distance == 0) {
+				return ComplexEntity.GAIT_NO_MOVE
+			} else if (distance <= walkPoints) {
 				return ComplexEntity.GAIT_WALK;
 			} else if (distance <= runPoints) {
 				return ComplexEntity.GAIT_RUN;
