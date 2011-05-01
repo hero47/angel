@@ -67,6 +67,7 @@ package angel.game {
 		// Color of path dot, and of tile hilight that follows mouse in Move ui
 		public static function colorForGait(gait:int):uint {
 			switch (gait) {
+				case ComplexEntity.GAIT_NO_MOVE:
 				case ComplexEntity.GAIT_WALK:
 					return WALK_COLOR;
 				break;

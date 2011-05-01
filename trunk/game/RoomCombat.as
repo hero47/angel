@@ -300,7 +300,7 @@ package angel.game {
 				shooter.turnToFaceTile(target.location);
 				
 				--shooter.actionsRemaining;
-				damage(target, shooter.weaponDamage() - target.defense());
+				damage(target, shooter.weaponDamage() * (100 - target.defensePercent()) / 100);
 				
 				var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(room.stage.frameRate);
 				uglyFireLineThatViolates3D.graphics.lineStyle(2, (shooter.isPlayerControlled ? 0xff0000 : 0xffa500));
@@ -401,7 +401,8 @@ package angel.game {
 			}
 			return (distance <= minDistance);
 			*/
-			var expectedDamage:int = shooter.weaponDamage() - target.defense();
+			var expectedDamage:int = shooter.weaponDamage() * (100 - target.defensePercent()) / 100 ;
+			trace("expected damage", expectedDamage);
 			return (expectedDamage >= Settings.minForOpportunity);
 		}
 		

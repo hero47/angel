@@ -122,7 +122,7 @@ package angel.game {
 		
 		private function doPlayerMoveStay():void {
 			removePath();
-			doPlayerMove(ComplexEntity.GAIT_WALK);
+			doPlayerMove(ComplexEntity.GAIT_NO_MOVE);
 		}
 		
 		private function doPlayerMoveWalk():void {
