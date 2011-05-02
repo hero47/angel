@@ -59,6 +59,7 @@ package angel.game {
 		public var walkPoints:int;
 		public var runPoints:int;
 		public var sprintPoints:int;
+		public var baseDamage:int;
 		public var maxHealth:int = 1;
 		public var currentHealth:int;
 		public var actionsRemaining:int;
@@ -152,8 +153,8 @@ package angel.game {
 		}
 		
 		public function weaponDamage():int {
-			trace("shooter gait", mostRecentGait, "base damage", Settings.baseDamage, "penalty", Settings.speedPenalties[mostRecentGait], "weaponDamage", Settings.baseDamage * (100 - Settings.speedPenalties[mostRecentGait]) / 100);
-			return Settings.baseDamage * (100 - Settings.speedPenalties[mostRecentGait]) / 100;
+			trace("shooter gait", mostRecentGait, "base damage", baseDamage, "penalty", Settings.speedPenalties[mostRecentGait], "weaponDamage", baseDamage * (100 - Settings.speedPenalties[mostRecentGait]) / 100);
+			return baseDamage * (100 - Settings.speedPenalties[mostRecentGait]) / 100;
 		}
 		
 		// This percent is subtracted from any damage this entity receives

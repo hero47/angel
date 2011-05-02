@@ -19,6 +19,7 @@ package angel.common {
 		public static const FACE_DYING:int = 8;
 		
 		public var health:int = Defaults.HEALTH;
+		public var damage:int = Defaults.DAMAGE;
 		public var movePoints:int = Defaults.MOVE_POINTS;
 		public var displayName:String = Defaults.DISPLAY_NAME;
 		public var unusedPixelsAtTopOfCell:int = Defaults.TOP;
@@ -48,6 +49,7 @@ package angel.common {
 		private function parseAndDeleteCatalogXml(entry:CatalogEntry):void {
 			if (entry.xml != null) {
 				setIntFromXml(this, "health", entry, "health");
+				setIntFromXml(this, "damage", entry, "damage");
 				setIntFromXml(this, "unusedPixelsAtTopOfCell", entry, "top");
 				setIntFromXml(this, "movePoints", entry, "movePoints");
 				setTextFromXml(this, "displayName", entry, "displayName");

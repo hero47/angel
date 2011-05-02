@@ -24,6 +24,7 @@ package angel.roomedit {
 		private var propBitmap:Bitmap;
 		private var propCombo:ComboBox;
 		private var healthTextField:TextField;
+		private var damageTextField:TextField;
 		private var movePointsTextField:TextField;
 		private var nameTextField:TextField;
 		private var changeImageControl:FilenameControl;
@@ -63,7 +64,9 @@ package angel.roomedit {
 					function(event:Event):void { changeWalkerImageProperty(event.target.text, "displayName", Defaults.DISPLAY_NAME) });
 			healthTextField = Util.addTextEditControl(this, nameTextField, "Hits", 100, 40,
 					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "health", Defaults.HEALTH) });
-			movePointsTextField = Util.addTextEditControl(this, healthTextField, "Move Points", 100, 40,
+			damageTextField = Util.addTextEditControl(this, healthTextField, "Damage", 100, 40,
+					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "damage", Defaults.DAMAGE) });
+			movePointsTextField = Util.addTextEditControl(this, damageTextField, "Move Points", 100, 40,
 					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "movePoints", Defaults.MOVE_POINTS) } );
 			changeImageControl = FilenameControl.add(this, movePointsTextField, false, "Image", 0, 220,
 					function(event:Event):void { 
@@ -93,6 +96,7 @@ package angel.roomedit {
 			
 			nameTextField.text = walkerImage.displayName;
 			healthTextField.text = String(walkerImage.health);
+			damageTextField.text = String(walkerImage.damage);
 			movePointsTextField.text = String(walkerImage.movePoints);
 			changeImageControl.text = catalog.getFilenameFromId(walkerId);
 		}

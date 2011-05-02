@@ -7,6 +7,7 @@ package angel.common {
 		
 		public static const BASE_DAMAGE:int = 10;
 		public static const HEALTH:int = 1;
+		public static const DAMAGE:int = 10;
 		public static const MOVE_POINTS:int = 10;
 		public static const MOVE_SPEED:Number = 2; // speeds in adjacent-tiles-per-second
 		public static const DISPLAY_NAME:String = "Anonymous";
