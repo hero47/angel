@@ -13,7 +13,6 @@ package angel.game {
 		public static var walkPercent:int;
 		public static var runPercent:int;
 		public static var sprintPercent:int;
-		public static var baseDamage:int;
 		public static var minForOpportunity:int;
 		
 		public static var controlEnemies:Boolean;
@@ -39,12 +38,12 @@ package angel.game {
 		}
 		
 		public static function initFromXml(xml:XMLList):void {
-			if (xml.@player.length() > 0 || xml.@playerHealth.length() > 0) {
-				Alert.show("player or playerHealth found in 'Settings'.\nPlayer is now a separate entry in init file.\nSee Dev Notes!");
-			}
-			
 			if (xml.@combatMovePoints.length() > 0) {
 				Alert.show("Warning: combatMovePoints found in 'Settings'.\nThis is no longer used; move points are set independently\nfor each character in character editor.");
+			}
+			
+			if (xml.@baseDamage.length() > 0) {
+				Alert.show("Warning: baseDamage found in 'Settings'.\nThis is no longer used; weapon damage is set independently\nfor each character in character editor.");
 			}
 			
 			Settings.testExploreScroll = (xml.@testExploreScroll);
@@ -60,7 +59,6 @@ package angel.game {
 			setNumberFromXml("walkSpeed", Defaults.MOVE_SPEED, xml.@walkSpeed);
 			setNumberFromXml("runSpeed", Defaults.MOVE_SPEED, xml.@runSpeed);
 			setNumberFromXml("sprintSpeed", Defaults.MOVE_SPEED, xml.@sprintSpeed);
-			setIntFromXml("baseDamage", Defaults.BASE_DAMAGE, xml.@baseDamage);
 			setIntFromXml("penaltyWalk", Defaults.PENALTY_WALK, xml.@penaltyWalk);
 			setIntFromXml("penaltyRun", Defaults.PENALTY_RUN, xml.@penaltyRun);
 			setIntFromXml("penaltySprint", Defaults.PENALTY_SPRINT, xml.@penaltySprint);
