@@ -18,6 +18,7 @@ package angel.game {
 	import flash.filters.GlowFilter;
 	import flash.geom.Point;
 	import flash.text.TextField;
+	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFieldType;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
@@ -414,6 +415,47 @@ package angel.game {
 		public function beginFireFromCoverMove(start:Point):void {
 			extraDefenseForOpportunityFire = Settings.fireFromCoverDamageReduction;
 			returnHereAfterFire = start;
+		}
+			
+		public function throwGrenadeAndAdvanceToNextPhase(shooter:ComplexEntity, targetLocation:Point):void {
+			//UNDONE animate grenade moving through air?
+			shooter.turnToFaceTile(targetLocation);
+			
+			--shooter.actionsRemaining;
+			var fullDamage:int = Settings.grenadeDamage; // no damage reduction
+			
+			var temporaryGrenadeExplosionGraphic:TimedSprite = new TimedSprite(room.stage.frameRate);
+			
+			var hitLocation:Point = new Point();
+			for (hitLocation.x = targetLocation.x - 2; hitLocation.x <= targetLocation.x + 2; ++hitLocation.x) {
+				for (hitLocation.y = targetLocation.y - 2; hitLocation.y <= targetLocation.y + 2; ++hitLocation.y) {
+					if ((hitLocation.x < 0) || (hitLocation.x >= room.size.x) || (hitLocation.y < 0) || (hitLocation.y >= room.size.y)) {
+						continue;
+					}
+					var damagePoints:int = (Util.chessDistance(targetLocation, hitLocation) <= 1 ? fullDamage : fullDamage / 2);
+					room.forEachEntityIn(hitLocation, function(entity:ComplexEntity):void {
+						damage(entity, damagePoints);
+						trace(entity.aaId, "hit by grenade for", damagePoints);
+					}, filterIsWalker);
+					
+					var tileCenter:Point = Floor.centerOf(hitLocation);
+					var num:TextField = Util.textBox(String(damagePoints), 0, 30, TextFormatAlign.LEFT, false, 0xff0000);
+					num.autoSize = TextFieldAutoSize.LEFT;
+					num.x = tileCenter.x - num.width / 2;
+					num.y = tileCenter.y - num.height / 2;
+					temporaryGrenadeExplosionGraphic.addChild(num);
+				}
+			}
+			room.addChild(temporaryGrenadeExplosionGraphic);
+			
+			room.snapToCenter(targetLocation);
+			
+			// Give the player some time to gaze at the fire graphic before continuing with turn.
+			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
+		}
+		
+		private function filterIsWalker(prop:Prop):Boolean {
+			return (prop is Walker);
 		}
 		
 		/*********** Line of sight / fog of war, I don't know where I want to put this stuff *************/
