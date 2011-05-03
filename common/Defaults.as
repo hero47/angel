@@ -20,6 +20,7 @@ package angel.common {
 		public static const DEFENSE_RUN:int = 30;
 		public static const DEFENSE_SPRINT:int = 40;
 		public static const FIRE_FROM_COVER_DAMAGE_REDUCTION:int = 25;
+		public static const GRENADE_DAMAGE:int = 10;
 		
 		public static const CONVERSATION:String = null;
 			

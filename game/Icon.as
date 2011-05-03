@@ -39,6 +39,8 @@ package angel.game {
 		public static const CombatFireFromCover:Class;
 		[Embed(source = '../../../EmbeddedAssets/combat_icon_notarget.png')]
 		public static const CombatNoTarget:Class;
+		[Embed(source='../../../EmbeddedAssets/combat_icon_grenade.png')]
+		public static const CombatGrenade:Class;
 		
 		[Embed(source = '../../../EmbeddedAssets/combat_cursor_active.png')]
 		public static const CombatCursorActive:Class;

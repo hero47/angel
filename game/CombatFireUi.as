@@ -144,8 +144,16 @@ package angel.game {
 			if (targetLocked) {
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFire), doPlayerFire));
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatCancelTarget), doCancelTarget));
+				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade), function():void {
+					doPlayerThrowGrenadeAt(targetEnemy.location);
+				}));
 			} else {
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatNoTarget), null));
+				if (combat.lineOfSight(player, tile.location)) { // UNDONE: target tile can't have prop???
+					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade), function():void {
+						doPlayerThrowGrenadeAt(tile.location);
+					}));
+				}
 			}
 			slices.push(new PieSlice(Icon.bitmapData(Icon.CombatReserveFire), doReserveFire));
 			return slices;
@@ -168,6 +176,12 @@ package angel.game {
 			var playerFiring:ComplexEntity = player;
 			room.disableUi();
 			combat.fireAndAdvanceToNextPhase(playerFiring, target);
+		}
+		
+		private function doPlayerThrowGrenadeAt(loc:Point):void {
+			var playerFiring:ComplexEntity = player;
+			room.disableUi();
+			combat.throwGrenadeAndAdvanceToNextPhase(playerFiring, loc);
 		}
 		
 		private function doReserveFire():void {
