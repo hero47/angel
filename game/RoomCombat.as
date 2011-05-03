@@ -54,8 +54,6 @@ package angel.game {
 		private static const PAUSE_TO_VIEW_MOVE_TIME:int = 1000;
 		private static const PAUSE_TO_VIEW_FIRE_TIME:int = 1000;
 		
-		private static const FIRE_FROM_COVER_DAMAGE_REDUCTION:int = 25;
-		
 		public var statDisplay:CombatStatDisplay;
 		private var modeLabel:TextField;
 		private var enemyTurnOverlay:Shape;
@@ -414,7 +412,7 @@ package angel.game {
 		}
 		
 		public function beginFireFromCoverMove(start:Point):void {
-			extraDefenseForOpportunityFire = FIRE_FROM_COVER_DAMAGE_REDUCTION;
+			extraDefenseForOpportunityFire = Settings.fireFromCoverDamageReduction;
 			returnHereAfterFire = start;
 		}
 		

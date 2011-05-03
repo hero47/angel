@@ -326,7 +326,7 @@ package angel.game {
 		
 		// This will generally be called by the entity as it crosses the boundary between one floor tile
 		// and another during movement.
-		public function changeEntityLocation(entity:ComplexEntity, oldLocation, newLocation:Point):void {
+		public function changeEntityLocation(entity:ComplexEntity, oldLocation:Point, newLocation:Point):void {
 			cells[oldLocation.x][oldLocation.y].remove(entity);
 			cells[newLocation.x][newLocation.y].add(entity);
 			moveMarkerIfNeeded(entity, newLocation);
