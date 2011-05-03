@@ -7,6 +7,7 @@ package angel.common {
 			
 		protected var callback:Function;
 		protected var callbackFail:Function;
+		protected var filenameForErrorMessage:String;
 		
 		public function FileIOBase() {
 			
@@ -20,7 +21,13 @@ package angel.common {
 
 		protected function ioErrorListener(event:IOErrorEvent):void {
 			cleanup();
-			Alert.show("IO error: " + event.text);
+			var message:String = "IO error " + event.text;
+			if (message.indexOf("2035") >= 0) {
+				message = "Cannot open file " + filenameForErrorMessage;
+			} else if (message.indexOf("2124") >= 0) {
+				message = "Cannot load image from " + filenameForErrorMessage + "; unknown file type."
+			}
+			Alert.show(message);
 			if (callbackFail != null) {
 				callbackFail();
 			}
@@ -28,7 +35,9 @@ package angel.common {
 
 		protected function securityErrorListener(event:SecurityErrorEvent):void {
 			cleanup();
-			Alert.show("Security error: " + event.text);
+			//var message:String = "Security error " + event.text;
+			var message:String = "Security error on file " + filenameForErrorMessage;
+			Alert.show(message);
 			if (callbackFail != null) {
 				callbackFail();
 			}

@@ -23,6 +23,7 @@ package angel.common {
 		public function LoaderWithErrorCatching(type:int, filename:String, bytes:ByteArray, callbackWhenComplete:Function, callbackForFailure:Function) {		
 			callback = callbackWhenComplete;
 			callbackFail = callbackForFailure;
+			filenameForErrorMessage = filename;
 			if (type == LOAD_FILE) {
 				urlLoader = new URLLoader();
 				dispatcher = urlLoader;
