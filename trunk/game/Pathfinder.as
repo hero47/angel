@@ -12,7 +12,7 @@ package angel.game {
 		}
 		
 		// check neighbor tiles in this order when choosing path, so we'll prefer "straight" moves
-		private static const neighborCheck:Vector.<Point> = Vector.<Point>([
+		public static const neighborCheck:Vector.<Point> = Vector.<Point>([
 				new Point(1, 0), new Point(0, 1), new Point(0, -1), new Point( -1, 0),
 				new Point(1, 1), new Point(1, -1), new Point( -1, -1), new Point( -1, 1)
 			]);

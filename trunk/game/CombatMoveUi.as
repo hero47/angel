@@ -96,6 +96,9 @@ package angel.game {
 			}
 			slices.push(new PieSlice(Icon.bitmapData(Icon.Stay), doPlayerMoveStay));
 			if (combat.mover.hasPath()) {
+				if (combat.mover.shootFromCoverValidForCurrentLocationAndPath(player)) {
+					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFireFromCover), doPlayerFireFromCover));
+				}
 				var minGait:int = combat.mover.minimumGaitForPath(player);
 				if (minGait <= ComplexEntity.GAIT_WALK) {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doPlayerMoveWalk));
@@ -135,6 +138,12 @@ package angel.game {
 		
 		private function doPlayerMoveSprint():void {
 			doPlayerMove(ComplexEntity.GAIT_SPRINT);
+		}
+		
+		private function doPlayerFireFromCover():void {
+			combat.mover.displayReturnMarker(player.location);
+			combat.beginFireFromCoverMove(player.location);
+			doPlayerMove(ComplexEntity.GAIT_RUN);
 		}
 		
 		private function removePath():void {

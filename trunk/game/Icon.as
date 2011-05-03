@@ -35,6 +35,8 @@ package angel.game {
 		public static const CombatCancelTarget:Class;
 		[Embed(source = '../../../EmbeddedAssets/combat_icon_hold.png')]
 		public static const CombatReserveFire:Class;
+		[Embed(source='../../../EmbeddedAssets/combat_icon_cover.png')]
+		public static const CombatFireFromCover:Class;
 		[Embed(source = '../../../EmbeddedAssets/combat_icon_notarget.png')]
 		public static const CombatNoTarget:Class;
 		

@@ -17,6 +17,7 @@ package angel.game {
 		private var dots:Vector.<Shape> = new Vector.<Shape>(); // The dots on screen representing movement path
 		private var endIndexes:Vector.<int> = new Vector.<int>(); // indexes into path[] marking segment ends (aka waypoints)
 		private var path:Vector.<Point> = new Vector.<Point>(); // The tiles entity intends to move through, in sequence
+		private var returnMarker:Shape;
 		
 		private var combat:RoomCombat;
 		private var decorationsLayer:Sprite;
@@ -25,6 +26,7 @@ package angel.game {
 		private static const RUN_COLOR:uint = 0xffd800;
 		private static const SPRINT_COLOR:uint = 0xff0000;
 		private static const OUT_OF_RANGE_COLOR:uint = 0x888888;
+		private static const RETURN_COLOR:uint = 0xffffff;
 		
 		public function CombatMover(combat:RoomCombat) {
 			this.combat = combat;
@@ -145,6 +147,7 @@ package angel.game {
 		public function clearPath():void {
 			clearDots();
 			path.length = 0;
+			removeReturnMarker();
 		}
 		
 		public function removeLastPathSegment(entity:ComplexEntity):void {
@@ -153,6 +156,18 @@ package angel.game {
 				var ends:int = endIndexes.length;
 				path.length = (ends == 0 ? 0 : endIndexes[ends - 1] + 1);
 				extendPath(entity, null); // clear dots; redraw the ones that should still be there in appropriate color for current length
+			}
+		}
+		
+		public function displayReturnMarker(location:Point):void {
+			returnMarker = dot(RETURN_COLOR, Floor.centerOf(location));
+			decorationsLayer.addChild(returnMarker);
+		}
+		
+		public function removeReturnMarker():void {
+			if (returnMarker != null) {
+				decorationsLayer.removeChild(returnMarker);
+				returnMarker = null;
 			}
 		}
 		
@@ -172,6 +187,11 @@ package angel.game {
 			endIndexes.length = 0;
 		}
 		
+		/*************** I don't know how to classify this or even if it belongs in this class ***************/
+		
+		public function shootFromCoverValidForCurrentLocationAndPath(entity:ComplexEntity):Boolean {
+			return ((path.length == 1) && entity.hasCover())
+		}
 		
 	} // end class CombatMover
 

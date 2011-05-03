@@ -43,7 +43,6 @@ package angel.game {
 		private var gameIsPaused:Boolean = false;
 		
 		private var tileWithFilter:FloorTile;
-		//private var entityWithFilter:Entity; // not yet, but will be needed for future story
 		private var scrollingTo:Point = null;
 				
 		public function Room(floor:Floor) {
@@ -270,27 +269,10 @@ package angel.game {
 			if (tileWithFilter != null) {
 				tileWithFilter.filters = [];
 			}
-			/*
-			if (entityWithFilter != null) {
-				entityWithFilter.filters = [];
-				entityWithFilter = null;
-			}
-			*/
 			tileWithFilter = tile;
 			if (tileWithFilter != null) {
 				var glow:GlowFilter = new GlowFilter(color, 1, 15, 15, 10, 1, true, false);
 				tileWithFilter.filters = [ glow ];
-				/* 
-				// NOTE: when we get to this story, it will want to only light up entities that respond to clicks
-				// and that filtering may be done in the RoomMode rather than here
-				var cell:Cell = cells[tileWithFilter.location.x][tileWithFilter.location.y];
-				if (cell != null) {
-					entityWithFilter = cell.firstOccupant();
-					if (entityWithFilter != null) {
-						entityWithFilter.filters = [ glow ];
-					}
-				}
-				*/
 			}
 		}
 		
@@ -344,16 +326,17 @@ package angel.game {
 		
 		// This will generally be called by the entity as it crosses the boundary between one floor tile
 		// and another during movement.
-		public function changeEntityLocation(entity:ComplexEntity, newLocation:Point):void {
-			cells[entity.location.x][entity.location.y].remove(entity);
+		public function changeEntityLocation(entity:ComplexEntity, oldLocation, newLocation:Point):void {
+			cells[oldLocation.x][oldLocation.y].remove(entity);
 			cells[newLocation.x][newLocation.y].add(entity);
 			moveMarkerIfNeeded(entity, newLocation);
-			/*
-			if (entityWithFilter == entity) {
-				entityWithFilter.filters = [];
-				entityWithFilter = null;
+			
+			if (!entity.location.equals(newLocation)) {
+				// If this is called by the entity as part of gradual movement, it will already have set its own
+				// location along with appropriate depth.  If not, we need to directly set the location, which will
+				// put entity at the center-of-tile depth.
+				entity.location = newLocation;
 			}
-			*/
 		}
 		
 		public function moveMarkerIfNeeded(entity:ComplexEntity, newLocation:Point = null):void {

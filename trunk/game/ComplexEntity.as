@@ -295,8 +295,9 @@ package angel.game {
 				frameOfMove = 0;
 				// Change the "real" location to the next tile.  Doing this on first frame of move rather than
 				// halfway through the move circumvents a whole host of problems!
-				room.changeEntityLocation(this, movingTo);
+				var oldLocation:Point = myLocation;
 				myLocation = movingTo;
+				room.changeEntityLocation(this, oldLocation, myLocation);
 				dispatchEvent(new EntityEvent(EntityEvent.MOVED, true, false, this));
 			}
 			adjustImageForMove();
@@ -409,6 +410,21 @@ package angel.game {
 			room.y = (stage.stageHeight / 2) - this.y - this.height/2;
 		}
 		
+		// If we're talking real world, this makes no sense -- cover would be directional, and we'd have to talk about
+		// cover from a particular enemy.  Wm wants this move-to-shoot-from-cover thing to be available whenever you're
+		// next to a "tall" blocker, regardless of whether there are even any enemies around at all, so...
+		public function hasCover():Boolean {
+			for each (var toNeighbor:Point in Pathfinder.neighborCheck) {
+				var xNext:int = toNeighbor.x + myLocation.x;
+				var yNext:int = toNeighbor.y + myLocation.y;
+				var neighbor:Point = myLocation.add(toNeighbor);
+				if ((xNext >= 0) && (xNext < room.size.x) && (yNext >= 0) && (yNext < room.size.y) &&
+							((room.solid(xNext, yNext) & Prop.TALL) != 0)) {
+					return true;
+				}
+			}
+			return false;
+		}
 
 		
 	} // end class ComplexEntity
