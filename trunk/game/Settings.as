@@ -30,6 +30,7 @@ package angel.game {
 		public static var defenseSprint:int;
 		public static var speedPenalties:Vector.<int>;
 		public static var speedDefenses:Vector.<int>;
+		public static var fireFromCoverDamageReduction:int;
 		
 		public static var pcs:Vector.<ComplexEntity> = new Vector.<ComplexEntity>();
 		
@@ -67,6 +68,7 @@ package angel.game {
 			setIntFromXml("defenseRun", Defaults.DEFENSE_RUN, xml.@defenseRun);
 			setIntFromXml("defenseSprint", Defaults.DEFENSE_SPRINT, xml.@defenseSprint);
 			speedDefenses = Vector.<int>([0, defenseWalk, defenseRun, defenseSprint]);
+			setIntFromXml("fireFromCoverDamageReduction", Defaults.FIRE_FROM_COVER_DAMAGE_REDUCTION, xml.@fireFromCoverDamageReduction);
 			setIntFromXml("minForOpportunity", Defaults.MIN_FOR_OPPORTUNITY, xml.@minForOpportunity);
 			
 			setBooleanFromXml("showEnemyMoves", false, xml.@showEnemyMoves);
