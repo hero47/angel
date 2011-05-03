@@ -35,6 +35,8 @@ package angel.game {
 		private var fireUi:CombatFireUi;
 		private var minimap:Minimap;
 		public var mover:CombatMover;
+		private var extraDefenseForOpportunityFire:int = 0;
+		private var returnHereAfterFire:Point;
 		
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
 		public var fighters:Vector.<ComplexEntity>;
@@ -51,6 +53,8 @@ package angel.game {
 		
 		private static const PAUSE_TO_VIEW_MOVE_TIME:int = 1000;
 		private static const PAUSE_TO_VIEW_FIRE_TIME:int = 1000;
+		
+		private static const FIRE_FROM_COVER_DAMAGE_REDUCTION:int = 25;
 		
 		public var statDisplay:CombatStatDisplay;
 		private var modeLabel:TextField;
@@ -288,7 +292,7 @@ package angel.game {
 			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
 		}
 		
-		public function fire(shooter:ComplexEntity, target:ComplexEntity):void {
+		public function fire(shooter:ComplexEntity, target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
 			if (target == null) {
 				trace(shooter.aaId, "reserve fire");
 				if (shooter.isPlayerControlled || losFromAnyPlayer(shooter.location)) {
@@ -300,7 +304,10 @@ package angel.game {
 				shooter.turnToFaceTile(target.location);
 				
 				--shooter.actionsRemaining;
-				damage(target, shooter.weaponDamage() * (100 - target.defensePercent()) / 100);
+				var damagePoints:int = shooter.weaponDamage() * (100 - target.defensePercent()) / 100
+						* (100 - extraDamageReductionPercent) / 100;
+				trace("firing for damage", damagePoints, "(extra reduction was", extraDamageReductionPercent, " percent)");
+				damage(target, damagePoints);
 				
 				var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(room.stage.frameRate);
 				uglyFireLineThatViolates3D.graphics.lineStyle(2, (shooter.isPlayerControlled ? 0xff0000 : 0xffa500));
@@ -377,7 +384,7 @@ package angel.game {
 			trace("Checking", shooter.aaId, "for opportunity fire");
 			if (shooter.actionsRemaining > 0) {
 				if (isGoodTarget(shooter, target) && lineOfSight(shooter, target.location)) {
-					fire(shooter, target);
+					fire(shooter, target, extraDefenseForOpportunityFire);
 					return true;
 				}
 			}
@@ -404,6 +411,11 @@ package angel.game {
 			var expectedDamage:int = shooter.weaponDamage() * (100 - target.defensePercent()) / 100 ;
 			trace("expected damage", expectedDamage);
 			return (expectedDamage >= Settings.minForOpportunity);
+		}
+		
+		public function beginFireFromCoverMove(start:Point):void {
+			extraDefenseForOpportunityFire = FIRE_FROM_COVER_DAMAGE_REDUCTION;
+			returnHereAfterFire = start;
 		}
 		
 		/*********** Line of sight / fog of war, I don't know where I want to put this stuff *************/
@@ -512,6 +524,8 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 				return;
 			}
 			
+			extraDefenseForOpportunityFire = 0;
+			
 			//event.entity won't match currentFighter() if moving entity was killed by opportunity fire
 			if (event.entity != currentFighter()) {
 				trace("fighter", iFighterTurnInProgress, "was killed, don't give them a fire phase");
@@ -538,6 +552,12 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 				// don't allow next enemy to move, don't enable player UI, just wait for them to OK the message,
 				// which will end combat mode.
 				return;
+			}
+			
+			if (returnHereAfterFire != null) {
+				room.changeEntityLocation(currentFighter(), currentFighter().location, returnHereAfterFire);
+				returnHereAfterFire = null;
+				mover.removeReturnMarker();
 			}
 				
 			goToNextFighter();
@@ -587,6 +607,9 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 		}
 		
 		private function currentFighter():ComplexEntity {
+			if (iFighterTurnInProgress >= fighters.length) {
+				return fighters[0];
+			}
 			return fighters[iFighterTurnInProgress];
 		}
 		
