@@ -4,6 +4,8 @@ package angel.game {
 	public interface RoomMode {
 	
 		function cleanup():void;
+		function addEntity(entity:SimpleEntity):void;
+		function removeEntity(entity:SimpleEntity):void;
 		
 	}
 	

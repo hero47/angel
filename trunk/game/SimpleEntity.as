@@ -22,18 +22,17 @@ package angel.game {
 			totalEntitiesCreated++;
 			aaId = id + "-" + String(totalEntitiesCreated);
 		}
-	
-		//Delete this eventually
-		public static function createFromRoomContentsXmlVersion0(propXml: XML, catalog:Catalog) : SimpleEntity {
-			var id:String = propXml;
-			var propImage:PropImage = catalog.retrievePropImage(id);
-			var simpleEntity:SimpleEntity = new SimpleEntity(new Bitmap(propImage.imageData), propImage.solid, id);
-			simpleEntity.myLocation = new Point(propXml.@x, propXml.@y);
-			return simpleEntity;
-		}
-	
-		public static function createFromRoomContentsXmlVersion1(propXml: XML, catalog:Catalog) : SimpleEntity {
-			var id:String = propXml.@id;
+		
+		public static function createFromRoomContentsXml(propXml: XML, version:int, catalog:Catalog) : SimpleEntity {
+			var id:String;
+			
+			//Delete older version support eventually
+			if (version < 1) {
+				id = propXml;
+			} else {
+				id = propXml.@id
+			}
+			
 			var propImage:PropImage = catalog.retrievePropImage(id);
 			var simpleEntity:SimpleEntity = new SimpleEntity(new Bitmap(propImage.imageData), propImage.solid, id);
 			simpleEntity.myLocation = new Point(propXml.@x, propXml.@y);

@@ -8,7 +8,12 @@ package angel.game.action {
 	 */
 	public class Action {
 		
-		private static const actionNameToClass:Object = { "goto":GotoAction, "add":AddFlagAction, "remove":RemoveFlagAction };
+		private static const actionNameToClass:Object = {
+			"goto":GotoAction,
+			"add":AddFlagAction,
+			"remove":RemoveFlagAction,
+			"addNpc":AddNpcAction
+		};
 		
 		public function Action() {
 			Assert.assertTrue(true, "Should never be called");
