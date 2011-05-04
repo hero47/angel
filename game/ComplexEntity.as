@@ -418,8 +418,8 @@ package angel.game {
 				var xNext:int = toNeighbor.x + myLocation.x;
 				var yNext:int = toNeighbor.y + myLocation.y;
 				var neighbor:Point = myLocation.add(toNeighbor);
-				if ((xNext >= 0) && (xNext < room.size.x) && (yNext >= 0) && (yNext < room.size.y) &&
-							((room.solid(xNext, yNext) & Prop.TALL) != 0)) {
+				if ((xNext >= 0) && (xNext < room.size.x) && (yNext >= 0) && (yNext < room.size.y) && 
+							room.blocksSight(xNext, yNext)) {
 					return true;
 				}
 			}

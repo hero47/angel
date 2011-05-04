@@ -354,6 +354,10 @@ package angel.game {
 			return cells[x][y].solid();
 		}
 		
+		public function blocksSight(x:int, y:int):Boolean {
+			return (solid(x,y) & Prop.TALL) != 0;
+		}
+		
 		private function enterFrameListener(event:Event):void {
 			stage.focus = stage;
 			if (!gameIsPaused) {

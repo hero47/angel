@@ -55,7 +55,7 @@ package angel.game {
 		private function getFirstAvailableTarget():ComplexEntity {
 			for (var i:int = 0; i < combat.fighters.length; i++) {
 				var fighter:ComplexEntity = combat.fighters[i];
-				if (fighter.isPlayerControlled && combat.lineOfSight(me, fighter.location)) {
+				if (fighter.isPlayerControlled && combat.entityHasLineOfSight(me, fighter.location)) {
 					return fighter;
 				}
 			}
