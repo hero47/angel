@@ -14,10 +14,10 @@ package angel.game.action {
 			Assert.assertTrue(true, "Should never be called");
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
+		public static function createFromXml(actionXml:XML, errorPrefix:String=""):IAction {
 			var name:String = actionXml.name();
 			if (actionNameToClass[name] == null) {
-				Alert.show("Bad action " + name);
+				Alert.show(errorPrefix + "Unknown action " + name);
 				return null;
 			}
 			

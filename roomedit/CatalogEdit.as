@@ -25,11 +25,11 @@ package angel.roomedit {
 			super.loadFromXmlFile(filename);
 		}
 		
-		override protected function catalogXmlLoaded(event:Event):void {
+		override protected function catalogXmlLoaded(event:Event, filename:String):void {
 			// Cache catalog xml so we can re-save it later, rather than re-creating
 			// This should hopefully preserve any comments & formatting the author may have inserted
 			catalogXml = new XML(event.target.data);
-			super.catalogXmlLoaded(event);
+			super.catalogXmlLoaded(event, filename);
 		}
 		
 		public function save():void {
@@ -125,7 +125,7 @@ package angel.roomedit {
 				changeXmlAttribute(id, "file", newFilename);
 				entry.filename = newFilename;
 				LoaderWithErrorCatching.LoadBytesFromFile(entry.filename,
-					function(event:Event):void {
+					function(event:Event, filename:String):void {
 						var bitmap:Bitmap = event.target.content;
 						warnIfBitmapIsWrongSize(entry, bitmap.bitmapData);
 						entry.data.dataFinishedLoading(bitmap.bitmapData);

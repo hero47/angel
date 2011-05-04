@@ -23,8 +23,9 @@ package angel.game {
 			LoaderWithErrorCatching.LoadFile(filename, conversationXmlLoaded);
 		}
 		
-		private function conversationXmlLoaded(event:Event):void {
+		private function conversationXmlLoaded(event:Event, filename:String):void {
 			var xml:XML = new XML(event.target.data);
+			var errorPrefix:String = "Error in file " + filename + ":\n";
 			
 			for each (var topicXml:XML in xml.topic) {
 				var topic:Topic = new Topic();
@@ -39,11 +40,11 @@ package angel.game {
 				
 				topic.entries = new Object();
 				for each (var entryXml:XML in topicXml.entry) {
-					topic.entries[entryXml.@id] = ConversationEntry.createFromXml(entryXml);
+					topic.entries[entryXml.@id] = ConversationEntry.createFromXml(entryXml, errorPrefix);
 				}
 				if (topic.entries["start"] == null) {
-					Alert.show("Error: topic " + topicId + " has no start entry.");
-					topic.entries["start"] = ConversationEntry.createFromXml(topicXml.entry[0]);
+					Alert.show(errorPrefix + "Topic " + topicId + " has no start entry.");
+					topic.entries["start"] = ConversationEntry.createFromXml(topicXml.entry[0], errorPrefix);
 				}
 				
 				topics[topicId] = topic;

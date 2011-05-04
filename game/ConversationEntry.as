@@ -12,22 +12,25 @@ package angel.game {
 			
 		}
 		
-		public static function createFromXml(entryXml:XML):ConversationEntry {
+		public static function createFromXml(entryXml:XML, errorPrefix:String = ""):ConversationEntry {
+			if (errorPrefix == "") {
+				errorPrefix = "Error in conversation XML:\n";
+			}
 			var entry:ConversationEntry = new ConversationEntry();
 			var npcSegmentXmlList:XMLList = entryXml.npc;
 			if (npcSegmentXmlList.length() > 1) {
-				Alert.show("Error! Multiple NPC segments:\n" + entryXml);
+				Alert.show(errorPrefix + "Multiple NPC segments:\n" + entryXml);
 			}
 			if (npcSegmentXmlList.length() > 0) {
-				entry.npcSegment = ConversationSegment.createFromXml(npcSegmentXmlList[0]);
+				entry.npcSegment = ConversationSegment.createFromXml(npcSegmentXmlList[0], errorPrefix);
 			}
 			
 			entry.pcSegments = new Vector.<ConversationSegment>();
 			for each (var pcSegmentXml:XML in entryXml.pc) {
-				entry.pcSegments.push(ConversationSegment.createFromXml(pcSegmentXml));
+				entry.pcSegments.push(ConversationSegment.createFromXml(pcSegmentXml, errorPrefix));
 			}
 			if (entry.pcSegments.length == 0) {
-				Alert.show("Error! Missing PC segment:\n" + entryXml);
+				Alert.show("Missing PC segment:\n" + entryXml);
 			}
 			
 			return entry;
