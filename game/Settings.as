@@ -8,6 +8,13 @@ package angel.game {
 		
 		public static const FRAMES_PER_SECOND:int = 30;
 		
+		// These are set by the game engine so scripting can access them.
+		// Is there a better way to do this sort of thing?
+		// UNDONE: if this is legit, root out all the places I'm passing around catalog and use Settings.catalog instead
+		// CONSIDER: should Catalog itself enforce being a singleton, and provide public static var catalog?
+		public static var catalog:Catalog;
+		public static var currentRoom:Room;
+		
 		public static var testExploreScroll:int;
 		public static var showEnemyMoves:Boolean;
 		public static var walkPercent:int;

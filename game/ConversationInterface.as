@@ -31,20 +31,21 @@ package angel.game {
 		private var npcBox:ConversationBox;
 		private var pcBox:ConversationBox;
 		private var target:SimpleEntity;
+		private var conversationData:ConversationData;
 		
 		public function ConversationInterface(target:SimpleEntity, conversationData:ConversationData) {
 			this.target = target;
+			this.conversationData = conversationData;
 			var glow:GlowFilter = new GlowFilter(TARGET_HILIGHT_COLOR, 1, 20, 20, 2, 1, false, false);
 			target.filters = [ glow ];
 			target.room.snapToCenter(target.location);
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
-			
-			conversationData.runConversation(this);
 		}	
 		
 		private function addedToStageListener(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
 			target.room.disableUi();
+			conversationData.runConversation(this);
 		}
 		
 		public function startSegment(npcSegment:ConversationSegment, pcSegments:Vector.<ConversationSegment>):void {
@@ -85,7 +86,9 @@ package angel.game {
 		}
 		
 		public function cleanup():void {
-			stage.removeChild(this);
+			if (this.parent != null) {
+				parent.removeChild(this);
+			}
 			target.filters = [];
 			target.room.restoreLastUi();
 		}

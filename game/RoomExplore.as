@@ -35,6 +35,16 @@ package angel.game {
 			timeQueue = null;
 		}
 		
+		public function addEntity(entity:SimpleEntity):void {
+			if (entity is ComplexEntity) {
+				initEntityForExplore(entity as ComplexEntity);
+			}
+		}
+		
+		public function removeEntity(entity:SimpleEntity):void {
+			//UNDONE
+		}
+		
 		private function initEntityForExplore(entity:ComplexEntity):void {
 			entity.initHealth();
 			entity.joinExplore(this);

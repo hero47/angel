@@ -98,27 +98,16 @@ package angel.game {
 		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander };
 		private static const combatBrain:Object = { wander:CombatBrainWander };
 
-		//Delete this eventually
-		public static function createFromRoomContentsXmlVersion0(walkerXml:XML, catalog:Catalog):Walker {
-			var id:String = walkerXml;
-			var walker:Walker = new Walker(catalog.retrieveWalkerImage(id), id);
-			walker.myLocation = new Point(walkerXml.@x, walkerXml.@y);
-			var exploreSetting:String = walkerXml.@explore;
-			walker.exploreBrainClass = exploreBrain[exploreSetting];
-			var combatSetting:String = walkerXml.@combat;
-			walker.combatBrainClass = combatBrain[combatSetting];
+		public static function createFromRoomContentsXml(walkerXml:XML, version:int, catalog:Catalog):Walker {
+			var id:String;
 			
-			var talk:String = walkerXml.@talk;
-			if (talk != "") {
-				walker.conversationData = new ConversationData();
-				walker.conversationData.loadFromXmlFile(talk);
+			//Delete older version support eventually
+			if (version < 1) {
+				id = walkerXml;
+			} else {
+				id = walkerXml.@id
 			}
 			
-			return walker;
-		}
-		
-		public static function createFromRoomContentsXmlVersion1(walkerXml:XML, catalog:Catalog):Walker {
-			var id:String = walkerXml.@id;
 			var walker:Walker = new Walker(catalog.retrieveWalkerImage(id), id);
 			walker.myLocation = new Point(walkerXml.@x, walkerXml.@y);
 			var exploreSetting:String = walkerXml.@explore;

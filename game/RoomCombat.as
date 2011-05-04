@@ -163,6 +163,17 @@ package angel.game {
 			}
 		}
 		
+		// CONSIDER: Adds to end of fighter list. Would it be better to add somewhere else, like right before/after current?
+		public function addEntity(entity:SimpleEntity):void {
+			if (entity is ComplexEntity) {
+				initEntityForCombat(entity as ComplexEntity);
+			}
+		}
+		
+		public function removeEntity(entity:SimpleEntity):void {
+			//UNDONE
+		}
+		
 		private function initEntityForCombat(entity:ComplexEntity):void {
 			entity.initHealth();
 			entity.actionsRemaining = 0;

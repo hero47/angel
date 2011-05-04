@@ -75,6 +75,8 @@ package angel.game {
 			room = new Room(floor);
 			addChild(room);
 			room.snapToCenter(startLoc);
+			Settings.currentRoom = room;
+			Settings.catalog = catalog;
 			
 			room.initContentsFromXml(catalog, contentsXml);
 			
