@@ -1,5 +1,6 @@
 package angel.common {
 	import flash.display.DisplayObject;
+	import flash.display.Graphics;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.geom.Point;
@@ -93,6 +94,76 @@ package angel.common {
 		public static function chessDistance(a:Point, b:Point):int {
 			return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 		}
+		
+		// startAngle should be multiple of 45 degrees; it's the facing to the first point on circle. Half continues clockwise.
+		public static function halfCircle(g:Graphics, x:Number,y:Number,r:Number, startAngle:int):void {
+			var c1:Number=r * (Math.SQRT2 - 1);
+			var c2:Number = r * Math.SQRT2 / 2;
+			var start:int = ((startAngle +360) % 360) / 45;
+			var controlX:Number;
+			var controlY:Number;
+			var anchorX:Number;
+			var anchorY:Number;
+			
+			
+			for (var i:int = start; i < start + 5; i++) {
+				switch (i % 8) {
+					case 0:
+						controlX = x + r;
+						controlY = y - c1;
+						anchorX = x + r;
+						anchorY = y;
+					break;
+					case 1:
+						controlX = x + r;
+						controlY = y + c1;
+						anchorX = x + c2;
+						anchorY = y + c2;
+					break;
+					case 2:
+						controlX = x + c1;
+						controlY = y + r;
+						anchorX = x;
+						anchorY = y + r;
+					break;
+					case 3:
+						controlX = x - c1;
+						controlY = y + r;
+						anchorX = x - c2;
+						anchorY = y + c2;
+					break;
+					case 4:
+						controlX = x - r;
+						controlY = y + c1;
+						anchorX =  x - r;
+						anchorY = y;
+					break;
+					case 5:
+						controlX = x - r;
+						controlY = y - c1;
+						anchorX = x - c2;
+						anchorY = y - c2;
+					break;
+					case 6:
+						controlX = x - c1;
+						controlY = y - r;
+						anchorX = x;
+						anchorY = y - r;
+					break;
+					case 7:
+						controlX = x + c1;
+						controlY = y - r;
+						anchorX = x + c2;
+						anchorY = y - c2;
+					break;	
+				}
+				if (i == start) {
+					g.moveTo(anchorX, anchorY);
+				} else {
+					g.curveTo(controlX, controlY, anchorX, anchorY);
+				}
+			}
+		};
 		
 	} // end class Util
 
