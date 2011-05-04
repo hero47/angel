@@ -1,6 +1,7 @@
 package angel.game {
 	import angel.common.Assert;
 	import angel.common.Floor;
+	import angel.common.Util;
 	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.geom.Point;
@@ -53,6 +54,20 @@ package angel.game {
 			return dotShape;
 		}
 		
+		private function splitDot(color1:uint, color2:uint, center:Point, isEnd:Boolean = false):Shape {
+			var dotShape:Shape = new Shape();
+			if (isEnd) {
+				dotShape.graphics.lineStyle(2, 0x0000ff)
+			}
+			// TAG tile-width-is-twice-height: aspect will be off if tiles no longer follow this rule!
+			dotShape.graphics.beginFill(color1, 1);
+			Util.halfCircle(dotShape.graphics, center.x, center.y * 2, DOT_X_RADIUS, 90);
+			dotShape.graphics.beginFill(color2, 1);
+			Util.halfCircle(dotShape.graphics, center.x, center.y * 2, DOT_X_RADIUS, 270);
+			dotShape.height /= 2;
+			return dotShape;
+		}
+		
 		public function clearDots():void {
 			for (var i:int = 0; i < dots.length; i++) {
 				decorationsLayer.removeChild(dots[i]);
@@ -95,6 +110,9 @@ package angel.game {
 					distance = path.length + nextSegment.length;
 				}
 			}
+			if (shootFromCoverValid(entity, distance)) {
+				return RETURN_COLOR;
+			}
 			return colorForGait(entity.gaitForDistance(distance));
 		}
 		
@@ -119,7 +137,11 @@ package angel.game {
 			var gait:int = entity.gaitForDistance(path.length);
 			for (var i:int = 0; i < path.length; i++) {
 				var isEnd:Boolean = (i == endIndexes[endIndexIndex]);
-				dots[i] = dot(colorForGait(gait), Floor.centerOf(path[i]), isEnd );
+				if (path.length == 1 && shootFromCoverValidForCurrentLocationAndPath(entity)) {
+					dots[i] = splitDot(RETURN_COLOR, colorForGait(gait), Floor.centerOf(path[i]), isEnd );
+				} else {
+					dots[i] = dot(colorForGait(gait), Floor.centerOf(path[i]), isEnd );
+				}
 				decorationsLayer.addChild(dots[i]);
 				if (isEnd) {
 					++endIndexIndex;
@@ -189,8 +211,12 @@ package angel.game {
 		
 		/*************** I don't know how to classify this or even if it belongs in this class ***************/
 		
+		public function shootFromCoverValid(entity:ComplexEntity, pathLength:int):Boolean {
+			return ((pathLength == 1) && entity.hasCover())
+		}
+		
 		public function shootFromCoverValidForCurrentLocationAndPath(entity:ComplexEntity):Boolean {
-			return ((path.length == 1) && entity.hasCover())
+			return shootFromCoverValid(entity, path.length);
 		}
 		
 	} // end class CombatMover
