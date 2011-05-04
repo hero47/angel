@@ -39,7 +39,7 @@ package angel.game {
 			LoaderWithErrorCatching.LoadFile("AngelInit.xml", xmlLoadedForInit);
 		}
 
-		private function xmlLoadedForInit(event:Event):void {
+		private function xmlLoadedForInit(event:Event, filename:String):void {
 			var xmlData:XML = new XML(event.target.data);
 			if (xmlData.room.length == 0) {
 				Alert.show("ERROR: Bad init file!");
@@ -55,7 +55,7 @@ package angel.game {
 		}
 		
 		private var contentsXml:XML; // stash here for use in mapLoadedListener
-		private function roomXmlLoaded(event:Event):void {
+		private function roomXmlLoaded(event:Event, filename:String):void {
 			var xml:XML = new XML(event.target.data);
 			
 			if (xml.floor.length() == 0) {
@@ -76,7 +76,7 @@ package angel.game {
 			addChild(room);
 			room.snapToCenter(startLoc);
 			
-			room.fillContentsFromXml(catalog, contentsXml);
+			room.initContentsFromXml(catalog, contentsXml);
 			
 			var previousPc:ComplexEntity = null;
 			for each (var entity:ComplexEntity in Settings.pcs) {

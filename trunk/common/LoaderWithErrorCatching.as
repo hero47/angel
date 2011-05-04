@@ -62,7 +62,7 @@ package angel.common {
 
 		private function completeListener(event:Event):void {
 			cleanup();
-			callback(event);
+			callback(event, filenameForErrorMessage);
 		}
 		
 		override protected function cleanup():void {

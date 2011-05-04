@@ -28,7 +28,7 @@ package angel.common {
 			LoaderWithErrorCatching.LoadFile(filename, catalogXmlLoaded);
 		}
 		
-		protected function catalogXmlLoaded(event:Event):void {
+		protected function catalogXmlLoaded(event:Event, filename:String):void {
 			var duplicateNames:String = "";
 			var xml:XML = new XML(event.target.data);
 			var entry:CatalogEntry;
@@ -117,7 +117,7 @@ package angel.common {
 
 			if (inCatalog) {
 				LoaderWithErrorCatching.LoadBytesFromFile(entry.filename,
-					function(event:Event):void {
+					function(event:Event, filename:String):void {
 						var bitmap:Bitmap = event.target.content;
 						warnIfBitmapIsWrongSize(entry, bitmap.bitmapData);
 						entry.data.dataFinishedLoading(bitmap.bitmapData);

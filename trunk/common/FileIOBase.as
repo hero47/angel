@@ -29,7 +29,7 @@ package angel.common {
 			}
 			Alert.show(message);
 			if (callbackFail != null) {
-				callbackFail();
+				callbackFail(filenameForErrorMessage);
 			}
 		}
 
@@ -39,7 +39,7 @@ package angel.common {
 			var message:String = "Security error on file " + filenameForErrorMessage;
 			Alert.show(message);
 			if (callbackFail != null) {
-				callbackFail();
+				callbackFail(filenameForErrorMessage);
 			}
 		}
 

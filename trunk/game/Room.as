@@ -398,14 +398,40 @@ package angel.game {
 							 stage.stageHeight / 2 - desiredTileCenter.y - Floor.FLOOR_TILE_Y / 2 );
 		}
 		
-		public function fillContentsFromXml(catalog:Catalog, contentsXml: XML):void {
-			for each (var propXml: XML in contentsXml.prop) {
-				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXml(propXml, catalog));
-			}
-			for each (var walkerXml: XML in contentsXml.walker) {
-				addEntityUsingItsLocation(Walker.createFromRoomContentsXml(walkerXml, catalog));
+		public function initContentsFromXml(catalog:Catalog, contentsXml: XML):void {
+			var version:int = int(contentsXml.@version);
+			
+			// During development we'll support reading (but not writing) some older formats.
+			// Eventually we'll get rid of all but the final version... and then, if we ever
+			// release and continue development, support the release version plus future. ;)
+			// To save headaches, I'll attempt to make most changes be additions with reasonable
+			// defaults, so most changes won't require a new version.
+			if (version < 1) {
+				initContentsFromXmlVersion0(catalog, contentsXml);
+			} else {
+				initContentsFromXmlVersion1(catalog, contentsXml);
 			}
 		}
+		
+		//Remove this eventually
+		private function initContentsFromXmlVersion0(catalog:Catalog, contentsXml:XML):void {
+			for each (var propXml: XML in contentsXml.prop) {
+				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXmlVersion0(propXml, catalog));
+			}
+			for each (var walkerXml: XML in contentsXml.walker) {
+				addEntityUsingItsLocation(Walker.createFromRoomContentsXmlVersion0(walkerXml, catalog));
+			}
+		}
+		
+		private function initContentsFromXmlVersion1(catalog:Catalog, contentsXml:XML):void {
+			for each (var propXml: XML in contentsXml.prop) {
+				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXmlVersion1(propXml, catalog));
+			}
+			for each (var walkerXml: XML in contentsXml.walker) {
+				addEntityUsingItsLocation(Walker.createFromRoomContentsXmlVersion1(walkerXml, catalog));
+			}
+		}
+		
 		
 	} // end class Room
 

@@ -21,10 +21,12 @@ package angel.game {
 			if (actions == null) {
 				actions = new Vector.<IAction>();
 			}
-			actions.push(newAction);
+			if (newAction != null) {
+				actions.push(newAction);
+			}
 		}
 		
-		public static function createFromXml(xml:XML):ConversationSegment {
+		public static function createFromXml(xml:XML, errorPrefix:String=""):ConversationSegment {
 			var text:String = xml.@text;
 			
 			// A \n for newline in XML attribute doesn't translate, and a CRLF looks like two newlines, so fix them
@@ -44,7 +46,7 @@ package angel.game {
 					}
 					segment.need.push(child.@flag);
 				} else {
-					segment.addAction(Action.createFromXml(child));
+					segment.addAction(Action.createFromXml(child, errorPrefix));
 				}
 			}
 			return segment;

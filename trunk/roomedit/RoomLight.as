@@ -176,7 +176,7 @@ package angel.roomedit {
 			LoaderWithErrorCatching.LoadFile(filename, roomXmlLoaded);
 		}
 		
-		private function roomXmlLoaded(event:Event):void {
+		private function roomXmlLoaded(event:Event, filename:String):void {
 			var xml:XML = new XML(event.target.data);
 			
 			if (xml.floor.length() == 0) {
@@ -188,29 +188,60 @@ package angel.roomedit {
 			initContentsFromXml(xml.floor.@x, xml.floor.@y, xml.contents[0]);
 			dispatchEvent(new Event(Event.INIT));
 		}
-
+	
 		// we take new size in parameters rather than retrieving from floor in case floor hasn't
 		// finished loading yet when this is called
-		public function initContentsFromXml(newx:int, newy:int, xml:XML):void {
+		public function initContentsFromXml(newx:int, newy:int, contentsXml:XML):void {
+			var version:int = int(contentsXml.@version);
 			resize(0, 0); // removes all existing props
 			resize(newx, newy);
+			
+			// During development we'll support reading (but not writing) some older formats.
+			// Eventually we'll get rid of all but the final version... and then, if we ever
+			// release and continue development, support the release version plus future. ;)
+			// To save headaches, I'll attempt to make most changes be additions with reasonable
+			// defaults, so most changes won't require a new version.
+			if (version < 1) {
+				initContentsFromXmlVersion0(contentsXml);
+			} else {
+				initContentsFromXmlVersion1(contentsXml);
+			}
+		}
+			
+		//Remove this eventually
+		public function initContentsFromXmlVersion0(contentsXml:XML):void {
 			var id:String;
-			for each (var propXml:XML in xml.prop) {
+			for each (var propXml:XML in contentsXml.prop) {
 				id = propXml;
 				addPropByName(id, new Point(propXml.@x, propXml.@y));
 			}
-			for each (var walkerXml:XML in xml.walker) {
+			for each (var walkerXml:XML in contentsXml.walker) {
 				id = walkerXml;
 				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml.@explore, walkerXml.@combat, walkerXml.@talk);
 			}
 		}
+
+		public function initContentsFromXmlVersion1(contentsXml:XML):void {
+			var id:String;
+			for each (var propXml:XML in contentsXml.prop) {
+				id = propXml.@id;
+				addPropByName(id, new Point(propXml.@x, propXml.@y));
+			}
+			for each (var walkerXml:XML in contentsXml.walker) {
+				id = walkerXml.@id;
+				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml.@explore, walkerXml.@combat, walkerXml.@talk);
+			}
+		}
 		
+		// version 1
 		public function buildContentsXml():XML {
 			var xml:XML = <contents/>;
+			xml.@version = "1";
 			for (var i:int = 0; i < propGrid.length; i++) {
 				for (var j:int = 0; j < propGrid[i].length; j++) {
 					if (propGrid[i][j] != null) {
 						var propXml:XML = new XML("<" + CatalogEntry.xmlTag[propGrid[i][j].type] + "/>");
+						propXml.@id = propGrid[i][j].id;
 						propXml.@x = i;
 						propXml.@y = j;
 						var attributes:Object = propGrid[i][j].attributes;
@@ -221,7 +252,6 @@ package angel.roomedit {
 								}
 							}
 						}
-						propXml.appendChild(propGrid[i][j].id);
 						xml.appendChild(propXml);
 					}
 				}
