@@ -107,7 +107,7 @@ package angel.game {
 		
 		public function mouseMove(tile:FloorTile):void {
 			if (tile != null) {
-				var lineOfSight:Boolean = combat.lineOfSight(player, tile.location);
+				var lineOfSight:Boolean = combat.entityHasLineOfSight(player, tile.location);
 				if (!lineOfSight) {
 					room.moveHilight(tile, LOS_BLOCKED_TILE_HILIGHT_COLOR);
 					if (!targetLocked) {
@@ -149,7 +149,7 @@ package angel.game {
 				}));
 			} else {
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatNoTarget), null));
-				if (combat.lineOfSight(player, tile.location)) { // UNDONE: target tile can't have prop???
+				if (combat.entityHasLineOfSight(player, tile.location)) { // UNDONE: target tile can't have prop???
 					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade), function():void {
 						doPlayerThrowGrenadeAt(tile.location);
 					}));

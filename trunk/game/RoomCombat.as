@@ -55,6 +55,19 @@ package angel.game {
 		private static const PAUSE_TO_VIEW_MOVE_TIME:int = 1000;
 		private static const PAUSE_TO_VIEW_FIRE_TIME:int = 1000;
 		
+		private static const grenadeInner:Vector.<Point> = Vector.<Point>([
+				new Point(0,0),
+				new Point(1, 0), new Point(0, 1), new Point(0, -1), new Point( -1, 0),
+				new Point(1, 1), new Point(1, -1), new Point( -1, -1), new Point( -1, 1)
+			]);
+		private static const grenadeOuter:Vector.<Point> = Vector.<Point>([
+				new Point(-2,-2), new Point(-2,-1), new Point(-2,0), new Point(-2,1), new Point(-2,2),
+				new Point(-1, -2), new Point( -1, 2),
+				new Point(0, -2), new Point(0, 2),
+				new Point(1, -2), new Point(1, 2),
+				new Point(2,-2), new Point(2,-1), new Point(2,0), new Point(2,1), new Point(2,2)
+			]);
+		
 		public var statDisplay:CombatStatDisplay;
 		private var modeLabel:TextField;
 		private var enemyTurnOverlay:Shape;
@@ -382,7 +395,7 @@ package angel.game {
 		private function opportunityFire(shooter:ComplexEntity, target:ComplexEntity):Boolean {
 			trace("Checking", shooter.aaId, "for opportunity fire");
 			if (shooter.actionsRemaining > 0) {
-				if (isGoodTarget(shooter, target) && lineOfSight(shooter, target.location)) {
+				if (isGoodTarget(shooter, target) && entityHasLineOfSight(shooter, target.location)) {
 					fire(shooter, target, extraDefenseForOpportunityFire);
 					return true;
 				}
@@ -418,33 +431,21 @@ package angel.game {
 		}
 			
 		public function throwGrenadeAndAdvanceToNextPhase(shooter:ComplexEntity, targetLocation:Point):void {
+			trace(shooter.aaId, "throws grenade at", targetLocation);
 			//UNDONE animate grenade moving through air?
 			shooter.turnToFaceTile(targetLocation);
 			
 			--shooter.actionsRemaining;
-			var fullDamage:int = Settings.grenadeDamage; // no damage reduction
 			
-			var temporaryGrenadeExplosionGraphic:TimedSprite = new TimedSprite(room.stage.frameRate);
+			var temporaryGrenadeExplosionGraphic:TimedSprite = new TimedSprite(room.stage.frameRate*10);	
 			
-			var hitLocation:Point = new Point();
-			for (hitLocation.x = targetLocation.x - 2; hitLocation.x <= targetLocation.x + 2; ++hitLocation.x) {
-				for (hitLocation.y = targetLocation.y - 2; hitLocation.y <= targetLocation.y + 2; ++hitLocation.y) {
-					if ((hitLocation.x < 0) || (hitLocation.x >= room.size.x) || (hitLocation.y < 0) || (hitLocation.y >= room.size.y)) {
-						continue;
-					}
-					var damagePoints:int = (Util.chessDistance(targetLocation, hitLocation) <= 1 ? fullDamage : fullDamage / 2);
-					room.forEachEntityIn(hitLocation, function(entity:ComplexEntity):void {
-						damage(entity, damagePoints);
-						trace(entity.aaId, "hit by grenade for", damagePoints);
-					}, filterIsWalker);
-					
-					var tileCenter:Point = Floor.centerOf(hitLocation);
-					var num:TextField = Util.textBox(String(damagePoints), 0, 30, TextFormatAlign.LEFT, false, 0xff0000);
-					num.autoSize = TextFieldAutoSize.LEFT;
-					num.x = tileCenter.x - num.width / 2;
-					num.y = tileCenter.y - num.height / 2;
-					temporaryGrenadeExplosionGraphic.addChild(num);
-				}
+			var offset:Point;
+			// Process all of outer ring first, so things in inner ring will provide blast shadow even if they are destroyed
+			for each (offset in grenadeOuter) {
+				processGrenadeBlastForSquare(targetLocation, targetLocation.add(offset), Settings.grenadeDamage/2, temporaryGrenadeExplosionGraphic);
+			}
+			for each (offset in grenadeInner) {
+				processGrenadeBlastForSquare(targetLocation, targetLocation.add(offset), Settings.grenadeDamage, temporaryGrenadeExplosionGraphic);
 			}
 			room.addChild(temporaryGrenadeExplosionGraphic);
 			
@@ -454,6 +455,28 @@ package angel.game {
 			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
 		}
 		
+		private function processGrenadeBlastForSquare(center:Point, processing:Point, damagePoints:int, graphic:Sprite):void {
+			if ((processing.x < 0) || (processing.x >= room.size.x) || (processing.y < 0) || (processing.y >= room.size.y)) {
+				return;
+			}
+			if ((Util.chessDistance(center, processing) > 1) && !lineOfSight(center, processing)) {
+				// CONSIDER: replace this with just "return" if we don't want graphic on shadowed squares
+				damagePoints = 0;
+			}
+			room.forEachEntityIn(processing, function(entity:ComplexEntity):void {
+				damage(entity, damagePoints);
+				trace(entity.aaId, "hit by grenade for", damagePoints);
+			}, filterIsWalker);
+			
+			var tileCenter:Point = Floor.centerOf(processing);
+			var num:TextField = Util.textBox(String(damagePoints), 0, 30, TextFormatAlign.LEFT, false, 0xff0000);
+			num.autoSize = TextFieldAutoSize.LEFT;
+			num.x = tileCenter.x - num.width / 2;
+			num.y = tileCenter.y - num.height / 2;
+			graphic.addChild(num);
+		}
+		
+		
 		private function filterIsWalker(prop:Prop):Boolean {
 			return (prop is Walker);
 		}
@@ -462,19 +485,24 @@ package angel.game {
 		
 		public function losFromAnyPlayer(target:Point):Boolean {
 			for (var i:int = 0; i < fighters.length; i++) {
-				if (fighters[i].isPlayerControlled && lineOfSight(fighters[i], target)) {
+				if (fighters[i].isPlayerControlled && entityHasLineOfSight(fighters[i], target)) {
 					return true;
 				}
 			}
 			return false;
 		}
 
+		
+		public function entityHasLineOfSight(entity:ComplexEntity, target:Point):Boolean {
+			return lineOfSight(entity.location, target);
+		}
+		
 //Outdented lines are for debugging, delete them eventually
-private var debugLOS:Boolean = false;
+private var debugLOS:Boolean = true;
 private var lastTarget:Point = new Point(-1,-1);
-		public function lineOfSight(entity:ComplexEntity, target:Point):Boolean {
-			var x0:int = entity.location.x;
-			var y0:int = entity.location.y;
+		public function lineOfSight(from:Point, target:Point):Boolean {
+			var x0:int = from.x;
+			var y0:int = from.y;
 			var x1:int = target.x;
 			var y1:int = target.y;
 			var dx:int = Math.abs(x1 - x0);
@@ -515,7 +543,7 @@ losPath.push(new Point(x, y));
 					}
 				}
 				// moved this check to end of loop so we're not checking the shooter's own tile
-				if (tileBlocksSight(x, y)) {
+				if (room.blocksSight(x, y)) {
 if (traceIt) { trace("Blocked; path", losPath);}
 					return false;
 				}
@@ -523,10 +551,6 @@ if (traceIt) { trace("Blocked; path", losPath);}
 if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath); }
 			return true;
 		} // end function lineOfSight
-		
-		public function tileBlocksSight(x:int, y:int):Boolean {
-			return (room.solid(x,y) & Prop.TALL) != 0;
-		}
 		
 		private function adjustAllEnemyVisibility():void {
 			for (var i:int = 0; i < fighters.length; i++) {
