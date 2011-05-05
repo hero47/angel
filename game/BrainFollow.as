@@ -1,4 +1,5 @@
 package angel.game {
+	import angel.common.Assert;
 	import flash.geom.Point;
 	/**
 	 * ...
@@ -18,6 +19,12 @@ package angel.game {
 		public function BrainFollow(entity:ComplexEntity, roomExplore:RoomExplore) {
 			me = entity;
 			roomExplore.addTimedEvent(Math.random()*INTERVAL, twitchOpportunity);
+		}
+		
+		public function cleanup():void {
+			Assert.assertTrue(me.room.mode is RoomExplore, "Explore brain not in explore mode");
+			RoomExplore(me.room.mode).removeTimedEvent(twitchOpportunity);
+			me = null;
 		}
 
 		private function twitchOpportunity(roomExplore:RoomExplore):void {

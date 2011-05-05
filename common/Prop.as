@@ -40,6 +40,11 @@ package angel.common {
 			}
 		}
 		
+		public function cleanup():void {
+			// Currently does nothing, but eventually we'll be doing resource tracking and need to
+			// decrement a count in the catalog.
+		}
+		
 		public static function createFromBitmapData(bitmapData:BitmapData):Prop {
 			return new Prop(new Bitmap(bitmapData));
 		}

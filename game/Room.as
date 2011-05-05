@@ -286,15 +286,41 @@ package angel.game {
 			cells[location.x][location.y].add(entity);
 			contentsLayer.addChild(entity);
 			entity.addToRoom(this, location);
-		}
-
-		public function addEntityUsingItsLocation(entity:SimpleEntity):void {
-			addEntity(entity, entity.location);
 			if (mode != null) {
 				mode.addEntity(entity);
 			}
 		}
 
+		public function addEntityUsingItsLocation(entity:SimpleEntity):void {
+			addEntity(entity, entity.location);
+		}
+		
+		public function removeEntityWithId(entityId:String):void {
+			var entity:SimpleEntity = entityInRoomWithId(entityId);
+			if (entity != null) {
+				if (mode != null) {
+					mode.removeEntity(entity);
+				}
+				var location:Point = entity.location;
+				cells[location.x][location.y].remove(entity);
+				contentsLayer.removeChild(entity);
+				entity.cleanup();
+			}
+		}
+		
+		public function entityInRoomWithId(entityId:String):SimpleEntity {
+			for (var i:int = 0; i < size.x; i++) {
+				for (var j:int = 0; j < size.y; j++) {
+					for each (var prop:Prop in cells[i][j].contents) {
+						if ((prop is SimpleEntity) && (SimpleEntity(prop).id == entityId)) {
+							return SimpleEntity(prop);
+						}
+					}
+				}
+			}
+			return null;
+		}
+		
 		public function forEachComplexEntity(callWithEntity:Function, filter:Function = null):void {
 			for (var i:int = 0; i < size.x; i++) {
 				for (var j:int = 0; j < size.y; j++) {

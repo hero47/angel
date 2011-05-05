@@ -93,6 +93,12 @@ package angel.game {
 			gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed *2, Settings.runSpeed*2, Settings.sprintSpeed*2]);
 		}
 		
+		override public function cleanup():void {
+			trace("cleanup", aaId);
+			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
+			super.cleanup();
+		}
+		
 		public function makePlayerControlled():void {
 			playerControlled = true;
 			gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
@@ -143,6 +149,9 @@ package angel.game {
 		}
 		
 		public function exitCurrentMode():void {
+			if (brain != null) {
+				brain.cleanup();
+			}
 			brain = null;
 		}
 		

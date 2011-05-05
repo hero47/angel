@@ -171,7 +171,11 @@ package angel.game {
 		}
 		
 		public function removeEntity(entity:SimpleEntity):void {
-			//UNDONE
+			if (entity is ComplexEntity) {
+				if (fighters.indexOf(entity) >= 0) {
+					removeFighterFromCombat(entity as ComplexEntity);
+				}
+			}
 		}
 		
 		private function initEntityForCombat(entity:ComplexEntity):void {

@@ -42,7 +42,9 @@ package angel.game {
 		}
 		
 		public function removeEntity(entity:SimpleEntity):void {
-			//UNDONE
+			if (entity is ComplexEntity) {
+				cleanupEntityFromExplore(entity as ComplexEntity);
+			}
 		}
 		
 		private function initEntityForExplore(entity:ComplexEntity):void {
@@ -81,6 +83,15 @@ package angel.game {
 			var timedEvent:TimedEvent = new TimedEvent(time + secondsFromNow * Settings.FRAMES_PER_SECOND, callback);
 			timeQueue.push(timedEvent);
 			queueNeedsSort = true;
+		}
+		
+		public function removeTimedEvent(callback:Function):void {
+			for (var i:int = 0; i < timeQueue.length; ++i) {
+				if (timeQueue[i].callback == callback) {
+					timeQueue.splice(i, 1);
+					--i;
+				}
+			}
 		}
 		
 	} // end class RoomExplore
