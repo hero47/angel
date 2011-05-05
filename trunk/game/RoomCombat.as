@@ -167,6 +167,7 @@ package angel.game {
 		public function addEntity(entity:SimpleEntity):void {
 			if (entity is ComplexEntity) {
 				initEntityForCombat(entity as ComplexEntity);
+				entity.dispatchEvent(new EntityEvent(EntityEvent.JOINED_COMBAT, true, false, entity));
 			}
 		}
 		
@@ -178,21 +179,52 @@ package angel.game {
 			}
 		}
 		
+		public function changePlayerControl(entity:ComplexEntity, pc:Boolean):void {
+			if (fighters.indexOf(entity) >= 0) {
+				removeCombatMarker(entity);
+				
+				//CONSIDER: refactor this + initEntityForCombat()
+				if (pc) {
+					createCombatMarker(entity, PLAYER_MARKER_COLOR);
+					deleteLastSeenLocation(entity);
+				} else {
+					if (entity.isEnemy()) {
+						entity.adjustBrainForRoomMode(this);
+						createCombatMarker(entity, ENEMY_MARKER_COLOR);
+						createLastSeenMarker(entity);
+					} // else non-combattant, if there is such a thing; currently (5/5/11) means they're just a prop
+				}
+			}
+		}
+		/*
+			if (entity.marker != null) {
+				room.decorationsLayer.removeChild(entity.marker);
+				entity.marker = null;
+			}
+
+			entity.setTextOverHead(null);
+			entity.visible = true;
+			if (!entity.isPlayerControlled) {
+				deleteLastSeenLocation(entity);
+			}
+		 */
+		
 		private function initEntityForCombat(entity:ComplexEntity):void {
 			entity.initHealth();
 			entity.actionsRemaining = 0;
 
 			entity.setTextOverHead(String(entity.currentHealth));
 			
+			//CONSIDER: refactor this + changePlayerControl()
 			if (entity.isPlayerControlled) {
 				fighters.push(entity);
 				createCombatMarker(entity, PLAYER_MARKER_COLOR);
 			} else if (entity.isEnemy()) {
 				fighters.push(entity);
-				entity.joinCombat(this);
+				entity.adjustBrainForRoomMode(this);
 				createCombatMarker(entity, ENEMY_MARKER_COLOR);
 				createLastSeenMarker(entity);
-			}
+			} // else non-combattant, if there is such a thing; currently (5/5/11) means they're just a prop
 		}
 		
 		private function createLastSeenMarker(entity:ComplexEntity):void {
@@ -239,13 +271,16 @@ package angel.game {
 			room.moveMarkerIfNeeded(entity);
 		}
 		
-		private function cleanupEntityFromCombat(entity:ComplexEntity):void {
-			entity.exitCurrentMode();
+		private function removeCombatMarker(entity:ComplexEntity):void {
 			if (entity.marker != null) {
 				room.decorationsLayer.removeChild(entity.marker);
 				entity.marker = null;
 			}
-
+		}
+		
+		private function cleanupEntityFromCombat(entity:ComplexEntity):void {
+			entity.adjustBrainForRoomMode(null);
+			removeCombatMarker(entity);
 			entity.setTextOverHead(null);
 			entity.visible = true;
 			if (!entity.isPlayerControlled) {
@@ -700,6 +735,8 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 			}
 		}
 		
+		//UNDONE - WARNING - Weird undesired things will probably happen if this is called for a player-controlled
+		//character while the ui is enabled for that character!  Should at least assert that this isn't the case.
 		private function removeFighterFromCombat(deadFighter:ComplexEntity):void {
 			var indexOfDeadFighter:int = fighters.indexOf(deadFighter);
 			Assert.assertTrue(indexOfDeadFighter >= 0, "Removing fighter that's already removed: " + deadFighter.aaId);

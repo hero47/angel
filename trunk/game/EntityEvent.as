@@ -11,6 +11,10 @@ package angel.game {
 		public static const FINISHED_MOVING:String = "entityFinishedMoving";
 		public static const START_TURN:String = "entityStartTurn";
 		public static const DEATH:String = "entityDied";
+		public static const ADDED_TO_ROOM:String = "entityAddedToRoom";
+		public static const REMOVED_FROM_ROOM:String = "entityRemovedFromRoom";
+		public static const JOINED_COMBAT:String = "entityJoinedCombat";
+		public static const CHANGED_FACTION:String = "entityChangedFaction";
 		
 		public var entity:SimpleEntity;
 		

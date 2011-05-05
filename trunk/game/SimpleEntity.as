@@ -62,6 +62,7 @@ package angel.game {
 			if (newLocation != null) {
 				this.location = newLocation;
 			}
+			dispatchEvent(new EntityEvent(EntityEvent.ADDED_TO_ROOM, true, false, this));
 		}
 		
 		public function center():Point {
