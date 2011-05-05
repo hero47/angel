@@ -26,7 +26,7 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IAction */
 		
-		public function doAction():Object {
+		public function doAction(doAtEnd:Vector.<Function>):Object {
 			Settings.currentRoom.addEntityUsingItsLocation(Walker.createFromRoomContentsXml(walkerXml, CONTENTS_VERSION, Settings.catalog));
 			return null;
 		}

@@ -56,13 +56,13 @@ package angel.game {
 			return Flags.haveAllFlagsIn(need);
 		}
 		
-		public function doActionsAndGetNextEntryId():Object {
+		public function doActionsAndGetNextEntryId(doAtEnd:Vector.<Function>):Object {
 			if (actions == null) {
 				return null;
 			}
 			var nextEntryReference:Object;
 			for (var i:int = 0; i < actions.length; ++i) {
-				var gotoReference:Object = actions[i].doAction();
+				var gotoReference:Object = actions[i].doAction(doAtEnd);
 				if ((gotoReference != null) && (nextEntryReference != null)) {
 					Alert.show("Conversation segment has extra goto, id=" + gotoReference.id);
 				}

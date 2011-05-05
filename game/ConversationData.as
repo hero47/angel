@@ -98,7 +98,7 @@ package angel.game {
 				return;
 			}
 			var ui:ConversationInterface = ConversationInterface(event.currentTarget);
-			var nextEntryReference:Object = event.choice.doActionsAndGetNextEntryId();
+			var nextEntryReference:Object = event.choice.doActionsAndGetNextEntryId(ui.doAtEnd);
 			currentEntry = null;
 			if (nextEntryReference != null) {
 				if (nextEntryReference.topic != null) {

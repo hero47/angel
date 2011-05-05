@@ -39,7 +39,7 @@ package angel.game {
 		public function start(ui:ConversationInterface):void {
 			ui.startSegment(npcSegment, pcSegments);
 			if (npcSegment != null) {
-				var illegalGoto:Object = npcSegment.doActionsAndGetNextEntryId();
+				var illegalGoto:Object = npcSegment.doActionsAndGetNextEntryId(ui.doAtEnd);
 				if (illegalGoto != null) {
 					Alert.show("Error! NPC segment contains goto id " + illegalGoto.id);
 				}
