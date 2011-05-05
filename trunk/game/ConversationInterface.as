@@ -33,6 +33,8 @@ package angel.game {
 		private var target:SimpleEntity;
 		private var conversationData:ConversationData;
 		
+		public var doAtEnd:Vector.<Function> = new Vector.<Function>();
+		
 		public function ConversationInterface(target:SimpleEntity, conversationData:ConversationData) {
 			this.target = target;
 			this.conversationData = conversationData;
@@ -91,6 +93,11 @@ package angel.game {
 			}
 			target.filters = [];
 			target.room.restoreLastUi();
+			
+			while (doAtEnd.length > 0) {
+				var f:Function = doAtEnd.shift();
+				f();
+			}
 		}
 		
 	}

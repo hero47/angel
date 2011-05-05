@@ -21,7 +21,7 @@ package angel.game.action {
 			return new GotoAction(id, topic);
 		}
 		
-		public function doAction():Object {
+		public function doAction(doAtEnd:Vector.<Function>):Object {
 			return { "topic":topic, "id":id };
 		}
 		

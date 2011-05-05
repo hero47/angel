@@ -12,7 +12,8 @@ package angel.game.action {
 			"goto":GotoAction,
 			"add":AddFlagAction,
 			"remove":RemoveFlagAction,
-			"addNpc":AddNpcAction
+			"addNpc":AddNpcAction,
+			"startCombat":StartCombatAction
 		};
 		
 		public function Action() {

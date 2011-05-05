@@ -16,7 +16,7 @@ package angel.game.action {
 			return new RemoveFlagAction(flag);
 		}
 		
-		public function doAction():Object {
+		public function doAction(doAtEnd:Vector.<Function>):Object {
 			Flags.setValue(flag, false);
 			return null;
 		}
