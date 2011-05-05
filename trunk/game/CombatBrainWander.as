@@ -21,6 +21,11 @@ package angel.game {
 			}
 		}
 		
+		public function cleanup():void {
+			me = null;
+		}
+
+		
 		public function chooseMoveAndDrawDots():void {
 			trace(me.aaId, "Choose move and draw dots");
 			

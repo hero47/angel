@@ -9,6 +9,7 @@ package angel.game {
 	
 	public class SimpleEntity extends Prop {
 		public var room:Room;
+		public var id:String;
 
 		
 		public var aaId:String; // catalog id + arbitrary index, for debugging, at top of alphabet for easy seeing!
@@ -16,7 +17,7 @@ package angel.game {
 
 		public function SimpleEntity(image:Bitmap, solidness: uint, id:String = "") {
 			super(image);
-
+			this.id = id;
 			this.solidness = solidness;
 
 			totalEntitiesCreated++;

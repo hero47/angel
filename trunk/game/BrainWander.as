@@ -1,4 +1,5 @@
 package angel.game {
+	import angel.common.Assert;
 	import flash.geom.Point;
 	/**
 	 * ...
@@ -19,10 +20,17 @@ package angel.game {
 			// This is not a listener; it will automatically go away when room explore mode ends
 			roomExplore.addTimedEvent(Math.random(), twitchOpportunity);
 		}
+		
+		public function cleanup():void {
+			Assert.assertTrue(me.room.mode is RoomExplore, "Explore brain not in explore mode");
+			RoomExplore(me.room.mode).removeTimedEvent(twitchOpportunity);
+			me = null;
+		}
 
 		private function twitchOpportunity(roomExplore:RoomExplore):void {
 			var wait:Number = 1;
-			if (Math.random() < 0.25) {
+//			if (Math.random() < 0.25) {
+if (true) {
 				var goal:Point = chooseVacantNeighbor();
 				if (goal != null) {
 					me.startMovingToward(goal);

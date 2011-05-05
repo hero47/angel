@@ -13,7 +13,8 @@ package angel.game.action {
 			"add":AddFlagAction,
 			"remove":RemoveFlagAction,
 			"addNpc":AddNpcAction,
-			"startCombat":StartCombatAction
+			"startCombat":StartCombatAction,
+			"removeFromRoom":RemoveFromRoomAction
 		};
 		
 		public function Action() {
