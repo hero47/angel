@@ -99,9 +99,22 @@ package angel.game {
 			super.cleanup();
 		}
 		
-		public function makePlayerControlled():void {
-			playerControlled = true;
-			gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
+		//NOTE: set brain classes and anything they will need for instantiation before calling.
+		public function changePlayerControl(pc:Boolean):void {
+			if (playerControlled == pc) {
+				return;
+			}
+			playerControlled = pc;
+			if (playerControlled) {
+				gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
+			} else {
+				gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed * 2, Settings.runSpeed * 2, Settings.sprintSpeed * 2]);
+			}
+			adjustBrainForRoomMode(room.mode);
+			if (room.mode != null) {
+				room.mode.changePlayerControl(this, playerControlled);
+			}
+			dispatchEvent(new EntityEvent(EntityEvent.CHANGED_FACTION, true, false, this));
 		}
 		
 		public function get isPlayerControlled():Boolean {
@@ -144,20 +157,18 @@ package angel.game {
 			sprintPoints += runPoints;
 		}
 		
-		public function joinCombat(roomCombat:RoomCombat):void {
-			brain = new combatBrainClass(this, roomCombat);
-		}
-		
-		public function exitCurrentMode():void {
+		public function adjustBrainForRoomMode(mode:RoomMode):void {
 			if (brain != null) {
 				brain.cleanup();
 			}
-			brain = null;
-		}
-		
-		public function joinExplore(roomExplore:RoomExplore):void {
-			if (exploreBrainClass != null) {
-				brain = new exploreBrainClass(this, roomExplore);
+			
+			if ((mode is RoomCombat) && (combatBrainClass != null)) {
+				brain = new combatBrainClass(this, mode);
+				dispatchEvent(new EntityEvent(EntityEvent.JOINED_COMBAT, true, false, this));
+			} else if ((mode is RoomExplore) && (exploreBrainClass != null)) {
+				brain = new exploreBrainClass(this, mode);
+			} else {
+				brain = null;
 			}
 		}
 		

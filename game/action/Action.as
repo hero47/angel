@@ -14,7 +14,8 @@ package angel.game.action {
 			"remove":RemoveFlagAction,
 			"addNpc":AddNpcAction,
 			"startCombat":StartCombatAction,
-			"removeFromRoom":RemoveFromRoomAction
+			"removeFromRoom":RemoveFromRoomAction,
+			"changeToPc":ChangeToPcAction
 		};
 		
 		public function Action() {

@@ -304,6 +304,7 @@ package angel.game {
 				var location:Point = entity.location;
 				cells[location.x][location.y].remove(entity);
 				contentsLayer.removeChild(entity);
+				entity.dispatchEvent(new EntityEvent(EntityEvent.ADDED_TO_ROOM, true, false, entity));
 				entity.cleanup();
 			}
 		}
@@ -350,7 +351,7 @@ package angel.game {
 				mainPlayerCharacter = entity;
 			}
 			addEntity(entity, location);
-			entity.makePlayerControlled();
+			entity.changePlayerControl(true);
 		}
 		
 		// This will generally be called by the entity as it crosses the boundary between one floor tile

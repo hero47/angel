@@ -47,13 +47,17 @@ package angel.game {
 			}
 		}
 		
+		public function changePlayerControl(entity:ComplexEntity, pc:Boolean):void {
+			// do nothing special
+		}
+		
 		private function initEntityForExplore(entity:ComplexEntity):void {
 			entity.initHealth();
-			entity.joinExplore(this);
+			entity.adjustBrainForRoomMode(this);
 		}
 		
 		private function cleanupEntityFromExplore(entity:ComplexEntity):void {
-			entity.exitCurrentMode();
+			entity.adjustBrainForRoomMode(null);
 		}
 		
 		/***************  TIMER STUFF  ****************/
