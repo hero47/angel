@@ -18,6 +18,7 @@ package angel.game {
 		
 		public function Main() {
 			stage.scaleMode = "noScale";
+			Settings.FRAMES_PER_SECOND = stage.frameRate;
 			Alert.init(stage);
 			
 			initFromXml();

@@ -6,7 +6,7 @@ package angel.game {
 	
 	public class Settings {
 		
-		public static const FRAMES_PER_SECOND:int = 30;
+		public static var FRAMES_PER_SECOND:int;
 		
 		// These are set by the game engine so scripting can access them.
 		// Is there a better way to do this sort of thing?
