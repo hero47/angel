@@ -1,4 +1,6 @@
 package angel.common {
+	import angel.game.ComplexEntity;
+	import angel.game.Room;
 	import flash.display.DisplayObject;
 	import flash.display.Graphics;
 	import flash.display.Sprite;
@@ -164,6 +166,65 @@ package angel.common {
 				}
 			}
 		};
+		
+//Outdented lines are for debugging, delete them eventually
+public static var debugLOS:Boolean = false;
+private static var lastLineOfSightTarget:Point = new Point(-1,-1);
+		public static function lineOfSight(room:Room, from:Point, target:Point):Boolean {		
+			var x0:int = from.x;
+			var y0:int = from.y;
+			var x1:int = target.x;
+			var y1:int = target.y;
+			var dx:int = Math.abs(x1 - x0);
+			var dy:int = Math.abs(y1 - y0);
+			
+var traceIt:Boolean = debugLOS && !target.equals(lastLineOfSightTarget);
+var losPath:Array = new Array();
+lastLineOfSightTarget = target;
+			// Ray-tracing on grid code, from http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
+			var x:int = x0;
+			var y:int = y0;
+			var n:int = 1 + dx + dy;
+			var x_inc:int = (x1 > x0) ? 1 : -1;
+			var y_inc:int = (y1 > y0) ? 1 : -1;
+			var error:int = dx - dy;
+			dx *= 2;
+			dy *= 2;
+			
+			// original code looped for (; n>0; --n) -- I changed it so the shooter & target don't block themselves
+			for (; n > 2; --n) {
+losPath.push(new Point(x, y));
+
+				if (error > 0) {
+					x += x_inc;
+					error -= dy;
+				}
+				else if (error < 0) {
+					y += y_inc;
+					error += dx;
+				} else { // special case when passing directly through vertex -- do a diagonal move, hitting one less tile
+					//CONSIDER: we may want to call this blocked if the tiles we're going between have "hard corners"
+					x += x_inc;
+					y += y_inc;
+					error = error - dy + dx;
+					--n;
+					if (n <= 2) {
+						break;
+					}
+				}
+				// moved this check to end of loop so we're not checking the shooter's own tile
+				if (room.blocksSight(x, y)) {
+if (traceIt) { trace("Blocked; path", losPath);}
+					return false;
+				}
+			}
+if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath); }
+			return true;
+		} // end function lineOfSight
+		
+		public static function entityHasLineOfSight(entity:ComplexEntity, target:Point):Boolean {
+			return Util.lineOfSight(entity.room, entity.location, target);
+		}
 		
 	} // end class Util
 

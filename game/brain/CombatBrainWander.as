@@ -1,5 +1,6 @@
 package angel.game.brain {
 	import angel.common.Assert;
+	import angel.common.Util;
 	import angel.game.combat.RoomCombat;
 	import angel.game.ComplexEntity;
 	import angel.game.Pathfinder;
@@ -63,7 +64,7 @@ package angel.game.brain {
 		private function getFirstAvailableTarget():ComplexEntity {
 			for (var i:int = 0; i < combat.fighters.length; i++) {
 				var fighter:ComplexEntity = combat.fighters[i];
-				if (fighter.isPlayerControlled && combat.entityHasLineOfSight(me, fighter.location)) {
+				if (fighter.isPlayerControlled && Util.entityHasLineOfSight(me, fighter.location)) {
 					return fighter;
 				}
 			}

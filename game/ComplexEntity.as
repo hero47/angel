@@ -8,6 +8,7 @@ package angel.game {
 	import angel.common.Tileset;
 	import angel.common.Util;
 	import angel.common.WalkerImage;
+	import angel.game.combat.Gun;
 	import angel.game.combat.RoomCombat;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -60,7 +61,6 @@ package angel.game {
 		public var walkPoints:int;
 		public var runPoints:int;
 		public var sprintPoints:int;
-		public var baseDamage:int;
 		public var maxHealth:int = 1;
 		public var currentHealth:int;
 		public var actionsRemaining:int;
@@ -69,6 +69,7 @@ package angel.game {
 		public var combatBrainClass:Class;
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
 		public var brain:Object;
+		public var gun:Gun;
 		
 		private var playerControlled:Boolean;
 		public var bestFriend:ComplexEntity; // for use by brain, persists through mode transitions
@@ -91,7 +92,8 @@ package angel.game {
 		public function ComplexEntity(image:Bitmap, id:String = "") {
 			super(image, Prop.DEFAULT_SOLIDITY, id);
 			setMovePoints(Defaults.MOVE_POINTS);
-			gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed *2, Settings.runSpeed*2, Settings.sprintSpeed*2]);
+			gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed * 2, Settings.runSpeed * 2, Settings.sprintSpeed * 2]);
+			gun = new Gun(Defaults.BASE_DAMAGE);
 		}
 		
 		override public function cleanup():void {
@@ -172,16 +174,31 @@ package angel.game {
 			}
 		}
 		
-		public function weaponDamage():int {
-			trace("shooter gait", mostRecentGait, "base damage", baseDamage, "penalty", Settings.speedPenalties[mostRecentGait], "weaponDamage", baseDamage * (100 - Settings.speedPenalties[mostRecentGait]) / 100);
-			return baseDamage * (100 - Settings.speedPenalties[mostRecentGait]) / 100;
+		public function percentOfFullDamageDealt():int {
+			return 100 - Settings.speedPenalties[mostRecentGait];
 		}
 		
-		// This percent is subtracted from any damage this entity receives
-		public function defensePercent():int {
-			// We'll probably have armor or other defense at some point that will enhance this.
-			trace("target gait", mostRecentGait, "defensePercent", Settings.speedDefenses[mostRecentGait]);
-			return Settings.speedDefenses[mostRecentGait];
+		public function damagePercentAfterSpeedApplied():int {
+			return 100 - Settings.speedDefenses[mostRecentGait];
+		}
+		
+		public function takeDamage(baseDamage:int, speedReducesDamage:Boolean, extraDamageReductionPercent:int = 0):void {
+			if (speedReducesDamage) {
+				baseDamage = baseDamage * damagePercentAfterSpeedApplied() / 100;
+			}
+			if (extraDamageReductionPercent > 0) {
+				baseDamage = baseDamage * (100 - extraDamageReductionPercent) / 100;
+			}
+			currentHealth -= baseDamage;
+			trace(aaId, "damaged for", baseDamage, ", health now", currentHealth);
+			setTextOverHead(String(currentHealth));
+
+			dispatchEvent(new EntityEvent(EntityEvent.HEALTH_CHANGE, true, false, this));
+			if (currentHealth <= 0) {
+				solidness ^= Prop.TALL; // Dead entities are short, by fiat.
+				startDeathAnimation();
+				dispatchEvent(new EntityEvent(EntityEvent.DEATH, true, false, this));
+			}
 		}
 		
 		// Reset health at start and end of combat.
@@ -445,7 +462,11 @@ package angel.game {
 			}
 			return false;
 		}
-
+		
+		// Eventually entities will be able to switch between different weapons
+		public function fireCurrentGunAt(target:ComplexEntity, extraDamageReductionPercent:int=0):void {
+			gun.fire(this, target, extraDamageReductionPercent);
+		}
 		
 	} // end class ComplexEntity
 

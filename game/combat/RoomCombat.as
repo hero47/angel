@@ -65,19 +65,6 @@ package angel.game.combat {
 		private static const PAUSE_TO_VIEW_MOVE_TIME:int = 1000;
 		private static const PAUSE_TO_VIEW_FIRE_TIME:int = 1000;
 		
-		private static const grenadeInner:Vector.<Point> = Vector.<Point>([
-				new Point(0,0),
-				new Point(1, 0), new Point(0, 1), new Point(0, -1), new Point( -1, 0),
-				new Point(1, 1), new Point(1, -1), new Point( -1, -1), new Point( -1, 1)
-			]);
-		private static const grenadeOuter:Vector.<Point> = Vector.<Point>([
-				new Point(-2,-2), new Point(-2,-1), new Point(-2,0), new Point(-2,1), new Point(-2,2),
-				new Point(-1, -2), new Point( -1, 2),
-				new Point(0, -2), new Point(0, 2),
-				new Point(1, -2), new Point(1, 2),
-				new Point(2,-2), new Point(2,-1), new Point(2,0), new Point(2,1), new Point(2,2)
-			]);
-		
 		public var statDisplay:CombatStatDisplay;
 		private var modeLabel:TextField;
 		private var enemyTurnOverlay:Shape;
@@ -107,8 +94,10 @@ package angel.game.combat {
 			// I'm keeping them around throughout combat rather than adding and removing them as we flip
 			// between phases because it seemed a little cleaner that way, but I'm not certain.
 			room.addEventListener(EntityEvent.MOVED, entityMovingToNewTile, false, 100);
-			room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, entityStandingOnNewTile, false, 100);
+			room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire, false, 100);
 			room.addEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener, false, 100);
+			room.addEventListener(EntityEvent.HEALTH_CHANGE, healthChangeListener);
+			room.addEventListener(EntityEvent.DEATH, deathListener);
 			
 			statDisplay = new CombatStatDisplay();
 			room.stage.addChild(statDisplay);
@@ -155,8 +144,10 @@ package angel.game.combat {
 			
 			room.disableUi();
 			room.removeEventListener(EntityEvent.MOVED, entityMovingToNewTile);
-			room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, entityStandingOnNewTile);
+			room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire);
 			room.removeEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
+			room.removeEventListener(EntityEvent.HEALTH_CHANGE, healthChangeListener);
+			room.removeEventListener(EntityEvent.DEATH, deathListener);
 			
 			minimap.cleanup();
 			
@@ -333,6 +324,26 @@ package angel.game.combat {
 			}	
 		}
 		
+		//UNDONE: upgrade stat display to track its own entity and do its own listening
+		private function healthChangeListener(event:EntityEvent):void {
+			var entity:ComplexEntity = ComplexEntity(event.entity);
+			//Current stat display is an ugly grab-bag of misc. bits with no coherence
+			if (entity.isPlayerControlled && (entity == currentFighter())) {
+				statDisplay.adjustCombatStatDisplay(entity);
+			}
+		}
+		
+		private function deathListener(event:EntityEvent):void {
+			var entity:ComplexEntity = ComplexEntity(event.entity);
+			removeFighterFromCombat(entity);
+			checkForCombatOver();
+			
+			if (entity.isPlayerControlled) {
+				adjustAllEnemyVisibility();
+			}
+		}
+		
+		
 		private function combatOverOk(button:String):void {
 			room.changeModeTo(RoomExplore);
 		}
@@ -355,21 +366,7 @@ package angel.game.combat {
 			}
 		}
 		
-		private function entityStandingOnNewTile(event:EntityEvent):void {
-			checkForOpportunityFire(event.entity as ComplexEntity);
-		}
-		
 		public function fireAndAdvanceToNextPhase(shooter:ComplexEntity, target:ComplexEntity):void {
-			fire(shooter, target);
-			if (shooter.isPlayerControlled || Settings.showEnemyMoves) {
-				shooter.centerRoomOnMe();
-			}
-			
-			// Give the player some time to gaze at the fire graphic before continuing with turn.
-			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
-		}
-		
-		private function fire(shooter:ComplexEntity, target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
 			if (target == null) {
 				trace(shooter.aaId, "reserve fire");
 				if (shooter.isPlayerControlled || losFromAnyPlayer(shooter.location)) {
@@ -377,26 +374,25 @@ package angel.game.combat {
 				}
 			} else {
 				trace(shooter.aaId, "firing at", target.aaId, target.location);
-				
-				shooter.turnToFaceTile(target.location);
-				
-				--shooter.actionsRemaining;
-				var damagePoints:int = shooter.weaponDamage() * (100 - target.defensePercent()) / 100
-						* (100 - extraDamageReductionPercent) / 100;
-				trace("firing for damage", damagePoints, "(extra reduction was", extraDamageReductionPercent, " percent)");
-				damage(target, damagePoints);
-				
-				var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(room.stage.frameRate);
-				uglyFireLineThatViolates3D.graphics.lineStyle(2, (shooter.isPlayerControlled ? 0xff0000 : 0xffa500));
-				uglyFireLineThatViolates3D.graphics.moveTo(shooter.center().x, shooter.center().y);
-				uglyFireLineThatViolates3D.graphics.lineTo(target.center().x, target.center().y);
-				room.addChild(uglyFireLineThatViolates3D);
-				
-				if (!shooter.isPlayerControlled) {
-					target.centerRoomOnMe();
+				shooter.fireCurrentGunAt(target);
+				if (shooter.isPlayerControlled || Settings.showEnemyMoves) {
+					shooter.centerRoomOnMe();
 				}
 			}
+			
+			// Give the player some time to gaze at the fire graphic before continuing with turn.
+			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
 		}
+			
+		public function throwGrenadeAndAdvanceToNextPhase(shooter:ComplexEntity, targetLocation:Point):void {
+			trace(shooter.aaId, "throws grenade at", targetLocation);
+			var grenade:Grenade = new Grenade();
+			grenade.throwAt(shooter, targetLocation);
+			
+			// Give the player some time to gaze at the fire graphic before continuing with turn.
+			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
+		}
+		
 		
 		private function displayReserveFireGraphic(shooter:ComplexEntity):void {
 			var reserveFireBitmap:Bitmap = new Icon.ReserveFireFloater();
@@ -407,32 +403,8 @@ package angel.game.combat {
 			room.addChild(reserveFireSprite);
 		}
 		
-		
-		private function damage(entity:ComplexEntity, points:int):void {
-			entity.currentHealth -= points;
-			entity.setTextOverHead(String(entity.currentHealth));
-
-			trace(entity.aaId, "damaged, health now", entity.currentHealth);
-			
-			//Current stat display is an ugly grab-bag of misc. bits with no coherence
-			if (entity.isPlayerControlled && (entity == currentFighter())) {
-				statDisplay.adjustCombatStatDisplay(entity);
-			}
-			
-			if (entity.currentHealth <= 0) {
-				entity.solidness ^= Prop.TALL; // Dead entities are short, by fiat.
-				entity.startDeathAnimation();
-				removeFighterFromCombat(entity);
-				checkForCombatOver();
-				
-				if (entity.isPlayerControlled) {
-					adjustAllEnemyVisibility();
-				}
-				entity.dispatchEvent(new EntityEvent(EntityEvent.DEATH, true, false, entity));
-			}
-		}
-		
-		private function checkForOpportunityFire(entityMoving:ComplexEntity):void {
+		private function checkForOpportunityFire(event:EntityEvent):void {
+			var entityMoving:ComplexEntity = ComplexEntity(event.entity);
 			Assert.assertTrue(currentFighter() == entityMoving, "Wrong entity moving");
 			var someoneDidOpportunityFire:Boolean = false;
 			
@@ -441,7 +413,7 @@ package angel.game.combat {
 			for (var i:int = 0; i < fighters.length; ++i) {
 				if (fighters[i].isReallyPlayer != entityMoving.isReallyPlayer) {
 					// WARNING: using ||= prevents it from executing the function if it's already true!
-					someoneDidOpportunityFire = (opportunityFire(fighters[i], entityMoving) || someoneDidOpportunityFire);
+					someoneDidOpportunityFire = (doOpportunityFireIfLegal(fighters[i], entityMoving) || someoneDidOpportunityFire);
 					if (entityMoving.currentHealth <= 0) {
 						// If the target is dead, it will have been removed from fighters
 						// and this loop is no longer valid!
@@ -457,165 +429,30 @@ package angel.game.combat {
 		}
 		
 		// return true if shooter fired, false if not
-		private function opportunityFire(shooter:ComplexEntity, target:ComplexEntity):Boolean {
+		private function doOpportunityFireIfLegal(shooter:ComplexEntity, target:ComplexEntity):Boolean {
 			trace("Checking", shooter.aaId, "for opportunity fire");
-			if (shooter.actionsRemaining > 0) {
-				if (isGoodTarget(shooter, target) && entityHasLineOfSight(shooter, target.location)) {
-					fire(shooter, target, extraDefenseForOpportunityFire);
-					return true;
-				}
+			if ((shooter.actionsRemaining > 0) && (shooter.gun.expectedDamage(shooter, target) >= Settings.minForOpportunity) &&
+						Util.entityHasLineOfSight(shooter, target.location)) {
+				shooter.fireCurrentGunAt(target, extraDefenseForOpportunityFire);
+				return true;
 			}
 			return false;
-		}
-		
-		private function isGoodTarget(shooter:ComplexEntity, target:ComplexEntity):Boolean {
-			/*
-			var distance:int = Util.chessDistance(shooter.location, target.location);
-			var minDistance:int;
-			switch (target.mostRecentGait) {
-				case Entity.GAIT_SPRINT:
-					minDistance = 6;
-				break;
-				case Entity.GAIT_RUN:
-					minDistance = 8;
-				break;
-				default:
-					minDistance = 10;
-				break;
-			}
-			return (distance <= minDistance);
-			*/
-			var expectedDamage:int = shooter.weaponDamage() * (100 - target.defensePercent()) / 100 ;
-			trace("expected damage", expectedDamage);
-			return (expectedDamage >= Settings.minForOpportunity);
 		}
 		
 		public function beginFireFromCoverMove(start:Point):void {
 			extraDefenseForOpportunityFire = Settings.fireFromCoverDamageReduction;
 			returnHereAfterFire = start;
 		}
-			
-		public function throwGrenadeAndAdvanceToNextPhase(shooter:ComplexEntity, targetLocation:Point):void {
-			trace(shooter.aaId, "throws grenade at", targetLocation);
-			//UNDONE animate grenade moving through air?
-			shooter.turnToFaceTile(targetLocation);
-			
-			--shooter.actionsRemaining;
-			
-			var temporaryGrenadeExplosionGraphic:TimedSprite = new TimedSprite(room.stage.frameRate*10);	
-			
-			var offset:Point;
-			// Process all of outer ring first, so things in inner ring will provide blast shadow even if they are destroyed
-			for each (offset in grenadeOuter) {
-				processGrenadeBlastForSquare(targetLocation, targetLocation.add(offset), Settings.grenadeDamage/2, temporaryGrenadeExplosionGraphic);
-			}
-			for each (offset in grenadeInner) {
-				processGrenadeBlastForSquare(targetLocation, targetLocation.add(offset), Settings.grenadeDamage, temporaryGrenadeExplosionGraphic);
-			}
-			room.addChild(temporaryGrenadeExplosionGraphic);
-			
-			room.snapToCenter(targetLocation);
-			
-			// Give the player some time to gaze at the fire graphic before continuing with turn.
-			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
-		}
-		
-		private function processGrenadeBlastForSquare(center:Point, processing:Point, damagePoints:int, graphic:Sprite):void {
-			if ((processing.x < 0) || (processing.x >= room.size.x) || (processing.y < 0) || (processing.y >= room.size.y)) {
-				return;
-			}
-			if ((Util.chessDistance(center, processing) > 1) && !lineOfSight(center, processing)) {
-				// CONSIDER: replace this with just "return" if we don't want graphic on shadowed squares
-				damagePoints = 0;
-			}
-			room.forEachEntityIn(processing, function(entity:ComplexEntity):void {
-				damage(entity, damagePoints);
-				trace(entity.aaId, "hit by grenade for", damagePoints);
-			}, filterIsWalker);
-			
-			var tileCenter:Point = Floor.centerOf(processing);
-			var num:TextField = Util.textBox(String(damagePoints), 0, 30, TextFormatAlign.LEFT, false, 0xff0000);
-			num.autoSize = TextFieldAutoSize.LEFT;
-			num.x = tileCenter.x - num.width / 2;
-			num.y = tileCenter.y - num.height / 2;
-			graphic.addChild(num);
-		}
-		
-		
-		private function filterIsWalker(prop:Prop):Boolean {
-			return (prop is Walker);
-		}
-		
 		/*********** Line of sight / fog of war, I don't know where I want to put this stuff *************/
 		
 		public function losFromAnyPlayer(target:Point):Boolean {
 			for (var i:int = 0; i < fighters.length; i++) {
-				if (fighters[i].isPlayerControlled && entityHasLineOfSight(fighters[i], target)) {
+				if (fighters[i].isPlayerControlled && Util.entityHasLineOfSight(fighters[i], target)) {
 					return true;
 				}
 			}
 			return false;
 		}
-
-		
-		public function entityHasLineOfSight(entity:ComplexEntity, target:Point):Boolean {
-			return lineOfSight(entity.location, target);
-		}
-		
-//Outdented lines are for debugging, delete them eventually
-private var debugLOS:Boolean = false;
-private var lastTarget:Point = new Point(-1,-1);
-		public function lineOfSight(from:Point, target:Point):Boolean {
-			var x0:int = from.x;
-			var y0:int = from.y;
-			var x1:int = target.x;
-			var y1:int = target.y;
-			var dx:int = Math.abs(x1 - x0);
-			var dy:int = Math.abs(y1 - y0);
-			
-var traceIt:Boolean = debugLOS && !target.equals(lastTarget);
-var losPath:Array = new Array();
-lastTarget = target;
-			// Ray-tracing on grid code, from http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
-			var x:int = x0;
-			var y:int = y0;
-			var n:int = 1 + dx + dy;
-			var x_inc:int = (x1 > x0) ? 1 : -1;
-			var y_inc:int = (y1 > y0) ? 1 : -1;
-			var error:int = dx - dy;
-			dx *= 2;
-			dy *= 2;
-			
-			// original code looped for (; n>0; --n) -- I changed it so the shooter & target don't block themselves
-			for (; n > 2; --n) {
-losPath.push(new Point(x, y));
-
-				if (error > 0) {
-					x += x_inc;
-					error -= dy;
-				}
-				else if (error < 0) {
-					y += y_inc;
-					error += dx;
-				} else { // special case when passing directly through vertex -- do a diagonal move, hitting one less tile
-					//CONSIDER: we may want to call this blocked if the tiles we're going between have "hard corners"
-					x += x_inc;
-					y += y_inc;
-					error = error - dy + dx;
-					--n;
-					if (n <= 2) {
-						break;
-					}
-				}
-				// moved this check to end of loop so we're not checking the shooter's own tile
-				if (room.blocksSight(x, y)) {
-if (traceIt) { trace("Blocked; path", losPath);}
-					return false;
-				}
-			}
-if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath); }
-			return true;
-		} // end function lineOfSight
 		
 		private function adjustAllEnemyVisibility():void {
 			for (var i:int = 0; i < fighters.length; i++) {
