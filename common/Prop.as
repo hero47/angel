@@ -41,8 +41,9 @@ package angel.common {
 		}
 		
 		public function cleanup():void {
-			// Currently does nothing, but eventually we'll be doing resource tracking and need to
-			// decrement a count in the catalog.
+			if (parent != null) {
+				parent.removeChild(this);
+			}
 		}
 		
 		public static function createFromBitmapData(bitmapData:BitmapData):Prop {

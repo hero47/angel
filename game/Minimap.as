@@ -158,10 +158,19 @@ package angel.game {
 			}
 		}
 		
-		private function setIconPositionFromEntityLocation(icon:Bitmap, entity:SimpleEntity):void {
-			var mapLoc:Point = Floor.centerOf(entity.location);
+		private function setIconPositionFromLocation(icon:Bitmap, location:Point):void {
+			var mapLoc:Point = Floor.centerOf(location);
 			icon.x = Math.floor(mapLoc.x / SCALE) + offsetX;
 			icon.y = Math.floor(mapLoc.y / SCALE) + offsetY;
+		}
+		
+		private function setIconPositionFromEntityLocation(icon:Bitmap, entity:SimpleEntity):void {
+			setIconPositionFromLocation(icon, entity.location);
+		}
+		
+		//CONSIDER: is there a better place to put off-map icons?  Should we spread them out?  Should we show them at all?
+		private function setIconPositionOffMap(icon:Bitmap):void {
+			setIconPositionFromLocation(icon, new Point(5,-5));
 		}
 		
 		private function adjustActiveEntityMarker():void {
@@ -217,6 +226,9 @@ package angel.game {
 		
 		public function someoneJoinedCombat(event:EntityEvent):void {
 			addFighter(ComplexEntity(event.entity), false);
+			if (!event.entity.visible) {
+				setIconPositionOffMap(entityToMapIcon[event.entity]);
+			}
 			adjustAllEnemyIconsForVisibility();
 		}
 		
@@ -239,6 +251,7 @@ package angel.game {
 					adjustEnemyIcon(entity);
 				} else {
 					icon.bitmapData = otherPlayerBitmapData;
+					setIconPositionFromEntityLocation(icon, entity);
 				}
 				adjustAllEnemyIconsForVisibility();
 			}

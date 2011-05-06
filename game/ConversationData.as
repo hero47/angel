@@ -24,8 +24,11 @@ package angel.game {
 		}
 		
 		private function conversationXmlLoaded(event:Event, filename:String):void {
-			var xml:XML = new XML(event.target.data);
-			var errorPrefix:String = "Error in conversation file " + filename + ":\n";
+			initializeFromXml(new XML(event.target.data), "Error in conversation file " + filename + ":\n");
+			dispatchEvent(new Event(Event.INIT));
+		}
+			
+		public function initializeFromXml(xml:XML, errorPrefix:String):void {
 			if (xml.topic.length() == 0) {
 				Alert.show(errorPrefix + "No topics (or missing root element that contains the topics).");
 			}
