@@ -1,5 +1,6 @@
 package angel.game {
 	import angel.common.*;
+	import angel.game.brain.BrainFollow;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;

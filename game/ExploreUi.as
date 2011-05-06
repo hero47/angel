@@ -2,6 +2,7 @@ package angel.game {
 	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.Util;
+	import angel.game.combat.RoomCombat;
 	import angel.game.PieSlice;
 	import angel.common.FloorTile;
 	import flash.events.Event;

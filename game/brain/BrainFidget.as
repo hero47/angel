@@ -1,4 +1,6 @@
-package angel.game {
+package angel.game.brain {
+	import angel.game.ComplexEntity;
+	import angel.game.RoomExplore;
 	/**
 	 * ...
 	 * @author Beth Moursund

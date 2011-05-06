@@ -1,8 +1,13 @@
-package angel.game {
+package angel.game.combat {
 	import angel.common.Assert;
 	import angel.common.FloorTile;
 	import angel.common.Util;
+	import angel.game.ComplexEntity;
+	import angel.game.Icon;
+	import angel.game.IRoomUi;
 	import angel.game.PieSlice;
+	import angel.game.Room;
+	import angel.game.RoomExplore;
 	import flash.geom.ColorTransform;
 	import flash.geom.Point;
 	import flash.text.TextField;

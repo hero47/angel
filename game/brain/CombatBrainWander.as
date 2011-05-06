@@ -1,5 +1,8 @@
-package angel.game {
+package angel.game.brain {
 	import angel.common.Assert;
+	import angel.game.combat.RoomCombat;
+	import angel.game.ComplexEntity;
+	import angel.game.Pathfinder;
 	import flash.geom.Point;
 	/**
 	 * ...

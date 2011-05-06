@@ -1,4 +1,4 @@
-package angel.game {
+package angel.game.conversation {
 	import angel.common.Alert;
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
@@ -29,11 +29,11 @@ package angel.game {
 		private static const TEXT_PORTRAIT_MARGIN:uint = 100;
 		private static const TEXT_OTHER_MARGIN:uint = 20;
 		
-		[Embed(source='../../../EmbeddedAssets/conversation_action_box.png')]
+		[Embed(source='../../../../EmbeddedAssets/conversation_action_box.png')]
 		private static const ActionBox:Class;
-		[Embed(source='../../../EmbeddedAssets/conversation_npc_arrow.png')]
+		[Embed(source='../../../../EmbeddedAssets/conversation_npc_arrow.png')]
 		private static const NpcActionIcon:Class;
-		[Embed(source='../../../EmbeddedAssets/conversation_pc_arrow.png')]
+		[Embed(source='../../../../EmbeddedAssets/conversation_pc_arrow.png')]
 		private static const PcActionIcon:Class;
 
 		/*

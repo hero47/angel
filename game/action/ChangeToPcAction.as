@@ -1,6 +1,6 @@
 package angel.game.action {
 	import angel.common.Alert;
-	import angel.game.BrainFollow;
+	import angel.game.brain.BrainFollow;
 	import angel.game.ComplexEntity;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;

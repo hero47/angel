@@ -7,6 +7,8 @@ package angel.game {
 	import angel.common.Prop;
 	import angel.common.PropImage;
 	import angel.common.Util;
+	import angel.game.conversation.ConversationData;
+	import angel.game.conversation.ConversationInterface;
 	import angel.game.test.ActionTest;
 	import flash.display.DisplayObject;
 	import flash.display.Graphics;

@@ -1,4 +1,5 @@
-package angel.game {
+package angel.game.conversation {
+	import angel.game.SimpleEntity;
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -21,9 +22,9 @@ package angel.game {
 		
 		// Temporary -- eventually these will come from catalog I believe
 		// size 276 x 329 ???
-		[Embed(source = '../../../EmbeddedAssets/conversation_NPC_portrait.png')]
+		[Embed(source = '../../../../EmbeddedAssets/conversation_NPC_portrait.png')]
 		private static const NpcPortrait:Class;
-		[Embed(source = '../../../EmbeddedAssets/conversation_MC_portrait.png')]
+		[Embed(source = '../../../../EmbeddedAssets/conversation_MC_portrait.png')]
 		private static const PcPortrait:Class;
 		
 		private static const TARGET_HILIGHT_COLOR:uint = 0x0000ff;

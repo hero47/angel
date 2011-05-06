@@ -4,6 +4,10 @@ package angel.game {
 	import angel.common.Catalog;
 	import angel.common.Prop;
 	import angel.common.WalkerImage;
+	import angel.game.brain.BrainFidget;
+	import angel.game.brain.BrainWander;
+	import angel.game.brain.CombatBrainWander;
+	import angel.game.conversation.ConversationData;
 	import flash.display.Bitmap;
 	import flash.events.Event;
 	import flash.events.TimerEvent;

@@ -1,5 +1,6 @@
-package angel.game {
+package angel.game.combat {
 	import angel.common.Util;
+	import angel.game.ComplexEntity;
 	import flash.display.Sprite;
 	import flash.text.TextField;
 	import flash.text.TextFormatAlign;
