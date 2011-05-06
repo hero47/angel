@@ -67,6 +67,10 @@ package angel.game.combat {
 		private var activeEntity:SimpleEntity;
 		private var activeEntityMarker:Bitmap = new activeBitmap();
 		
+		// NOTE: The minimap doesn't do any line-of-sight calculations on its own.  It uses the
+		// visibility setting on the entities themselves to determine visibility on map.
+		// If an event listener changes the visibility, it needs to have higher priority
+		// than the minimap's event listener.
 		public function Minimap(combat:RoomCombat) {
 			
 			// Wm wants it mouse-transparent and non-draggable.  I disagree, so just commenting out the

@@ -76,6 +76,7 @@ package angel.game.combat {
 			dots.length = 0;
 		}
 		
+		 //CONSIDER: should mover listen for move and do this in a listener rather than being called?
 		public function adjustDisplayAsEntityLeavesATile():void {
 			Assert.assertTrue(dots.length > 0, "adjustDisplayAsEntityLeavesATile with no dots remaining");
 			var dotToRemove:Shape = dots.shift();
@@ -147,7 +148,7 @@ package angel.game.combat {
 				if (isEnd) {
 					++endIndexIndex;
 				}
-				if (!entity.isPlayerControlled && !combat.losFromAnyPlayer(path[i])) {
+				if (!entity.isPlayerControlled && !combat.anyPlayerCanSeeLocation(path[i])) {
 					// This makes me wince.  It works, but this whole movement dot thing is getting messier and uglier.
 					dots[i].visible = false;
 				}

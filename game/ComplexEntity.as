@@ -93,7 +93,6 @@ package angel.game {
 			super(image, Prop.DEFAULT_SOLIDITY, id);
 			setMovePoints(Defaults.MOVE_POINTS);
 			gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed * 2, Settings.runSpeed * 2, Settings.sprintSpeed * 2]);
-			gun = new Gun(Defaults.BASE_DAMAGE);
 		}
 		
 		override public function cleanup():void {
@@ -115,7 +114,7 @@ package angel.game {
 			}
 			adjustBrainForRoomMode(room.mode);
 			if (room.mode != null) {
-				room.mode.changePlayerControl(this, playerControlled);
+				room.mode.playerControlChanged(this, playerControlled);
 			}
 			dispatchEvent(new EntityEvent(EntityEvent.CHANGED_FACTION, true, false, this));
 		}
@@ -464,8 +463,10 @@ package angel.game {
 		}
 		
 		// Eventually entities will be able to switch between different weapons
-		public function fireCurrentGunAt(target:ComplexEntity, extraDamageReductionPercent:int=0):void {
-			gun.fire(this, target, extraDamageReductionPercent);
+		public function fireCurrentGunAt(target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
+			if (gun != null) {
+				gun.fire(this, target, extraDamageReductionPercent);
+			}
 		}
 		
 	} // end class ComplexEntity

@@ -46,6 +46,7 @@ package angel.game {
 		private var dragging:Boolean = false;
 		private var gameIsPaused:Boolean = false;
 		private var pauseTimer:Timer;
+		private var pauseTimerInternalCallback:Function;
 		
 		private var tileWithFilter:FloorTile;
 		private var scrollingTo:Point = null;
@@ -116,17 +117,48 @@ package angel.game {
 			Assert.assertTrue(!gameIsPaused, "Pause when already paused");
 			gameIsPaused = true;
 			
+/*
+ * We're seeing a mysterious intermittant non-reproducible bug where occasionally the
+ * game will just get stuck in pause.  I've specifically seen this happen after
+ * a player character reserved fire; traces showed "Pausing 1000" but the trace in
+ * the callback function was never executed.  I had added code in the room's EnterFrame
+ * handler to detect this case, try restarting the timer, and if the pause went on
+ * too long generate a timer event itself; this is what the trace showed.
+			
+PC-barbara-1 reserve fire
+Pausing 1000
+Seconds paused aprx: 1 Should pause: 1
+Error! Game is paused but timer isn't running.  Starting it.
+Seconds paused aprx: 2 Should pause: 1
+Error! Game is paused but timer isn't running.  Starting it.
+Seconds paused aprx: 3 Should pause: 1
+Error! Pause is stuck. Attempting unstick.
+Error! Game is paused but timer isn't running.  Starting it.
+Seconds paused aprx: 4 Should pause: 1
+Error! Pause is stuck. Attempting unstick.
+...
+
+ * My next attempt at a patch is to stash a reference to the function that the timer
+ * should be calling, and call that directly in the "attempting unstick" case.
+ * 
+ * I wish I had an explanation for this!
+ * It is feeling like a bug in Flash's timer handling, but myriads of people use timers,
+ * so it's more likely something I'm doing wrong.
+ */
+			
 			Assert.assertTrue(pauseTimer == null, "Overwriting pauseTimer");
 			pauseTimer = new Timer(milliseconds, 1);
-			pauseTimer.addEventListener(TimerEvent.TIMER_COMPLETE, function(event:TimerEvent):void {
+			pauseTimerInternalCallback = function(event:TimerEvent):void {
 				trace("Pause timer complete");
 				pauseTimer = null;
+				pauseTimerInternalCallback = null;
 				Assert.assertTrue(gameIsPaused, "Something unpaused us before pause timer expired");
 				gameIsPaused = false;
 				if (callback != null) {
 					callback();
 				}
-			}, false, 0, true );
+			}
+			pauseTimer.addEventListener(TimerEvent.TIMER_COMPLETE, pauseTimerInternalCallback, false, 0, true );
 			pauseTimer.start();
 		}
 		
@@ -298,7 +330,7 @@ package angel.game {
 			contentsLayer.addChild(entity);
 			entity.addToRoom(this, location);
 			if (mode != null) {
-				mode.addEntity(entity);
+				mode.entityAddedToRoom(entity);
 			}
 		}
 
@@ -310,7 +342,7 @@ package angel.game {
 			var entity:SimpleEntity = entityInRoomWithId(entityId);
 			if (entity != null) {
 				if (mode != null) {
-					mode.removeEntity(entity);
+					mode.entityWillBeRemovedFromRoom(entity);
 				}
 				var location:Point = entity.location;
 				cells[location.x][location.y].remove(entity);		
@@ -419,7 +451,7 @@ package angel.game {
 						if (debugPauseCount / Settings.FRAMES_PER_SECOND > pauseTimer.delay / 1000 + 1) {
 							trace("Error! Pause is stuck. Attempting unstick.");
 							Alert.show("Error! Pause is stuck. Attempting unstick.");
-							pauseTimer.dispatchEvent(new TimerEvent(TimerEvent.TIMER_COMPLETE));
+							pauseTimerInternalCallback(null);
 						}
 					}
 				}

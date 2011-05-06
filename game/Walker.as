@@ -7,6 +7,7 @@ package angel.game {
 	import angel.game.brain.BrainFidget;
 	import angel.game.brain.BrainWander;
 	import angel.game.brain.CombatBrainWander;
+	import angel.game.combat.Gun;
 	import angel.game.conversation.ConversationData;
 	import flash.display.Bitmap;
 	import flash.events.Event;
@@ -32,7 +33,7 @@ package angel.game {
 			facing = WalkerImage.FACE_CAMERA;
 			super(new Bitmap(walkerImage.bitsFacing(facing)), id);
 			this.maxHealth = this.currentHealth = walkerImage.health;
-			this.gun.baseDamage = walkerImage.damage;
+			this.gun = new Gun(walkerImage.damage);
 			this.displayName = walkerImage.displayName;
 			setMovePoints(walkerImage.movePoints);
 			solidness = solidnessWhenAlive = Prop.DEFAULT_SOLIDITY; // no ghostly/short characters... at least, not yet

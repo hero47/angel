@@ -40,22 +40,17 @@ package angel.game.combat {
 	public class RoomCombat implements RoomMode {
 		
 		public var room:Room;
+		public var augmentedReality:AugmentedReality;
 		private var iFighterTurnInProgress:int;
 		private var combatOver:Boolean = false;
 		private var moveUi:CombatMoveUi;
 		private var fireUi:CombatFireUi;
-		private var minimap:Minimap;
 		public var mover:CombatMover;
 		private var extraDefenseForOpportunityFire:int = 0;
 		private var returnHereAfterFire:Point;
 		
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
 		public var fighters:Vector.<ComplexEntity>;
-		
-		// Colors for movement dots/hilights
-		private static const ENEMY_MARKER_COLOR:uint = 0xff0000;
-		private static const PLAYER_MARKER_COLOR:uint = 0x0000ff;
-		private static const GRID_COLOR:uint = 0xff0000;
 		
 		private static const PLAYER_MOVE:String = "Move";
 		private static const ENEMY_MOVE:String = "Enemy Action";
@@ -65,58 +60,28 @@ package angel.game.combat {
 		private static const PAUSE_TO_VIEW_MOVE_TIME:int = 1000;
 		private static const PAUSE_TO_VIEW_FIRE_TIME:int = 1000;
 		
-		public var statDisplay:CombatStatDisplay;
 		private var modeLabel:TextField;
 		private var enemyTurnOverlay:Shape;
-		
-		// We will keep one of these markers for every enemy at all times, and make it visible when the enemy
-		// goes out of sight.  That seems cleaner than tracking 'previous position' of the moving enemy and creating
-		// and deleting markers, though probably a bit less efficient.
-		private var lastSeenMarkers:Dictionary = new Dictionary(); // map from entity to LastSeen
-		private static const LAST_SEEN_MARKER_TURNS:int = 2; // markers remain visible this long after sighting
-		
-		private var enemyHealthDisplay:TextField;
-		private static const ENEMY_HEALTH_PREFIX:String = "Enemy: ";
 
 		public function RoomCombat(room:Room) {
 			trace("***BEGINNING COMBAT***");
 			this.room = room;
-			drawCombatGrid(room.decorationsLayer.graphics);
 			
-			fighters = new Vector.<ComplexEntity>();
-			room.forEachComplexEntity(initEntityForCombat); // init health; add enemies to fighter list & init their combat brains
-			Util.shuffle(fighters); // enemy turn order is randomized at start of combat and stays the same thereafter
+			createFighterList();
 			
-			makeMainPlayerGoFirst();
-			adjustAllEnemyVisibility();
+			augmentedReality = new AugmentedReality(this);
 
 			// These listeners can only trigger in specific phases, and finishedMoving advances the phase.
 			// I'm keeping them around throughout combat rather than adding and removing them as we flip
 			// between phases because it seemed a little cleaner that way, but I'm not certain.
-			room.addEventListener(EntityEvent.MOVED, entityMovingToNewTile, false, 100);
 			room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire, false, 100);
 			room.addEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener, false, 100);
-			room.addEventListener(EntityEvent.HEALTH_CHANGE, healthChangeListener);
-			room.addEventListener(EntityEvent.DEATH, deathListener);
-			
-			statDisplay = new CombatStatDisplay();
-			room.stage.addChild(statDisplay);
+			room.addEventListener(EntityEvent.DEATH, deathListener, false, 100);
 			
 			enemyTurnOverlay = new Shape();
 			enemyTurnOverlay.graphics.beginFill(0x4E7DB1, 0.3); // color to match alert, no clue where that number came from, heh
 			enemyTurnOverlay.graphics.drawRect(0, 0, room.stage.stageWidth, room.stage.stageHeight);
 			enemyTurnOverlay.graphics.endFill();
-			
-			enemyHealthDisplay = CombatStatDisplay.createHealthTextField();
-			enemyHealthDisplay.x = room.stage.stageWidth - enemyHealthDisplay.width - 10;
-			enemyHealthDisplay.y = 10;
-			adjustEnemyHealthDisplay(-1);
-			room.stage.addChild(enemyHealthDisplay);
-			
-			minimap = new Minimap(this); // WARNING: must be created after enemy visibility set!
-			minimap.x = room.stage.stageWidth - minimap.width - 5;
-			minimap.y = room.stage.stageHeight - minimap.height - 5;
-			room.stage.addChild(minimap);
 			
 			modeLabel = Util.textBox("", 350, 60, TextFormatAlign.CENTER, false, 0xffffff);
 			modeLabel.mouseEnabled = false;
@@ -131,245 +96,109 @@ package angel.game.combat {
 			
 			beginTurnForCurrentFighter();
 		}
-
-		private function makeMainPlayerGoFirst():void {			
-			// Move room.mainPlayerCharacter to the front of the fighters list
-			fighters.splice(fighters.indexOf(room.mainPlayerCharacter), 1);
-			fighters.splice(0, 0, room.mainPlayerCharacter);
-		}
+		
+		/****************** INTERFACE angel.game.RoomMode ****************/
 		
 		public function cleanup():void {
 			trace("***ENDING COMBAT***");
 			Assert.assertTrue(!room.paused, "Closing down combat ui while pause timer active");
 			
 			room.disableUi();
-			room.removeEventListener(EntityEvent.MOVED, entityMovingToNewTile);
 			room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire);
 			room.removeEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
-			room.removeEventListener(EntityEvent.HEALTH_CHANGE, healthChangeListener);
 			room.removeEventListener(EntityEvent.DEATH, deathListener);
 			
-			minimap.cleanup();
+			augmentedReality.cleanup();
 			
-			room.decorationsLayer.graphics.clear(); // remove grid outlines
 			mover.clearPath();
-			room.stage.removeChild(statDisplay);
 			room.stage.removeChild(modeLabel);
 			if (enemyTurnOverlay.parent != null) {
 				enemyTurnOverlay.parent.removeChild(enemyTurnOverlay);
 			}
 			
-			for (var i:int = 0; i < fighters.length; i++) {
-				cleanupEntityFromCombat(fighters[i]);
+			for each (var fighter:ComplexEntity in fighters) {
+				fighter.adjustBrainForRoomMode(null);
 			}
 		}
 		
 		// CONSIDER: Adds to end of fighter list. Would it be better to add somewhere else, like right before/after current?
-		public function addEntity(entity:SimpleEntity):void {
+		public function entityAddedToRoom(entity:SimpleEntity):void {
 			if (entity is ComplexEntity) {
 				initEntityForCombat(entity as ComplexEntity);
-				adjustAllEnemyVisibility();
+				augmentedReality.addFighter(entity as ComplexEntity);
 				entity.dispatchEvent(new EntityEvent(EntityEvent.JOINED_COMBAT, true, false, entity));
 			}
 		}
 		
-		public function removeEntity(entity:SimpleEntity):void {
-			if (entity is ComplexEntity) {
-				if (fighters.indexOf(entity) >= 0) {
-					removeFighterFromCombat(entity as ComplexEntity);
-					adjustAllEnemyVisibility();
-					checkForCombatOver();
-				}
+		public function entityWillBeRemovedFromRoom(entity:SimpleEntity):void {
+			if (fighters.indexOf(entity) >= 0) {
+				removeFighterFromCombat(entity as ComplexEntity);
+				checkForCombatOver();
 			}
 		}
 		
-		public function changePlayerControl(entity:ComplexEntity, pc:Boolean):void {
+		public function playerControlChanged(entity:ComplexEntity, pc:Boolean):void {
 			if (fighters.indexOf(entity) >= 0) {
-				removeCombatMarker(entity);
+				augmentedReality.removeFighter(entity);
 				
-				//CONSIDER: refactor this + initEntityForCombat()
-				if (pc) {
-					entity.visible = true;
-					createCombatMarker(entity, PLAYER_MARKER_COLOR);
-					deleteLastSeenLocation(entity);
-				} else {
-					if (entity.isEnemy()) {
-						entity.adjustBrainForRoomMode(this);
-						createCombatMarker(entity, ENEMY_MARKER_COLOR);
-						createLastSeenMarker(entity);
-					} // else non-combattant, if there is such a thing; currently (5/5/11) means they're just a prop
-				}
-				adjustAllEnemyVisibility();
+				if (pc || entity.isEnemy()) {
+					augmentedReality.addFighter(entity);
+				} // else non-combattant, if there is such a thing; currently (5/5/11) means they're just a prop
 			}
 		}
-		/*
-			if (entity.marker != null) {
-				room.decorationsLayer.removeChild(entity.marker);
-				entity.marker = null;
-			}
-
-			entity.setTextOverHead(null);
-			entity.visible = true;
-			if (!entity.isPlayerControlled) {
-				deleteLastSeenLocation(entity);
-			}
-		 */
+		
+		/***************** init/cleanup related **********************/
+		
+		private function createFighterList():void {
+			fighters = new Vector.<ComplexEntity>();
+			room.forEachComplexEntity(initEntityForCombat); // init health; add enemies to fighter list & init their combat brains
+			Util.shuffle(fighters); // enemy turn order is randomized at start of combat and stays the same thereafter
+			makeMainPlayerGoFirst();
+		}
+		
+		private function makeMainPlayerGoFirst():void {			
+			// Move room.mainPlayerCharacter to the front of the fighters list
+			fighters.splice(fighters.indexOf(room.mainPlayerCharacter), 1);
+			fighters.splice(0, 0, room.mainPlayerCharacter);
+		}
 		
 		private function initEntityForCombat(entity:ComplexEntity):void {
 			entity.initHealth();
 			entity.actionsRemaining = 0;
-
-			entity.setTextOverHead(String(entity.currentHealth));
 			
-			//CONSIDER: refactor this + changePlayerControl()
 			if (entity.isPlayerControlled) {
 				fighters.push(entity);
-				createCombatMarker(entity, PLAYER_MARKER_COLOR);
 			} else if (entity.isEnemy()) {
 				fighters.push(entity);
 				entity.adjustBrainForRoomMode(this);
-				createCombatMarker(entity, ENEMY_MARKER_COLOR);
-				createLastSeenMarker(entity);
 			} // else non-combattant, if there is such a thing; currently (5/5/11) means they're just a prop
 		}
 		
-		private function createLastSeenMarker(entity:ComplexEntity):void {
-			// I think this should be visible for out-of-sight enemies when first entering combat from explore,
-			// but Wm disagrees.  To change that, just remove the line setting age to LAST_SEEN_MARKER_TURNS.
-			var lastSeen:LastSeen = new LastSeen();
-			room.decorationsLayer.addChild(lastSeen);
-			lastSeenMarkers[entity] = lastSeen;
-			updateLastSeenLocation(entity);
-			lastSeen.age = LAST_SEEN_MARKER_TURNS;
-		}
-		
-		private function updateLastSeenLocation(entity:ComplexEntity):void {
-			var loc:Point = Floor.tileBoxCornerOf(entity.location);
-			var lastSeen:LastSeen = lastSeenMarkers[entity];
-			if (entity.visible) {
-				lastSeen.visible = false;
-				lastSeen.age = 0;
-				lastSeen.x = loc.x;
-				lastSeen.y = loc.y;
-			} else {
-				lastSeen.visible = (lastSeen.age < LAST_SEEN_MARKER_TURNS);
+		//UNDONE - WARNING - Weird undesired things will probably happen if this is called for a player-controlled
+		//character while the ui is enabled for that character!  Should at least assert that this isn't the case.
+		private function removeFighterFromCombat(deadFighter:ComplexEntity):void {
+			var indexOfDeadFighter:int = fighters.indexOf(deadFighter);
+			Assert.assertTrue(indexOfDeadFighter >= 0, "Removing fighter that's already removed: " + deadFighter.aaId);
+			if (indexOfDeadFighter == iFighterTurnInProgress) {
+				mover.clearPath();
 			}
-		}
-		
-		// Rather than just making it invisible, remove the marker entirely (for an entity who leaves combat)
-		private function deleteLastSeenLocation(entity:ComplexEntity):void {
-			var lastSeen:LastSeen = lastSeenMarkers[entity];
-			delete lastSeenMarkers[entity];
-			room.decorationsLayer.removeChild(lastSeen);
-		}
-		
-		private function createCombatMarker(entity:ComplexEntity, color:uint):void {
-			var marker:Shape = new Shape();
-			marker.graphics.lineStyle(4, color, 0.7);
-			marker.graphics.drawCircle(0, 0, 15);
-			marker.graphics.drawCircle(0, 0, 30);
-			marker.graphics.drawCircle(0, 0, 45);
-			// TAG tile-width-is-twice-height: aspect will be off if tiles no longer follow this rule!
-			marker.scaleY = 0.5;
-			room.decorationsLayer.addChild(marker);
-			
-			entity.marker = marker;
-			room.moveMarkerIfNeeded(entity);
-		}
-		
-		private function removeCombatMarker(entity:ComplexEntity):void {
-			if (entity.marker != null) {
-				room.decorationsLayer.removeChild(entity.marker);
-				entity.marker = null;
+			if (indexOfDeadFighter <= iFighterTurnInProgress) {
+				--iFighterTurnInProgress;
+				if (iFighterTurnInProgress < 0) {
+					iFighterTurnInProgress = fighters.length - 1;
+				}
 			}
+			fighters.splice(indexOfDeadFighter, 1);
+			deadFighter.adjustBrainForRoomMode(null);
+			augmentedReality.removeFighter(deadFighter);
 		}
 		
-		private function cleanupEntityFromCombat(entity:ComplexEntity):void {
-			entity.adjustBrainForRoomMode(null);
-			removeCombatMarker(entity);
-			entity.setTextOverHead(null);
-			entity.visible = true;
-			if (!entity.isPlayerControlled) {
-				deleteLastSeenLocation(entity);
-			}
-		}
-		
-		//NOTE: grid lines are tweaked up by one pixel because the tile image bitmaps actually extend one pixel outside the
-		//tile boundaries, overlapping the previous row.
-		private function drawCombatGrid(graphics:Graphics):void {
-			graphics.lineStyle(0, GRID_COLOR, 1);
-			var startPoint:Point = Floor.topCornerOf(new Point(0, 0));
-			var endPoint:Point = Floor.topCornerOf(new Point(0, room.size.y));
-			for (var i:int = 0; i <= room.size.x; i++) {
-				graphics.moveTo(startPoint.x + (i * Floor.FLOOR_TILE_X), startPoint.y + (i * Floor.FLOOR_TILE_Y) - 1);
-				graphics.lineTo(endPoint.x + (i * Floor.FLOOR_TILE_X), endPoint.y + (i * Floor.FLOOR_TILE_Y) - 1);
-			}
-			endPoint = Floor.topCornerOf(new Point(room.size.x, 0));
-			for (i = 0; i <= room.size.y; i++) {
-				graphics.moveTo(startPoint.x - (i * Floor.FLOOR_TILE_X), startPoint.y + (i * Floor.FLOOR_TILE_Y) - 1);
-				graphics.lineTo(endPoint.x - (i * Floor.FLOOR_TILE_X), endPoint.y + (i * Floor.FLOOR_TILE_Y) - 1);
-			}
-		}		
-		
-		public function toggleMinimap():void {
-			minimap.visible = !minimap.visible;
-		}
-		
-		public function adjustEnemyHealthDisplay(points:int):void {
-			if (points < 0) {
-				enemyHealthDisplay.visible = false;
-			} else {
-				enemyHealthDisplay.text = ENEMY_HEALTH_PREFIX + String(points);
-				enemyHealthDisplay.visible = true;
-			}	
-		}
-		
-		//UNDONE: upgrade stat display to track its own entity and do its own listening
-		private function healthChangeListener(event:EntityEvent):void {
-			var entity:ComplexEntity = ComplexEntity(event.entity);
-			//Current stat display is an ugly grab-bag of misc. bits with no coherence
-			if (entity.isPlayerControlled && (entity == currentFighter())) {
-				statDisplay.adjustCombatStatDisplay(entity);
-			}
-		}
-		
-		private function deathListener(event:EntityEvent):void {
-			var entity:ComplexEntity = ComplexEntity(event.entity);
-			removeFighterFromCombat(entity);
-			checkForCombatOver();
-			
-			if (entity.isPlayerControlled) {
-				adjustAllEnemyVisibility();
-			}
-		}
-		
-		
-		private function combatOverOk(button:String):void {
-			room.changeModeTo(RoomExplore);
-		}
-		
-		/****************** Used by both player & NPCs during combat turns *******************/
-		
-		// Called by event listener each time an entity begins moving to a new tile during combat.
-		// (entity's location will have already changed to the new tile)
-		// The tile they're moving to should always be the one with the first dot on the path,
-		// if everything is working right.
-		private function entityMovingToNewTile(event:EntityEvent):void {
-			Assert.assertTrue(event.entity == currentFighter(), "Wrong entity moving");
-			
-			var entity:ComplexEntity = (event.entity as ComplexEntity);
-			mover.adjustDisplayAsEntityLeavesATile();
-			if (entity.isPlayerControlled) {
-				adjustAllEnemyVisibility();
-			} else {
-				adjustVisibilityOfEnemy(entity);
-			}
-		}
+		/****************** public “api” for combat brains/ui *******************/
 		
 		public function fireAndAdvanceToNextPhase(shooter:ComplexEntity, target:ComplexEntity):void {
 			if (target == null) {
 				trace(shooter.aaId, "reserve fire");
-				if (shooter.isPlayerControlled || losFromAnyPlayer(shooter.location)) {
+				if (shooter.isPlayerControlled || anyPlayerCanSeeLocation(shooter.location)) {
 					displayReserveFireGraphic(shooter);
 				}
 			} else {
@@ -393,15 +222,12 @@ package angel.game.combat {
 			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
 		}
 		
-		
-		private function displayReserveFireGraphic(shooter:ComplexEntity):void {
-			var reserveFireBitmap:Bitmap = new Icon.ReserveFireFloater();
-			var reserveFireSprite:TimedSprite = new TimedSprite(room.stage.frameRate);
-			reserveFireSprite.addChild(reserveFireBitmap);
-			reserveFireSprite.x = shooter.x;
-			reserveFireSprite.y = shooter.y - reserveFireSprite.height;
-			room.addChild(reserveFireSprite);
+		public function beginFireFromCoverMove(start:Point):void {
+			extraDefenseForOpportunityFire = Settings.fireFromCoverDamageReduction;
+			returnHereAfterFire = start;
 		}
+		
+		/**************** opportunity fire ***********************/
 		
 		private function checkForOpportunityFire(event:EntityEvent):void {
 			var entityMoving:ComplexEntity = ComplexEntity(event.entity);
@@ -431,7 +257,8 @@ package angel.game.combat {
 		// return true if shooter fired, false if not
 		private function doOpportunityFireIfLegal(shooter:ComplexEntity, target:ComplexEntity):Boolean {
 			trace("Checking", shooter.aaId, "for opportunity fire");
-			if ((shooter.actionsRemaining > 0) && (shooter.gun.expectedDamage(shooter, target) >= Settings.minForOpportunity) &&
+			if ((shooter.actionsRemaining > 0) && (shooter.gun != null) && 
+						(shooter.gun.expectedDamage(shooter, target) >= Settings.minForOpportunity) &&
 						Util.entityHasLineOfSight(shooter, target.location)) {
 				shooter.fireCurrentGunAt(target, extraDefenseForOpportunityFire);
 				return true;
@@ -439,35 +266,36 @@ package angel.game.combat {
 			return false;
 		}
 		
-		public function beginFireFromCoverMove(start:Point):void {
-			extraDefenseForOpportunityFire = Settings.fireFromCoverDamageReduction;
-			returnHereAfterFire = start;
-		}
-		/*********** Line of sight / fog of war, I don't know where I want to put this stuff *************/
+		/*********** Miscellaneous *************/
 		
-		public function losFromAnyPlayer(target:Point):Boolean {
-			for (var i:int = 0; i < fighters.length; i++) {
-				if (fighters[i].isPlayerControlled && Util.entityHasLineOfSight(fighters[i], target)) {
+		public function anyPlayerCanSeeLocation(target:Point):Boolean {
+			for each (var fighter:ComplexEntity in fighters) {
+				if (fighter.isPlayerControlled && Util.entityHasLineOfSight(fighter, target)) {
 					return true;
 				}
 			}
 			return false;
 		}
 		
-		private function adjustAllEnemyVisibility():void {
-			for (var i:int = 0; i < fighters.length; i++) {
-				var target:ComplexEntity = fighters[i];
-				if (!target.isPlayerControlled) {
-					adjustVisibilityOfEnemy(target);
-				}
-			}
+		private function deathListener(event:EntityEvent):void {
+			var entity:ComplexEntity = ComplexEntity(event.entity);
+			removeFighterFromCombat(entity);
+			checkForCombatOver();
+		}		
+		
+		private function combatOverOk(button:String):void {
+			room.changeModeTo(RoomExplore);
 		}
 		
-		private function adjustVisibilityOfEnemy(enemy:ComplexEntity):void {
-			enemy.visible = enemy.marker.visible = losFromAnyPlayer(enemy.location);
-			updateLastSeenLocation(enemy);
+		private function displayReserveFireGraphic(shooter:ComplexEntity):void {
+			var reserveFireBitmap:Bitmap = new Icon.ReserveFireFloater();
+			var reserveFireSprite:TimedSprite = new TimedSprite(room.stage.frameRate);
+			reserveFireSprite.addChild(reserveFireBitmap);
+			reserveFireSprite.x = shooter.x;
+			reserveFireSprite.y = shooter.y - reserveFireSprite.height;
+			room.addChild(reserveFireSprite);
 		}
-		
+
 		/*********** Turn-structure related **************/
 		
 		// Turn structure: Each combatant (beginning with player) gets a turn, in a continuous cycle.  Each entity's
@@ -551,16 +379,12 @@ package angel.game.combat {
 				if (enemyTurnOverlay.parent != null) {
 					enemyTurnOverlay.parent.removeChild(enemyTurnOverlay);
 				}
-				statDisplay.adjustCombatStatDisplay(fighter);
 				room.enableUi(moveUi, fighter);
 				modeLabel.text = PLAYER_MOVE;
 			} else {
 				room.stage.addChild(enemyTurnOverlay);
-				statDisplay.adjustCombatStatDisplay(null);
 				modeLabel.text = ENEMY_MOVE;
-				
-				trace("Begin turn for npc", fighter.aaId, "marker age", lastSeenMarkers[fighter].age, "(pause will start before move calc)");
-				++lastSeenMarkers[fighter].age;
+				trace("Begin turn for npc (pause timer will start before move calc)", fighter.aaId);
 				
 				// Give the player some time to gaze at the enemy's move dots before continuing with turn.
 				// (The timer will be running while enemy calculates move, so if that takes a while once we
@@ -573,7 +397,7 @@ package angel.game.combat {
 			}
 		}
 		
-		private function currentFighter():ComplexEntity {
+		public function currentFighter():ComplexEntity {
 			if (iFighterTurnInProgress >= fighters.length) {
 				return fighters[0];
 			}
@@ -586,24 +410,6 @@ package angel.game.combat {
 				trace("All turns have been processed, go back to first player");
 				iFighterTurnInProgress = 0;
 			}
-		}
-		
-		//UNDONE - WARNING - Weird undesired things will probably happen if this is called for a player-controlled
-		//character while the ui is enabled for that character!  Should at least assert that this isn't the case.
-		private function removeFighterFromCombat(deadFighter:ComplexEntity):void {
-			var indexOfDeadFighter:int = fighters.indexOf(deadFighter);
-			Assert.assertTrue(indexOfDeadFighter >= 0, "Removing fighter that's already removed: " + deadFighter.aaId);
-			if (indexOfDeadFighter == iFighterTurnInProgress) {
-				mover.clearPath();
-			}
-			if (indexOfDeadFighter <= iFighterTurnInProgress) {
-				--iFighterTurnInProgress;
-				if (iFighterTurnInProgress < 0) {
-					iFighterTurnInProgress = fighters.length - 1;
-				}
-			}
-			fighters.splice(indexOfDeadFighter, 1);
-			cleanupEntityFromCombat(deadFighter);
 		}
 		
 		private function checkForCombatOver():void {
@@ -634,23 +440,4 @@ package angel.game.combat {
 		
 	} // end class RoomCombat
 
-}
-
-import angel.common.Tileset;
-import flash.display.DisplayObject;
-import flash.display.Shape;
-
-class LastSeen extends Shape {
-	public var age:int;
-	public function LastSeen(age:int = 0) {
-		this.age = age;
-		
-		var w:int = Tileset.TILE_WIDTH / 3;
-		var h:int = Tileset.TILE_HEIGHT / 3;
-		graphics.lineStyle(4, 0x0, 1);
-		graphics.moveTo(w, h);
-		graphics.lineTo(Tileset.TILE_WIDTH - w, Tileset.TILE_HEIGHT - h);
-		graphics.moveTo(w, Tileset.TILE_HEIGHT - h);
-		graphics.lineTo(Tileset.TILE_WIDTH - w, h);
-	}
 }
