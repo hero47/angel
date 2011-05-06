@@ -1,6 +1,6 @@
 package angel.game.action {
 	import angel.common.Alert;
-	import angel.game.RoomCombat;
+	import angel.game.combat.RoomCombat;
 	import angel.game.Settings;
 	/**
 	 * ...

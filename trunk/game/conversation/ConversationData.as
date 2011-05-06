@@ -1,7 +1,8 @@
-package angel.game {
+package angel.game.conversation {
 	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.LoaderWithErrorCatching;
+	import angel.game.Flags;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 

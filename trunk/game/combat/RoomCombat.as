@@ -1,4 +1,4 @@
-package angel.game {
+package angel.game.combat {
 	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.Floor;
@@ -6,6 +6,16 @@ package angel.game {
 	import angel.common.Prop;
 	import angel.common.Tileset;
 	import angel.common.Util;
+	import angel.game.ComplexEntity;
+	import angel.game.EntityEvent;
+	import angel.game.Icon;
+	import angel.game.Room;
+	import angel.game.RoomExplore;
+	import angel.game.RoomMode;
+	import angel.game.Settings;
+	import angel.game.SimpleEntity;
+	import angel.game.TimedSprite;
+	import angel.game.Walker;
 	import flash.display.Bitmap;
 	import flash.display.Graphics;
 	import flash.display.Shape;
@@ -359,7 +369,7 @@ package angel.game {
 			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
 		}
 		
-		public function fire(shooter:ComplexEntity, target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
+		private function fire(shooter:ComplexEntity, target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
 			if (target == null) {
 				trace(shooter.aaId, "reserve fire");
 				if (shooter.isPlayerControlled || losFromAnyPlayer(shooter.location)) {
@@ -422,7 +432,7 @@ package angel.game {
 			}
 		}
 		
-		public function checkForOpportunityFire(entityMoving:ComplexEntity):void {
+		private function checkForOpportunityFire(entityMoving:ComplexEntity):void {
 			Assert.assertTrue(currentFighter() == entityMoving, "Wrong entity moving");
 			var someoneDidOpportunityFire:Boolean = false;
 			
@@ -757,15 +767,6 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 			}
 			fighters.splice(indexOfDeadFighter, 1);
 			cleanupEntityFromCombat(deadFighter);
-		}
-		
-		private function allEnemiesAreDead():Boolean {
-			for (var i:int = 0; i < fighters.length; i++) {
-				if (!fighters[i].isPlayerControlled) {
-					return false;
-				}
-			}
-			return true;
 		}
 		
 		private function checkForCombatOver():void {

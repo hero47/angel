@@ -1,7 +1,8 @@
-package angel.game {
+package angel.game.combat {
 	import angel.common.Assert;
 	import angel.common.Floor;
 	import angel.common.Util;
+	import angel.game.ComplexEntity;
 	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.geom.Point;

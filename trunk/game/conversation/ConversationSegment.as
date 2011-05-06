@@ -1,8 +1,9 @@
-package angel.game {
+package angel.game.conversation {
 	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.game.action.Action;
 	import angel.game.action.IAction;
+	import angel.game.Flags;
 	/**
 	 * ...
 	 * @author Beth Moursund

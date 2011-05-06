@@ -1,5 +1,8 @@
-package angel.game {
+package angel.game.combat {
 	import angel.common.Floor;
+	import angel.game.ComplexEntity;
+	import angel.game.EntityEvent;
+	import angel.game.SimpleEntity;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Shape;
@@ -31,19 +34,19 @@ package angel.game {
 		private static const SCALE:int = 10;
 		
 		// WARNING: All of these icons must be the same size, with the image that appears on the map centered in the bitmap
-		[Embed(source='../../../EmbeddedAssets/combat_minimap_enemy.png')]
+		[Embed(source='../../../../EmbeddedAssets/combat_minimap_enemy.png')]
 		private static const enemyBitmap:Class;		
-		[Embed(source = '../../../EmbeddedAssets/combat_minimap_mainPCb.png')]
+		[Embed(source = '../../../../EmbeddedAssets/combat_minimap_mainPCb.png')]
 		private static const mainPlayerBitmap:Class;
-		[Embed(source = '../../../EmbeddedAssets/combat_minimap_secondaryPC.png')]
+		[Embed(source = '../../../../EmbeddedAssets/combat_minimap_secondaryPC.png')]
 		private static const otherPlayerBitmap:Class;
-		[Embed(source = '../../../EmbeddedAssets/combat_minimap_active.png')]
+		[Embed(source = '../../../../EmbeddedAssets/combat_minimap_active.png')]
 		private static const activeBitmap:Class;
-		[Embed(source = '../../../EmbeddedAssets/combat_minimap_enemyDown.png')]
+		[Embed(source = '../../../../EmbeddedAssets/combat_minimap_enemyDown.png')]
 		private static const enemyDownBitmap:Class;
-		[Embed(source = '../../../EmbeddedAssets/combat_minimap_PCDown.png')]
+		[Embed(source = '../../../../EmbeddedAssets/combat_minimap_PCDown.png')]
 		private static const playerDownBitmap:Class;
-		[Embed(source = '../../../EmbeddedAssets/combat_minimap_enemyLastSeen2.png')]
+		[Embed(source = '../../../../EmbeddedAssets/combat_minimap_enemyLastSeen2.png')]
 		private static const enemyLastSeenBitmap:Class;
 		
 		

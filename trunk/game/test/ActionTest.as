@@ -1,5 +1,5 @@
 package angel.game.test {
-	import angel.game.ConversationData;
+	import angel.game.conversation.ConversationData;
 	import angel.game.Room;
 	import angel.game.Settings;
 	import flash.events.Event;

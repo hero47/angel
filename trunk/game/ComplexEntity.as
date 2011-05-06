@@ -8,6 +8,7 @@ package angel.game {
 	import angel.common.Tileset;
 	import angel.common.Util;
 	import angel.common.WalkerImage;
+	import angel.game.combat.RoomCombat;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;

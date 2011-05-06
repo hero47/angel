@@ -1,4 +1,4 @@
-package angel.game {
+package angel.game.conversation {
 	import angel.common.Alert;
 	/**
 	 * ...

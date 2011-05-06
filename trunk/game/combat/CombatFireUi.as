@@ -1,7 +1,13 @@
-package angel.game {
+package angel.game.combat {
 	import angel.common.Util;
+	import angel.game.ComplexEntity;
+	import angel.game.Icon;
+	import angel.game.IRoomUi;
 	import angel.game.PieSlice;
 	import angel.common.FloorTile;
+	import angel.game.Room;
+	import angel.game.RoomExplore;
+	import angel.game.Settings;
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.filters.GlowFilter;
