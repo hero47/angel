@@ -164,7 +164,6 @@ package angel.game {
 			
 			if ((mode is RoomCombat) && (combatBrainClass != null)) {
 				brain = new combatBrainClass(this, mode);
-				dispatchEvent(new EntityEvent(EntityEvent.JOINED_COMBAT, true, false, this));
 			} else if ((mode is RoomExplore) && (exploreBrainClass != null)) {
 				brain = new exploreBrainClass(this, mode);
 			} else {

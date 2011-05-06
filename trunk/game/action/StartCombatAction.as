@@ -1,4 +1,5 @@
 package angel.game.action {
+	import angel.common.Alert;
 	import angel.game.RoomCombat;
 	import angel.game.Settings;
 	/**
@@ -23,7 +24,11 @@ package angel.game.action {
 		}
 		
 		private function changeModeToCombat():void {
-			Settings.currentRoom.changeModeTo(RoomCombat);
+			if (Settings.currentRoom.mode is RoomCombat) {
+				Alert.show("Error! changeModeToCombat when already in combat");
+			} else {
+				Settings.currentRoom.changeModeTo(RoomCombat);
+			}
 		}
 		
 	}

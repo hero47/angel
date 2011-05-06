@@ -167,6 +167,7 @@ package angel.game {
 		public function addEntity(entity:SimpleEntity):void {
 			if (entity is ComplexEntity) {
 				initEntityForCombat(entity as ComplexEntity);
+				adjustAllEnemyVisibility();
 				entity.dispatchEvent(new EntityEvent(EntityEvent.JOINED_COMBAT, true, false, entity));
 			}
 		}
@@ -175,6 +176,8 @@ package angel.game {
 			if (entity is ComplexEntity) {
 				if (fighters.indexOf(entity) >= 0) {
 					removeFighterFromCombat(entity as ComplexEntity);
+					adjustAllEnemyVisibility();
+					checkForCombatOver();
 				}
 			}
 		}
@@ -185,6 +188,7 @@ package angel.game {
 				
 				//CONSIDER: refactor this + initEntityForCombat()
 				if (pc) {
+					entity.visible = true;
 					createCombatMarker(entity, PLAYER_MARKER_COLOR);
 					deleteLastSeenLocation(entity);
 				} else {
@@ -194,6 +198,7 @@ package angel.game {
 						createLastSeenMarker(entity);
 					} // else non-combattant, if there is such a thing; currently (5/5/11) means they're just a prop
 				}
+				adjustAllEnemyVisibility();
 			}
 		}
 		/*
@@ -548,7 +553,7 @@ package angel.game {
 		}
 		
 //Outdented lines are for debugging, delete them eventually
-private var debugLOS:Boolean = true;
+private var debugLOS:Boolean = false;
 private var lastTarget:Point = new Point(-1,-1);
 		public function lineOfSight(from:Point, target:Point):Boolean {
 			var x0:int = from.x;
@@ -632,6 +637,7 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 		// (specifically, during ENTER_FRAME for last frame of movement)
 		// Advance to that entity's fire phase.
 		private function finishedMovingListener(event:EntityEvent):void {
+			trace(event.entity.aaId, "finished moving, iFighter", iFighterTurnInProgress);
 			if (combatOver) {
 				// don't allow next enemy to fire, don't enable player UI, just wait for them to OK the message,
 				// which will end combat mode.
@@ -642,11 +648,10 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 			
 			//event.entity won't match currentFighter() if moving entity was killed by opportunity fire
 			if (event.entity != currentFighter()) {
-				trace("fighter", iFighterTurnInProgress, "was killed, don't give them a fire phase");
+				trace(event.entity.aaId, "was killed, don't give them a fire phase");
 				finishedFire();
 				return;
 			}
-			trace("fighter", iFighterTurnInProgress, "(", currentFighter().aaId, ") finished moving");
 			currentFighter().actionsRemaining = 1; // everyone gets one action per turn, at least for now
 			if (currentFighter().isPlayerControlled) {
 				room.enableUi(fireUi, currentFighter());
@@ -695,6 +700,7 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 			var fighter:ComplexEntity = currentFighter();
 			fighter.dispatchEvent(new EntityEvent(EntityEvent.START_TURN, true, false, fighter));
 			if (fighter.isPlayerControlled) {
+				trace("Begin turn for PC", fighter.aaId);
 				if (enemyTurnOverlay.parent != null) {
 					enemyTurnOverlay.parent.removeChild(enemyTurnOverlay);
 				}
@@ -706,7 +712,7 @@ if (traceIt) { losPath.push(new Point(x, y));  trace("LOS clear; path", losPath)
 				statDisplay.adjustCombatStatDisplay(null);
 				modeLabel.text = ENEMY_MOVE;
 				
-				trace("Begin turn for", fighter.aaId, "marker age", lastSeenMarkers[fighter].age);
+				trace("Begin turn for npc", fighter.aaId, "marker age", lastSeenMarkers[fighter].age, "(pause will start before move calc)");
 				++lastSeenMarkers[fighter].age;
 				
 				// Give the player some time to gaze at the enemy's move dots before continuing with turn.

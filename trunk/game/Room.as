@@ -1,4 +1,5 @@
 package angel.game {
+	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.Floor;
@@ -6,6 +7,7 @@ package angel.game {
 	import angel.common.Prop;
 	import angel.common.PropImage;
 	import angel.common.Util;
+	import angel.game.test.ActionTest;
 	import flash.display.DisplayObject;
 	import flash.display.Graphics;
 	import flash.display.Shape;
@@ -41,6 +43,7 @@ package angel.game {
 		private var lastUiPlayer:ComplexEntity;
 		private var dragging:Boolean = false;
 		private var gameIsPaused:Boolean = false;
+		private var pauseTimer:Timer;
 		
 		private var tileWithFilter:FloorTile;
 		private var scrollingTo:Point = null;
@@ -107,20 +110,22 @@ package angel.game {
 		}
 		
 		public function pause(milliseconds:int, callback:Function = null):void {
-			trace("Pausing, callback = ", callback);
+			trace("Pausing", milliseconds);
 			Assert.assertTrue(!gameIsPaused, "Pause when already paused");
 			gameIsPaused = true;
 			
-			var timer:Timer = new Timer(milliseconds, 1);
-			timer.addEventListener(TimerEvent.TIMER_COMPLETE, function(event:TimerEvent):void {
+			Assert.assertTrue(pauseTimer == null, "Overwriting pauseTimer");
+			pauseTimer = new Timer(milliseconds, 1);
+			pauseTimer.addEventListener(TimerEvent.TIMER_COMPLETE, function(event:TimerEvent):void {
 				trace("Pause timer complete");
+				pauseTimer = null;
 				Assert.assertTrue(gameIsPaused, "Something unpaused us before pause timer expired");
 				gameIsPaused = false;
 				if (callback != null) {
 					callback();
 				}
 			}, false, 0, true );
-			timer.start();
+			pauseTimer.start();
 		}
 		
 		public function get paused():Boolean {
@@ -185,6 +190,10 @@ package angel.game {
 			switch (event.keyCode) {
 				case Util.KEYBOARD_V:
 					toggleVisibility();
+				break;
+				
+				case Keyboard.HOME:
+					new ActionTest();
 				break;
 				
 				default:
@@ -302,9 +311,8 @@ package angel.game {
 					mode.removeEntity(entity);
 				}
 				var location:Point = entity.location;
-				cells[location.x][location.y].remove(entity);
-				contentsLayer.removeChild(entity);
-				entity.dispatchEvent(new EntityEvent(EntityEvent.ADDED_TO_ROOM, true, false, entity));
+				cells[location.x][location.y].remove(entity);		
+				entity.dispatchEvent(new EntityEvent(EntityEvent.REMOVED_FROM_ROOM, true, false, entity));
 				entity.cleanup();
 			}
 		}
@@ -388,12 +396,37 @@ package angel.game {
 			return (solid(x,y) & Prop.TALL) != 0;
 		}
 		
+		private var debugPauseCount:int;
 		private function enterFrameListener(event:Event):void {
 			stage.focus = stage;
 			if (!gameIsPaused) {
 				dispatchEvent(new Event(UNPAUSED_ENTER_FRAME));
 			}
 			handleScrolling();
+			
+			if (gameIsPaused) {
+				if (!pauseTimer.running) {
+					trace("Error! Game is paused but timer isn't running.  Starting it.");
+					Alert.show("Error! Game is paused but timer isn't running.  Starting it.");
+					pauseTimer.start();
+				} else {
+					debugPauseCount++;
+					var atSecond:Boolean = (debugPauseCount % Settings.FRAMES_PER_SECOND) == 0;
+					if (atSecond) {
+						trace("Seconds paused aprx:", debugPauseCount / Settings.FRAMES_PER_SECOND, "Should pause:", int(pauseTimer.delay / 1000));
+						if (debugPauseCount / Settings.FRAMES_PER_SECOND > pauseTimer.delay / 1000 + 1) {
+							trace("Error! Pause is stuck. Attempting unstick.");
+							Alert.show("Error! Pause is stuck. Attempting unstick.");
+							pauseTimer.dispatchEvent(new TimerEvent(TimerEvent.TIMER_COMPLETE));
+						}
+					}
+				}
+			} else {
+				if (debugPauseCount > 0) {
+					trace("reached unpaused frame after pausing");
+				}
+				debugPauseCount = 0;
+			}
 		}						
 			
 		private function handleScrolling():void {

@@ -26,6 +26,7 @@ package angel.game.action {
 			if (entityWithId is ComplexEntity) {
 				var entity:ComplexEntity = ComplexEntity(entityWithId);
 				entity.bestFriend = Settings.currentRoom.mainPlayerCharacter;
+				entity.combatBrainClass = null;
 				entity.exploreBrainClass = BrainFollow;
 				entity.changePlayerControl(true);
 			} else {
