@@ -13,6 +13,7 @@ package angel.game.combat {
 	import flash.filters.GlowFilter;
 	import flash.geom.ColorTransform;
 	import flash.geom.Point;
+	import flash.text.TextField;
 	import flash.ui.Keyboard;
 	import flash.ui.Mouse;
 	/**
@@ -26,6 +27,9 @@ package angel.game.combat {
 		private var oldMarkerColorTransform:ColorTransform;
 		private var aimCursor:Sprite;
 		private var aimCursorBitmap:Bitmap;
+		
+		private var enemyHealthDisplay:TextField;
+		private static const ENEMY_HEALTH_PREFIX:String = "Enemy: ";
 		
 		private var targetEnemy:ComplexEntity;
 		private var targetLocked:Boolean = false;
@@ -46,7 +50,8 @@ package angel.game.combat {
 			aimCursorBitmap.y = -aimCursorBitmap.height / 2;
 			aimCursor = new Sprite();
 			aimCursor.mouseEnabled = false;
-			aimCursor.addChild(aimCursorBitmap);		
+			aimCursor.addChild(aimCursorBitmap);
+			createEnemyHealthDisplay();
 		}
 		
 		/* INTERFACE angel.game.IRoomUi */
@@ -84,7 +89,7 @@ package angel.game.combat {
 				break;
 				
 				case Util.KEYBOARD_M:
-					combat.toggleMinimap();
+					combat.augmentedReality.toggleMinimap();
 				break;
 				
 				case Keyboard.BACKSPACE:
@@ -215,7 +220,24 @@ package angel.game.combat {
 				var glow:GlowFilter = new GlowFilter(TARGET_HILIGHT_COLOR, 1, 20, 20, 2, 1, false, false);
 				targetEnemy.filters = [ glow ];
 			}
-			combat.adjustEnemyHealthDisplay(targetEnemy == null ? -1 : targetEnemy.currentHealth);
+			displayEnemyHealthFor(targetEnemy);
+		}
+		
+		private function createEnemyHealthDisplay():void {
+			enemyHealthDisplay = CombatStatDisplay.createHealthTextField();
+			enemyHealthDisplay.x = room.stage.stageWidth - enemyHealthDisplay.width - 10;
+			enemyHealthDisplay.y = 10;
+			displayEnemyHealthFor(null);
+			room.stage.addChild(enemyHealthDisplay);
+		}
+		
+		private function displayEnemyHealthFor(enemy:ComplexEntity):void {
+			if (enemy == null) {
+				enemyHealthDisplay.visible = false;
+			} else {
+				enemyHealthDisplay.text = ENEMY_HEALTH_PREFIX + String(enemy.currentHealth);
+				enemyHealthDisplay.visible = true;
+			}	
 		}
 	
 	} // end class CombatFireUi

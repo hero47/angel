@@ -56,7 +56,7 @@ package angel.game.combat {
 				break;
 				
 				case Util.KEYBOARD_M:
-					combat.toggleMinimap();
+					combat.augmentedReality.toggleMinimap();
 				break;
 				
 				case Keyboard.BACKSPACE:
@@ -162,7 +162,8 @@ package angel.game.combat {
 		}
 		
 		private function adjustMovePointsDisplay(show:Boolean = true):void {
-			combat.statDisplay.adjustMovePointsDisplay(show ? combat.mover.unusedMovePoints(player) : -1);
+			//UNDONE: upgrade stat display to remove this abomination
+			combat.augmentedReality.statDisplay.adjustMovePointsDisplay(show ? combat.mover.unusedMovePoints(player) : -1);
 		}
 		
 	} // end class CombatMoveUi

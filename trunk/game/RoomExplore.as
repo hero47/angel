@@ -35,19 +35,19 @@ package angel.game {
 			timeQueue = null;
 		}
 		
-		public function addEntity(entity:SimpleEntity):void {
+		public function entityAddedToRoom(entity:SimpleEntity):void {
 			if (entity is ComplexEntity) {
 				initEntityForExplore(entity as ComplexEntity);
 			}
 		}
 		
-		public function removeEntity(entity:SimpleEntity):void {
+		public function entityWillBeRemovedFromRoom(entity:SimpleEntity):void {
 			if (entity is ComplexEntity) {
 				cleanupEntityFromExplore(entity as ComplexEntity);
 			}
 		}
 		
-		public function changePlayerControl(entity:ComplexEntity, pc:Boolean):void {
+		public function playerControlChanged(entity:ComplexEntity, pc:Boolean):void {
 			// do nothing special
 		}
 		
