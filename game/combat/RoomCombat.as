@@ -216,7 +216,7 @@ package angel.game.combat {
 			
 		public function throwGrenadeAndAdvanceToNextPhase(shooter:ComplexEntity, targetLocation:Point):void {
 			trace(shooter.aaId, "throws grenade at", targetLocation);
-			var grenade:Grenade = new Grenade();
+			var grenade:Grenade = Grenade.getCopy();
 			grenade.throwAt(shooter, targetLocation);
 			
 			// Give the player some time to gaze at the fire graphic before continuing with turn.
@@ -278,10 +278,16 @@ package angel.game.combat {
 			return false;
 		}
 		
+		public function isFighter(entity:ComplexEntity):Boolean {
+			return (fighters.indexOf(entity) >= 0);
+		}
+		
 		private function deathListener(event:EntityEvent):void {
 			var entity:ComplexEntity = ComplexEntity(event.entity);
-			removeFighterFromCombat(entity);
-			checkForCombatOver();
+			if (isFighter(entity)) {
+				removeFighterFromCombat(entity);
+				checkForCombatOver();
+			}
 		}
 		
 		private function displayReserveFireGraphic(shooter:ComplexEntity):void {

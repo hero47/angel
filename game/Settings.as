@@ -2,6 +2,7 @@ package angel.game {
 	import angel.common.Alert;
 	import angel.common.Catalog;
 	import angel.common.Defaults;
+	import angel.game.combat.Grenade;
 
 	
 	public class Settings {
@@ -122,6 +123,10 @@ package angel.game {
 				entity.exploreBrainClass = entity.combatBrainClass = null;
 				if (pc.@health.length() > 0) {
 					entity.maxHealth = entity.currentHealth = pc.@health;
+				}
+				var grenades:int = pc.@grenades;
+				if (grenades > 0) {
+					entity.inventory.add(Grenade.getCopy(), grenades);
 				}
 				pcs.push(entity);
 			}

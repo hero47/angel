@@ -70,6 +70,7 @@ package angel.game {
 		public var combatBrainClass:Class;
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
 		public var brain:IBrain;
+		public var inventory:Inventory = new Inventory();
 		public var gun:Gun;
 		
 		private var playerControlled:Boolean;

@@ -227,8 +227,10 @@ package angel.game.combat {
 		
 		public function someoneDied(event:EntityEvent):void {
 			var icon:Bitmap = entityToMapIcon[event.entity];
-			icon.bitmapData = (ComplexEntity(event.entity).isPlayerControlled ? deadPlayerBitmapData : deadEnemyBitmapData);
-			adjustAllEnemyIconsForVisibility();
+			if (icon != null) { // we don't currently (5/7/11) show map icons for non-combattants, so need to check
+				icon.bitmapData = (ComplexEntity(event.entity).isPlayerControlled ? deadPlayerBitmapData : deadEnemyBitmapData);
+				adjustAllEnemyIconsForVisibility();
+			}
 		}
 		
 		public function someoneJoinedCombat(event:EntityEvent):void {
