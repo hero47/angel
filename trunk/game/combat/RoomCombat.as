@@ -282,10 +282,6 @@ package angel.game.combat {
 			var entity:ComplexEntity = ComplexEntity(event.entity);
 			removeFighterFromCombat(entity);
 			checkForCombatOver();
-		}		
-		
-		private function combatOverOk(button:String):void {
-			room.changeModeTo(RoomExplore);
 		}
 		
 		private function displayReserveFireGraphic(shooter:ComplexEntity):void {
@@ -437,6 +433,10 @@ package angel.game.combat {
 			// alter in some scripted fashion. But for now, we just drop back to explore mode and everyone comes
 			// back to life.
 			Alert.show(playerAlive ? "You won." : "You have been taken out.", { callback:combatOverOk } );
+		}
+		
+		private function combatOverOk(button:String):void {
+			room.changeModeTo(RoomExplore);
 		}
 		
 	} // end class RoomCombat

@@ -74,9 +74,8 @@ package angel.game {
 		
 		private var playerControlled:Boolean;
 		public var bestFriend:ComplexEntity; // for use by brain, persists through mode transitions
-
-		// if non-null, drawn on decorations layer
-		public var marker:Shape;
+		
+		public var marker:DisplayObject; // if non-null, drawn on decorations layer centered directly under me
 		
 		private var textOverHead:TextField;
 		
@@ -100,6 +99,37 @@ package angel.game {
 			trace("cleanup", aaId);
 			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
 			super.cleanup();
+		}
+		
+		override public function set x(value:Number):void {
+			super.x = value;
+			if (marker != null) {
+				marker.x = this.x + this.width / 2;
+			}
+		}
+		
+		override public function set y(value:Number):void {
+			super.y = value;
+			if (marker != null) {
+				marker.y = this.y + Tileset.TILE_HEIGHT / 2;
+			}
+		}
+		
+		public function attachMarker(newMarker:DisplayObject):void {
+			if (marker != null) {
+				removeMarker();
+			}
+			marker = newMarker;
+			room.decorationsLayer.addChild(marker);
+			marker.x = this.x + this.width / 2;
+			marker.y = this.y + Tileset.TILE_HEIGHT/2;
+		}
+		
+		public function removeMarker():void {
+			if (marker != null) {
+				room.decorationsLayer.removeChild(marker);
+				marker = null;
+			}
 		}
 		
 		//NOTE: set brain classes and anything they will need for instantiation before calling.
