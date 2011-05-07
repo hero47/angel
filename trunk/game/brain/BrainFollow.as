@@ -13,7 +13,7 @@ package angel.game.brain {
 	// whether it's standing next to the character it's trying to follow, and if not, try to move to a spot that is.
 	// Of course, the other character may move again while this one is catching up.
 	 
-	public class BrainFollow {
+	public class BrainFollow implements IBrain {
 		private var me:ComplexEntity;
 		
 		private static const INTERVAL:int = 2;

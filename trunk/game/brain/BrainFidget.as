@@ -1,4 +1,5 @@
 package angel.game.brain {
+	import angel.common.Assert;
 	import angel.game.ComplexEntity;
 	import angel.game.RoomExplore;
 	/**
@@ -9,7 +10,7 @@ package angel.game.brain {
 	 * direction, intermittently, in a random direction.  At this point, no more than twice in a row; with a wait
 	 * of a second between chances to turn; and no more than ¼ of the time will they move."
 	 */
-	public class BrainFidget {
+	public class BrainFidget implements IBrain {
 		private var me:ComplexEntity;
 		
 		public function BrainFidget(entity:ComplexEntity, roomExplore:RoomExplore) {
@@ -18,6 +19,12 @@ package angel.game.brain {
 			// Set the first twitch opportunity to a random fraction of a second, so all the NPCs in
 			// the room aren't acting in unison.
 			roomExplore.addTimedEvent(Math.random(), twitchOpportunity);
+		}
+		
+		public function cleanup():void {
+			Assert.assertTrue(me.room.mode is RoomExplore, "Explore brain not in explore mode");
+			RoomExplore(me.room.mode).removeTimedEvent(twitchOpportunity);
+			me = null;
 		}
 
 		private function twitchOpportunity(roomExplore:RoomExplore):void {

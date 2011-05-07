@@ -7,6 +7,7 @@ package angel.game {
 	import flash.events.Event;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.utils.describeType;
 	
 	
 	// GAME Main class

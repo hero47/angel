@@ -6,6 +6,7 @@ package angel.game.combat {
 	import angel.common.Prop;
 	import angel.common.Tileset;
 	import angel.common.Util;
+	import angel.game.brain.ICombatBrain;
 	import angel.game.ComplexEntity;
 	import angel.game.EntityEvent;
 	import angel.game.Icon;
@@ -332,7 +333,7 @@ package angel.game.combat {
 				room.enableUi(fireUi, currentFighter());
 				modeLabel.text = PLAYER_FIRE;
 			} else {
-				currentFighter().brain.doFire();
+				ICombatBrain(currentFighter().brain).doFire();
 				modeLabel.text = ENEMY_FIRE;
 			}
 		}
@@ -368,7 +369,7 @@ package angel.game.combat {
 		// Called each time the timer for gazing at the enemy's move dots expires
 		private function doPlottedEnemyMove():void {
 			trace("enemyMoveTimerListener for fighter #", iFighterTurnInProgress, currentFighter().aaId);
-			currentFighter().brain.doMove();
+			ICombatBrain(currentFighter().brain).doMove();
 		}
 		
 		private function beginTurnForCurrentFighter():void {
@@ -393,7 +394,7 @@ package angel.game.combat {
 				// stay at that time unless we're really slow.)
 				room.pause(PAUSE_TO_VIEW_MOVE_TIME, doPlottedEnemyMove);
 				
-				fighter.brain.chooseMoveAndDrawDots();
+				ICombatBrain(fighter.brain).chooseMoveAndDrawDots();
 			}
 		}
 		
