@@ -7,10 +7,10 @@ package angel.game.test {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class ActionTest {
+	public class ConversationNonAutoTest {
 		private static var conversationData:ConversationData;
 		
-		public function ActionTest() {
+		public function ConversationNonAutoTest() {
 			if (conversationData == null) {
 				conversationData = new ConversationData();
 				conversationData.addEventListener(Event.INIT, dataLoaded);
