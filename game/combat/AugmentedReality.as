@@ -162,9 +162,9 @@ package angel.game.combat {
 		private function initializeDisplayElementsForFighter(entity:ComplexEntity):void {
 			entity.setTextOverHead(String(entity.currentHealth));
 			if (entity.isPlayerControlled) {
-				createCombatMarker(entity, PLAYER_MARKER_COLOR);
+				createCombatMarkerForEntity(entity, PLAYER_MARKER_COLOR);
 			} else {
-				createCombatMarker(entity, ENEMY_MARKER_COLOR);
+				createCombatMarkerForEntity(entity, ENEMY_MARKER_COLOR);
 				createLastSeenMarker(entity);
 				adjustVisibilityOfEnemy(entity);
 			}			
@@ -179,7 +179,7 @@ package angel.game.combat {
 		private function removeDisplayElementsForFighter(entity:ComplexEntity):void {
 			entity.setTextOverHead(null);
 			entity.visible = true;
-			removeCombatMarker(entity);
+			entity.removeMarker();
 			if (!entity.isPlayerControlled) {
 				deleteLastSeenLocation(entity);
 			}
@@ -218,30 +218,18 @@ package angel.game.combat {
 			room.decorationsLayer.removeChild(lastSeen);
 		}
 		
-		private function createCombatMarker(entity:ComplexEntity, color:uint):void {
-			var marker:Shape = new Shape();
-			marker.graphics.lineStyle(4, color, 0.7);
-			marker.graphics.drawCircle(0, 0, 15);
-			marker.graphics.drawCircle(0, 0, 30);
-			marker.graphics.drawCircle(0, 0, 45);
+		private function createCombatMarkerForEntity(entity:ComplexEntity, color:uint):void {
+			var combatMarker:Shape = new Shape();
+			combatMarker.graphics.lineStyle(4, color, 0.7);
+			combatMarker.graphics.drawCircle(0, 0, 15);
+			combatMarker.graphics.drawCircle(0, 0, 30);
+			combatMarker.graphics.drawCircle(0, 0, 45);
 			// TAG tile-width-is-twice-height: aspect will be off if tiles no longer follow this rule!
-			marker.scaleY = 0.5;
-			room.decorationsLayer.addChild(marker);
+			combatMarker.scaleY = 0.5;
 			
-			entity.marker = marker;
-			room.moveMarkerIfNeeded(entity);
+			entity.attachMarker(combatMarker);
 		}
-		
-		private function removeCombatMarker(entity:ComplexEntity):void {
-			if (entity.marker != null) {
-				room.decorationsLayer.removeChild(entity.marker);
-				entity.marker = null;
-			}
-		}
-		
-		
-		
-		
+
 	} // end class AugmentedReality
 
 }

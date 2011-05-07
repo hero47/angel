@@ -401,21 +401,12 @@ Error! Pause is stuck. Attempting unstick.
 		public function changeEntityLocation(entity:ComplexEntity, oldLocation:Point, newLocation:Point):void {
 			cells[oldLocation.x][oldLocation.y].remove(entity);
 			cells[newLocation.x][newLocation.y].add(entity);
-			moveMarkerIfNeeded(entity, newLocation);
 			
 			if (!entity.location.equals(newLocation)) {
 				// If this is called by the entity as part of gradual movement, it will already have set its own
 				// location along with appropriate depth.  If not, we need to directly set the location, which will
 				// put entity at the center-of-tile depth.
 				entity.location = newLocation;
-			}
-		}
-		
-		public function moveMarkerIfNeeded(entity:ComplexEntity, newLocation:Point = null):void {
-			if (entity.marker != null) {
-				var tileCenter:Point = Floor.centerOf(newLocation == null ? entity.location : newLocation);
-				entity.marker.x = tileCenter.x;
-				entity.marker.y = tileCenter.y;
 			}
 		}
 		
