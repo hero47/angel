@@ -19,9 +19,12 @@ package angel.common {
 	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
-	// Alert class courtesy of http://fatal-exception.co.uk/blog/?p=69
+	// Alert class originally courtesy of http://fatal-exception.co.uk/blog/?p=69, tweaked by Beth Moursund
 	public class Alert {
 		//
+		public static var testMode:Boolean = false;
+		public static var messageForTestMode:String;
+		
 		private static var stage:Stage = null;
 		private static var btnWidth:int = 75
 		private static var btnHeight:int = 18;
@@ -48,6 +51,14 @@ package angel.common {
 			stage = stageReference;
 		}
 		public static function show(Text:* = "Made by dVyper", ALERTOPTIONS:Object = null):void {
+			if (testMode) {
+				if (messageForTestMode == null) {
+					messageForTestMode = Text;
+				} else {
+					messageForTestMode += "@@@" + Text;
+				}
+				return;
+			}
 			if (stage == null) {
 				trace("Alert class has not been initialised!");
 				return;

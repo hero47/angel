@@ -8,6 +8,8 @@ package angel.game.combat {
 	import angel.game.Room;
 	import angel.game.RoomExplore;
 	import angel.game.Settings;
+	import angel.game.SimpleEntity;
+	import angel.game.Walker;
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.filters.GlowFilter;
@@ -160,7 +162,9 @@ package angel.game.combat {
 				}));
 			} else {
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatNoTarget), null));
-				if (Util.entityHasLineOfSight(player, tile.location)) { // UNDONE: target tile can't have prop???
+				if (locationEmptyOrContainsWalker(tile.location) &&
+							player.inventory.findA(Grenade) != null &&
+							Util.entityHasLineOfSight(player, tile.location)) {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade), function():void {
 						doPlayerThrowGrenadeAt(tile.location);
 					}));
@@ -238,6 +242,20 @@ package angel.game.combat {
 				enemyHealthDisplay.text = ENEMY_HEALTH_PREFIX + String(enemy.currentHealth);
 				enemyHealthDisplay.visible = true;
 			}	
+		}
+		
+		// This is a restriction that makes no logical sense, and it really upsets me.
+		private function locationEmptyOrContainsWalker(location:Point):Boolean {
+			var foundNonWalker:Boolean = false;
+			var foundWalker:Boolean = false;
+			room.forEachEntityIn(location, function(entity:SimpleEntity):void {
+				if (entity is Walker) {
+					foundWalker = true;
+				} else {
+					foundNonWalker = true;
+				}
+			} );
+			return (foundWalker || !foundNonWalker);
 		}
 	
 	} // end class CombatFireUi

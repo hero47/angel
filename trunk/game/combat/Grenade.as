@@ -1,7 +1,9 @@
 package angel.game.combat {
+	import angel.common.Assert;
 	import angel.common.Floor;
 	import angel.common.Prop;
 	import angel.common.Util;
+	import angel.game.CanBeInInventory;
 	import angel.game.ComplexEntity;
 	import angel.game.Room;
 	import angel.game.Settings;
@@ -18,7 +20,9 @@ package angel.game.combat {
 	 */
 	
 	 // This may become an interface once we have more types of area weapons, or the others may extend it
-	public class Grenade {
+	public class Grenade implements CanBeInInventory {
+		
+		private static const singleton:Grenade = new Grenade();
 		
 		private static const grenadeInner:Vector.<Point> = Vector.<Point>([
 				new Point(0,0),
@@ -34,11 +38,17 @@ package angel.game.combat {
 			]);
 		
 		public function Grenade() {
+			Assert.assertTrue(singleton == null, "Singleton -- need to use getCopy");
+		}
+		
+		public static function getCopy():Grenade {
+			return singleton;
 		}
 		
 		public function throwAt(shooter:ComplexEntity, targetLocation:Point):void {
 			shooter.turnToFaceTile(targetLocation);
 			--shooter.actionsRemaining;
+			shooter.inventory.remove(this, 1);
 			//UNDONE animate grenade moving through air?
 			
 			var temporaryGrenadeExplosionGraphic:TimedSprite = new TimedSprite(Settings.FRAMES_PER_SECOND);	

@@ -9,7 +9,7 @@ package angel.game {
 	import angel.common.Util;
 	import angel.game.conversation.ConversationData;
 	import angel.game.conversation.ConversationInterface;
-	import angel.game.test.ActionTest;
+	import angel.game.test.ConversationNonAutoTest;
 	import flash.display.DisplayObject;
 	import flash.display.Graphics;
 	import flash.display.Shape;
@@ -227,7 +227,7 @@ Error! Pause is stuck. Attempting unstick.
 				break;
 				
 				case Keyboard.HOME:
-					new ActionTest();
+					new ConversationNonAutoTest();
 				break;
 				
 				default:

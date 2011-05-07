@@ -1,4 +1,5 @@
 package angel.game.combat {
+	import angel.game.CanBeInInventory;
 	import angel.game.ComplexEntity;
 	import angel.game.Settings;
 	import angel.game.TimedSprite;
@@ -8,11 +9,15 @@ package angel.game.combat {
 	 */
 	
 	 // This may become an interface once we have more types of guns, or the others may extend it
-	public class Gun {
+	public class Gun implements CanBeInInventory {
 		public var baseDamage:int;
 		
 		public function Gun(baseDamage:int) {
 			this.baseDamage = baseDamage;
+		}
+		
+		public function toString():String {
+			return "[Gun baseDamage=" + baseDamage + "]";
 		}
 		
 		public function fire(shooter:ComplexEntity, target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
