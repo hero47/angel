@@ -8,6 +8,7 @@ package angel.game {
 	import angel.common.Tileset;
 	import angel.common.Util;
 	import angel.common.WalkerImage;
+	import angel.game.brain.IBrain;
 	import angel.game.combat.Gun;
 	import angel.game.combat.RoomCombat;
 	import flash.display.Bitmap;
@@ -68,7 +69,7 @@ package angel.game {
 		public var exploreBrainClass:Class;
 		public var combatBrainClass:Class;
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
-		public var brain:Object;
+		public var brain:IBrain;
 		public var gun:Gun;
 		
 		private var playerControlled:Boolean;

@@ -68,7 +68,7 @@ package angel.game.combat {
 			room.forEachEntityIn(location, function(entity:ComplexEntity):void {
 				entity.takeDamage(damagePoints, false);
 				trace(entity.aaId, "hit by grenade for", damagePoints);
-			}, filterIsWalker);
+			}, filterIsAlive);
 			
 			var tileCenter:Point = Floor.centerOf(location);
 			var num:TextField = Util.textBox(String(damagePoints), 0, 30, TextFormatAlign.LEFT, false, 0xff0000);
@@ -78,8 +78,8 @@ package angel.game.combat {
 			graphic.addChild(num);
 		}	
 		
-		private function filterIsWalker(prop:Prop):Boolean {
-			return (prop is Walker);
+		private function filterIsAlive(prop:Prop):Boolean {
+			return ((prop is ComplexEntity) && ComplexEntity(prop).currentHealth > 0);
 		}
 		
 	}

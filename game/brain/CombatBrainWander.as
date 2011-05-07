@@ -9,7 +9,7 @@ package angel.game.brain {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class CombatBrainWander {
+	public class CombatBrainWander implements ICombatBrain {
 		private var me:ComplexEntity;
 		private var combat:RoomCombat;
 		private var gait:int;

@@ -12,7 +12,7 @@ package angel.game.brain {
 	 * a wait of a second between chances to move; and no more than ¼ of the time will they move."
 	 */
 	
-	public class BrainWander {
+	public class BrainWander implements IBrain {
 		private var me:ComplexEntity;
 		
 		public function BrainWander(entity:ComplexEntity, roomExplore:RoomExplore) {
@@ -31,8 +31,7 @@ package angel.game.brain {
 
 		private function twitchOpportunity(roomExplore:RoomExplore):void {
 			var wait:Number = 1;
-//			if (Math.random() < 0.25) {
-if (true) {
+			if (Math.random() < 0.25) {
 				var goal:Point = chooseVacantNeighbor();
 				if (goal != null) {
 					me.startMovingToward(goal);

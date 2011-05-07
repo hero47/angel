@@ -110,7 +110,10 @@ class TimedEvent {
 		this.callback = callback;
 	}
 	
+	public function toString():String {
+		return "TimedEvent[" + gameTime + "]";
+	}
 	public static function compare(a:TimedEvent, b:TimedEvent):Number {
-		return b.gameTime - a.gameTime;
+		return a.gameTime - b.gameTime;
 	}
 }
