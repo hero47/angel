@@ -14,9 +14,12 @@ package angel.common {
 		public static const SOLID:uint = 0x1;	// normal solid object, prevents movement (default)
 		public static const HARD_CORNER:uint = 0x2; // prevent movement between two adjacent diagonals if both hard
 		public static const TALL:uint = 0x4; // block line of sight (default) (optional "short" setting doesn't)
+		public static const FILLS_TILE:uint = 0x8; // takes up so much space that you can't throw things at this square
+												//NOTE: currently (5/7/11) also controls whether it gives blast shadow!
 		
-		public static const DEFAULT_SOLIDITY:uint = (SOLID | TALL);
-		public static const OFF_MAP:uint = (SOLID | HARD_CORNER | TALL);
+		public static const DEFAULT_SOLIDITY:uint = (SOLID | TALL | FILLS_TILE);
+		public static const OFF_MAP:uint = (SOLID | HARD_CORNER | TALL | FILLS_TILE);
+		public static const DEFAULT_CHARACTER_SOLIDITY:uint = (SOLID | TALL); // these can't currently be changed
 		
 		protected var imageBitmap:Bitmap;
 		protected var myLocation:Point = null;

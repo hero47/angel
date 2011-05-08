@@ -71,7 +71,7 @@ package angel.game.combat {
 			if ((location.x < 0) || (location.x >= room.size.x) || (location.y < 0) || (location.y >= room.size.y)) {
 				return;
 			}
-			if ((Util.chessDistance(center, location) > 1) && !Util.lineOfSight(room, center, location)) {
+			if ((Util.chessDistance(center, location) > 1) && !Util.lineUnblocked(room.blocksGrenade, center, location)) {
 				// CONSIDER: replace this with just "return" if we don't want graphic on shadowed squares
 				damagePoints = 0;
 			}

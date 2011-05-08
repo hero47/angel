@@ -224,6 +224,7 @@ package angel.roomedit {
 		private function clickedClear(event:Event):void {
 			floor.clear();
 			room.removeAllProps();
+			room.currentFilename = null;
 		}
 		
 		private function clickedFill(event:Event):void {
