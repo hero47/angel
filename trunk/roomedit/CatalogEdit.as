@@ -2,12 +2,11 @@ package angel.roomedit {
 	import angel.common.Catalog;
 	import angel.common.CatalogEntry;
 	import angel.common.LoaderWithErrorCatching;
+	import angel.common.Util;
 	import fl.controls.ComboBox;
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.events.Event;
-	import flash.net.FileReference;
-	import flash.utils.ByteArray;
 	
 
 	public class CatalogEdit extends Catalog {
@@ -33,18 +32,7 @@ package angel.roomedit {
 		}
 		
 		public function save():void {
-			saveXmlToFile(catalogXml, "AngelCatalog.xml");
-		}
-		
-		// UNDONE: This really belongs in a util class somewhere
-		public static function saveXmlToFile(xml:XML, defaultFilename:String):void {
-			// convert xml to binary data
-			var ba:ByteArray = new ByteArray( );
-			ba.writeUTFBytes( xml );
- 
-			// save to disk
-			var fr:FileReference = new FileReference( );
-			fr.save( ba, defaultFilename );
+			Util.saveXmlToFile(catalogXml, "AngelCatalog.xml");
 		}
 		
 		public function appendXml(newXml:XML):void {

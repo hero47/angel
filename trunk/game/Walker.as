@@ -36,7 +36,7 @@ package angel.game {
 			this.gun = new Gun(walkerImage.damage);
 			this.displayName = walkerImage.displayName;
 			setMovePoints(walkerImage.movePoints);
-			solidness = solidnessWhenAlive = Prop.DEFAULT_SOLIDITY; // no ghostly/short characters... at least, not yet
+			solidness = solidnessWhenAlive = Prop.DEFAULT_CHARACTER_SOLIDITY;
 		}
 
 		override protected function adjustImageForMove():void {

@@ -20,7 +20,7 @@ package angel.game {
 		private static const PIE_COLOR:uint = 0x888888;
 		private static const PIE_BORDER_COLOR:uint = 0xcccccc;
 		private static const PIE_ALPHA:Number = 0.5;
-		private static const ICON_ALPHA:Number = 0.5;
+		private static const ICON_ALPHA:Number = .75;
 		private static const CENTER_OF_FIRST_SLICE:int = 180;
 		public static const ICON_SIZE:int = 28; // square
 		

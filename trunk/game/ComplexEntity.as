@@ -431,7 +431,7 @@ package angel.game {
 			if (!(solidness & Prop.SOLID)) {
 				return (loc.x < 0 || loc.x >= room.size.x || loc.y < 0 || loc.y >= room.size.y)
 			}
-			return (room.solid(loc.x,loc.y) & Prop.SOLID) != 0;
+			return (room.solidness(loc.x,loc.y) & Prop.SOLID) != 0;
 		}
 		
 		// step is a one-tile vector. Return from+step if legal, null if not
@@ -443,8 +443,8 @@ package angel.game {
 			if (step.x == 0 || step.y == 0) {
 				return target;
 			}
-			if ( (room.solid(from.x, from.y + step.y) & Prop.HARD_CORNER) &&
-				 (room.solid(from.x + step.x, from.y) & Prop.HARD_CORNER) ) {
+			if ( (room.solidness(from.x, from.y + step.y) & Prop.HARD_CORNER) &&
+				 (room.solidness(from.x + step.x, from.y) & Prop.HARD_CORNER) ) {
 				return null;
 			}
 			return target;

@@ -410,15 +410,19 @@ Error! Pause is stuck. Attempting unstick.
 			}
 		}
 		
-		public function solid(x:int, y:int):uint {
+		public function solidness(x:int, y:int):uint {
 			if ((x < 0) || (x >= size.x) || (y < 0) || (y >= size.y)) {
 				return Prop.OFF_MAP;
 			}
-			return cells[x][y].solid();
+			return cells[x][y].solidness();
 		}
 		
 		public function blocksSight(x:int, y:int):Boolean {
-			return (solid(x,y) & Prop.TALL) != 0;
+			return (solidness(x,y) & Prop.TALL) != 0;
+		}
+		
+		public function blocksGrenade(x:int, y:int):Boolean {
+			return (solidness(x,y) & Prop.FILLS_TILE) != 0;
 		}
 		
 		private var debugPauseCount:int;

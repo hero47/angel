@@ -2,6 +2,7 @@ package angel.roomedit {
 	import angel.common.CatalogEntry;
 	import angel.common.Prop;
 	import angel.common.PropImage;
+	import angel.common.Util;
 	import fl.controls.CheckBox;
 	import fl.controls.ComboBox;
 	import flash.display.Bitmap;
@@ -17,14 +18,11 @@ package angel.roomedit {
 		private var catalog:CatalogEdit;
 		private var propBitmap:Bitmap;
 		private var propCombo:ComboBox;
-		private var solidCombo:ComboBox;
+		private var ghostCheck:CheckBox;
+		private var hardCornerCheck:CheckBox;
 		private var shortCheck:CheckBox;
-		
-		private static const solidChoices:Array = [
-				{ label:"Ghost/Hologram", data:0 },
-				{ label:"'Soft' Solid (normal)", data:Prop.SOLID },
-				{ label:"'Hard' Solid (adjacent corners block)", data:(Prop.SOLID | Prop.HARD_CORNER) } 
-		]
+		private var fillsTileCheck:CheckBox;
+
 		private static const SOLID_COMBO_MASK:uint = (Prop.SOLID | Prop.HARD_CORNER);
 		
 		private static const WIDTH:int = 220;
@@ -42,25 +40,15 @@ package angel.roomedit {
 			propChooser.y = propBitmap.y + propBitmap.height + 10;
 			addChild(propChooser);
 			
-			solidCombo = new ComboBox();
-			solidCombo.width = WIDTH;
-			for (var i:int = 0; i < solidChoices.length; i++) {
-				solidCombo.addItem(solidChoices[i]);
-			}
-			solidCombo.addEventListener(Event.CHANGE, changeSolidness);
-			solidCombo.y = propChooser.y + propCombo.height + 10;
-			addChild(solidCombo);
-			
-			shortCheck = new CheckBox();
-			shortCheck.label = "Short";
-			shortCheck.y = solidCombo.y + solidCombo.height + 10;
-			shortCheck.addEventListener(Event.CHANGE, changeSolidness);
-			addChild(shortCheck);
+			ghostCheck = Util.addCheckboxEditControl(this, propChooser, "Ghostly", changeSolidness);
+			hardCornerCheck = Util.addCheckboxEditControl(this, ghostCheck, "Hard corners", changeSolidness);
+			shortCheck = Util.addCheckboxEditControl(this, hardCornerCheck, "Short", changeSolidness);
+			fillsTileCheck = Util.addCheckboxEditControl(this, shortCheck, "Fills Tile", changeSolidness);
 
 			if (startId == null) {
 				propCombo.selectedIndex = 0;
 			} else {
-				for (i = 0; i < propCombo.length; i++) {
+				for (var i:int = 0; i < propCombo.length; i++) {
 					if (propCombo.getItemAt(i).label == startId) {
 						propCombo.selectedIndex = i;
 						break;
@@ -77,24 +65,42 @@ package angel.roomedit {
 			var propImage:PropImage = catalog.retrievePropImage(propId);
 			propBitmap.bitmapData = propImage.imageData;
 
-			var solidComboData:uint = propImage.solid & SOLID_COMBO_MASK;
-			for (var i:int = 0; i < solidChoices.length; i++) {
-				if (solidCombo.getItemAt(i).data == solidComboData) {
-					solidCombo.selectedIndex = i;
-					break;
-				}
-			}
 			
+			ghostCheck.selected = ((propImage.solid & Prop.SOLID) == 0);
+			hardCornerCheck.enabled = !ghostCheck.selected;
+			fillsTileCheck.enabled = !ghostCheck.selected;
+			hardCornerCheck.selected = ((propImage.solid & Prop.HARD_CORNER) != 0);
 			shortCheck.selected = ((propImage.solid & Prop.TALL) == 0);
+			fillsTileCheck.selected = ((propImage.solid & Prop.FILLS_TILE) != 0);
 		}
 		
 		private function changeSolidness(event:Event):void {
 			var propId:String = propCombo.selectedLabel;
 			var propImage:PropImage = catalog.retrievePropImage(propId);
-			propImage.solid = solidCombo.selectedItem.data;
+			
+			if (event.target == ghostCheck) {
+				hardCornerCheck.enabled = !ghostCheck.selected;
+				fillsTileCheck.enabled = !ghostCheck.selected;
+				if (ghostCheck.selected) {
+					hardCornerCheck.selected  = false;
+					fillsTileCheck.selected = false;
+				}
+			}
+			
+			propImage.solid = 0;
+			if (!ghostCheck.selected) {
+				propImage.solid |= Prop.SOLID;
+			}
+			if (hardCornerCheck.selected) {
+				propImage.solid |= Prop.HARD_CORNER;
+			}
 			if (!shortCheck.selected) {
 				propImage.solid |= Prop.TALL;
 			}
+			if (fillsTileCheck.selected) {
+				propImage.solid |= Prop.FILLS_TILE;
+			}
+			
 			if (propImage.solid == Prop.DEFAULT_SOLIDITY) {
 				catalog.deleteXmlAttribute(propId, "solid");
 			} else {

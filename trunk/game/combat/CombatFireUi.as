@@ -1,4 +1,5 @@
 package angel.game.combat {
+	import angel.common.Prop;
 	import angel.common.Util;
 	import angel.game.ComplexEntity;
 	import angel.game.Icon;
@@ -162,7 +163,7 @@ package angel.game.combat {
 				}));
 			} else {
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatNoTarget), null));
-				if (locationEmptyOrContainsWalker(tile.location) &&
+				if (!room.blocksGrenade(tile.location.x, tile.location.y) &&
 							player.inventory.findA(Grenade) != null &&
 							Util.entityHasLineOfSight(player, tile.location)) {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade), function():void {
@@ -242,20 +243,6 @@ package angel.game.combat {
 				enemyHealthDisplay.text = ENEMY_HEALTH_PREFIX + String(enemy.currentHealth);
 				enemyHealthDisplay.visible = true;
 			}	
-		}
-		
-		// This is a restriction that makes no logical sense, and it really upsets me.
-		private function locationEmptyOrContainsWalker(location:Point):Boolean {
-			var foundNonWalker:Boolean = false;
-			var foundWalker:Boolean = false;
-			room.forEachEntityIn(location, function(entity:SimpleEntity):void {
-				if (entity is Walker) {
-					foundWalker = true;
-				} else {
-					foundNonWalker = true;
-				}
-			} );
-			return (foundWalker || !foundNonWalker);
 		}
 	
 	} // end class CombatFireUi

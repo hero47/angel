@@ -1,15 +1,18 @@
 package angel.common {
 	import angel.game.ComplexEntity;
 	import angel.game.Room;
+	import fl.controls.CheckBox;
 	import flash.display.DisplayObject;
 	import flash.display.Graphics;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.geom.Point;
+	import flash.net.FileReference;
 	import flash.text.TextField;
 	import flash.text.TextFieldType;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
+	import flash.utils.ByteArray;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -24,6 +27,16 @@ package angel.common {
 		public function Util() {
 			
 		}
+		
+		public static function saveXmlToFile(xml:XML, defaultFilename:String):void {
+			// convert xml to binary data
+			var ba:ByteArray = new ByteArray( );
+			ba.writeUTFBytes( xml );
+ 
+			// save to disk
+			var fr:FileReference = new FileReference( );
+			fr.save( ba, defaultFilename );
+		}
 
 		public static function addTextEditControl(parent:Sprite, previousControl:DisplayObject, labelText:String, labelWidth:int, fieldWidth:int, changeHandler:Function):TextField {
 			var label:TextField = Util.textBox(labelText + ":", labelWidth, 20);
@@ -35,6 +48,15 @@ package angel.common {
 			textField.addEventListener(Event.CHANGE, changeHandler);
 			parent.addChild(textField);
 			return textField;
+		}
+
+		public static function addCheckboxEditControl(parent:Sprite, previousControl:DisplayObject, labelText:String, changeHandler:Function):CheckBox {
+			var checkBox:CheckBox = new CheckBox();
+			checkBox.label = labelText;
+			checkBox.y = previousControl.y + previousControl.height + 10;
+			parent.addChild(checkBox);
+			checkBox.addEventListener(Event.CHANGE, changeHandler);
+			return checkBox;
 		}
 		
 		public static const DEFAULT_TEXT_WIDTH:int = 100;
@@ -167,10 +189,14 @@ package angel.common {
 			}
 		};
 		
+		public static function lineOfSight(room:Room, from:Point, target:Point):Boolean {
+			return lineUnblocked(room.blocksSight, from, target);
+		}
+		
 //Outdented lines are for debugging, delete them eventually
 public static var debugLOS:Boolean = false;
 private static var lastLineOfSightTarget:Point = new Point(-1,-1);
-		public static function lineOfSight(room:Room, from:Point, target:Point):Boolean {		
+		public static function lineUnblocked(blockTest:Function, from:Point, target:Point):Boolean {		
 			var x0:int = from.x;
 			var y0:int = from.y;
 			var x1:int = target.x;
@@ -213,7 +239,7 @@ losPath.push(new Point(x, y));
 					}
 				}
 				// moved this check to end of loop so we're not checking the shooter's own tile
-				if (room.blocksSight(x, y)) {
+				if (blockTest(x, y)) {
 if (traceIt) { trace("Blocked; path", losPath);}
 					return false;
 				}

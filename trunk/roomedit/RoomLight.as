@@ -6,6 +6,7 @@ package angel.roomedit {
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Prop;
 	import angel.common.PropImage;
+	import angel.common.Util;
 	import angel.common.WalkerImage;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -19,6 +20,7 @@ package angel.roomedit {
 	public class RoomLight extends Sprite {
 
 		public var floor:FloorEdit;
+		public var currentFilename:String;
 		private var catalog:CatalogEdit;
 		private var contentsLayer:Sprite;
 		private var propGrid:Vector.<Vector.<ContentItem>>;
@@ -184,6 +186,7 @@ package angel.roomedit {
 				return;
 			}
 			
+			currentFilename = filename;
 			floor.loadFromXml(catalog, xml.floor[0]);
 			initContentsFromXml(xml.floor.@x, xml.floor.@y, xml.contents[0]);
 			dispatchEvent(new Event(Event.INIT));
@@ -263,7 +266,7 @@ package angel.roomedit {
 			var roomXml:XML = new XML(<room/>);
 			roomXml.appendChild( floor.buildFloorXml() );
 			roomXml.appendChild( buildContentsXml() );
-			CatalogEdit.saveXmlToFile(roomXml, "room.xml"); // should really be in a util class but I won't make one just for that
+			Util.saveXmlToFile(roomXml, currentFilename == null ? "room.xml" : currentFilename);
 		}
 
 		
