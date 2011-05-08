@@ -20,6 +20,10 @@ package angel.game.combat {
 			return "[Gun baseDamage=" + baseDamage + "]";
 		}
 		
+		public function get displayName():String {
+			return "Gun, base damage " + baseDamage;
+		}
+		
 		public function fire(shooter:ComplexEntity, target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
 			shooter.turnToFaceTile(target.location);
 			--shooter.actionsRemaining;

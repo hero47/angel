@@ -103,6 +103,20 @@ package angel.game {
 		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander };
 		private static const combatBrain:Object = { wander:CombatBrainWander };
 
+		public static function exploreBrainClassFromString(brainName:String):Class {
+			if ((brainName == null) || (brainName == "")) {
+				return null;
+			}
+			return exploreBrain[brainName];
+		}
+
+		public static function combatBrainClassFromString(brainName:String):Class {
+			if ((brainName == null) || (brainName == "")) {
+				return null;
+			}
+			return combatBrain[brainName];
+		}
+		
 		public static function createFromRoomContentsXml(walkerXml:XML, version:int, catalog:Catalog):Walker {
 			var id:String;
 			
@@ -115,10 +129,8 @@ package angel.game {
 			
 			var walker:Walker = new Walker(catalog.retrieveWalkerImage(id), id);
 			walker.myLocation = new Point(walkerXml.@x, walkerXml.@y);
-			var exploreSetting:String = walkerXml.@explore;
-			walker.exploreBrainClass = exploreBrain[exploreSetting];
-			var combatSetting:String = walkerXml.@combat;
-			walker.combatBrainClass = combatBrain[combatSetting];
+			walker.exploreBrainClass = exploreBrainClassFromString(walkerXml.@explore);
+			walker.combatBrainClass = combatBrainClassFromString(walkerXml.@combat);
 			
 			var talk:String = walkerXml.@talk;
 			if (talk != "") {

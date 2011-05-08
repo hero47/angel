@@ -38,6 +38,10 @@ package angel.game {
 			this.player = null;
 		}
 		
+		public function get currentPlayer():ComplexEntity {
+			return player;
+		}
+		
 		public function keyDown(keyCode:uint):void {
 			switch (keyCode) {
 				case Util.KEYBOARD_C:
@@ -47,6 +51,7 @@ package angel.game {
 						room.changeModeTo(RoomCombat);
 					}
 				break;
+				
 				case Keyboard.SPACE:
 					// if move in progress, stop moving as soon as possible.
 					if (playerIsMoving) {

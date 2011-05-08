@@ -49,6 +49,10 @@ package angel.game.combat {
 			room.moveHilight(null, 0);
 		}
 		
+		public function get currentPlayer():ComplexEntity {
+			return player;
+		}
+		
 		public function keyDown(keyCode:uint):void {
 			switch (keyCode) {
 				case Util.KEYBOARD_C:

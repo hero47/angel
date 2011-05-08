@@ -124,7 +124,7 @@ package angel.game.combat {
 		
 		// CONSIDER: Adds to end of fighter list. Would it be better to add somewhere else, like right before/after current?
 		public function entityAddedToRoom(entity:SimpleEntity):void {
-			if (entity is ComplexEntity) {
+			if ((entity is ComplexEntity) && ComplexEntity(entity).canBeActiveInCombat()) {
 				initEntityForCombat(entity as ComplexEntity);
 				augmentedReality.addFighter(entity as ComplexEntity);
 				entity.dispatchEvent(new EntityEvent(EntityEvent.JOINED_COMBAT, true, false, entity));
@@ -139,12 +139,21 @@ package angel.game.combat {
 		}
 		
 		public function playerControlChanged(entity:ComplexEntity, pc:Boolean):void {
-			if (fighters.indexOf(entity) >= 0) {
+			var wasAlreadyAFighter:Boolean = fighters.indexOf(entity) >= 0;
+			var shouldBeAFighter:Boolean = entity.canBeActiveInCombat();
+			
+			if (wasAlreadyAFighter) {
 				augmentedReality.removeFighter(entity);
-				
-				if (pc || entity.isEnemy()) {
+				if (shouldBeAFighter) {
 					augmentedReality.addFighter(entity);
-				} // else non-combattant, if there is such a thing; currently (5/5/11) means they're just a prop
+				} else {
+					removeFighterFromCombat(entity as ComplexEntity);
+					checkForCombatOver();
+				}
+			} else if (shouldBeAFighter) {
+				initEntityForCombat(entity as ComplexEntity);
+				augmentedReality.addFighter(entity);
+				entity.dispatchEvent(new EntityEvent(EntityEvent.JOINED_COMBAT, true, false, entity));
 			}
 		}
 		
@@ -176,12 +185,15 @@ package angel.game.combat {
 		}
 		
 		//UNDONE - WARNING - Weird undesired things will probably happen if this is called for a player-controlled
-		//character while the ui is enabled for that character!  Should at least assert that this isn't the case.
+		//character while the ui is enabled for that character!
 		private function removeFighterFromCombat(deadFighter:ComplexEntity):void {
 			var indexOfDeadFighter:int = fighters.indexOf(deadFighter);
 			Assert.assertTrue(indexOfDeadFighter >= 0, "Removing fighter that's already removed: " + deadFighter.aaId);
 			if (indexOfDeadFighter == iFighterTurnInProgress) {
 				mover.clearPath();
+			}
+			if ((room.activeUi != null) && (room.activeUi.currentPlayer == deadFighter)) {
+				Assert.fail("Removing active player from combat. This WILL break things.");
 			}
 			if (indexOfDeadFighter <= iFighterTurnInProgress) {
 				--iFighterTurnInProgress;

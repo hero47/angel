@@ -180,9 +180,7 @@ package angel.game.combat {
 			entity.setTextOverHead(null);
 			entity.visible = true;
 			entity.removeMarker();
-			if (!entity.isPlayerControlled) {
-				deleteLastSeenLocation(entity);
-			}
+			deleteLastSeenLocation(entity);
 		}
 		
 		private function createLastSeenMarker(entity:ComplexEntity):void {
@@ -214,8 +212,10 @@ package angel.game.combat {
 		// Rather than just making it invisible, remove the marker entirely (for an entity who leaves combat)
 		private function deleteLastSeenLocation(entity:ComplexEntity):void {
 			var lastSeen:LastSeen = lastSeenMarkers[entity];
-			delete lastSeenMarkers[entity];
-			room.decorationsLayer.removeChild(lastSeen);
+			if (lastSeen != null) {
+				delete lastSeenMarkers[entity];
+				room.decorationsLayer.removeChild(lastSeen);
+			}
 		}
 		
 		private function createCombatMarkerForEntity(entity:ComplexEntity, color:uint):void {

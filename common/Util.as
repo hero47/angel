@@ -21,11 +21,18 @@ package angel.common {
 		// For God-only-knows what reason, the version of Keyboard class for Flex compilation is missing all
 		// of the letter-key constants.  The version in CS5 has them.  ?????
 		public static const KEYBOARD_C:uint = 67;
+		public static const KEYBOARD_I:uint = 73;
 		public static const KEYBOARD_M:uint = 77;
 		public static const KEYBOARD_V:uint = 86;
 		
 		public function Util() {
 			
+		}
+		
+		public static function traceXml(xml:XML):void {
+			var debug:XML = new XML("<debug/>");
+			debug.appendChild(xml.copy());
+			trace(debug);
 		}
 		
 		public static function saveXmlToFile(xml:XML, defaultFilename:String):void {

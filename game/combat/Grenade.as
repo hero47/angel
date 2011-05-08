@@ -45,6 +45,10 @@ package angel.game.combat {
 			return singleton;
 		}
 		
+		public function get displayName():String {
+			return "Grenade(s), standard issue";
+		}
+		
 		public function throwAt(shooter:ComplexEntity, targetLocation:Point):void {
 			shooter.turnToFaceTile(targetLocation);
 			--shooter.actionsRemaining;

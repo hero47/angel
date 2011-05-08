@@ -163,6 +163,10 @@ package angel.game {
 			return (combatBrainClass != null && currentHealth > 0);
 		}
 		
+		public function canBeActiveInCombat():Boolean {
+			return isPlayerControlled || isEnemy();
+		}
+		
 		public function setMovePoints(points:int):void {		
 			// Init file gives us settings for two of the three percents.  We want to set movement points for those
 			// two speeds based on percent of total points, then give the third one whatever's left (so rounding
