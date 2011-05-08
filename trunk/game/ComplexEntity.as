@@ -71,7 +71,6 @@ package angel.game {
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
 		public var brain:IBrain;
 		public var inventory:Inventory = new Inventory();
-		public var gun:Gun;
 		
 		private var playerControlled:Boolean;
 		public var bestFriend:ComplexEntity; // for use by brain, persists through mode transitions
@@ -495,7 +494,12 @@ package angel.game {
 		}
 		
 		// Eventually entities will be able to switch between different weapons
+		public function currentGun():Gun {
+			return inventory.findA(Gun);
+		}
+		
 		public function fireCurrentGunAt(target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
+			var gun:Gun = currentGun();
 			if (gun != null) {
 				gun.fire(this, target, extraDamageReductionPercent);
 			}

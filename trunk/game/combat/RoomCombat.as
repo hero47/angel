@@ -258,11 +258,13 @@ package angel.game.combat {
 		// return true if shooter fired, false if not
 		private function doOpportunityFireIfLegal(shooter:ComplexEntity, target:ComplexEntity):Boolean {
 			trace("Checking", shooter.aaId, "for opportunity fire");
-			if ((shooter.actionsRemaining > 0) && (shooter.gun != null) && 
-						(shooter.gun.expectedDamage(shooter, target) >= Settings.minForOpportunity) &&
+			if ((shooter.actionsRemaining > 0)) {
+				var gun:Gun = shooter.currentGun();
+				if ((gun != null) && (gun.expectedDamage(shooter, target) >= Settings.minForOpportunity) &&
 						Util.entityHasLineOfSight(shooter, target.location)) {
-				shooter.fireCurrentGunAt(target, extraDefenseForOpportunityFire);
-				return true;
+					shooter.fireCurrentGunAt(target, extraDefenseForOpportunityFire);
+					return true;
+				}
 			}
 			return false;
 		}

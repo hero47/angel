@@ -33,9 +33,9 @@ package angel.game {
 			facing = WalkerImage.FACE_CAMERA;
 			super(new Bitmap(walkerImage.bitsFacing(facing)), id);
 			this.maxHealth = this.currentHealth = walkerImage.health;
-			this.gun = new Gun(walkerImage.damage);
 			this.displayName = walkerImage.displayName;
 			setMovePoints(walkerImage.movePoints);
+			inventory.add(new Gun(walkerImage.damage));
 			solidness = solidnessWhenAlive = Prop.DEFAULT_CHARACTER_SOLIDITY;
 		}
 
