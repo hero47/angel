@@ -89,6 +89,14 @@ package angel.game {
 			
 		}
 		
+		public function showInventoryInAlert():void {
+			var text:String = "Placeholder for inventory!\n\nCurrent inventory:";
+			for (var item:Object in items) {
+				text += "\n  " + items[item] + " " + item.displayName;
+			}
+			Alert.show(text);
+		}
+		
 	}
 
 }

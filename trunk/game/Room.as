@@ -210,8 +210,10 @@ Error! Pause is stuck. Attempting unstick.
 				activeUi = null;
 			}
 		}
-		
+			
+		//UNDONE
 		public function restoreLastUi():void {
+			Assert.assertTrue(lastUiPlayer.room == this, "Active player was removed from room. This WILL break things.");
 			enableUi(disabledUi, lastUiPlayer);
 			disabledUi = null;
 		}
@@ -224,6 +226,10 @@ Error! Pause is stuck. Attempting unstick.
 			switch (event.keyCode) {
 				case Util.KEYBOARD_V:
 					toggleVisibility();
+				break;
+				
+				case Util.KEYBOARD_I:
+					lastUiPlayer.inventory.showInventoryInAlert();
 				break;
 				
 				case Keyboard.HOME:

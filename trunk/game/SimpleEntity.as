@@ -24,6 +24,11 @@ package angel.game {
 			aaId = id + "-" + String(totalEntitiesCreated);
 		}
 		
+		override public function cleanup():void {
+			super.cleanup();
+			room = null;
+		}
+		
 		public static function createFromRoomContentsXml(propXml: XML, version:int, catalog:Catalog) : SimpleEntity {
 			var id:String;
 			
