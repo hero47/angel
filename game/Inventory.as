@@ -48,7 +48,7 @@ package angel.game {
 			delete items[specificItem];
 		}
 		
-		public function findA(classToFind:Class):CanBeInInventory {
+		public function findA(classToFind:Class):* {
 			for (var item:Object in items) {
 				if (item is classToFind) {
 					return CanBeInInventory(item);
