@@ -67,6 +67,14 @@ package angel.roomedit {
 			room.addEventListener(Event.INIT, roomLoaded);
 		}
 		
+		public function asSprite():Sprite {
+			return this;
+		}
+		
+		public function get tabLabel():String {
+			return "NPCs";
+		}
+		
 		private function createAttributeDisplay():Sprite {
 			var holder:Sprite = new Sprite();
 			
@@ -88,7 +96,7 @@ package angel.roomedit {
 			var talkLabel:TextField = Util.textBox("Conversation file:", EditorSettings.PALETTE_XSIZE-20);
 			talkLabel.y = combatCombo.y + combatCombo.height + 10;
 			holder.addChild(talkLabel);
-			talkFile = FilenameControl.add(holder, talkLabel, true, null, 0, EditorSettings.PALETTE_XSIZE-20, changeTalk );
+			talkFile = FilenameControl.createBelow(talkLabel, true, null, 0, EditorSettings.PALETTE_XSIZE-20, changeTalk );
 			
 			return holder;
 		}
@@ -152,10 +160,18 @@ package angel.roomedit {
 			room.setAttributesOfItemAt(locationOfCurrentSelection, attributes);
 		}
 
-		public function applyToTile(tile:FloorTileEdit):void {
-			if (room.occupied(tile.location)) {
-				room.removeItemAt(tile.location);
-			} else {
+		public function applyToTile(tile:FloorTileEdit, remove:Boolean = false):void {
+			var occupied:Boolean = room.occupied(tile.location);
+			if (remove && !occupied) {
+				return;
+			}
+			if (occupied) {
+				if (remove) {
+					room.removeItemAt(tile.location);
+				} else { 
+					//UNDONE select this NPC
+				}
+			} else { // !occupied && !remove
 				if (locationOfCurrentSelection == null) {
 					//CONSIDER: this will need revision if we add resource management
 					var prop:Prop = Prop.createFromBitmapData(walkerFacingFront.bitmapData);

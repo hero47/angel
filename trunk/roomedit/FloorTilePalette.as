@@ -10,12 +10,9 @@ package angel.roomedit {
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
 	
-	//UNDONE: FloorTile now has .tileName, this class hasn't been revised to use it
+	//CONSIDER: Other places using FloorTile store name in .name, this class hasn't taken advantage of that
 	
 	public class FloorTilePalette extends Sprite implements IRoomEditorPalette {
-		
-
-
 		
 		private var catalog:Catalog;
 		private var tileset:Tileset;
@@ -26,19 +23,27 @@ package angel.roomedit {
 		private var selection:Sprite = null;
 		private var editingTileNames:Boolean = false;
 		
-		public function FloorTilePalette(catalog:Catalog, tilesetId:String, editNames:Boolean = false) {
+		// FloorTilePalette doesn't actually use room, but included so it fits the same template as other IRoomEditorPalettes
+		public function FloorTilePalette(catalog:Catalog, room:RoomLight = null) {
 			this.catalog = catalog;
-			editingTileNames = editNames;
 			graphics.beginFill(EditorSettings.PALETTE_BACKCOLOR, 1);
 			graphics.drawRect(0, 0, EditorSettings.PALETTE_XSIZE, EditorSettings.PALETTE_YSIZE);
 			
-			changeTileset(tilesetId);
+			changeTileset("");
 			addEventListener(MouseEvent.CLICK, clickListener);
 		}
+		
+		public function asSprite():Sprite {
+			return this;
+		}
+		
+		public function get tabLabel():String {
+			return "Tiles";
+		}
 
-		public function applyToTile(tile:FloorTileEdit):void {
+		public function applyToTile(tile:FloorTileEdit, remove:Boolean = false):void {
 			var index:int = tileset.tileIndexForName(selectedTileName);
-			tile.setTile(catalog, tilesetId, index);
+			tile.setTile(catalog, tilesetId, remove ? -1 : index);
 		}
 		
 		public function paintWhileDragging():Boolean {
@@ -104,9 +109,11 @@ package angel.roomedit {
 			selectedTileName = "";		
 		}
 
-		public function setEditMode(editNames:Boolean):void {
+		// When we change edit mode we have to rebuild the palette contents, so if we're also wanting to
+		// change tileset, it's better to do that at the same time.
+		public function setEditMode(editNames:Boolean, newTilesetId:String = null):void {
 			editingTileNames = editNames;
-			changeTileset(tilesetId);
+			changeTileset(newTilesetId == null ? tilesetId : newTilesetId);
 		}
 
 		public function setTileNamesFromPalette():void {

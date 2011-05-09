@@ -41,6 +41,14 @@ package angel.roomedit {
 			
 			addEventListener(MouseEvent.CLICK, clickListener);
 		}
+		
+		public function asSprite():Sprite {
+			return this;
+		}
+		
+		public function get tabLabel():String {
+			return "Props";
+		}
 
 		private function addPaletteItem(propName:String, i:int, imagesAcross:int):void {
 			var sprite:Sprite = new Sprite();
@@ -53,10 +61,14 @@ package angel.roomedit {
 			sprite.addChild(bitmap);
 		}
 		
-		public function applyToTile(floorTile:FloorTileEdit):void {
+		public function applyToTile(floorTile:FloorTileEdit, remove:Boolean = false):void {
 			if (room.occupied(floorTile.location)) {
-				room.removeItemAt(floorTile.location);
-			} else if (selectedPropName != "") {
+				if (remove) {
+					room.removeItemAt(floorTile.location);
+				} else { 
+					//UNDONE select this prop
+				}
+			} else if (!remove && (selectedPropName != "")) {
 				//CONSIDER: this will need revision if we add resource management
 				var prop:Prop = Prop.createFromBitmapData(selectedPropBitmapData);
 				room.addContentItem(prop, CatalogEntry.PROP, selectedPropName, floorTile.location);

@@ -204,7 +204,7 @@ package angel.roomedit {
 				return;
 			}
 			if (event.target is FloorTileEdit) {
-				changeTile(event.target as FloorTileEdit);
+				changeTile(event.target as FloorTileEdit, event.ctrlKey);
 			}
 		}
 		
@@ -214,8 +214,8 @@ package angel.roomedit {
 			}
 		}
 		
-		private function changeTile(tile:FloorTileEdit):void {
-			palette.applyToTile(tile);
+		private function changeTile(tile:FloorTileEdit, remove:Boolean=false):void {
+			palette.applyToTile(tile, remove);
 			hasBeenEdited = true;
 		}
 

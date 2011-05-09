@@ -60,15 +60,15 @@ package angel.roomedit {
 			propCombo = propChooser.comboBox;
 			addChild(propChooser);
 			
-			nameTextField = Util.addTextEditControl(this, propChooser, "Display Name", 100, 100,
+			nameTextField = Util.createTextEditControlBelow(propChooser, "Display Name", 100, 100,
 					function(event:Event):void { changeWalkerImageProperty(event.target.text, "displayName", Defaults.DISPLAY_NAME) });
-			healthTextField = Util.addTextEditControl(this, nameTextField, "Hits", 100, 40,
+			healthTextField = Util.createTextEditControlBelow(nameTextField, "Hits", 100, 40,
 					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "health", Defaults.HEALTH) });
-			damageTextField = Util.addTextEditControl(this, healthTextField, "Damage", 100, 40,
+			damageTextField = Util.createTextEditControlBelow(healthTextField, "Damage", 100, 40,
 					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "damage", Defaults.DAMAGE) });
-			movePointsTextField = Util.addTextEditControl(this, damageTextField, "Move Points", 100, 40,
+			movePointsTextField = Util.createTextEditControlBelow(damageTextField, "Move Points", 100, 40,
 					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "movePoints", Defaults.MOVE_POINTS) } );
-			changeImageControl = FilenameControl.add(this, movePointsTextField, false, "Image", 0, 220,
+			changeImageControl = FilenameControl.createBelow(movePointsTextField, false, "Image", 0, 220,
 					function(event:Event):void { 
 							var walkerId:String = propCombo.selectedLabel;
 							catalog.changeFilename(walkerId, changeImageControl.text);

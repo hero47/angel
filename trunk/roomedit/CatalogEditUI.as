@@ -134,11 +134,7 @@ package angel.roomedit {
 				defaultId = defaultIdBase + String(num++);
 			}
 			KludgeDialogBox.init(stage);
-			var options:Object = new Object();
-			options.buttons = ["OK", "Cancel"];
-			options.inputs = ["id:"];
-			options.defaultValues = [defaultId];
-			options.callback = callback;
+			var options:Object = { buttons:["OK", "Cancel"], inputs:["id:"], defaultValues:[defaultId], callback:callback };
 			var text:String = "Enter catalog id for " + idForWhat;
 			if (previousError != null) {
 				text = previousError + "\n" + text;
@@ -229,7 +225,8 @@ package angel.roomedit {
 			if (tilesPalette != null) {
 				removeChild(tilesPalette);
 			}
-			tilesPalette = new FloorTilePalette(catalog, tilesetId, true);
+			tilesPalette = new FloorTilePalette(catalog);
+			tilesPalette.setEditMode(true, tilesetId);
 			tilesPalette.x = 5;
 			tilesPalette.y = 30;
 			addChild(tilesPalette);
