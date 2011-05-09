@@ -40,10 +40,10 @@ package angel.roomedit {
 			propChooser.y = propBitmap.y + propBitmap.height + 10;
 			addChild(propChooser);
 			
-			ghostCheck = Util.addCheckboxEditControl(this, propChooser, "Ghostly", changeSolidness);
-			hardCornerCheck = Util.addCheckboxEditControl(this, ghostCheck, "Hard corners", changeSolidness);
-			shortCheck = Util.addCheckboxEditControl(this, hardCornerCheck, "Short", changeSolidness);
-			fillsTileCheck = Util.addCheckboxEditControl(this, shortCheck, "Fills Tile", changeSolidness);
+			ghostCheck = Util.createCheckboxEditControlBelow(propChooser, "Ghost/Hologram", 120, changeSolidness);
+			hardCornerCheck = Util.createCheckboxEditControlBelow(ghostCheck, "Hard corners", 120, changeSolidness);
+			shortCheck = Util.createCheckboxEditControlBelow(hardCornerCheck, "Short", 120, changeSolidness);
+			fillsTileCheck = Util.createCheckboxEditControlBelow(shortCheck, "Fills Tile", 120, changeSolidness);
 
 			if (startId == null) {
 				propCombo.selectedIndex = 0;

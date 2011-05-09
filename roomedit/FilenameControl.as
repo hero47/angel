@@ -81,10 +81,9 @@ package angel.roomedit {
 			}
 		}
 
-		public static function add(parent:Sprite, previousControl:DisplayObject, includeClearButton:Boolean, labelText:String, labelWidth:int, controlWidth:int, changeHandler:Function):FilenameControl {
+		public static function createBelow(previousControl:DisplayObject, includeClearButton:Boolean, labelText:String, labelWidth:int, controlWidth:int, changeHandler:Function):FilenameControl {
 			var control:FilenameControl = new FilenameControl(includeClearButton, labelText, controlWidth, labelWidth);
-			control.y = previousControl.y + previousControl.height + 10;
-			parent.addChild(control);
+			Util.addBelow(control, previousControl, 10);
 			control.addEventListener(Event.CHANGE, changeHandler);
 			return control;
 		}

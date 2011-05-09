@@ -20,6 +20,8 @@ package angel.roomedit {
 	public class RoomLight extends Sprite {
 
 		public var floor:FloorEdit;
+		public var spotLayer:Sprite;
+		public var spots:Object = new Object(); // associative array mapping from spotId to location
 		public var currentFilename:String;
 		private var catalog:CatalogEdit;
 		private var contentsLayer:Sprite;
@@ -32,6 +34,10 @@ package angel.roomedit {
 			addChild(floor);
 			resize(floor.size.x, floor.size.y);
 			floor.addEventListener(FloorEdit.RESIZE_EVENT, floorResized);
+			
+			spotLayer = new Sprite();
+			spotLayer.mouseEnabled = false;
+			addChild(spotLayer);
 			
 			contentsLayer = new Sprite();
 			contentsLayer.mouseEnabled = false;
@@ -188,7 +194,12 @@ package angel.roomedit {
 			
 			currentFilename = filename;
 			floor.loadFromXml(catalog, xml.floor[0]);
-			initContentsFromXml(xml.floor.@x, xml.floor.@y, xml.contents[0]);
+			if (xml.contents.length() > 0) {
+				initContentsFromXml(xml.floor.@x, xml.floor.@y, xml.contents[0]);
+			}
+			if (xml.spots.length() > 0) {
+				initSpotsFromXml(xml.spots[0]);
+			}
 			dispatchEvent(new Event(Event.INIT));
 		}
 	
@@ -261,11 +272,36 @@ package angel.roomedit {
 			}
 			return xml;
 		}
+
+		public function initSpotsFromXml(spotsXml:XML):void {
+			spots = new Object();
+			for each (var spotXml:XML in spotsXml.spot) {
+				var id:String = spotXml.@id;
+				if (spots[id] != null) {
+					Alert.show("Error! Duplicate spot id " + id + " in " + currentFilename);
+				}
+				spots[id] = new Point(spotXml.@x, spotXml.@y);
+			}
+		}
+		
+		public function buildSpotsXml():XML {
+			var xml:XML = <spots/>;
+			for (var id:String in spots) {
+				var location:Point = spots[id];
+				var spotXml:XML = <spot/>;
+				spotXml.@id = id;
+				spotXml.@x = location.x;
+				spotXml.@y = location.y;
+				xml.appendChild(spotXml);
+			}
+			return xml;
+		}
 		
 		public function saveRoomAsXmlFile():void {
 			var roomXml:XML = new XML(<room/>);
 			roomXml.appendChild( floor.buildFloorXml() );
 			roomXml.appendChild( buildContentsXml() );
+			roomXml.appendChild( buildSpotsXml() );
 			Util.saveXmlToFile(roomXml, currentFilename == null ? "room.xml" : currentFilename);
 		}
 

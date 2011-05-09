@@ -10,6 +10,7 @@ package angel.roomedit {
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
+	import flash.filters.GlowFilter;
 	import flash.text.TextField;
 	
 	/**
@@ -19,6 +20,8 @@ package angel.roomedit {
 	public class RoomEditUI extends Sprite {
 		public static const DEFAULT_FLOORSIZE_X:int = 10;
 		public static const DEFAULT_FLOORSIZE_Y:int = 10;
+		public static const SELECT_COLOR:uint = 0x0000ff;
+		public static const SELECTION_GLOW_FILTER:GlowFilter = new GlowFilter(SELECT_COLOR, 1, 20, 20, 2, 1, false, false);
 		
 		
 		private var catalog:CatalogEdit;
@@ -27,11 +30,9 @@ package angel.roomedit {
 		private var paletteHolder:Sprite;
 		
 		private static const TILE_PALETTE_INDEX:int = 0;
-		private static const PROP_PALETTE_INDEX:int = 1;
-		private static const NPC_PALETTE_INDEX:int = 2;
-		private static const tabLabels:Vector.<String> = Vector.<String>(["Tiles", "Props", "NPCs"]);
-		private var paletteTabs:Vector.<TextField> = new Vector.<TextField>(3);
-		private var palettes:Vector.<Sprite> = new Vector.<Sprite>(3);
+		private static const paletteClasses:Vector.<Class> = Vector.<Class>([FloorTilePalette, PropPalette, NpcPalette, SpotPalette]);
+		private var paletteTabs:Vector.<TextField> = new Vector.<TextField>(paletteClasses.length);
+		private var palettes:Vector.<IRoomEditorPalette> = new Vector.<IRoomEditorPalette>(paletteClasses.length);
 		private var visibleOnlyWhenPaletteIsTileset:Vector.<DisplayObject> = new Vector.<DisplayObject>();
 		
 		public function RoomEditUI(catalog:CatalogEdit) {
@@ -46,28 +47,14 @@ package angel.roomedit {
 			room.y = 55;
 			
 			// Do these AFTER room so they float on top of it
-			initPaletteHolder();
+			initPalettes();
 			initButtons();
-			
-			var tilesPalette:FloorTilePalette = new FloorTilePalette(catalog, "");
-			tilesPalette.y = EditorSettings.PALETTE_LABEL_HEIGHT;
-			paletteHolder.addChild(tilesPalette);
-			palettes[TILE_PALETTE_INDEX] = tilesPalette;
-			
-			var propPalette:PropPalette = new PropPalette(catalog, room);
-			propPalette.y = EditorSettings.PALETTE_LABEL_HEIGHT;
-			paletteHolder.addChild(propPalette);
-			palettes[PROP_PALETTE_INDEX] = propPalette;
-			
-			var npcPalette:NpcPalette = new NpcPalette(catalog, room);
-			npcPalette.y = EditorSettings.PALETTE_LABEL_HEIGHT;
-			paletteHolder.addChild(npcPalette);
-			palettes[NPC_PALETTE_INDEX] = npcPalette;
 			
 			switchPaletteTo(paletteTabs[TILE_PALETTE_INDEX]);		
 			
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
 		}
+		
 		
 		private function addedToStageListener(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
@@ -94,19 +81,19 @@ package angel.roomedit {
 			}
 		}
 		
-		private function initPaletteHolder():void {
+		private function initPalettes():void {
 			paletteHolder = new Sprite();
 			paletteHolder.graphics.beginFill(EditorSettings.PALETTE_BACKCOLOR, 1);
 			paletteHolder.graphics.drawRect(0, 0, EditorSettings.PALETTE_XSIZE, EditorSettings.PALETTE_YSIZE + EditorSettings.PALETTE_LABEL_HEIGHT);
 			paletteHolder.x = 5;
 			paletteHolder.y = 30;
-			
 			paletteTabs = new Vector.<TextField>();
-			var tab:TextField;
 			
-			for (var i:int = 0; i < 3; i++) {
-				tab = Util.textBox(tabLabels[i], EditorSettings.PALETTE_XSIZE / 3);
-				tab.x = EditorSettings.PALETTE_XSIZE / 3 * i;
+			var tabWidth:int = EditorSettings.PALETTE_XSIZE / paletteClasses.length;
+			for (var i:int = 0; i < paletteClasses.length; ++i) {
+				palettes[i] = createPaletteAndAddToHolder(paletteClasses[i]);
+				var tab:TextField = Util.textBox(palettes[i].tabLabel, tabWidth);
+				tab.x = tabWidth * i;
 				tab.background = true;
 				tab.border = true;
 				tab.addEventListener(MouseEvent.CLICK, switchPalette);
@@ -114,6 +101,13 @@ package angel.roomedit {
 				paletteTabs[i] = tab;
 			}
 			addChild(paletteHolder);
+		}
+		
+		private function createPaletteAndAddToHolder(paletteClass:Class):IRoomEditorPalette {
+			var palette:IRoomEditorPalette = new paletteClass(catalog, room);
+			palette.asSprite().y = EditorSettings.PALETTE_LABEL_HEIGHT;
+			paletteHolder.addChild(palette.asSprite());
+			return palette;
 		}
 		
 		
@@ -259,19 +253,20 @@ package angel.roomedit {
 			(parent as Main).editCatalog();
 		}
 
-		private function switchPaletteTo(palette:DisplayObject):void {
+		private function switchPaletteTo(paletteTab:DisplayObject):void {
 			for (var i:int = 0; i < paletteTabs.length; i++) {
-				if (paletteTabs[i] == palette) {
+				if (paletteTabs[i] == paletteTab) {
 					paletteTabs[i].backgroundColor = EditorSettings.PALETTE_BACKCOLOR;
-					palettes[i].visible = true;
-					floor.attachPalette(palettes[i] as IRoomEditorPalette);
+					palettes[i].asSprite().visible = true;
+					floor.attachPalette(palettes[i]);
 					var isTile:Boolean = (palettes[i] is FloorTilePalette);
 					for each (var it:DisplayObject in visibleOnlyWhenPaletteIsTileset) {
 						it.visible =  isTile;
 					}
+					room.spotLayer.visible = (palettes[i] is SpotPalette);
 				} else {
 					paletteTabs[i].backgroundColor = 0x888888;
-					palettes[i].visible = false;
+					palettes[i].asSprite().visible = false;
 				}
 			}
 		}

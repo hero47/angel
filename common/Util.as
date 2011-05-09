@@ -44,25 +44,38 @@ package angel.common {
 			var fr:FileReference = new FileReference( );
 			fr.save( ba, defaultFilename );
 		}
+		
+		public static function addBelow(newObject:DisplayObject, existingObject:DisplayObject, gap:int = 0):void {
+			newObject.x = existingObject.x;
+			newObject.y = existingObject.y + existingObject.height + gap;
+			existingObject.parent.addChild(newObject);
+		}
+		
+		public static function addBeside(newObject:DisplayObject, existingObject:DisplayObject, gap:int = 0):void {
+			newObject.y = existingObject.y;
+			newObject.x = existingObject.x + existingObject.width + gap;
+			existingObject.parent.addChild(newObject);
+		}
 
-		public static function addTextEditControl(parent:Sprite, previousControl:DisplayObject, labelText:String, labelWidth:int, fieldWidth:int, changeHandler:Function):TextField {
+		public static function createTextEditControlBelow(previousControl:DisplayObject, labelText:String, labelWidth:int, fieldWidth:int, changeHandler:Function):TextField {
 			var label:TextField = Util.textBox(labelText + ":", labelWidth, 20);
-			label.y = previousControl.y + previousControl.height + 10;
-			parent.addChild(label);
+			addBelow(label, previousControl, 5)
 			var textField:TextField = Util.textBox("", fieldWidth, 20, TextFormatAlign.LEFT, true);
-			textField.x = label.x + label.width + 5;
-			textField.y = label.y;
-			textField.addEventListener(Event.CHANGE, changeHandler);
-			parent.addChild(textField);
+			addBeside(textField, label, 5);
+			if (changeHandler != null) {
+				textField.addEventListener(Event.CHANGE, changeHandler);
+			}
 			return textField;
 		}
 
-		public static function addCheckboxEditControl(parent:Sprite, previousControl:DisplayObject, labelText:String, changeHandler:Function):CheckBox {
+		public static function createCheckboxEditControlBelow(previousControl:DisplayObject, labelText:String, width:int, changeHandler:Function):CheckBox {
 			var checkBox:CheckBox = new CheckBox();
 			checkBox.label = labelText;
-			checkBox.y = previousControl.y + previousControl.height + 10;
-			parent.addChild(checkBox);
-			checkBox.addEventListener(Event.CHANGE, changeHandler);
+			checkBox.width = width;
+			addBelow(checkBox, previousControl, 5);
+			if (changeHandler != null) {
+				checkBox.addEventListener(Event.CHANGE, changeHandler);
+			}
 			return checkBox;
 		}
 		
