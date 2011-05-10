@@ -123,6 +123,9 @@ package angel.roomedit {
 			var comboEntry:SpotComboEntry = SpotComboEntry(spotCombo.selectedItem);
 			changeSelectedSpotToMatch(comboEntry);
 			setLocationText();
+			if ((event != null) && (comboEntry!= null)) {
+				room.snapToCenter(comboEntry.location);
+			}
 		}
 		
 		private function selectOrMoveSelectionTo(location:Point):void {

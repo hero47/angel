@@ -2,6 +2,7 @@ package angel.roomedit {
 	import angel.common.Alert;
 	import angel.common.CatalogEntry;
 	import angel.common.Prop;
+	import angel.common.SimplerButton;
 	import angel.common.Util;
 	import angel.common.WalkerImage;
 	import fl.controls.ComboBox;
@@ -27,7 +28,9 @@ package angel.roomedit {
 		private var exploreCombo:ComboBox;
 		private var combatCombo:ComboBox;
 		private var talkFile:FilenameControl;
+		private var removeButton:SimplerButton;
 		
+		private var currentSelection:Prop;
 		private var locationOfCurrentSelection:Point;
 		
 		private static const exploreChoices:Vector.<String> = Vector.<String>(["", "fidget", "wander"]);
@@ -40,29 +43,30 @@ package angel.roomedit {
 			graphics.beginFill(EditorSettings.PALETTE_BACKCOLOR, 1);
 			graphics.drawRect(0, 0, EditorSettings.PALETTE_XSIZE, EditorSettings.PALETTE_YSIZE);
 			
+			removeButton = new SimplerButton("Remove", removeSelectedItem, 0xff0000);
+			removeButton.x = EditorSettings.PALETTE_XSIZE - 10 - removeButton.width;
+			removeButton.y = 5;
+			addChild(removeButton);
+			
 			walkerFacingFront = new Bitmap(new BitmapData(Prop.WIDTH, Prop.HEIGHT));
-			walkerFacingFront.x = (this.width - walkerFacingFront.width) / 2;
-			walkerFacingFront.y = 10;
-			addChild(walkerFacingFront);
+			Util.addBelow(walkerFacingFront, removeButton);
+			walkerFacingFront.x = (EditorSettings.PALETTE_XSIZE - walkerFacingFront.width) / 2;
 			
 			var walkerChooser:ComboHolder = catalog.createChooser(CatalogEntry.WALKER, EditorSettings.PALETTE_XSIZE - 10);
-			walkerChooser.x = (this.width - walkerChooser.width) / 2;
-			walkerChooser.y = Prop.HEIGHT + 20;
-			addChild(walkerChooser);
+			Util.addBelow(walkerChooser, walkerFacingFront, 10);
+			walkerChooser.x = (EditorSettings.PALETTE_XSIZE - walkerChooser.width) / 2;
 			walkerCombo = walkerChooser.comboBox;
-			walkerCombo.addEventListener(Event.CHANGE, changeWalker);
+			walkerCombo.addEventListener(Event.CHANGE, walkerComboBoxChanged);
 			
 			locationText = Util.textBox("", EditorSettings.PALETTE_XSIZE, Util.DEFAULT_TEXT_HEIGHT, TextFormatAlign.CENTER);
-			locationText.y = walkerChooser.y + walkerChooser.height + 10;
-			addChild(locationText);
+			Util.addBelow(locationText, walkerChooser, 10);
 			
 			attributeDisplay = createAttributeDisplay();
-			attributeDisplay.x = walkerChooser.x;
-			attributeDisplay.y = locationText.y + locationText.height + 10;
+			Util.addBelow(attributeDisplay, locationText, 10);
 			addChild(attributeDisplay);
 			
 			walkerCombo.selectedIndex = 0;
-			changeWalker(null);
+			walkerComboBoxChanged(null);
 			
 			room.addEventListener(Event.INIT, roomLoaded);
 		}
@@ -96,23 +100,53 @@ package angel.roomedit {
 			var talkLabel:TextField = Util.textBox("Conversation file:", EditorSettings.PALETTE_XSIZE-20);
 			talkLabel.y = combatCombo.y + combatCombo.height + 10;
 			holder.addChild(talkLabel);
-			talkFile = FilenameControl.createBelow(talkLabel, true, null, 0, EditorSettings.PALETTE_XSIZE-20, changeTalk );
+			talkFile = FilenameControl.createBelow(talkLabel, true, null, 0, EditorSettings.PALETTE_XSIZE-10, changeTalk );
 			
 			return holder;
 		}
 		
 		
-		private function changeWalker(event:Event):void {
+		private function walkerComboBoxChanged(event:Event = null):void {
 			var walkerId:String = walkerCombo.selectedLabel;
 			
 			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
 			walkerFacingFront.bitmapData = walkerImage.bitsFacing(1);
 			
 			updateAvailabilityAndAttributes();
+			if ((event != null) && (locationOfCurrentSelection != null)) {
+				room.snapToCenter(locationOfCurrentSelection);
+			}
+		}
+		
+		private function changeSelectionOnMapTo(location:Point):void {
+			if (currentSelection != null) {
+				currentSelection.filters = [];
+			}
+			currentSelection = room.propAt(location);
+			if (currentSelection != null) {
+				currentSelection.filters = [ RoomEditUI.SELECTION_GLOW_FILTER ];
+			}
+		}
+		
+		private function changeSelectionToContentsOf(location:Point):void {
+			var id:String = room.idOfItemAt(location);
+			if (id != null) {
+				var comboEntry:Object = Util.itemWithLabelInComboBox(walkerCombo, id);
+				walkerCombo.selectedItem = comboEntry;
+				walkerComboBoxChanged();
+			}
+		}
+		
+		private function removeSelectedItem(event:Event):void {
+			if (locationOfCurrentSelection != null) {
+				room.removeItemAt(locationOfCurrentSelection);
+				updateAvailabilityAndAttributes();
+			}
 		}
 		
 		private function updateAvailabilityAndAttributes():void {
 			locationOfCurrentSelection = room.find(walkerCombo.selectedLabel);
+			changeSelectionOnMapTo(locationOfCurrentSelection);
 			var onMap:Boolean = (locationOfCurrentSelection != null);
 			locationText.text = (onMap ? "Location: " + locationOfCurrentSelection : "Available");
 			attributeDisplay.visible = onMap;
@@ -168,8 +202,8 @@ package angel.roomedit {
 			if (occupied) {
 				if (remove) {
 					room.removeItemAt(tile.location);
-				} else { 
-					//UNDONE select this NPC
+				} else {
+					changeSelectionToContentsOf(tile.location);
 				}
 			} else { // !occupied && !remove
 				if (locationOfCurrentSelection == null) {
@@ -177,6 +211,7 @@ package angel.roomedit {
 					var prop:Prop = Prop.createFromBitmapData(walkerFacingFront.bitmapData);
 					room.addContentItem(prop, CatalogEntry.WALKER, walkerCombo.selectedLabel, tile.location);
 				} else {
+					room.snapToCenter(locationOfCurrentSelection);
 					Alert.show("Cannot place " + walkerCombo.selectedLabel + " -- already in room.");
 				}
 			}
