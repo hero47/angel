@@ -39,6 +39,7 @@ package angel.game {
 		public var mainPlayerCharacter:ComplexEntity;
 		public var size:Point;
 		public var mode:RoomMode;
+		public var spots:Object = new Object(); // associative array mapping from spotId to location
 
 		public var activeUi:IRoomUi;
 		private var disabledUi:IRoomUi;
@@ -509,6 +510,17 @@ Error! Pause is stuck. Attempting unstick.
 			}
 			for each (var walkerXml: XML in contentsXml.walker) {
 				addEntityUsingItsLocation(Walker.createFromRoomContentsXml(walkerXml, version, catalog));
+			}
+		}
+
+		public function initSpotsFromXml(spotsXml:XML):void {
+			spots = new Object();
+			for each (var spotXml:XML in spotsXml.spot) {
+				var id:String = spotXml.@id;
+				if (spots[id] != null) {
+					Alert.show("Error! Duplicate spot id " + id);
+				}
+				spots[id] = new Point(spotXml.@x, spotXml.@y);
 			}
 		}
 		

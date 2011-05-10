@@ -5,6 +5,8 @@ package angel.game {
 	import angel.common.Prop;
 	import angel.common.WalkerImage;
 	import angel.game.brain.BrainFidget;
+	import angel.game.brain.BrainFollow;
+	import angel.game.brain.BrainPatrol;
 	import angel.game.brain.BrainWander;
 	import angel.game.brain.CombatBrainWander;
 	import angel.game.combat.Gun;
@@ -100,7 +102,7 @@ package angel.game {
 			}
 		}
 
-		private static const exploreBrain:Object = { fidget:BrainFidget, wander:BrainWander };
+		private static const exploreBrain:Object = { fidget:BrainFidget, follow:BrainFollow, patrol:BrainPatrol, wander:BrainWander };
 		private static const combatBrain:Object = { wander:CombatBrainWander };
 
 		public static function exploreBrainClassFromString(brainName:String):Class {
@@ -131,6 +133,8 @@ package angel.game {
 			walker.myLocation = new Point(walkerXml.@x, walkerXml.@y);
 			walker.exploreBrainClass = exploreBrainClassFromString(walkerXml.@explore);
 			walker.combatBrainClass = combatBrainClassFromString(walkerXml.@combat);
+			walker.exploreBrainParam = walkerXml.@exploreParam;
+			walker.combatBrainParam = walkerXml.@combatParam;
 			
 			var talk:String = walkerXml.@talk;
 			if (talk != "") {

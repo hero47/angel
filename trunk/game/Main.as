@@ -15,7 +15,7 @@ package angel.game {
 		private var catalog:Catalog;
 		private var floor:Floor;
 		private var room:Room;
-		private var startLoc:Point;
+		private var startSpot:String;
 		
 		public function Main() {
 			stage.scaleMode = "noScale";
@@ -53,11 +53,13 @@ package angel.game {
 			Settings.initPlayerFromXml(xmlData.player, catalog);
 			Flags.initFlagsFromXml(xmlData.setFlag);
 			
-			startLoc = new Point(xmlData.room.@startX, xmlData.room.@startY);
+			
+			startSpot = xmlData.room.@start;
+			
 			LoaderWithErrorCatching.LoadFile(xmlData.room, roomXmlLoaded);
 		}
 		
-		private var contentsXml:XML; // stash here for use in mapLoadedListener
+		private var roomXml:XML; // stash here for use in mapLoadedListener
 		private function roomXmlLoaded(event:Event, filename:String):void {
 			var xml:XML = new XML(event.target.data);
 			
@@ -66,7 +68,7 @@ package angel.game {
 				return;
 			}
 			
-			contentsXml = xml.contents[0];
+			roomXml = xml;
 			floor = new Floor();
 			floor.addEventListener(Event.INIT, mapLoadedListener);			
 			floor.loadFromXml(catalog, xml.floor[0]);
@@ -77,21 +79,32 @@ package angel.game {
 			floor.removeEventListener(Event.INIT, mapLoadedListener);
 			room = new Room(floor);
 			addChild(room);
-			room.snapToCenter(startLoc);
 			Settings.currentRoom = room;
 			Settings.catalog = catalog;
 			
-			room.initContentsFromXml(catalog, contentsXml);
+			if (roomXml.contents.length() > 0) {
+				room.initContentsFromXml(catalog, roomXml.contents[0]);
+			}
+			if (roomXml.spots.length() > 0) {
+				room.initSpotsFromXml(roomXml.spots[0]);
+			}
 			
-			var previousPc:ComplexEntity = null;
+			var startLoc:Point;
+			if ((startSpot == null) || (startSpot == "")) {
+				startLoc = new Point(0, 0);
+			} else {
+				startLoc = room.spots[startSpot];
+			}
+			room.snapToCenter(startLoc);
+			var previousPc:String = null;
 			for each (var entity:ComplexEntity in Settings.pcs) {
 				// UNDONE: start followers near main PC instead of stacked on top
 				room.addPlayerCharacter(entity, startLoc);
 				if (previousPc != null) {
-					entity.bestFriend = previousPc;
 					entity.exploreBrainClass = BrainFollow;
+					entity.exploreBrainParam = previousPc;
 				}
-				previousPc = entity;
+				previousPc = entity.id;
 			}
 			
 			room.changeModeTo(RoomExplore);

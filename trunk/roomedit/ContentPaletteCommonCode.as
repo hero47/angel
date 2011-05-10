@@ -41,7 +41,7 @@ package angel.roomedit {
 			itemImage.x = (EditorSettings.PALETTE_XSIZE - itemImage.width) / 2;
 			
 			var itemChooser:ComboHolder = catalog.createChooser(catalogEntryType, EditorSettings.PALETTE_XSIZE - 10);
-			Util.addBelow(itemChooser, itemImage, 10);
+			Util.addBelow(itemChooser, itemImage);
 			itemChooser.x = (EditorSettings.PALETTE_XSIZE - itemChooser.width) / 2;
 			itemCombo = itemChooser.comboBox;
 			itemCombo.addEventListener(Event.CHANGE, itemComboBoxChanged);

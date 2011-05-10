@@ -67,13 +67,14 @@ package angel.game {
 		public var actionsRemaining:int;
 		public var mostRecentGait:int = GAIT_WALK;	// gait for move in progress, or last move if none in progress
 		public var exploreBrainClass:Class;
+		public var exploreBrainParam:String;
 		public var combatBrainClass:Class;
+		public var combatBrainParam:String;
 		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
 		public var brain:IBrain;
 		public var inventory:Inventory = new Inventory();
 		
 		private var playerControlled:Boolean;
-		public var bestFriend:ComplexEntity; // for use by brain, persists through mode transitions
 		
 		public var marker:DisplayObject; // if non-null, drawn on decorations layer centered directly under me
 		
@@ -200,9 +201,9 @@ package angel.game {
 			}
 			
 			if ((mode is RoomCombat) && (combatBrainClass != null)) {
-				brain = new combatBrainClass(this, mode);
+				brain = new combatBrainClass(this, mode, combatBrainParam);
 			} else if ((mode is RoomExplore) && (exploreBrainClass != null)) {
-				brain = new exploreBrainClass(this, mode);
+				brain = new exploreBrainClass(this, mode, exploreBrainParam);
 			} else {
 				brain = null;
 			}

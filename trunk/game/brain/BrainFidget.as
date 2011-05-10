@@ -13,7 +13,7 @@ package angel.game.brain {
 	public class BrainFidget implements IBrain {
 		private var me:ComplexEntity;
 		
-		public function BrainFidget(entity:ComplexEntity, roomExplore:RoomExplore) {
+		public function BrainFidget(entity:ComplexEntity, roomExplore:RoomExplore, param:String) {
 			me = entity;
 			me.turnToFacing(Math.random() * 8);
 			// Set the first twitch opportunity to a random fraction of a second, so all the NPCs in

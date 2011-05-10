@@ -138,15 +138,20 @@ package angel.roomedit {
 			addContentItem(prop, CatalogEntry.PROP, id, location);
 		}
 		
-		public function addWalkerByName(id:String, location:Point, exploreBehavior:String, combatBehavior:String, talk:String):void {
+		private static const walkerXmlAttributes:Vector.<String> = Vector.<String>(["explore", "combat", "talk", "exploreParam", "combatParam"]);
+		public function addWalkerByName(id:String, location:Point, xml:XML):void {
 			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(id);
 			var prop:Prop = Prop.createFromBitmapData(walkerImage.bitsFacing(1));
 			var attributes:Object = null;
-			if (exploreBehavior != "" || combatBehavior != "" || talk != "") {
-				attributes = new Object();
-				attributes["explore"] = exploreBehavior;
-				attributes["combat"] = combatBehavior;
-				attributes["talk"] = talk;
+			trace("adding", id);
+			for each (var attributeName:String in walkerXmlAttributes) {
+				if (String(xml.@[attributeName]) != "") {
+					if (attributes == null) {
+						attributes = new Object();
+					}
+					attributes[attributeName] = xml.@[attributeName];
+					trace("  added attribute", attributeName, attributes[attributeName]);
+				}
 			}
 			addContentItem(prop, CatalogEntry.WALKER, id, location, attributes);
 		}
@@ -266,7 +271,7 @@ package angel.roomedit {
 			}
 			for each (var walkerXml:XML in contentsXml.walker) {
 				id = walkerXml;
-				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml.@explore, walkerXml.@combat, walkerXml.@talk);
+				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml);
 			}
 		}
 
@@ -278,7 +283,7 @@ package angel.roomedit {
 			}
 			for each (var walkerXml:XML in contentsXml.walker) {
 				id = walkerXml.@id;
-				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml.@explore, walkerXml.@combat, walkerXml.@talk);
+				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml);
 			}
 		}
 		
