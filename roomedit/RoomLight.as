@@ -194,6 +194,14 @@ package angel.roomedit {
 			}
 			return null;
 		}
+		
+		public function typeOfItemAt(loc:Point):int {
+			if (propGrid[loc.x][loc.y] != null) {
+				return propGrid[loc.x][loc.y].type;
+			}
+			return CatalogEntry.NO_TYPE;
+			
+		}
 
 		public function setAttributesOfItemAt(loc:Point, attributes:Object):void {
 			Assert.assertTrue(propGrid[loc.x][loc.y] != null, "Setting attributes for empty location");

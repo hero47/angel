@@ -18,65 +18,93 @@ package angel.roomedit {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class NpcPalette extends Sprite implements IRoomEditorPalette {
-		private var catalog:CatalogEdit;
-		private var room:RoomLight;
-		private var walkerFacingFront:Bitmap;
-		private var walkerCombo:ComboBox;
+	public class NpcPalette extends ContentPaletteCommonCode {
 		private var locationText:TextField;
 		private var attributeDisplay:Sprite;
 		private var exploreCombo:ComboBox;
 		private var combatCombo:ComboBox;
 		private var talkFile:FilenameControl;
-		private var removeButton:SimplerButton;
-		
-		private var currentSelection:Prop;
-		private var locationOfCurrentSelection:Point;
 		
 		private static const exploreChoices:Vector.<String> = Vector.<String>(["", "fidget", "wander"]);
 		private static const combatChoices:Vector.<String> = Vector.<String>(["", "wander"]);
 		
 		public function NpcPalette(catalog:CatalogEdit, room:RoomLight) {
-			this.catalog = catalog;
-			this.room = room;
-			
-			graphics.beginFill(EditorSettings.PALETTE_BACKCOLOR, 1);
-			graphics.drawRect(0, 0, EditorSettings.PALETTE_XSIZE, EditorSettings.PALETTE_YSIZE);
-			
-			removeButton = new SimplerButton("Remove", removeSelectedItem, 0xff0000);
-			removeButton.x = EditorSettings.PALETTE_XSIZE - 10 - removeButton.width;
-			removeButton.y = 5;
-			addChild(removeButton);
-			
-			walkerFacingFront = new Bitmap(new BitmapData(Prop.WIDTH, Prop.HEIGHT));
-			Util.addBelow(walkerFacingFront, removeButton);
-			walkerFacingFront.x = (EditorSettings.PALETTE_XSIZE - walkerFacingFront.width) / 2;
-			
-			var walkerChooser:ComboHolder = catalog.createChooser(CatalogEntry.WALKER, EditorSettings.PALETTE_XSIZE - 10);
-			Util.addBelow(walkerChooser, walkerFacingFront, 10);
-			walkerChooser.x = (EditorSettings.PALETTE_XSIZE - walkerChooser.width) / 2;
-			walkerCombo = walkerChooser.comboBox;
-			walkerCombo.addEventListener(Event.CHANGE, walkerComboBoxChanged);
+			super(catalog, room);
 			
 			locationText = Util.textBox("", EditorSettings.PALETTE_XSIZE, Util.DEFAULT_TEXT_HEIGHT, TextFormatAlign.CENTER);
-			Util.addBelow(locationText, walkerChooser, 10);
+			Util.addBelow(locationText, itemCombo, 10);
 			
 			attributeDisplay = createAttributeDisplay();
 			Util.addBelow(attributeDisplay, locationText, 10);
-			addChild(attributeDisplay);
 			
-			walkerCombo.selectedIndex = 0;
-			walkerComboBoxChanged(null);
-			
-			room.addEventListener(Event.INIT, roomLoaded);
+			itemCombo.selectedIndex = 0;
+			itemComboBoxChanged(null);
 		}
 		
-		public function asSprite():Sprite {
-			return this;
-		}
-		
-		public function get tabLabel():String {
+		override public function get tabLabel():String {
 			return "NPCs";
+		}
+
+		override public function applyToTile(tile:FloorTileEdit, remove:Boolean = false):void {
+			super.applyToTile(tile, remove);
+			updateAvailabilityAndAttributes();
+		}
+		
+		// Whenever we become visible, update the walker location text
+		override public function set visible(value:Boolean):void {
+			super.visible = value;
+			if (this.visible) {
+				updateAvailabilityAndAttributes();
+			}
+		}
+		
+		override protected function get catalogEntryType():int {
+			return CatalogEntry.WALKER;
+		}
+		
+		override protected function roomLoaded(event:Event):void {
+			if (this.visible) {
+				updateAvailabilityAndAttributes();
+			}
+		}
+		
+		override protected function userClickedOccupiedTile(location:Point):void {
+			var id:String = room.idOfItemAt(location);
+			if (id != null) {
+				var comboEntry:Object = Util.itemWithLabelInComboBox(itemCombo, id);
+				if (comboEntry != null) {
+					itemCombo.selectedItem = comboEntry;
+					itemComboBoxChanged();
+				}
+			}
+		}
+		
+		override protected function itemComboBoxChanged(event:Event = null):void {
+			var walkerId:String = itemCombo.selectedLabel;
+			
+			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
+			itemImage.bitmapData = walkerImage.bitsFacing(1);
+			
+			updateAvailabilityAndAttributes();
+			if ((event != null) && (locationOfCurrentSelection != null)) {
+				room.snapToCenter(locationOfCurrentSelection);
+			}
+		}
+		
+		override protected function removeSelectedItem(event:Event):void {
+			super.removeSelectedItem(event);
+			updateAvailabilityAndAttributes();
+		}
+		
+		override protected function attemptToCreateOneAt(location:Point):void {
+			if (locationOfCurrentSelection == null) {
+				//CONSIDER: this will need revision if we add resource management
+				var prop:Prop = Prop.createFromBitmapData(itemImage.bitmapData);
+				room.addContentItem(prop, CatalogEntry.WALKER, itemCombo.selectedLabel, location);
+			} else {
+				room.snapToCenter(locationOfCurrentSelection);
+				Alert.show("Cannot place " + itemCombo.selectedLabel + " -- already in room.");
+			}
 		}
 		
 		private function createAttributeDisplay():Sprite {
@@ -105,47 +133,8 @@ package angel.roomedit {
 			return holder;
 		}
 		
-		
-		private function walkerComboBoxChanged(event:Event = null):void {
-			var walkerId:String = walkerCombo.selectedLabel;
-			
-			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
-			walkerFacingFront.bitmapData = walkerImage.bitsFacing(1);
-			
-			updateAvailabilityAndAttributes();
-			if ((event != null) && (locationOfCurrentSelection != null)) {
-				room.snapToCenter(locationOfCurrentSelection);
-			}
-		}
-		
-		private function changeSelectionOnMapTo(location:Point):void {
-			if (currentSelection != null) {
-				currentSelection.filters = [];
-			}
-			currentSelection = room.propAt(location);
-			if (currentSelection != null) {
-				currentSelection.filters = [ RoomEditUI.SELECTION_GLOW_FILTER ];
-			}
-		}
-		
-		private function changeSelectionToContentsOf(location:Point):void {
-			var id:String = room.idOfItemAt(location);
-			if (id != null) {
-				var comboEntry:Object = Util.itemWithLabelInComboBox(walkerCombo, id);
-				walkerCombo.selectedItem = comboEntry;
-				walkerComboBoxChanged();
-			}
-		}
-		
-		private function removeSelectedItem(event:Event):void {
-			if (locationOfCurrentSelection != null) {
-				room.removeItemAt(locationOfCurrentSelection);
-				updateAvailabilityAndAttributes();
-			}
-		}
-		
 		private function updateAvailabilityAndAttributes():void {
-			locationOfCurrentSelection = room.find(walkerCombo.selectedLabel);
+			locationOfCurrentSelection = room.find(itemCombo.selectedLabel);
 			changeSelectionOnMapTo(locationOfCurrentSelection);
 			var onMap:Boolean = (locationOfCurrentSelection != null);
 			locationText.text = (onMap ? "Location: " + locationOfCurrentSelection : "Available");
@@ -158,82 +147,32 @@ package angel.roomedit {
 					combatCombo.selectedIndex = 0;
 					talkFile.text = "";
 				} else {
-					exploreCombo.selectedIndex = indexInChoices(exploreChoices, attributes["explore"]);
-					combatCombo.selectedIndex = indexInChoices(combatChoices, attributes["combat"]);
+					exploreCombo.selectedItem = Util.itemWithLabelInComboBox(exploreCombo, attributes["explore"]);
+					combatCombo.selectedItem = Util.itemWithLabelInComboBox(exploreCombo, attributes["combat"]);
 					talkFile.text = attributes["talk"];
 				}
 			}
 		}
 		
-		// UNDONE: Refactor and merge these!
-		
 		private function changeExplore(event:Event):void {
-			var attributes:Object = room.attributesOfItemAt(locationOfCurrentSelection);
-			if (attributes == null) {
-				attributes = new Object();
-			}
-			attributes["explore"] = exploreCombo.selectedLabel;
-			room.setAttributesOfItemAt(locationOfCurrentSelection, attributes);
+			changeAttribute("explore", exploreCombo.selectedLabel);
 		}
 		
 		private function changeCombat(event:Event):void {
-			var attributes:Object = room.attributesOfItemAt(locationOfCurrentSelection);
-			if (attributes == null) {
-				attributes = new Object();
-			}
-			attributes["combat"] = combatCombo.selectedLabel;
-			room.setAttributesOfItemAt(locationOfCurrentSelection, attributes);
+			changeAttribute("combat", combatCombo.selectedLabel);
 		}
 		
 		private function changeTalk(event:Event):void {
+			changeAttribute("talk", talkFile.text);
+		}
+		
+		private function changeAttribute(attributeName:String, newValue:String):void {
 			var attributes:Object = room.attributesOfItemAt(locationOfCurrentSelection);
 			if (attributes == null) {
 				attributes = new Object();
 			}
-			attributes["talk"] = talkFile.text;
+			attributes[attributeName] = newValue;
 			room.setAttributesOfItemAt(locationOfCurrentSelection, attributes);
-		}
-
-		public function applyToTile(tile:FloorTileEdit, remove:Boolean = false):void {
-			var occupied:Boolean = room.occupied(tile.location);
-			if (remove && !occupied) {
-				return;
-			}
-			if (occupied) {
-				if (remove) {
-					room.removeItemAt(tile.location);
-				} else {
-					changeSelectionToContentsOf(tile.location);
-				}
-			} else { // !occupied && !remove
-				if (locationOfCurrentSelection == null) {
-					//CONSIDER: this will need revision if we add resource management
-					var prop:Prop = Prop.createFromBitmapData(walkerFacingFront.bitmapData);
-					room.addContentItem(prop, CatalogEntry.WALKER, walkerCombo.selectedLabel, tile.location);
-				} else {
-					room.snapToCenter(locationOfCurrentSelection);
-					Alert.show("Cannot place " + walkerCombo.selectedLabel + " -- already in room.");
-				}
-			}
-			updateAvailabilityAndAttributes();
-		}
-		
-		public function paintWhileDragging():Boolean {
-			return false;
-		}
-		
-		private function roomLoaded(event:Event):void {
-			if (this.visible) {
-				updateAvailabilityAndAttributes();
-			}
-		}
-		
-		// Whenever we become visible, update the walker location text
-		override public function set visible(value:Boolean):void {
-			super.visible = value;
-			if (this.visible) {
-				updateAvailabilityAndAttributes();
-			}
 		}
 		
 		private function createBrainChooser(choices:Vector.<String>):ComboBox {
@@ -243,15 +182,6 @@ package angel.roomedit {
 				combo.addItem( { label:choices[i] } );
 			}
 			return combo;
-		}
-		
-		private function indexInChoices(choices:Vector.<String>, label:String):int {
-			for (var i:int = 0; i < choices.length; i++) {
-				if (choices[i] == label) {
-					return i;
-				}
-			}
-			return 0;
 		}
 		
 	} // end class NpcPalette
