@@ -17,7 +17,7 @@ package angel.game.brain {
 		// reachable[gait] will hold all points reachable by moving at that gait
 		private var reachable:Vector.<Vector.<Point>> = new Vector.<Vector.<Point>>();
 		
-		public function CombatBrainWander(entity:ComplexEntity, combat:RoomCombat) {
+		public function CombatBrainWander(entity:ComplexEntity, combat:RoomCombat, param:String) {
 			me = entity;
 			this.combat = combat;
 			for (var i:int = 0; i <= ComplexEntity.GAIT_SPRINT; ++i) {

@@ -59,10 +59,14 @@ package angel.common {
 		}
 
 		public static function createTextEditControlBelow(previousControl:DisplayObject, labelText:String, labelWidth:int, fieldWidth:int, changeHandler:Function):TextField {
-			var label:TextField = Util.textBox(labelText + ":", labelWidth, 20);
-			addBelow(label, previousControl, 5)
 			var textField:TextField = Util.textBox("", fieldWidth, 20, TextFormatAlign.LEFT, true);
-			addBeside(textField, label, 5);
+			if (labelText != null) {
+				var label:TextField = Util.textBox(labelText + ":", labelWidth, 20);
+				addBelow(label, previousControl, 5);
+				addBeside(textField, label, 5);
+			} else {
+				addBelow(textField, previousControl, 5);
+			}
 			if (changeHandler != null) {
 				textField.addEventListener(Event.CHANGE, changeHandler);
 			}
@@ -102,9 +106,16 @@ package angel.common {
 			return myTextField;
 		}
 		
+		public static function nullSafeSetText(textField:TextField, value:String):void {
+			textField.text = (value == null ? "" : value);
+		}
+		
 		// It baffles me that ComboBox doesn't provide this as a built-in
 		// (If two or more entries have the same label, this just finds the first one)
 		public static function itemWithLabelInComboBox(combo:ComboBox, label:String):Object {
+			if (label == null) {
+				label = "";
+			}
 			for (var i:int = 0; i < combo.length; ++i) {
 				var item:Object = combo.getItemAt(i);
 				if (combo.itemToLabel(item) == label) {

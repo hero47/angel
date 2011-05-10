@@ -1,7 +1,9 @@
 package angel.game.brain {
+	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.game.ComplexEntity;
 	import angel.game.RoomExplore;
+	import angel.game.SimpleEntity;
 	import flash.geom.Point;
 	/**
 	 * ...
@@ -15,11 +17,13 @@ package angel.game.brain {
 	 
 	public class BrainFollow implements IBrain {
 		private var me:ComplexEntity;
+		private var friendId:String;
 		
 		private static const INTERVAL:int = 2;
 		
-		public function BrainFollow(entity:ComplexEntity, roomExplore:RoomExplore) {
+		public function BrainFollow(entity:ComplexEntity, roomExplore:RoomExplore, param:String) {
 			me = entity;
+			friendId = param;
 			roomExplore.addTimedEvent(Math.random()*INTERVAL, twitchOpportunity);
 		}
 		
@@ -30,8 +34,9 @@ package angel.game.brain {
 		}
 
 		private function twitchOpportunity(roomExplore:RoomExplore):void {
-			if ((me.bestFriend != null) && !me.moving) {
-				var path:Vector.<Point> = me.findPathTo(me.bestFriend.location);
+			var friend:SimpleEntity = me.room.entityInRoomWithId(friendId);
+			if ((friend != null) && !me.moving) {
+				var path:Vector.<Point> = me.findPathTo(friend.location);
 				if ((path != null) && (path.length > 1)) {
 					path.length = path.length - 1;
 					me.startMovingAlongPath(path);

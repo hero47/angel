@@ -15,7 +15,7 @@ package angel.game.brain {
 	public class BrainWander implements IBrain {
 		private var me:ComplexEntity;
 		
-		public function BrainWander(entity:ComplexEntity, roomExplore:RoomExplore) {
+		public function BrainWander(entity:ComplexEntity, roomExplore:RoomExplore, param:String) {
 			me = entity;
 			// Set the first twitch opportunity to a random fraction of a second, so all the NPCs in
 			// the room aren't acting in unison.

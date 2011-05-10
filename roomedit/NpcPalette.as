@@ -23,19 +23,21 @@ package angel.roomedit {
 		private var attributeDisplay:Sprite;
 		private var exploreCombo:ComboBox;
 		private var combatCombo:ComboBox;
+		private var exploreParameters:TextField;
+		private var combatParameters:TextField;
 		private var talkFile:FilenameControl;
 		
-		private static const exploreChoices:Vector.<String> = Vector.<String>(["", "fidget", "wander"]);
+		private static const exploreChoices:Vector.<String> = Vector.<String>(["", "fidget", "follow", "patrol", "wander"]);
 		private static const combatChoices:Vector.<String> = Vector.<String>(["", "wander"]);
 		
 		public function NpcPalette(catalog:CatalogEdit, room:RoomLight) {
 			super(catalog, room);
 			
 			locationText = Util.textBox("", EditorSettings.PALETTE_XSIZE, Util.DEFAULT_TEXT_HEIGHT, TextFormatAlign.CENTER);
-			Util.addBelow(locationText, itemCombo, 10);
+			Util.addBelow(locationText, itemCombo, 5);
 			
 			attributeDisplay = createAttributeDisplay();
-			Util.addBelow(attributeDisplay, locationText, 10);
+			Util.addBelow(attributeDisplay, locationText, 5);
 			
 			itemCombo.selectedIndex = 0;
 			itemComboBoxChanged(null);
@@ -113,22 +115,30 @@ package angel.roomedit {
 			var exploreLabel:TextField = Util.textBox("Explore mode behavior:", EditorSettings.PALETTE_XSIZE-20);
 			holder.addChild(exploreLabel);
 			exploreCombo = createBrainChooser(exploreChoices);
-			exploreCombo.y = exploreLabel.y + exploreLabel.height;
-			exploreCombo.addEventListener(Event.CHANGE, changeExplore);
-			holder.addChild(exploreCombo);
+			Util.addBelow(exploreCombo, exploreLabel);
+			exploreCombo.addEventListener(Event.CHANGE, function(event:Event):void {
+				changeAttribute("explore", exploreCombo.selectedLabel);
+			});
+			exploreParameters = Util.createTextEditControlBelow(exploreCombo, null, 0, EditorSettings.PALETTE_XSIZE-10, function(event:Event):void {
+				changeAttribute("exploreParam", exploreParameters.text);
+			});
 			
 			var combatLabel:TextField = Util.textBox("Combat mode behavior:", EditorSettings.PALETTE_XSIZE-20);
-			combatLabel.y = exploreCombo.y + exploreCombo.height + 10;
-			holder.addChild(combatLabel);
+			Util.addBelow(combatLabel, exploreParameters, 5);
 			combatCombo = createBrainChooser(combatChoices);
-			combatCombo.y = combatLabel.y + combatLabel.height;
-			combatCombo.addEventListener(Event.CHANGE, changeCombat);
-			holder.addChild(combatCombo);
+			Util.addBelow(combatCombo, combatLabel);
+			combatCombo.addEventListener(Event.CHANGE, function(event:Event):void {
+				changeAttribute("combat", combatCombo.selectedLabel);
+			});
+			combatParameters = Util.createTextEditControlBelow(combatCombo, null, 0, EditorSettings.PALETTE_XSIZE-10, function(event:Event):void {
+				changeAttribute("combatParam", combatParameters.text);
+			});
 			
 			var talkLabel:TextField = Util.textBox("Conversation file:", EditorSettings.PALETTE_XSIZE-20);
-			talkLabel.y = combatCombo.y + combatCombo.height + 10;
-			holder.addChild(talkLabel);
-			talkFile = FilenameControl.createBelow(talkLabel, true, null, 0, EditorSettings.PALETTE_XSIZE-10, changeTalk );
+			Util.addBelow(talkLabel, combatParameters, 10);
+			talkFile = FilenameControl.createBelow(talkLabel, true, null, 0, EditorSettings.PALETTE_XSIZE-10, function(event:Event):void {
+				changeAttribute("talk", talkFile.text);
+			});
 			
 			return holder;
 		}
@@ -145,25 +155,16 @@ package angel.roomedit {
 				if (attributes == null) {
 					exploreCombo.selectedIndex = 0;
 					combatCombo.selectedIndex = 0;
-					talkFile.text = "";
+					talkFile.text = exploreParameters.text = combatParameters.text = "";
 				} else {
 					exploreCombo.selectedItem = Util.itemWithLabelInComboBox(exploreCombo, attributes["explore"]);
-					combatCombo.selectedItem = Util.itemWithLabelInComboBox(exploreCombo, attributes["combat"]);
+					combatCombo.selectedItem = Util.itemWithLabelInComboBox(combatCombo, attributes["combat"]);
 					talkFile.text = attributes["talk"];
+					Util.nullSafeSetText(exploreParameters, attributes["exploreParam"]);
+					Util.nullSafeSetText(combatParameters, attributes["combatParam"]);
 				}
+				adjustParamVisibilities();
 			}
-		}
-		
-		private function changeExplore(event:Event):void {
-			changeAttribute("explore", exploreCombo.selectedLabel);
-		}
-		
-		private function changeCombat(event:Event):void {
-			changeAttribute("combat", combatCombo.selectedLabel);
-		}
-		
-		private function changeTalk(event:Event):void {
-			changeAttribute("talk", talkFile.text);
 		}
 		
 		private function changeAttribute(attributeName:String, newValue:String):void {
@@ -172,7 +173,21 @@ package angel.roomedit {
 				attributes = new Object();
 			}
 			attributes[attributeName] = newValue;
+			if (newValue == "") {
+				if (attributeName == "explore") {
+					attributes["exploreParam"] = "";
+				} else if (attributeName == "combat") {
+					attributes["combatParam"] = "";
+				}
+			}
+			
 			room.setAttributesOfItemAt(locationOfCurrentSelection, attributes);
+			adjustParamVisibilities();
+		}
+		
+		private function adjustParamVisibilities():void {
+			exploreParameters.visible = (exploreCombo.selectedIndex != 0);
+			combatParameters.visible = (combatCombo.selectedIndex != 0);
 		}
 		
 		private function createBrainChooser(choices:Vector.<String>):ComboBox {

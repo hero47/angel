@@ -25,9 +25,9 @@ package angel.game.action {
 			var entityWithId:SimpleEntity = Settings.currentRoom.entityInRoomWithId(id);
 			if (entityWithId is ComplexEntity) {
 				var entity:ComplexEntity = ComplexEntity(entityWithId);
-				entity.bestFriend = Settings.currentRoom.mainPlayerCharacter;
 				entity.combatBrainClass = null;
 				entity.exploreBrainClass = BrainFollow;
+				entity.exploreBrainParam = Settings.currentRoom.mainPlayerCharacter.id;
 				entity.changePlayerControl(true);
 			} else {
 				Alert.show("Script error: no character " + id + " in room for changeToPc");
