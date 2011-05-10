@@ -9,96 +9,52 @@ package angel.roomedit {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
+	import flash.events.Event;
 	import flash.events.MouseEvent;
+	import flash.geom.Point;
 
-	public class PropPalette extends Sprite implements IRoomEditorPalette {
-
-		private var catalog:CatalogEdit;
-		private var room:RoomLight;
-		
-		private var selectedPropName:String = "";
-		private var selectedPropBitmapData:BitmapData;
-		private var selection:Sprite = null;
+	public class PropPalette extends ContentPaletteCommonCode {
 		
 		public function PropPalette(catalog:CatalogEdit, room:RoomLight) {
-			this.room = room;
-			this.catalog = catalog;
-
-			var allPropNames:Array = catalog.allNames(CatalogEntry.PROP);
-		
-			var imagesAcross:int = 3;
-			while (imagesAcross * imagesAcross < allPropNames.length) {
-				imagesAcross += 3;
-			}
-			this.scaleX = this.scaleY = 3 / imagesAcross;
-			
-			graphics.beginFill(EditorSettings.PALETTE_BACKCOLOR, 1);
-			graphics.drawRect(0, 0, imagesAcross*Prop.WIDTH, imagesAcross*Prop.HEIGHT);
-			
-			for (var i:int = 0; i < allPropNames.length; i++) {
-				addPaletteItem(allPropNames[i], i, imagesAcross);
-			}
-			
-			addEventListener(MouseEvent.CLICK, clickListener);
+			super(catalog, room);			
+			itemCombo.selectedIndex = 0;
+			itemComboBoxChanged(null);
 		}
 		
-		public function asSprite():Sprite {
-			return this;
-		}
-		
-		public function get tabLabel():String {
+		override public function get tabLabel():String {
 			return "Props";
 		}
-
-		private function addPaletteItem(propName:String, i:int, imagesAcross:int):void {
-			var sprite:Sprite = new Sprite();
-			sprite.name = propName;
-			addChild(sprite);
-			sprite.x = (i % imagesAcross) * Prop.WIDTH;
-			sprite.y = Math.floor(i / imagesAcross) * Prop.HEIGHT;
-			var propImage:PropImage = catalog.retrievePropImage(propName);
-			var bitmap:Bitmap = new Bitmap(propImage.imageData);
-			sprite.addChild(bitmap);
+		
+		override protected function roomLoaded(event:Event):void {
+			clearSelection();
 		}
 		
-		public function applyToTile(floorTile:FloorTileEdit, remove:Boolean = false):void {
-			if (room.occupied(floorTile.location)) {
-				if (remove) {
-					room.removeItemAt(floorTile.location);
-				} else { 
-					//UNDONE select this prop
-				}
-			} else if (!remove && (selectedPropName != "")) {
-				//CONSIDER: this will need revision if we add resource management
-				var prop:Prop = Prop.createFromBitmapData(selectedPropBitmapData);
-				room.addContentItem(prop, CatalogEntry.PROP, selectedPropName, floorTile.location);
+		override protected function userClickedOccupiedTile(location:Point):void {
+			if (room.typeOfItemAt(location) == CatalogEntry.PROP) {
+				locationOfCurrentSelection = location;
+				changeSelectionOnMapTo(location);
 			}
 		}
 		
-		public function paintWhileDragging():Boolean {
-			return false;
+		override protected function itemComboBoxChanged(event:Event = null):void {
+			var propId:String = itemCombo.selectedLabel;
+			
+			var propImage:PropImage = catalog.retrievePropImage(propId);
+			itemImage.bitmapData = propImage.imageData;
 		}
 		
-		private function moveHilight(newSelection:Sprite):void {
-			if (selection != null) {
-				selection.graphics.beginFill(EditorSettings.PALETTE_BACKCOLOR, 1);
-				selection.graphics.drawRect(0, 0, Prop.WIDTH, Prop.HEIGHT);
-			}
-			selection = newSelection;
-			if (newSelection != null) {
-				selection.graphics.beginFill(EditorSettings.PALETTE_SELECT_COLOR, 1);
-				selection.graphics.drawRect(0, 0, Prop.WIDTH, Prop.HEIGHT);
-			}
-		}	
-
-		private function clickListener(event:MouseEvent):void {
-			if (event.target != this) {
-				var foo:Sprite = (event.target as Sprite);
-				selectedPropName = foo.name;
-				selectedPropBitmapData = Bitmap(foo.getChildAt(0)).bitmapData;
-				moveHilight(foo);
-			}
-		}	
+		override protected function attemptToCreateOneAt(location:Point):void {
+			//CONSIDER: this will need revision if we add resource management
+			var prop:Prop = Prop.createFromBitmapData(itemImage.bitmapData);
+			room.addContentItem(prop, CatalogEntry.PROP, itemCombo.selectedLabel, location);
+			locationOfCurrentSelection = location;
+			changeSelectionOnMapTo(location);
+		}
+		
+		override protected function removeSelectedItem(event:Event):void {
+			super.removeSelectedItem(event);
+			clearSelection();
+		}
 		
 	} // end class PropPalette
 

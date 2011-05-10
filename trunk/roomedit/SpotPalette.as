@@ -181,7 +181,7 @@ package angel.roomedit {
 			}
 			selectedComboEntry = comboEntry;
 			if (selectedComboEntry != null) {
-				selectedComboEntry.marker.filters = [ RoomEditUI.SELECTION_GLOW_FILTER ];
+				selectedComboEntry.marker.filters = RoomEditUI.FILTERS_FOR_SELECTED_ITEM;
 			}
 		}
 		

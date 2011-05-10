@@ -21,7 +21,7 @@ package angel.roomedit {
 		public static const DEFAULT_FLOORSIZE_X:int = 10;
 		public static const DEFAULT_FLOORSIZE_Y:int = 10;
 		public static const SELECT_COLOR:uint = 0x0000ff;
-		public static const SELECTION_GLOW_FILTER:GlowFilter = new GlowFilter(SELECT_COLOR, 1, 20, 20, 2, 1, false, false);
+		public static const FILTERS_FOR_SELECTED_ITEM:Array = [ new GlowFilter(SELECT_COLOR, 1, 20, 20, 2, 1, false, false) ];
 		
 		
 		private var catalog:CatalogEdit;
