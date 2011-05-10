@@ -3,6 +3,7 @@ package angel.roomedit {
 	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.CatalogEntry;
+	import angel.common.Floor;
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Prop;
 	import angel.common.PropImage;
@@ -48,6 +49,18 @@ package angel.roomedit {
 		
 		public function toggleVisibility():void {
 			contentsLayer.alpha = 1.5 - contentsLayer.alpha;
+		}
+
+		public function snapToCenter(tileLoc:Point):void {
+			var whereToMove:Point = PositionOfRoomToCenterTile(tileLoc);
+			this.x = whereToMove.x;
+			this.y = whereToMove.y;
+		}
+	
+		private function PositionOfRoomToCenterTile(tileLoc: Point): Point {
+			var desiredTileCenter:Point = Floor.centerOf(tileLoc);
+			return new Point(stage.stageWidth / 2 - desiredTileCenter.x - Floor.FLOOR_TILE_X / 2, 
+							 stage.stageHeight / 2 - desiredTileCenter.y - Floor.FLOOR_TILE_Y / 2 );
 		}
 
 		// Add something at the given location.  If there's already something there, this replaces previous content.
@@ -160,10 +173,24 @@ package angel.roomedit {
 			}
 			return null;
 		}
+		
+		public function propAt(loc:Point):Prop {
+			if ((loc != null) && (propGrid[loc.x][loc.y] != null)) {
+				return propGrid[loc.x][loc.y].prop;
+			}
+			return null;
+		}
 
 		public function attributesOfItemAt(loc:Point):Object {
 			if (propGrid[loc.x][loc.y] != null) {
 				return propGrid[loc.x][loc.y].attributes;
+			}
+			return null;
+		}
+		
+		public function idOfItemAt(loc:Point):String {
+			if (propGrid[loc.x][loc.y] != null) {
+				return propGrid[loc.x][loc.y].id;
 			}
 			return null;
 		}

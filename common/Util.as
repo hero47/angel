@@ -2,6 +2,7 @@ package angel.common {
 	import angel.game.ComplexEntity;
 	import angel.game.Room;
 	import fl.controls.CheckBox;
+	import fl.controls.ComboBox;
 	import flash.display.DisplayObject;
 	import flash.display.Graphics;
 	import flash.display.Sprite;
@@ -99,6 +100,18 @@ package angel.common {
 			
 			myTextField.text = text;
 			return myTextField;
+		}
+		
+		// It baffles me that ComboBox doesn't provide this as a built-in
+		// (If two or more entries have the same label, this just finds the first one)
+		public static function itemWithLabelInComboBox(combo:ComboBox, label:String):Object {
+			for (var i:int = 0; i < combo.length; ++i) {
+				var item:Object = combo.getItemAt(i);
+				if (combo.itemToLabel(item) == label) {
+					return item;
+				}
+			}
+			return null;
 		}
 		
 		public static function pointOnCircleFromFacing(radius:Number, facing:Number, center:Point = null):Point {
