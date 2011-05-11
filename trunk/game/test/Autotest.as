@@ -5,17 +5,12 @@ package angel.game.test {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class Autotest extends Sprite {
+	public class Autotest {
 		
-		private static var failCount:int = 0;
+		public static var failCount:int = 0;
+		public static var runningFromRoot:Sprite;
 		
 		public function Autotest() {
-			Alert.testMode = true;
-			alertTest();
-			
-			runTest(InventoryTest);
-			
-			trace("Tests finished, failCount", failCount);
 		}
 		
 		public static function assertTrue(test:Boolean, message:String = ""):void {
@@ -50,18 +45,21 @@ package angel.game.test {
 			if (Alert.messageForTestMode != null) {
 				fail("Alert: [" + Alert.messageForTestMode + "] " + message);
 			}
+			clearAlert();
 		}
 		
 		public static function assertAlerted(message:String = ""):void {
 			if (Alert.messageForTestMode == null) {
 				fail("Should have alerted. " + message);
 			}
+			clearAlert();
 		}
 		
 		public static function assertAlertText(text:String, message:String = ""):void {
 			if (Alert.messageForTestMode != text) {
 				fail("Alert [" + Alert.messageForTestMode + "], expected [" + text + "] " + message);
 			}
+			clearAlert();
 		}
 		
 		public static function fail(message:String):void {
@@ -76,10 +74,10 @@ package angel.game.test {
 			assertNoAlert("Something in " + testClass + " caused an alert.");
 		}
 		
-		private function alertTest():void {
-			Autotest.assertNoAlert("Shouldn't have seen alert yet");
-			Alert.show("test");
-			Autotest.assertAlertText("test", "Wrong message");
+		public static function testFunction(testFunction:Function):void {
+			assertNoAlert("Leftover alert before testFunction");
+			testFunction();
+			assertNoAlert("Something in a tested function caused an alert.");
 		}
 		
 		private static function failureFileAndLineNumber(): String {

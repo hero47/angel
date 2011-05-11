@@ -7,6 +7,7 @@ package angel.game {
 	import angel.common.Prop;
 	import angel.common.PropImage;
 	import angel.common.Util;
+	import angel.game.combat.RoomCombat;
 	import angel.game.conversation.ConversationData;
 	import angel.game.conversation.ConversationInterface;
 	import angel.game.test.ConversationNonAutoTest;
@@ -39,7 +40,7 @@ package angel.game {
 		public var mainPlayerCharacter:ComplexEntity;
 		public var size:Point;
 		public var mode:RoomMode;
-		public var spots:Object = new Object(); // associative array mapping from spotId to location
+		private var spots:Object = new Object(); // associative array mapping from spotId to location
 
 		public var activeUi:IRoomUi;
 		private var disabledUi:IRoomUi;
@@ -84,6 +85,31 @@ package angel.game {
 		}
 		*/
 		
+		public function cleanup():void {
+			removeEventListener(Event.ENTER_FRAME, enterFrameListener);
+			if (pauseTimer != null) {
+				pauseTimer.stop();
+				pauseTimer = null;
+			}
+			if (mode != null) {
+				mode.cleanup();
+				mode = null;
+			}
+			Assert.assertTrue(activeUi == null, "UI didn't get shut down");
+			while (contentsLayer.numChildren > 0) {
+				var prop:Prop = Prop(contentsLayer.getChildAt(0));
+				prop.cleanup();
+			}
+			contentsLayer = null;
+			// UNDONE: Does floor need a cleanup?
+			floor = null;
+			if (parent != null) {
+				parent.removeChild(this);
+			}
+			if (Settings.currentRoom == this) {
+				Settings.currentRoom = null;
+			}
+		}
 		
 		private var changingModeTo:Class;
 		public function changeModeTo(newModeClass:Class):void {
@@ -109,7 +135,7 @@ package angel.game {
 				timer.addEventListener(TimerEvent.TIMER_COMPLETE, ensureMovementFinishedThenChangeMode);
 				timer.start();
 			} else {
-				mode = new changingModeTo(this);
+				mode = (changingModeTo == null ? null : new changingModeTo(this));
 			}
 		}
 		
@@ -430,6 +456,23 @@ Error! Pause is stuck. Attempting unstick.
 		
 		public function blocksGrenade(x:int, y:int):Boolean {
 			return (solidness(x,y) & Prop.FILLS_TILE) != 0;
+		}
+		
+		public function spotLocation(spotId:String):Point {
+			return spots[spotId];
+		}
+		
+		public function spotLocationWithDefault(spotId:String):Point {
+			var location:Point = spotLocation(spotId);
+			return (location == null ? new Point(0, 0) : location);
+		}
+		
+		public function addOrMoveSpot(spotId:String, location:Point):void {
+			spots[spotId] = location;
+		}
+		
+		public function removeSpot(spotId:String):void {
+			delete spots[spotId];
 		}
 		
 		private var debugPauseCount:int;

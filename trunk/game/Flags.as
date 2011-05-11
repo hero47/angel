@@ -62,7 +62,6 @@ package angel.game {
 				Alert.show("Warning: unknown flag [" + id + "].");
 			}
 			flags[id] = value;
-			trace("Set flag", id, value);
 		}
 		
 		public static function getValue(id:String):Boolean {

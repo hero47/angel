@@ -21,6 +21,13 @@ package angel.common {
 		// Don't use this constructor -- use static method LoadFile, LoadBytes, or LoadBytesFromFile
 		// Callback takes complete event as parameter; callbackFail takes no parameter
 		public function LoaderWithErrorCatching(type:int, filename:String, bytes:ByteArray, callbackWhenComplete:Function, callbackForFailure:Function) {		
+			if (((type == LOAD_FILE) || (type == LOAD_BYTES_FROM_FILE)) && ((filename == null) || (filename == ""))) {
+				Alert.show("Error! Missing filename.");
+				if (callbackForFailure != null) {
+					callbackForFailure();
+				}
+				return;
+			}
 			callback = callbackWhenComplete;
 			callbackFail = callbackForFailure;
 			filenameForErrorMessage = filename;
@@ -67,7 +74,7 @@ package angel.common {
 		
 		override protected function cleanup():void {
 			dispatcher.removeEventListener(Event.COMPLETE, completeListener);
-			dispatcher.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorListener);
+			dispatcher.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorListener);
 			dispatcher.removeEventListener(IOErrorEvent.IO_ERROR, ioErrorListener);
 			dispatcher = null;
 			loader = null;

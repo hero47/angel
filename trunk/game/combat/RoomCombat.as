@@ -134,7 +134,8 @@ package angel.game.combat {
 		public function entityWillBeRemovedFromRoom(entity:SimpleEntity):void {
 			if (fighters.indexOf(entity) >= 0) {
 				removeFighterFromCombat(entity as ComplexEntity);
-				checkForCombatOver();
+				// NOTE: I did have checkForCombatOver() here, but decided that room scripts should be free to
+				// manipulate entities without regard to whether an intermediate state leaves no enemies in the room.
 			}
 		}
 		
@@ -148,7 +149,8 @@ package angel.game.combat {
 					augmentedReality.addFighter(entity);
 				} else {
 					removeFighterFromCombat(entity as ComplexEntity);
-					checkForCombatOver();
+					// NOTE: I did have checkForCombatOver() here, but decided that room scripts should be free to
+					// manipulate entities without regard to whether an intermediate state leaves no enemies in the room.
 				}
 			} else if (shouldBeAFighter) {
 				initEntityForCombat(entity as ComplexEntity);
@@ -330,7 +332,7 @@ package angel.game.combat {
 		// Advance to that entity's fire phase.
 		private function finishedMovingListener(event:EntityEvent):void {
 			trace(event.entity.aaId, "finished moving, iFighter", iFighterTurnInProgress);
-			if (combatOver) {
+			if (checkForCombatOver()) {
 				// don't allow next enemy to fire, don't enable player UI, just wait for them to OK the message,
 				// which will end combat mode.
 				return;
@@ -396,6 +398,11 @@ package angel.game.combat {
 				if (enemyTurnOverlay.parent != null) {
 					enemyTurnOverlay.parent.removeChild(enemyTurnOverlay);
 				}
+				if (checkForCombatOver()) {
+					// don't allow next enemy to move, don't enable player UI, just wait for them to OK the message,
+					// which will end combat mode.
+					return;
+				}
 				room.enableUi(moveUi, fighter);
 				modeLabel.text = PLAYER_MOVE;
 			} else {
@@ -429,10 +436,14 @@ package angel.game.combat {
 			}
 		}
 		
-		private function checkForCombatOver():void {
+		public function checkForCombatOver():Boolean {
+			if (combatOver) {
+				// Once it's over, it's over.
+				return true;
+			}
 			if (Settings.controlEnemies) {
 				// If we're in the "control enemies" test mode, then there are no non-players and so combat is never over.
-				return;
+				return false;
 			}
 			
 			var playerAlive:Boolean = false;
@@ -445,7 +456,7 @@ package angel.game.combat {
 					enemyAlive = true;
 				}
 				if (playerAlive && enemyAlive) {
-					return;
+					return false;
 				}
 			}
 			combatOver = true;
@@ -453,6 +464,7 @@ package angel.game.combat {
 			// alter in some scripted fashion. But for now, we just drop back to explore mode and everyone comes
 			// back to life.
 			Alert.show(playerAlive ? "You won." : "You have been taken out.", { callback:combatOverOk } );
+			return true;
 		}
 		
 		private function combatOverOk(button:String):void {
