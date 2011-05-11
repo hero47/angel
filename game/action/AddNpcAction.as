@@ -1,6 +1,8 @@
 package angel.game.action {
+	import angel.common.Alert;
 	import angel.game.Settings;
 	import angel.game.Walker;
+	import flash.geom.Point;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -27,7 +29,20 @@ package angel.game.action {
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(doAtEnd:Vector.<Function>):Object {
-			Settings.currentRoom.addEntityUsingItsLocation(Walker.createFromRoomContentsXml(walkerXml, CONTENTS_VERSION, Settings.catalog));
+			var walker:Walker = Walker.createFromRoomContentsXml(walkerXml, CONTENTS_VERSION, Settings.catalog);
+			var spotId:String = walkerXml.@spot;
+			var location:Point;
+			if (spotId != "") {
+				location = Settings.currentRoom.spotLocation(spotId);
+				if (location == null) {
+					Alert.show("Error in addNpc: spot '" + spotId + "' undefined in current room.");
+				}
+			}
+			if (location == null) {
+				Settings.currentRoom.addEntityUsingItsLocation(walker);
+			} else {
+				Settings.currentRoom.addEntity(walker, location);
+			}
 			return null;
 		}
 		

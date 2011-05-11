@@ -58,7 +58,7 @@ package angel.common {
 		}
 		
 		protected function message(text:String):void {
-			if (collectMessages != null) {
+			if (collectMessages == null) {
 				Alert.show(text);
 			} else {
 				collectMessages += text;

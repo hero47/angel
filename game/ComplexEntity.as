@@ -97,7 +97,6 @@ package angel.game {
 		}
 		
 		override public function cleanup():void {
-			trace("cleanup", aaId);
 			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
 			super.cleanup();
 		}

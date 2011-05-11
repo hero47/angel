@@ -58,14 +58,20 @@ package angel.common {
 			existingObject.parent.addChild(newObject);
 		}
 
-		public static function createTextEditControlBelow(previousControl:DisplayObject, labelText:String, labelWidth:int, fieldWidth:int, changeHandler:Function):TextField {
+		public static function createTextEditControlBelow(previousControl:DisplayObject, labelText:String, labelWidth:int, fieldWidth:int, changeHandler:Function, optionalXInsteadOfAligning:int = int.MAX_VALUE):TextField {
 			var textField:TextField = Util.textBox("", fieldWidth, 20, TextFormatAlign.LEFT, true);
 			if (labelText != null) {
 				var label:TextField = Util.textBox(labelText + ":", labelWidth, 20);
 				addBelow(label, previousControl, 5);
+				if (optionalXInsteadOfAligning != int.MAX_VALUE) {
+					label.x = optionalXInsteadOfAligning;
+				}
 				addBeside(textField, label, 5);
 			} else {
 				addBelow(textField, previousControl, 5);
+				if (optionalXInsteadOfAligning != int.MAX_VALUE) {
+					textField.x = optionalXInsteadOfAligning;
+				}
 			}
 			if (changeHandler != null) {
 				textField.addEventListener(Event.CHANGE, changeHandler);

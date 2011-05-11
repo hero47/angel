@@ -1,4 +1,6 @@
 package angel.game.conversation {
+	import angel.game.combat.RoomCombat;
+	import angel.game.Room;
 	import angel.game.SimpleEntity;
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
@@ -33,21 +35,23 @@ package angel.game.conversation {
 		private var pcBox:ConversationBox;
 		private var target:SimpleEntity;
 		private var conversationData:ConversationData;
+		private var room:Room;
 		
 		public var doAtEnd:Vector.<Function> = new Vector.<Function>();
 		
 		public function ConversationInterface(target:SimpleEntity, conversationData:ConversationData) {
 			this.target = target;
+			this.room = target.room;
 			this.conversationData = conversationData;
 			var glow:GlowFilter = new GlowFilter(TARGET_HILIGHT_COLOR, 1, 20, 20, 2, 1, false, false);
 			target.filters = [ glow ];
-			target.room.snapToCenter(target.location);
+			room.snapToCenter(target.location);
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
 		}	
 		
 		private function addedToStageListener(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
-			target.room.disableUi();
+			room.disableUi();
 			conversationData.runConversation(this);
 		}
 		
@@ -98,6 +102,9 @@ package angel.game.conversation {
 			while (doAtEnd.length > 0) {
 				var f:Function = doAtEnd.shift();
 				f();
+			}
+			if (room.mode is RoomCombat) {
+				RoomCombat(room.mode).checkForCombatOver();
 			}
 		}
 		

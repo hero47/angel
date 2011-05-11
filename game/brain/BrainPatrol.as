@@ -21,7 +21,7 @@ package angel.game.brain {
 			if (param != null) {
 				var goalSpots:Array = param.split(",");
 				for (var i:int = 0; i < goalSpots.length; ++i) {
-					var goal:Point = entity.room.spots[goalSpots[i]];
+					var goal:Point = entity.room.spotLocation(goalSpots[i]);
 					if (goal == null) {
 						Alert.show("Error! Unknown spot " + goalSpots[i] + " in patrol route for " + entity.id);
 					} else {

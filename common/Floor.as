@@ -107,6 +107,8 @@ package angel.common {
 			dispatchEvent(new Event(Event.INIT));
 		}
 		
+		
+		
 	} //end class Floor
 	
 }

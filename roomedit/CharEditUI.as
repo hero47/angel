@@ -61,18 +61,18 @@ package angel.roomedit {
 			addChild(propChooser);
 			
 			nameTextField = Util.createTextEditControlBelow(propChooser, "Display Name", 100, 100,
-					function(event:Event):void { changeWalkerImageProperty(event.target.text, "displayName", Defaults.DISPLAY_NAME) });
+					function(event:Event):void { changeWalkerImageProperty(event.target.text, "displayName", Defaults.DISPLAY_NAME) }, 0);
 			healthTextField = Util.createTextEditControlBelow(nameTextField, "Hits", 100, 40,
-					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "health", Defaults.HEALTH) });
+					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "health", Defaults.HEALTH) }, 0);
 			damageTextField = Util.createTextEditControlBelow(healthTextField, "Damage", 100, 40,
-					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "damage", Defaults.DAMAGE) });
+					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "damage", Defaults.DAMAGE) }, 0);
 			movePointsTextField = Util.createTextEditControlBelow(damageTextField, "Move Points", 100, 40,
-					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "movePoints", Defaults.MOVE_POINTS) } );
+					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "movePoints", Defaults.MOVE_POINTS) }, 0 );
 			changeImageControl = FilenameControl.createBelow(movePointsTextField, false, "Image", 0, 220,
 					function(event:Event):void { 
 							var walkerId:String = propCombo.selectedLabel;
 							catalog.changeFilename(walkerId, changeImageControl.text);
-					} );
+					}, 0 );
 			
 			if (startId == null) {
 				propCombo.selectedIndex = 0;

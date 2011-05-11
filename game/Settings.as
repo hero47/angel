@@ -119,7 +119,7 @@ package angel.game {
 					id = "PLAYER-" + i;
 				}
 				++i;
-				entity = new Walker(catalog.retrieveWalkerImage(id), "PC-" + id);
+				entity = new Walker(catalog.retrieveWalkerImage(id), id);
 				entity.exploreBrainClass = entity.combatBrainClass = null;
 				if (pc.@health.length() > 0) {
 					entity.maxHealth = entity.currentHealth = pc.@health;
