@@ -51,6 +51,7 @@ package angel.game.conversation {
 		
 		private function addedToStageListener(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
+			room.pauseGameTimeIndefinitely();
 			room.disableUi();
 			conversationData.runConversation(this);
 		}
@@ -97,7 +98,8 @@ package angel.game.conversation {
 				parent.removeChild(this);
 			}
 			target.filters = [];
-			target.room.restoreLastUi();
+			room.unpauseGameTimeAndDeleteCallback();
+			room.restoreLastUi();
 			
 			while (doAtEnd.length > 0) {
 				var f:Function = doAtEnd.shift();

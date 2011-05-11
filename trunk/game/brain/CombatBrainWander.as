@@ -31,7 +31,7 @@ package angel.game.brain {
 
 		
 		public function chooseMoveAndDrawDots():void {
-			trace(me.aaId, "Choose move and draw dots");
+			trace(me.aaId, "Wander: Choose move and draw dots");
 			
 			var tiles:int = fillListWithReachableTiles();
 			if (tiles == 0) {
@@ -57,18 +57,8 @@ package angel.game.brain {
 		}
 		
 		public function doFire():void {
-			trace(me.aaId, "do fire");
-			combat.fireAndAdvanceToNextPhase(me, getFirstAvailableTarget());
-		}
-		
-		private function getFirstAvailableTarget():ComplexEntity {
-			for (var i:int = 0; i < combat.fighters.length; i++) {
-				var fighter:ComplexEntity = combat.fighters[i];
-				if (fighter.isPlayerControlled && Util.entityHasLineOfSight(me, fighter.location)) {
-					return fighter;
-				}
-			}
-			return null;
+			trace(me.aaId, "do fire (CombatBrainWander)");
+			UtilBrain.fireAtFirstAvailableTarget(me, combat);
 		}
 		
 		// return total number of reachable tiles
@@ -81,7 +71,7 @@ package angel.game.brain {
 			for (var x:int = 0; x < combat.room.size.x; ++x) {
 				for (var y:int = 0; y < combat.room.size.y; ++y) {
 					if (steps[x][y] > 0) {
-						reachable[me.gaitForDistance(steps[x][y] - 1)].push(new Point(x, y));
+						reachable[me.minGaitForDistance(steps[x][y] - 1)].push(new Point(x, y));
 						++count;
 					}
 				}

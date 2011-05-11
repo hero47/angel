@@ -151,7 +151,7 @@ package angel.game.combat {
 		
 		private function doPlayerFireFromCover():void {
 			combat.mover.displayReturnMarker(player.location);
-			combat.beginFireFromCoverMove(player.location);
+			combat.setupFireFromCoverMove(player);
 			doPlayerMove(ComplexEntity.GAIT_RUN);
 		}
 		

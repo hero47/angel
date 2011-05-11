@@ -19,6 +19,7 @@ package angel.game.combat {
 		private var dots:Vector.<Shape> = new Vector.<Shape>(); // The dots on screen representing movement path
 		private var endIndexes:Vector.<int> = new Vector.<int>(); // indexes into path[] marking segment ends (aka waypoints)
 		private var path:Vector.<Point> = new Vector.<Point>(); // The tiles entity intends to move through, in sequence
+																// NOTE: path does not include the starting tile.
 		private var returnMarker:Shape;
 		
 		private var combat:RoomCombat;
@@ -115,11 +116,11 @@ package angel.game.combat {
 			if (shootFromCoverValid(entity, distance)) {
 				return RETURN_COLOR;
 			}
-			return colorForGait(entity.gaitForDistance(distance));
+			return colorForGait(entity.minGaitForDistance(distance));
 		}
 		
 		public function minimumGaitForPath(entity:ComplexEntity):int {
-			return entity.gaitForDistance(path.length);
+			return entity.minGaitForDistance(path.length);
 		}
 		
 		/******** Routines sharing elements of actual movement & visual elements **********/
@@ -136,7 +137,7 @@ package angel.game.combat {
 			}
 			dots.length = path.length;
 			var endIndexIndex:int = 0;
-			var gait:int = entity.gaitForDistance(path.length);
+			var gait:int = entity.minGaitForDistance(path.length);
 			for (var i:int = 0; i < path.length; i++) {
 				var isEnd:Boolean = (i == endIndexes[endIndexIndex]);
 				if (path.length == 1 && shootFromCoverValidForCurrentLocationAndPath(entity)) {

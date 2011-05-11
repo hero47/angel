@@ -59,9 +59,7 @@ package angel.game {
 		public var displayName:String;
 		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
 		public var combatMovePoints:int;
-		public var walkPoints:int;
-		public var runPoints:int;
-		public var sprintPoints:int;
+		public var maxDistanceForGait:Vector.<int>;
 		public var maxHealth:int = 1;
 		public var currentHealth:int;
 		public var actionsRemaining:int;
@@ -173,9 +171,9 @@ package angel.game {
 			// errors fall into the unspecified one).
 			// Then, once that's figured out, convert them to totals.
 			combatMovePoints = points;
-			walkPoints = combatMovePoints * Settings.walkPercent/100;
-			runPoints = combatMovePoints * Settings.runPercent/100;
-			sprintPoints = combatMovePoints * Settings.sprintPercent/100;
+			var walkPoints:int = combatMovePoints * Settings.walkPercent/100;
+			var runPoints:int = combatMovePoints * Settings.runPercent/100;
+			var sprintPoints:int = combatMovePoints * Settings.sprintPercent/100;
 			if (walkPoints + runPoints + sprintPoints == 0) {
 				walkPoints = runPoints = combatMovePoints / 3;
 			}
@@ -192,6 +190,7 @@ package angel.game {
 			
 			runPoints += walkPoints;
 			sprintPoints += runPoints;
+			maxDistanceForGait = Vector.<int>( [0, walkPoints, runPoints, sprintPoints] );
 		}
 		
 		public function adjustBrainForRoomMode(mode:RoomMode):void {
@@ -299,18 +298,13 @@ package angel.game {
 			turnToFacing((angle / 45) % 8);
 		}
 		
-		public function gaitForDistance(distance:int):int {
-			if (distance == 0) {
-				return ComplexEntity.GAIT_NO_MOVE
-			} else if (distance <= walkPoints) {
-				return ComplexEntity.GAIT_WALK;
-			} else if (distance <= runPoints) {
-				return ComplexEntity.GAIT_RUN;
-			} else if (distance <= sprintPoints) {
-				return ComplexEntity.GAIT_SPRINT;
-			} else {
-				return ComplexEntity.GAIT_TOO_FAR;
+		public function minGaitForDistance(distance:int):int {
+			for (var gait:int = GAIT_NO_MOVE; gait < GAIT_TOO_FAR; ++gait) {
+				if (distance <= maxDistanceForGait[gait]) {
+					return gait;
+				}
 			}
+			return GAIT_TOO_FAR;
 		}
 		
 		// fills in coordsForEachFrameOfMove, depthChangePerFrame, and facing
@@ -410,6 +404,7 @@ package angel.game {
 		
 		// if from is null, find path from current location
 		// NOTE: does not check whether the goal tile itself is occupied!
+		// NOTE: path does not include the starting tile.
 		public function findPathTo(goal:Point, from:Point = null):Vector.<Point> {
 			if (from == null) {
 				from = new Point(myLocation.x, myLocation.y);
@@ -419,6 +414,7 @@ package angel.game {
 			if (!Pathfinder.findShortestPathTo(this, from, goal, myPath)) {
 				return null;
 			}
+			trace("path from", from, "to", goal, myPath);
 			
 			return myPath;
 		}

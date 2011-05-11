@@ -11,7 +11,7 @@ package angel.game.brain {
 	 */
 	public class BrainPatrol implements IBrain {
 		private var me:ComplexEntity;
-		private var goals:Vector.<Point> = new Vector.<Point>();
+		private var goals:Vector.<Point>;
 		private var currentGoalIndex:int = 0;
 		
 		private static const DELAY_AT_EACH_SPOT:int = 1;
@@ -19,15 +19,7 @@ package angel.game.brain {
 		public function BrainPatrol(entity:ComplexEntity, roomExplore:RoomExplore, param:String) {
 			me = entity;
 			if (param != null) {
-				var goalSpots:Array = param.split(",");
-				for (var i:int = 0; i < goalSpots.length; ++i) {
-					var goal:Point = entity.room.spotLocation(goalSpots[i]);
-					if (goal == null) {
-						Alert.show("Error! Unknown spot " + goalSpots[i] + " in patrol route for " + entity.id);
-					} else {
-						goals.push(goal);
-					}
-				}
+				goals = UtilBrain.pointsFromCommaSeparatedSpots(me.room, param, " in patrol route for " + entity.id);
 				if (goals.length > 0) {
 					me.addEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
 					continuePatrol(roomExplore);
@@ -35,6 +27,7 @@ package angel.game.brain {
 			}
 			
 		}
+		
 		
 		/* INTERFACE angel.game.brain.IBrain */
 		
