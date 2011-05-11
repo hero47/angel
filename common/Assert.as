@@ -39,6 +39,9 @@ package angel.common {
 			// it's too long and we can get the info from the method trace
 			var regEx:RegExp = /\w:[\\\/]([\w-]+[\\\/])*\w+.as/ig;
 			var newStack:String = new String("\n");
+			while (lines[0].indexOf("Assert$") >= 0) {
+				lines.shift();
+			}
 			for (var i:int = 0; i < lines.length; i++) {
 				var line:String = lines[i];
 				line = line.replace(regEx, "");

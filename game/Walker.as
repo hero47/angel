@@ -8,6 +8,9 @@ package angel.game {
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.BrainPatrol;
 	import angel.game.brain.BrainWander;
+	import angel.game.brain.CombatBrainPatrolRun;
+	import angel.game.brain.CombatBrainPatrolSprint;
+	import angel.game.brain.CombatBrainPatrolWalk;
 	import angel.game.brain.CombatBrainWander;
 	import angel.game.combat.Gun;
 	import angel.game.conversation.ConversationData;
@@ -103,7 +106,8 @@ package angel.game {
 		}
 
 		private static const exploreBrain:Object = { fidget:BrainFidget, follow:BrainFollow, patrol:BrainPatrol, wander:BrainWander };
-		private static const combatBrain:Object = { wander:CombatBrainWander };
+		private static const combatBrain:Object = { patrolWalk:CombatBrainPatrolWalk, patrolRun:CombatBrainPatrolRun, 
+		patrolSprint:CombatBrainPatrolSprint, wander:CombatBrainWander };
 
 		public static function exploreBrainClassFromString(brainName:String):Class {
 			if ((brainName == null) || (brainName == "")) {

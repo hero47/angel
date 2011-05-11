@@ -154,7 +154,7 @@ package angel.game.test {
 			if (Settings.currentRoom.mode is RoomExplore) {
 				Autotest.assertTrue(nei5.brain is BrainFidget);
 			} else if (Settings.currentRoom.mode is RoomCombat) {
-				Autotest.assertTrue(nei5.brain is CombatBrainWander);
+				Autotest.assertTrue(nei5.brain is CombatBrainWander, "Note: This will fail if controlEnemies==true");
 			} else {
 				Autotest.assertEqual(nei5.brain, null);
 			}

@@ -47,7 +47,7 @@ package angel.game.combat {
 		private var moveUi:CombatMoveUi;
 		private var fireUi:CombatFireUi;
 		public var mover:CombatMover;
-		private var extraDefenseForOpportunityFire:int = 0;
+		private var currentFighterHasOpportunityFireCoverFrom:Vector.<ComplexEntity> = new Vector.<ComplexEntity>();
 		private var returnHereAfterFire:Point;
 		
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
@@ -58,8 +58,8 @@ package angel.game.combat {
 		private static const PLAYER_FIRE:String = "Attack";
 		private static const ENEMY_FIRE:String = "Enemy Action";
 		
-		private static const PAUSE_TO_VIEW_MOVE_TIME:int = 1000;
-		private static const PAUSE_TO_VIEW_FIRE_TIME:int = 1000;
+		private static const PAUSE_TO_VIEW_MOVE_SECONDS:Number = 1;
+		private static const PAUSE_TO_VIEW_FIRE_SECONDS:Number = 1;
 		
 		private var modeLabel:TextField;
 		private var enemyTurnOverlay:Shape;
@@ -102,7 +102,7 @@ package angel.game.combat {
 		
 		public function cleanup():void {
 			trace("***ENDING COMBAT***");
-			Assert.assertTrue(!room.paused, "Closing down combat ui while pause timer active");
+			room.unpauseGameTimeAndDeleteCallback();
 			
 			room.disableUi();
 			room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire);
@@ -193,6 +193,7 @@ package angel.game.combat {
 			Assert.assertTrue(indexOfDeadFighter >= 0, "Removing fighter that's already removed: " + deadFighter.aaId);
 			if (indexOfDeadFighter == iFighterTurnInProgress) {
 				mover.clearPath();
+				returnHereAfterFire = null;
 			}
 			if ((room.activeUi != null) && (room.activeUi.currentPlayer == deadFighter)) {
 				Assert.fail("Removing active player from combat. This WILL break things.");
@@ -225,7 +226,7 @@ package angel.game.combat {
 			}
 			
 			// Give the player some time to gaze at the fire graphic before continuing with turn.
-			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
+			room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, finishedFire);
 		}
 			
 		public function throwGrenadeAndAdvanceToNextPhase(shooter:ComplexEntity, targetLocation:Point):void {
@@ -234,15 +235,26 @@ package angel.game.combat {
 			grenade.throwAt(shooter, targetLocation);
 			
 			// Give the player some time to gaze at the fire graphic before continuing with turn.
-			room.pause(PAUSE_TO_VIEW_FIRE_TIME, finishedFire);
+			room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, finishedFire);
 		}
 		
-		public function beginFireFromCoverMove(start:Point):void {
-			extraDefenseForOpportunityFire = Settings.fireFromCoverDamageReduction;
-			returnHereAfterFire = start;
+		public function setupFireFromCoverMove(mover:ComplexEntity):void {
+			Assert.assertTrue(mover == currentFighter(), "wrong fighter");
+			Assert.assertTrue(currentFighterHasOpportunityFireCoverFrom.length == 0, "cover list not cleared");
+			var moverLocation:Point = mover.location;
+			for each (var possibleShooter:ComplexEntity in fighters) {
+				if (opposingFactions(possibleShooter, mover) && !Util.entityHasLineOfSight(possibleShooter, moverLocation)) {
+					currentFighterHasOpportunityFireCoverFrom.push(possibleShooter);
+				}
+			}
+			returnHereAfterFire = moverLocation;
 		}
 		
 		/**************** opportunity fire ***********************/
+		
+		private function opposingFactions(fighterA:ComplexEntity, fighterB:ComplexEntity):Boolean {
+			return (fighterA.isReallyPlayer != fighterB.isReallyPlayer);
+		}
 		
 		private function checkForOpportunityFire(event:EntityEvent):void {
 			var entityMoving:ComplexEntity = ComplexEntity(event.entity);
@@ -252,7 +264,7 @@ package angel.game.combat {
 			//NOTE: This assumes only two factions. If we add civilians and want the enemy NPCs
 			//to be able to shoot them (or the PCs to avoid shooting them) it will need revision.
 			for (var i:int = 0; i < fighters.length; ++i) {
-				if (fighters[i].isReallyPlayer != entityMoving.isReallyPlayer) {
+				if (opposingFactions(fighters[i], entityMoving)) {
 					// WARNING: using ||= prevents it from executing the function if it's already true!
 					someoneDidOpportunityFire = (doOpportunityFireIfLegal(fighters[i], entityMoving) || someoneDidOpportunityFire);
 					if (entityMoving.currentHealth <= 0) {
@@ -264,7 +276,8 @@ package angel.game.combat {
 			}
 			
 			if (someoneDidOpportunityFire) {
-				room.pause(PAUSE_TO_VIEW_FIRE_TIME, null);
+				//No callback here because we're in the middle of movement and next phase will start from end-move listener
+				room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, null);
 			}
 				
 		}
@@ -276,7 +289,12 @@ package angel.game.combat {
 				var gun:Gun = shooter.currentGun();
 				if ((gun != null) && (gun.expectedDamage(shooter, target) >= Settings.minForOpportunity) &&
 						Util.entityHasLineOfSight(shooter, target.location)) {
-					shooter.fireCurrentGunAt(target, extraDefenseForOpportunityFire);
+					var extraDefense:int = 0;
+					if (currentFighterHasOpportunityFireCoverFrom.indexOf(shooter) >= 0) {
+						extraDefense = Settings.fireFromCoverDamageReduction;
+					}
+					trace(shooter.aaId, "opportunity fire at", target.aaId, "extraDefense=", extraDefense);
+					shooter.fireCurrentGunAt(target, extraDefense);
 					return true;
 				}
 			}
@@ -338,7 +356,7 @@ package angel.game.combat {
 				return;
 			}
 			
-			extraDefenseForOpportunityFire = 0;
+			currentFighterHasOpportunityFireCoverFrom.length = 0;
 			
 			//event.entity won't match currentFighter() if moving entity was killed by opportunity fire
 			if (event.entity != currentFighter()) {
@@ -369,6 +387,7 @@ package angel.game.combat {
 			
 			if (returnHereAfterFire != null) {
 				room.changeEntityLocation(currentFighter(), currentFighter().location, returnHereAfterFire);
+				augmentedReality.adjustAllEnemyVisibility();
 				returnHereAfterFire = null;
 				mover.removeReturnMarker();
 			}
@@ -415,7 +434,7 @@ package angel.game.combat {
 				// start complicating the AI, then there may be a delay before the move dots are drawn, but
 				// the total time between enemy's turn starting and enemy beginning to follow dots should
 				// stay at that time unless we're really slow.)
-				room.pause(PAUSE_TO_VIEW_MOVE_TIME, doPlottedEnemyMove);
+				room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_MOVE_SECONDS, doPlottedEnemyMove);
 				
 				ICombatBrain(fighter.brain).chooseMoveAndDrawDots();
 			}

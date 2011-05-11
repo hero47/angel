@@ -22,6 +22,7 @@ package angel.game {
 	import flash.filters.GlowFilter;
 	import flash.geom.Point;
 	import flash.ui.Keyboard;
+	import flash.utils.getTimer;
 	import flash.utils.Timer;
 
 	public class Room extends Sprite {
@@ -46,11 +47,11 @@ package angel.game {
 		private var disabledUi:IRoomUi;
 		private var lastUiPlayer:ComplexEntity;
 		private var dragging:Boolean = false;
-		private var gameIsPaused:Boolean = false;
-		private var pauseTimer:Timer;
-		private var pauseTimerInternalCallback:Function;
 		
-		private var tileWithFilter:FloorTile;
+		private var pauseGameTimeUntil:int = 0;
+		private var gameTimePauseCallback:Function;		
+		
+		private var tileWithHilight:FloorTile;
 		private var scrollingTo:Point = null;
 				
 		public function Room(floor:Floor) {
@@ -87,15 +88,11 @@ package angel.game {
 		
 		public function cleanup():void {
 			removeEventListener(Event.ENTER_FRAME, enterFrameListener);
-			if (pauseTimer != null) {
-				pauseTimer.stop();
-				pauseTimer = null;
-			}
 			if (mode != null) {
 				mode.cleanup();
 				mode = null;
 			}
-			Assert.assertTrue(activeUi == null, "UI didn't get shut down");
+			Assert.assertTrue(activeUi == null, "UI didn't get shut down by mode cleanup");
 			while (contentsLayer.numChildren > 0) {
 				var prop:Prop = Prop(contentsLayer.getChildAt(0));
 				prop.cleanup();
@@ -139,58 +136,57 @@ package angel.game {
 			}
 		}
 		
-		public function pause(milliseconds:int, callback:Function = null):void {
-			trace("Pausing", milliseconds);
-			Assert.assertTrue(!gameIsPaused, "Pause when already paused");
-			gameIsPaused = true;
-			
-/*
- * We're seeing a mysterious intermittant non-reproducible bug where occasionally the
- * game will just get stuck in pause.  I've specifically seen this happen after
- * a player character reserved fire; traces showed "Pausing 1000" but the trace in
- * the callback function was never executed.  I had added code in the room's EnterFrame
- * handler to detect this case, try restarting the timer, and if the pause went on
- * too long generate a timer event itself; this is what the trace showed.
-			
-PC-barbara-1 reserve fire
-Pausing 1000
-Seconds paused aprx: 1 Should pause: 1
-Error! Game is paused but timer isn't running.  Starting it.
-Seconds paused aprx: 2 Should pause: 1
-Error! Game is paused but timer isn't running.  Starting it.
-Seconds paused aprx: 3 Should pause: 1
-Error! Pause is stuck. Attempting unstick.
-Error! Game is paused but timer isn't running.  Starting it.
-Seconds paused aprx: 4 Should pause: 1
-Error! Pause is stuck. Attempting unstick.
-...
-
- * My next attempt at a patch is to stash a reference to the function that the timer
- * should be calling, and call that directly in the "attempting unstick" case.
- * 
- * I wish I had an explanation for this!
- * It is feeling like a bug in Flash's timer handling, but myriads of people use timers,
- * so it's more likely something I'm doing wrong.
- */
-			
-			Assert.assertTrue(pauseTimer == null, "Overwriting pauseTimer");
-			pauseTimer = new Timer(milliseconds, 1);
-			pauseTimerInternalCallback = function(event:TimerEvent):void {
-				trace("Pause timer complete");
-				pauseTimer = null;
-				pauseTimerInternalCallback = null;
-				Assert.assertTrue(gameIsPaused, "Something unpaused us before pause timer expired");
-				gameIsPaused = false;
-				if (callback != null) {
-					callback();
-				}
-			}
-			pauseTimer.addEventListener(TimerEvent.TIMER_COMPLETE, pauseTimerInternalCallback, false, 0, true );
-			pauseTimer.start();
+		public function pauseGameTimeIndefinitely():void {
+			trace("Pausing game time indefinitely");
+			Assert.assertTrue(!gameTimeIsPaused, "Pause indefinitely when already paused");
+			pauseGameTimeUntil = int.MAX_VALUE;
 		}
 		
-		public function get paused():Boolean {
-			return gameIsPaused;
+		public function pauseGameTimeForFixedDelay(seconds:Number, callback:Function = null):void {
+			trace("Pausing game time for", seconds, "seconds", (callback == null) ? "no callback" : "with callback");
+			if (gameTimeIsPaused) { // Something is screwed up, but try to continue gracefully
+				pauseGameTimeUntil = 0;
+				if (gameTimePauseCallback != null) {
+					Assert.fail("Pause when already paused! Calling original callback.");
+					var temp:Function = gameTimePauseCallback;
+					gameTimePauseCallback = null;
+					temp();
+				} else {
+					Assert.fail("Pause when already paused! No callback on first pause.");
+				}
+			}
+			pauseGameTimeUntil = getTimer() + seconds * 1000;
+			Assert.assertTrue(gameTimePauseCallback == null, "Overwriting game time pause callback");
+			gameTimePauseCallback = callback;
+		}
+		
+		public function get gameTimeIsPaused():Boolean {
+			return (pauseGameTimeUntil > 0);
+		}
+		
+		// For use when mode change makes pause & callback obsolete
+		public function unpauseGameTimeAndDeleteCallback():void {
+			trace("Deleting game time pause & callback");
+			pauseGameTimeUntil = 0;
+			gameTimePauseCallback = null;
+		}
+		
+		private function handlePauseAndAdvanceGameTimeIfNotPaused():void {
+			var currentTime:int = getTimer();
+			if ((pauseGameTimeUntil > 0) && (pauseGameTimeUntil <= currentTime)) {
+				pauseGameTimeUntil = 0;
+				trace("Game time pause expired;", gameTimePauseCallback == null ? "no callback" : "calling callback");
+				if (gameTimePauseCallback != null) {
+					// Inside callback we may pause again, so we need to set the callback to null BEFORE calling it
+					var temp:Function = gameTimePauseCallback;
+					gameTimePauseCallback = null;
+					temp();
+				}
+				
+			}
+			if (!gameTimeIsPaused) {
+				dispatchEvent(new Event(UNPAUSED_ENTER_FRAME));
+			}			
 		}
 		
 		public function startConversation(entity:SimpleEntity, conversationData:ConversationData):void {
@@ -342,13 +338,13 @@ Error! Pause is stuck. Attempting unstick.
 		/********************* end general ui **********************/
 		
 		public function moveHilight(tile:FloorTile, color:uint):void {
-			if (tileWithFilter != null) {
-				tileWithFilter.filters = [];
+			if (tileWithHilight != null) {
+				tileWithHilight.filters = [];
 			}
-			tileWithFilter = tile;
-			if (tileWithFilter != null) {
+			tileWithHilight = tile;
+			if (tileWithHilight != null) {
 				var glow:GlowFilter = new GlowFilter(color, 1, 15, 15, 10, 1, true, false);
-				tileWithFilter.filters = [ glow ];
+				tileWithHilight.filters = [ glow ];
 			}
 		}
 		
@@ -475,37 +471,10 @@ Error! Pause is stuck. Attempting unstick.
 			delete spots[spotId];
 		}
 		
-		private var debugPauseCount:int;
 		private function enterFrameListener(event:Event):void {
 			stage.focus = stage;
-			if (!gameIsPaused) {
-				dispatchEvent(new Event(UNPAUSED_ENTER_FRAME));
-			}
+			handlePauseAndAdvanceGameTimeIfNotPaused();
 			handleScrolling();
-			
-			if (gameIsPaused) {
-				if (!pauseTimer.running) {
-					trace("Error! Game is paused but timer isn't running.  Starting it.");
-					Alert.show("Error! Game is paused but timer isn't running.  Starting it.");
-					pauseTimer.start();
-				} else {
-					debugPauseCount++;
-					var atSecond:Boolean = (debugPauseCount % Settings.FRAMES_PER_SECOND) == 0;
-					if (atSecond) {
-						trace("Seconds paused aprx:", debugPauseCount / Settings.FRAMES_PER_SECOND, "Should pause:", int(pauseTimer.delay / 1000));
-						if (debugPauseCount / Settings.FRAMES_PER_SECOND > pauseTimer.delay / 1000 + 1) {
-							trace("Error! Pause is stuck. Attempting unstick.");
-							Alert.show("Error! Pause is stuck. Attempting unstick.");
-							pauseTimerInternalCallback(null);
-						}
-					}
-				}
-			} else {
-				if (debugPauseCount > 0) {
-					trace("reached unpaused frame after pausing");
-				}
-				debugPauseCount = 0;
-			}
 		}						
 			
 		private function handleScrolling():void {
