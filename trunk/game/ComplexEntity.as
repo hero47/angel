@@ -131,11 +131,11 @@ package angel.game {
 		}
 		
 		//NOTE: set brain classes and anything they will need for instantiation before calling.
-		public function changePlayerControl(pc:Boolean):void {
-			if (playerControlled == pc) {
+		public function changePlayerControl(willBePc:Boolean):void {
+			if (playerControlled == willBePc) {
 				return;
 			}
-			playerControlled = pc;
+			playerControlled = willBePc;
 			if (playerControlled) {
 				gaitSpeeds = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
 			} else {
@@ -414,8 +414,6 @@ package angel.game {
 			if (!Pathfinder.findShortestPathTo(this, from, goal, myPath)) {
 				return null;
 			}
-			trace("path from", from, "to", goal, myPath);
-			
 			return myPath;
 		}
 		

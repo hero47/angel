@@ -21,8 +21,8 @@ package angel.game.brain {
 			me = entity;
 			this.combat = combat;
 			this.gait = gait;
-			if (param != null) {
-				goals = UtilBrain.pointsFromCommaSeparatedSpots(entity.room, param, " in patrol route for " + entity.id);
+			if ((param != null) && (param != "")) {
+				goals = UtilBrain.pointsFromCommaSeparatedSpots(entity.room, param, " in combat patrol route for " + entity.id);
 			}
 			
 		}

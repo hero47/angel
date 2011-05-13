@@ -37,7 +37,7 @@ package angel.game {
 			}
 			
 			Settings.initFromXml(xmlData.settings);
-			Settings.initPlayerFromXml(xmlData.player, Settings.catalog);
+			Settings.initPlayersFromXml(xmlData.player, Settings.catalog);
 			Flags.initFlagsFromXml(xmlData.setFlag);
 			
 			callbackWithInitRoomXml(xmlData.room[0]);

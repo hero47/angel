@@ -1,5 +1,6 @@
 package angel.game {
 	import angel.common.Alert;
+	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.Defaults;
 	import angel.game.combat.Grenade;
@@ -103,7 +104,7 @@ package angel.game {
 		
 		// This part will probably be going away or moving eventually -- identity of main PC and followers will be
 		// script-controlled and stats will carry over from one scene to the next
-		public static function initPlayerFromXml(xml:XMLList, catalog:Catalog):void {
+		public static function initPlayersFromXml(xml:XMLList, catalog:Catalog):void {
 			var entity:Walker;
 			if (xml.length() == 0) {
 				entity = new Walker(catalog.retrieveWalkerImage("PLAYER"), "PLAYER");
@@ -130,10 +131,23 @@ package angel.game {
 				}
 				pcs.push(entity);
 			}
-			
-			
 		}
 		
-	}
+		public static function addToPlayerList(entity:ComplexEntity):void {
+			Assert.assertTrue(pcs.indexOf(entity) == -1, "addPc already in list");
+			pcs.push(entity);
+		}
+		
+		public static function removeFromPlayerList(entity:SimpleEntity):void {
+			var index:int = pcs.indexOf(entity);
+			Assert.assertTrue(index >= 0, "removePc not in list");
+			pcs.splice(index, 1);
+		}
+		
+		public static function isOnPlayerList(entity:SimpleEntity):Boolean {
+			return (pcs.indexOf(entity) >= 0);
+		}
+		
+	} // end class Settings
 
 }
