@@ -18,8 +18,8 @@ package angel.game.brain {
 		
 		public function BrainPatrol(entity:ComplexEntity, roomExplore:RoomExplore, param:String) {
 			me = entity;
-			if (param != null) {
-				goals = UtilBrain.pointsFromCommaSeparatedSpots(me.room, param, " in patrol route for " + entity.id);
+			if ((param != null) && (param != "")) {
+				goals = UtilBrain.pointsFromCommaSeparatedSpots(me.room, param, " in explore patrol route for " + entity.id);
 				if (goals.length > 0) {
 					me.addEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
 					continuePatrol(roomExplore);

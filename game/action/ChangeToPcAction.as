@@ -29,6 +29,7 @@ package angel.game.action {
 				entity.exploreBrainClass = BrainFollow;
 				entity.exploreBrainParam = Settings.currentRoom.mainPlayerCharacter.id;
 				entity.changePlayerControl(true);
+				Settings.addToPlayerList(entity);
 			} else {
 				Alert.show("Script error: no character " + id + " in room for changeToPc");
 			}

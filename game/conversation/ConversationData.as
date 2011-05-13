@@ -30,6 +30,7 @@ package angel.game.conversation {
 		}
 			
 		public function initializeFromXml(xml:XML, errorPrefix:String):void {
+			trace("ConversationData init from", xml.name());
 			if (xml.topic.length() == 0) {
 				Alert.show(errorPrefix + "No topics (or missing root element that contains the topics).");
 			}

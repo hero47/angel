@@ -4,6 +4,9 @@ package angel.game.test {
 	import angel.game.action.Action;
 	import angel.game.action.IAction;
 	import angel.game.brain.BrainFidget;
+	import angel.game.brain.BrainFollow;
+	import angel.game.brain.BrainWander;
+	import angel.game.brain.CombatBrainPatrolWalk;
 	import angel.game.brain.CombatBrainWander;
 	import angel.game.combat.RoomCombat;
 	import angel.game.ComplexEntity;
@@ -78,6 +81,7 @@ package angel.game.test {
 			}
 			
 			Autotest.testFunction(testAddRemoveCharacterActions);
+			Autotest.testFunction(testChangeToFromPc);
 			
 			Settings.currentRoom.changeModeTo(null);
 			Autotest.assertEqual(Settings.currentRoom.mode, null, modeChangeFail);
@@ -121,10 +125,12 @@ package angel.game.test {
 			
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null);
 			Action.createFromXml(addnei).doAction(doAtEnd);
-			var nei1:SimpleEntity = room.entityInRoomWithId("nei");
-			Autotest.assertNotEqual(nei1, null, "nei should have been added to room");
-			Autotest.assertTrue(nei1 is Walker);
-			Autotest.assertTrue(nei1.location.equals(new Point(0, 0)), "Unspecified location should default to 0,0");
+			var nei:SimpleEntity = room.entityInRoomWithId("nei");
+			Autotest.assertNotEqual(nei, null, "nei should have been added to room");
+			Autotest.assertTrue(nei is Walker);
+			Autotest.assertFalse(Walker(nei).isReallyPlayer, "Should be npc");
+			Autotest.assertTrue(nei.location.equals(new Point(0, 0)), "Unspecified location should default to 0,0");
+			Autotest.assertFalse(Settings.isOnPlayerList(nei));
 			
 			Action.createFromXml(removenei).doAction(doAtEnd);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null, "nei should have been removed");
@@ -160,6 +166,66 @@ package angel.game.test {
 			}
 			room.removeEntityWithId("nei");
 		}
-	}
+		
+		private const changeNeiToPc:XML = <changeToPc id="nei" />;
+		private const changeNeiToNpc:XML = <changeToNpc id="nei" />;
+		private const changeNeiToNpcWithBrains:XML = <changeToNpc id="nei" explore="wander" combat="patrolWalk" />
+		
+		private function testChangeToFromPc():void {
+			var room:Room = Settings.currentRoom;
+			
+			Action.createFromXml(changeNeiToPc).doAction(doAtEnd);
+			Autotest.assertAlertText("Script error: no character nei in room for changeToPc");			
+			
+			Action.createFromXml(changeNeiToNpc).doAction(doAtEnd);
+			Autotest.assertAlertText("Script error: no character nei in room for changeToNpc");
+			
+			Action.createFromXml(addNeiWithBrains).doAction(doAtEnd);
+			var nei:ComplexEntity = ComplexEntity(room.entityInRoomWithId("nei"));
+			Autotest.assertFalse(nei.isReallyPlayer, "Should be npc");
+			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Npc shouldn't be on player list");
+			
+			Action.createFromXml(changeNeiToNpc).doAction(doAtEnd);
+			Autotest.assertNoAlert("Change to Npc does nothing if entity is already npc");
+			
+			Action.createFromXml(changeNeiToPc).doAction(doAtEnd);
+			Autotest.assertEqual(room.entityInRoomWithId("nei"), nei, "Change pc-ness shouldn't change room or identity");
+			Autotest.assertTrue(nei.isReallyPlayer, "Should have changed to player");
+			Autotest.assertTrue(Settings.isOnPlayerList(nei), "Should have added to player list");
+			Autotest.assertEqual(nei.exploreBrainClass, BrainFollow, "PC gets follow brain");
+			Autotest.assertEqual(nei.combatBrainClass, null, "PC gets no combat brain");
+			if (Settings.currentRoom.mode is RoomExplore) {
+				Autotest.assertTrue(nei.brain is BrainFollow);
+			} else {
+				Autotest.assertEqual(nei.brain, null);
+			}
+			
+			Action.createFromXml(changeNeiToNpc).doAction(doAtEnd);
+			Autotest.assertEqual(room.entityInRoomWithId("nei"), nei, "Change pc-ness shouldn't change room or identity");
+			Autotest.assertFalse(nei.isReallyPlayer, "Should have changed back to npc");
+			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Should have removed from player list");
+			Autotest.assertEqual(nei.exploreBrainClass, null, "No explore brain specified should default to null");
+			Autotest.assertEqual(nei.combatBrainClass, null, "No combat brain specified should default to null");
+			Autotest.assertEqual(nei.brain, null);
+			
+			Action.createFromXml(changeNeiToPc).doAction(doAtEnd);
+			Action.createFromXml(changeNeiToNpcWithBrains).doAction(doAtEnd);
+			Autotest.assertEqual(nei.exploreBrainClass, BrainWander);
+			Autotest.assertEqual(nei.combatBrainClass, CombatBrainPatrolWalk);
+			if (Settings.currentRoom.mode is RoomExplore) {
+				Autotest.assertTrue(nei.brain is BrainWander);
+			} else if (Settings.currentRoom.mode is RoomCombat) {
+				Autotest.assertTrue(nei.brain is CombatBrainPatrolWalk, "Note: This will fail if controlEnemies==true");
+			} else {
+				Autotest.assertEqual(nei.brain, null);
+			}
+			
+			Action.createFromXml(changeNeiToPc).doAction(doAtEnd);
+			Action.createFromXml(removenei).doAction(doAtEnd);
+			Autotest.assertEqual(room.entityInRoomWithId("nei"), null, "nei should have been removed");
+			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Remove pc from room should also remove from player list");
+		}
+		
+	} // end class ActionTest
 
 }
