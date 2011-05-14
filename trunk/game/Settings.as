@@ -3,12 +3,15 @@ package angel.game {
 	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.Defaults;
+	import angel.game.brain.BrainFollow;
 	import angel.game.combat.Grenade;
 
 	
 	public class Settings {
 		
 		public static var FRAMES_PER_SECOND:int;
+		public static var STAGE_HEIGHT:int;
+		public static var STAGE_WIDTH:int;
 		
 		// These are set by the game engine so scripting can access them.
 		// Is there a better way to do this sort of thing?
@@ -114,6 +117,7 @@ package angel.game {
 			}
 			
 			var i:int = 1;
+			var previousPcId:String = null;
 			for each (var pc:XML in xml.pc) {
 				var id:String = pc.@id;
 				if (id == "") {
@@ -129,6 +133,13 @@ package angel.game {
 				if (grenades > 0) {
 					entity.inventory.add(Grenade.getCopy(), grenades);
 				}
+				
+				if (previousPcId != null) {
+					entity.exploreBrainClass = BrainFollow;
+					entity.exploreBrainParam = previousPcId;
+				}
+				previousPcId = entity.id;
+				
 				pcs.push(entity);
 			}
 		}

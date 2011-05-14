@@ -19,6 +19,8 @@ package angel.game {
 		public function Main() {
 			stage.scaleMode = "noScale";
 			Settings.FRAMES_PER_SECOND = stage.frameRate;
+			Settings.STAGE_HEIGHT = stage.stageHeight;
+			Settings.STAGE_WIDTH = stage.stageWidth;
 			Alert.init(stage);
 			
 			new InitGameFromFiles(gameInitialized);
@@ -38,56 +40,16 @@ package angel.game {
 			LoaderWithErrorCatching.LoadFile(roomFile, roomXmlLoaded);
 		}
 		
-		private var roomXml:XML; // stash here for use in mapLoadedListener
 		private function roomXmlLoaded(event:Event, filename:String):void {
 			var xml:XML = new XML(event.target.data);
-			
-			if (xml.floor.length() == 0) {
-				Alert.show("Invalid room file " + filename);
-				return;
+			var room:Room = Room.createFromXml(xml, filename);
+			if (room != null) {
+				room.addPlayerCharactersFromSettings(startSpot);
+				addChild(room);
+				Settings.currentRoom = room;
+				room.changeModeTo(RoomExplore);
 			}
-			
-			roomXml = xml;
-			floor = new Floor();
-			floor.addEventListener(Event.INIT, mapLoadedListener);			
-			floor.loadFromXml(Settings.catalog, xml.floor[0]);
 		}
-		
-
-		private function mapLoadedListener(event:Event):void {
-			floor.removeEventListener(Event.INIT, mapLoadedListener);
-			room = new Room(floor);
-			addChild(room);
-			Settings.currentRoom = room;
-			
-			if (roomXml.contents.length() > 0) {
-				room.initContentsFromXml(Settings.catalog, roomXml.contents[0]);
-			}
-			if (roomXml.spots.length() > 0) {
-				room.initSpotsFromXml(roomXml.spots[0]);
-			}
-			
-			var startLoc:Point;
-			if ((startSpot == null) || (startSpot == "")) {
-				startSpot = "start";
-			}
-	
-			startLoc = room.spotLocationWithDefault(startSpot);
-			room.snapToCenter(startLoc);
-			var previousPc:String = null;
-			for each (var entity:ComplexEntity in Settings.pcs) {
-				// UNDONE: start followers near main PC instead of stacked on top
-				room.addPlayerCharacter(entity, startLoc);
-				if (previousPc != null) {
-					entity.exploreBrainClass = BrainFollow;
-					entity.exploreBrainParam = previousPc;
-				}
-				previousPc = entity.id;
-			}
-			
-			room.changeModeTo(RoomExplore);
-		}
-		
 		
 	}	// end class Main
 }

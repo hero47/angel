@@ -2,6 +2,7 @@ package angel.game.combat {
 	import angel.common.Floor;
 	import angel.game.ComplexEntity;
 	import angel.game.EntityEvent;
+	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -91,8 +92,8 @@ package angel.game.combat {
 			roomSprite = new Sprite();
 			addChild(roomSprite);
 			
-			var visibleWidthScaled:int = combat.room.stage.stageWidth / SCALE;
-			var visibleHeightScaled:int = combat.room.stage.stageHeight / SCALE;
+			var visibleWidthScaled:int = Settings.STAGE_WIDTH / SCALE;
+			var visibleHeightScaled:int = Settings.STAGE_HEIGHT / SCALE;
 			offsetX = (WIDTH - visibleWidthScaled) / 2;
 			offsetY = (HEIGHT - visibleHeightScaled) / 2;
 			

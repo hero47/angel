@@ -99,7 +99,7 @@ package angel.game.conversation {
 			}
 			target.filters = [];
 			room.unpauseGameTimeAndDeleteCallback();
-			room.restoreLastUi();
+			room.restoreUiAfterConversation();
 			
 			while (doAtEnd.length > 0) {
 				var f:Function = doAtEnd.shift();

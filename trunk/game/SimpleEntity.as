@@ -4,12 +4,18 @@ package angel.game {
 	import angel.common.Prop;
 	import angel.common.PropImage;
 	import angel.common.Util;
+	import angel.game.action.ConversationAction;
+	import angel.game.conversation.ConversationData;
+	import angel.game.conversation.Script;
 	import flash.display.Bitmap;
 	import flash.geom.Point;
+	import flash.utils.describeType;
 	
 	public class SimpleEntity extends Prop {
 		public var room:Room;
 		public var id:String;
+		
+		public var frobScript:Script;
 
 		
 		public var aaId:String; // catalog id + arbitrary index, for debugging, at top of alphabet for easy seeing!
@@ -41,8 +47,35 @@ package angel.game {
 			
 			var propImage:PropImage = catalog.retrievePropImage(id);
 			var simpleEntity:SimpleEntity = new SimpleEntity(new Bitmap(propImage.imageData), propImage.solid, id);
-			simpleEntity.myLocation = new Point(propXml.@x, propXml.@y);
+			simpleEntity.setCommonPropertiesFromXml(propXml);
 			return simpleEntity;
+		}
+		
+		public function setCommonPropertiesFromXml(xml:XML):void {
+			myLocation = new Point(xml.@x, xml.@y);
+			
+			//UNDONE: @talk is pre-5/13/11 version; get rid of it eventually
+			var talk:String = xml.@talk;
+			var scriptFile:String = xml.@script;
+			if (talk != "") {
+				if (scriptFile != "") {
+					Alert.show("Error! @talk and @script on same room item, id " + id);
+				}
+				var conversationData:ConversationData = new ConversationData();
+				conversationData.loadFromXmlFile(talk);
+				frobScript = new Script();
+				//CONSIDER: may need a special id meaning "entity that was frobbed"
+				frobScript.addAction(new ConversationAction(conversationData, this.id));
+			}
+			
+			if (scriptFile != "") {
+				frobScript = new Script();
+				frobScript.loadFromXmlFile(scriptFile);
+			}
+		}
+		
+		public function get displayName():String {
+			return null;
 		}
 
 		override public function toString():String {
@@ -57,7 +90,17 @@ package angel.game {
 		
 		// Eventually, entity properties and/or scripting will control what happens when entity is frobbed
 		public function frob(player:ComplexEntity):void {
-			Alert.show("It ignores you.");
+			if (frobScript != null) {
+				room.frobbedEntity = this;
+				frobScript.run();
+				room.frobbedEntity = null;
+			} else {
+				var nameOrIt:String = displayName;
+				if ((nameOrIt == null) || (nameOrIt == "")) {
+					nameOrIt = "It";
+				}
+				Alert.show(nameOrIt + " ignores you.");
+			}
 		}
 		
 		//NOTE: indetermined yet whether it will be meaningful or useful to have an entity "in" a room but not

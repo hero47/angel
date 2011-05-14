@@ -20,12 +20,11 @@ package angel.roomedit {
 	 */
 	public class NpcPalette extends ContentPaletteCommonCode {
 		private var locationText:TextField;
-		private var attributeDisplay:Sprite;
 		private var exploreCombo:ComboBox;
 		private var combatCombo:ComboBox;
 		private var exploreParameters:TextField;
 		private var combatParameters:TextField;
-		private var talkFile:FilenameControl;
+		private var scriptFile:FilenameControl;
 		
 		private static const exploreChoices:Vector.<String> = Vector.<String>(["", "fidget", "follow", "patrol", "wander"]);
 		private static const combatChoices:Vector.<String> = Vector.<String>(["", "patrolWalk", "patrolRun", "patrolSprint", "wander"]);
@@ -34,9 +33,8 @@ package angel.roomedit {
 			super(catalog, room);
 			
 			locationText = Util.textBox("", EditorSettings.PALETTE_XSIZE, Util.DEFAULT_TEXT_HEIGHT, TextFormatAlign.CENTER);
-			Util.addBelow(locationText, itemCombo, 5);
+			Util.addBelow(locationText, itemChooser, 5);
 			
-			attributeDisplay = createAttributeDisplay();
 			Util.addBelow(attributeDisplay, locationText, 5);
 			
 			itemCombo.selectedIndex = 0;
@@ -45,19 +43,6 @@ package angel.roomedit {
 		
 		override public function get tabLabel():String {
 			return "NPCs";
-		}
-
-		override public function applyToTile(tile:FloorTileEdit, remove:Boolean = false):void {
-			super.applyToTile(tile, remove);
-			updateAvailabilityAndAttributes();
-		}
-		
-		// Whenever we become visible, update the walker location text
-		override public function set visible(value:Boolean):void {
-			super.visible = value;
-			if (this.visible) {
-				updateAvailabilityAndAttributes();
-			}
 		}
 		
 		override protected function get catalogEntryType():int {
@@ -109,7 +94,12 @@ package angel.roomedit {
 			}
 		}
 		
-		private function createAttributeDisplay():Sprite {
+		override protected function changeAttribute(attributeName:String, newValue:String):void {
+			super.changeAttribute(attributeName, newValue);
+			adjustParamVisibilities();
+		}
+		
+		override protected function createAttributeDisplay():Sprite {
 			var holder:Sprite = new Sprite();
 			
 			var exploreLabel:TextField = Util.textBox("Explore mode behavior:", EditorSettings.PALETTE_XSIZE-20);
@@ -134,16 +124,16 @@ package angel.roomedit {
 				changeAttribute("combatParam", combatParameters.text);
 			});
 			
-			var talkLabel:TextField = Util.textBox("Conversation file:", EditorSettings.PALETTE_XSIZE-20);
+			var talkLabel:TextField = Util.textBox("Conversation/Script file:", EditorSettings.PALETTE_XSIZE-20);
 			Util.addBelow(talkLabel, combatParameters, 10);
-			talkFile = FilenameControl.createBelow(talkLabel, true, null, 0, EditorSettings.PALETTE_XSIZE-10, function(event:Event):void {
-				changeAttribute("talk", talkFile.text);
+			scriptFile = FilenameControl.createBelow(talkLabel, true, null, 0, EditorSettings.PALETTE_XSIZE-10, function(event:Event):void {
+				changeAttribute("script", scriptFile.text);
 			});
 			
 			return holder;
 		}
 		
-		private function updateAvailabilityAndAttributes():void {
+		override protected function updateAvailabilityAndAttributes():void {
 			locationOfCurrentSelection = room.find(itemCombo.selectedLabel);
 			changeSelectionOnMapTo(locationOfCurrentSelection);
 			var onMap:Boolean = (locationOfCurrentSelection != null);
@@ -155,34 +145,16 @@ package angel.roomedit {
 				if (attributes == null) {
 					exploreCombo.selectedIndex = 0;
 					combatCombo.selectedIndex = 0;
-					talkFile.text = exploreParameters.text = combatParameters.text = "";
+					scriptFile.text = exploreParameters.text = combatParameters.text = "";
 				} else {
 					exploreCombo.selectedItem = Util.itemWithLabelInComboBox(exploreCombo, attributes["explore"]);
 					combatCombo.selectedItem = Util.itemWithLabelInComboBox(combatCombo, attributes["combat"]);
-					talkFile.text = attributes["talk"];
+					scriptFile.text = attributes["script"];
 					Util.nullSafeSetText(exploreParameters, attributes["exploreParam"]);
 					Util.nullSafeSetText(combatParameters, attributes["combatParam"]);
 				}
 				adjustParamVisibilities();
 			}
-		}
-		
-		private function changeAttribute(attributeName:String, newValue:String):void {
-			var attributes:Object = room.attributesOfItemAt(locationOfCurrentSelection);
-			if (attributes == null) {
-				attributes = new Object();
-			}
-			attributes[attributeName] = newValue;
-			if (newValue == "") {
-				if (attributeName == "explore") {
-					attributes["exploreParam"] = "";
-				} else if (attributeName == "combat") {
-					attributes["combatParam"] = "";
-				}
-			}
-			
-			room.setAttributesOfItemAt(locationOfCurrentSelection, attributes);
-			adjustParamVisibilities();
 		}
 		
 		private function adjustParamVisibilities():void {

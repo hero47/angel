@@ -26,8 +26,6 @@ package angel.game {
 		private var deathTimer:Timer;
 		private var solidnessWhenAlive:uint;
 		
-		public var conversationData:ConversationData; // This will probably migrate to SimpleEntity someday, or maybe ComplexEntity
-		
 		private static const DEATH_DURATION:int = 500; // milliseconds
 		private static const WALK_FRAMES:Vector.<int> = Vector.<int>([WalkerImage.LEFT, WalkerImage.STAND,
 			WalkerImage.RIGHT, WalkerImage.STAND, WalkerImage.LEFT, WalkerImage.STAND, WalkerImage.RIGHT, WalkerImage.STAND]);
@@ -38,7 +36,7 @@ package angel.game {
 			facing = WalkerImage.FACE_CAMERA;
 			super(new Bitmap(walkerImage.bitsFacing(facing)), id);
 			this.maxHealth = this.currentHealth = walkerImage.health;
-			this.displayName = walkerImage.displayName;
+			myDisplayName = walkerImage.displayName;
 			setMovePoints(walkerImage.movePoints);
 			inventory.add(new Gun(walkerImage.damage));
 			solidness = solidnessWhenAlive = Prop.DEFAULT_CHARACTER_SOLIDITY;
@@ -95,15 +93,6 @@ package angel.game {
 				deathTimer = null;
 			}
 		}
-		
-		// Eventually, entity properties and/or scripting will control what happens when entity is frobbed
-		override public function frob(player:ComplexEntity):void {
-			if (conversationData != null) {
-				room.startConversation(this, conversationData);
-			} else {
-				Alert.show(this.displayName + " ignores you.");
-			}
-		}
 
 		private static const exploreBrain:Object = { fidget:BrainFidget, follow:BrainFollow, patrol:BrainPatrol, wander:BrainWander };
 		private static const combatBrain:Object = { patrolWalk:CombatBrainPatrolWalk, patrolRun:CombatBrainPatrolRun, 
@@ -134,18 +123,12 @@ package angel.game {
 			}
 			
 			var walker:Walker = new Walker(catalog.retrieveWalkerImage(id), id);
-			walker.myLocation = new Point(walkerXml.@x, walkerXml.@y);
 			walker.exploreBrainClass = exploreBrainClassFromString(walkerXml.@explore);
 			walker.combatBrainClass = combatBrainClassFromString(walkerXml.@combat);
 			walker.exploreBrainParam = walkerXml.@exploreParam;
 			walker.combatBrainParam = walkerXml.@combatParam;
 			
-			var talk:String = walkerXml.@talk;
-			if (talk != "") {
-				walker.conversationData = new ConversationData();
-				walker.conversationData.loadFromXmlFile(talk);
-			}
-			
+			walker.setCommonPropertiesFromXml(walkerXml);
 			return walker;
 		}
 		

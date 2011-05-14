@@ -27,7 +27,6 @@ package angel.game.test {
 		
 		private const floorXml:XML = <floor x="10" y="10"/>;
 		
-		private var doAtEnd:Vector.<Function> = new Vector.<Function>();
 		
 		//CONSIDER: Parts of this are really flag tests and catalog tests, could be separated out
 		//CONSIDER: Room initialization will probably want to be pulled out so other tests can use it as well
@@ -64,8 +63,11 @@ package angel.game.test {
 			Autotest.runningFromRoot.addChild(Settings.currentRoom);
 			Autotest.assertNoAlert();
 			
+			trace("Testing actions for no room mode");
 			runTestsForMode(null);
+			trace("Testing actions for Explore mode");
 			runTestsForMode(RoomExplore);
+			trace("Testing actions for Combat mode");
 			runTestsForMode(RoomCombat);
 			
 			Settings.currentRoom.cleanup();
@@ -82,6 +84,7 @@ package angel.game.test {
 			
 			Autotest.testFunction(testAddRemoveCharacterActions);
 			Autotest.testFunction(testChangeToFromPc);
+			//Autotest.testFunction(testChangeRoom); This doesn't work because it uses a callback
 			
 			Settings.currentRoom.changeModeTo(null);
 			Autotest.assertEqual(Settings.currentRoom.mode, null, modeChangeFail);
@@ -96,11 +99,9 @@ package angel.game.test {
 			value = Flags.getValue("xxTest");
 			Autotest.assertNoAlert("Second reference should not alert");
 			
-			var addFlag:IAction = Action.createFromXml(addTestFlag);
-			var removeFlag:IAction = Action.createFromXml(removeTestFlag);
-			addFlag.doAction(doAtEnd);
+			testActionFromXml(addTestFlag);
 			Autotest.assertTrue(Flags.getValue("xxTest"));
-			removeFlag.doAction(doAtEnd);
+			testActionFromXml(removeTestFlag);
 			Autotest.assertFalse(Flags.getValue("xxTest"));
 		}
 		
@@ -121,10 +122,10 @@ package angel.game.test {
 			var room:Room = Settings.currentRoom;
 			
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null);
-			Action.createFromXml(removenei).doAction(doAtEnd); // Removing entity that's not in room does nothing
+			testActionFromXml(removenei); // Removing entity that's not in room does nothing
 			
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null);
-			Action.createFromXml(addnei).doAction(doAtEnd);
+			testActionFromXml(addnei);
 			var nei:SimpleEntity = room.entityInRoomWithId("nei");
 			Autotest.assertNotEqual(nei, null, "nei should have been added to room");
 			Autotest.assertTrue(nei is Walker);
@@ -132,28 +133,28 @@ package angel.game.test {
 			Autotest.assertTrue(nei.location.equals(new Point(0, 0)), "Unspecified location should default to 0,0");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei));
 			
-			Action.createFromXml(removenei).doAction(doAtEnd);
+			testActionFromXml(removenei);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null, "nei should have been removed");
 			
-			Action.createFromXml(addneiAt12).doAction(doAtEnd);
+			testActionFromXml(addneiAt12);
 			var nei2:SimpleEntity = room.entityInRoomWithId("nei");
 			Autotest.assertTrue(nei2.location.equals(new Point(1, 2)), "Should use x & y if provided");
 			room.removeEntityWithId("nei");
 			
-			Action.createFromXml(addneiAtTestSpot).doAction(doAtEnd);
+			testActionFromXml(addneiAtTestSpot);
 			var nei3:SimpleEntity = room.entityInRoomWithId("nei");
 			Autotest.assertAlerted("Undefined spot");
 			Autotest.assertTrue(nei3.location.equals(new Point(0, 0)), "Should create at 0,0 if spot undefined");
 			room.removeEntityWithId("nei");
 			
 			room.addOrMoveSpot("test", new Point(3, 4));
-			Action.createFromXml(addneiAtTestSpot).doAction(doAtEnd);
+			testActionFromXml(addneiAtTestSpot);
 			var nei4:SimpleEntity = room.entityInRoomWithId("nei");
 			Autotest.assertTrue(nei4.location.equals(new Point(3, 4)), "Should create at 0,0 if spot undefined");
 			room.removeEntityWithId("nei");
 			room.removeSpot("test");
 			
-			Action.createFromXml(addNeiWithBrains).doAction(doAtEnd);
+			testActionFromXml(addNeiWithBrains);
 			var nei5:ComplexEntity = ComplexEntity(room.entityInRoomWithId("nei"));
 			Autotest.assertEqual(nei5.exploreBrainClass, BrainFidget);
 			Autotest.assertEqual(nei5.combatBrainClass, CombatBrainWander);
@@ -174,21 +175,21 @@ package angel.game.test {
 		private function testChangeToFromPc():void {
 			var room:Room = Settings.currentRoom;
 			
-			Action.createFromXml(changeNeiToPc).doAction(doAtEnd);
+			testActionFromXml(changeNeiToPc);
 			Autotest.assertAlertText("Script error: no character nei in room for changeToPc");			
 			
-			Action.createFromXml(changeNeiToNpc).doAction(doAtEnd);
+			testActionFromXml(changeNeiToNpc);
 			Autotest.assertAlertText("Script error: no character nei in room for changeToNpc");
 			
-			Action.createFromXml(addNeiWithBrains).doAction(doAtEnd);
+			testActionFromXml(addNeiWithBrains);
 			var nei:ComplexEntity = ComplexEntity(room.entityInRoomWithId("nei"));
 			Autotest.assertFalse(nei.isReallyPlayer, "Should be npc");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Npc shouldn't be on player list");
 			
-			Action.createFromXml(changeNeiToNpc).doAction(doAtEnd);
+			testActionFromXml(changeNeiToNpc);
 			Autotest.assertNoAlert("Change to Npc does nothing if entity is already npc");
 			
-			Action.createFromXml(changeNeiToPc).doAction(doAtEnd);
+			testActionFromXml(changeNeiToPc);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), nei, "Change pc-ness shouldn't change room or identity");
 			Autotest.assertTrue(nei.isReallyPlayer, "Should have changed to player");
 			Autotest.assertTrue(Settings.isOnPlayerList(nei), "Should have added to player list");
@@ -200,7 +201,7 @@ package angel.game.test {
 				Autotest.assertEqual(nei.brain, null);
 			}
 			
-			Action.createFromXml(changeNeiToNpc).doAction(doAtEnd);
+			testActionFromXml(changeNeiToNpc);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), nei, "Change pc-ness shouldn't change room or identity");
 			Autotest.assertFalse(nei.isReallyPlayer, "Should have changed back to npc");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Should have removed from player list");
@@ -208,8 +209,8 @@ package angel.game.test {
 			Autotest.assertEqual(nei.combatBrainClass, null, "No combat brain specified should default to null");
 			Autotest.assertEqual(nei.brain, null);
 			
-			Action.createFromXml(changeNeiToPc).doAction(doAtEnd);
-			Action.createFromXml(changeNeiToNpcWithBrains).doAction(doAtEnd);
+			testActionFromXml(changeNeiToPc);
+			testActionFromXml(changeNeiToNpcWithBrains);
 			Autotest.assertEqual(nei.exploreBrainClass, BrainWander);
 			Autotest.assertEqual(nei.combatBrainClass, CombatBrainPatrolWalk);
 			if (Settings.currentRoom.mode is RoomExplore) {
@@ -220,11 +221,45 @@ package angel.game.test {
 				Autotest.assertEqual(nei.brain, null);
 			}
 			
-			Action.createFromXml(changeNeiToPc).doAction(doAtEnd);
-			Action.createFromXml(removenei).doAction(doAtEnd);
+			testActionFromXml(changeNeiToPc);
+			testActionFromXml(removenei);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null, "nei should have been removed");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Remove pc from room should also remove from player list");
 		}
+		
+		/*
+		 * Can't actually run this because it loads from file, which is a delayed callback.
+		private static const changeRoom:XML = <changeRoom file="empty15x15.xml" />;
+		private function testChangeRoom():void {
+			var oldCurrentRoom:Room = Settings.currentRoom;
+			var mainPc:ComplexEntity = Settings.currentRoom.mainPlayerCharacter;
+			//UNDONE: this isn't at all a rigorous test; we don't have anything but the pc's in either room
+			//also not testing mode, start spot
+			testActionFromXml(changeRoom, true);
+			Autotest.assertNoAlert();
+			
+			Autotest.assertNotEqual(oldCurrentRoom, Settings.currentRoom, "Room didn't change");
+			oldCurrentRoom = null;
+			Autotest.assertEqual(mainPc.room, Settings.currentRoom, "PC didn't move");
+			Autotest.assertEqual(Settings.currentRoom.mainPlayerCharacter, mainPc, "Same character should be main pc");
+		}
+		*/
+		
+		private function testActionFromXml(xml:XML, shouldDelayUntilEnd:Boolean = false):void {
+			var doAtEnd:Vector.<Function> = new Vector.<Function>();
+			var action:IAction = Action.createFromXml(xml);
+			Autotest.assertNoAlert();
+			Autotest.assertNotEqual(action, null, "Action creation failed");
+			if (action != null) {
+				action.doAction(doAtEnd);
+				Autotest.assertEqual(shouldDelayUntilEnd, doAtEnd.length > 0, "Wrong delay status");
+				while (doAtEnd.length > 0) {
+					var doThis:Function = doAtEnd.shift();
+					doThis();
+				}
+			}
+		}
+		
 		
 	} // end class ActionTest
 
