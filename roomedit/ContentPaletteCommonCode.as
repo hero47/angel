@@ -17,9 +17,11 @@ package angel.roomedit {
 	public class ContentPaletteCommonCode extends Sprite implements IRoomEditorPalette {
 		protected var catalog:CatalogEdit;
 		protected var room:RoomLight;
-		private var removeButton:SimplerButton;
+		protected var removeButton:SimplerButton;
 		protected var itemImage:Bitmap;
+		protected var itemChooser:ComboHolder;
 		protected var itemCombo:ComboBox;
+		protected var attributeDisplay:Sprite;
 		
 		protected var currentSelection:Prop;
 		protected var locationOfCurrentSelection:Point;
@@ -40,11 +42,13 @@ package angel.roomedit {
 			Util.addBelow(itemImage, removeButton);
 			itemImage.x = (EditorSettings.PALETTE_XSIZE - itemImage.width) / 2;
 			
-			var itemChooser:ComboHolder = catalog.createChooser(catalogEntryType, EditorSettings.PALETTE_XSIZE - 10);
+			itemChooser = catalog.createChooser(catalogEntryType, EditorSettings.PALETTE_XSIZE - 10);
 			Util.addBelow(itemChooser, itemImage);
 			itemChooser.x = (EditorSettings.PALETTE_XSIZE - itemChooser.width) / 2;
 			itemCombo = itemChooser.comboBox;
 			itemCombo.addEventListener(Event.CHANGE, itemComboBoxChanged);
+			
+			attributeDisplay = createAttributeDisplay();
 			
 			room.addEventListener(Event.INIT, roomLoaded);
 		}
@@ -74,6 +78,7 @@ package angel.roomedit {
 			} else { // !occupied && !remove
 				attemptToCreateOneAt(tile.location);
 			}
+			updateAvailabilityAndAttributes();
 		}
 		
 		public function paintWhileDragging():Boolean {
@@ -98,6 +103,9 @@ package angel.roomedit {
 			}
 			if (currentSelection != null) {
 				currentSelection.filters = filters;
+			}
+			if (this.visible) {
+				updateAvailabilityAndAttributes();
 			}
 		}
 		
@@ -141,6 +149,32 @@ package angel.roomedit {
 		protected function clearSelection():void {
 			currentSelection = null;
 			locationOfCurrentSelection = null;
+		}
+		
+		protected function createAttributeDisplay():Sprite {
+			// override this
+			return null;
+		}
+		
+		protected function changeAttribute(attributeName:String, newValue:String):void {
+			var attributes:Object = room.attributesOfItemAt(locationOfCurrentSelection);
+			if (attributes == null) {
+				attributes = new Object();
+			}
+			attributes[attributeName] = newValue;
+			if (newValue == "") {
+				if (attributeName == "explore") {
+					attributes["exploreParam"] = "";
+				} else if (attributeName == "combat") {
+					attributes["combatParam"] = "";
+				}
+			}
+			
+			room.setAttributesOfItemAt(locationOfCurrentSelection, attributes);
+		}
+		
+		protected function updateAvailabilityAndAttributes():void {
+			//override this
 		}
 		
 	}

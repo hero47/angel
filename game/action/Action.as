@@ -16,7 +16,9 @@ package angel.game.action {
 			"startCombat":StartCombatAction,
 			"removeFromRoom":RemoveFromRoomAction,
 			"changeToPc":ChangeToPcAction,
-			"changeToNpc":ChangeToNpcAction
+			"changeToNpc":ChangeToNpcAction,
+			"changeRoom":ChangeRoomAction,
+			"conversation":ConversationAction
 		};
 		
 		public function Action() {

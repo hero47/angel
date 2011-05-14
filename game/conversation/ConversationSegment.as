@@ -12,19 +12,17 @@ package angel.game.conversation {
 		
 		public var need:Vector.<String>; // must have these flags
 		public var text:String;
-		private var actions:Vector.<IAction>;
+		private var script:Script;
 		
 		public function ConversationSegment(text:String) {
 			this.text = text;
 		}
 		
 		public function addAction(newAction:IAction):void {
-			if (actions == null) {
-				actions = new Vector.<IAction>();
+			if (script == null) {
+				script = new Script();
 			}
-			if (newAction != null) {
-				actions.push(newAction);
-			}
+			script.addAction(newAction);
 		}
 		
 		public static function createFromXml(xml:XML, errorPrefix:String=""):ConversationSegment {
@@ -58,20 +56,10 @@ package angel.game.conversation {
 		}
 		
 		public function doActionsAndGetNextEntryId(doAtEnd:Vector.<Function>):Object {
-			if (actions == null) {
+			if (script == null) {
 				return null;
 			}
-			var nextEntryReference:Object;
-			for (var i:int = 0; i < actions.length; ++i) {
-				var gotoReference:Object = actions[i].doAction(doAtEnd);
-				if ((gotoReference != null) && (nextEntryReference != null)) {
-					Alert.show("Conversation segment has extra goto, id=" + gotoReference.id);
-				}
-				if (gotoReference != null) {
-					nextEntryReference = gotoReference;
-				}
-			}
-			return nextEntryReference;
+			return script.doActionsAndGetNextEntryId(doAtEnd);
 		}
 		
 	}

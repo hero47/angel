@@ -10,6 +10,7 @@ package angel.game {
 	import angel.game.combat.RoomCombat;
 	import angel.game.conversation.ConversationData;
 	import angel.game.conversation.ConversationInterface;
+	import angel.game.conversation.Script;
 	import angel.game.test.ConversationNonAutoTest;
 	import flash.display.DisplayObject;
 	import flash.display.Graphics;
@@ -39,6 +40,7 @@ package angel.game {
 		private var contentsLayer:Sprite;
 		public var cells:Vector.<Vector.<Cell>>;
 		public var mainPlayerCharacter:ComplexEntity;
+		public var frobbedEntity:SimpleEntity;
 		public var size:Point;
 		public var mode:RoomMode;
 		private var spots:Object = new Object(); // associative array mapping from spotId to location
@@ -47,6 +49,8 @@ package angel.game {
 		private var disabledUi:IRoomUi;
 		private var lastUiPlayer:ComplexEntity;
 		private var dragging:Boolean = false;
+		
+		private var conversationInProgress:ConversationInterface;
 		
 		private var pauseGameTimeUntil:int = 0;
 		private var gameTimePauseCallback:Function;		
@@ -108,32 +112,14 @@ package angel.game {
 			}
 		}
 		
-		private var changingModeTo:Class;
 		public function changeModeTo(newModeClass:Class):void {
+			forEachComplexEntity(function(entity:ComplexEntity):void {
+				entity.endMoveImmediately();
+			} );
 			if (mode != null) {
 				mode.cleanup();
 			}
-			changingModeTo = newModeClass;
-			ensureMovementFinishedThenChangeMode();
-		}
-		
-		private function ensureMovementFinishedThenChangeMode(event:TimerEvent = null):void {
-			if (event != null) {
-				(event.target as Timer).removeEventListener(TimerEvent.TIMER_COMPLETE, ensureMovementFinishedThenChangeMode);
-			}
-			var someoneIsMoving:Boolean = false;
-			forEachComplexEntity(function(entity:ComplexEntity):void {
-				someoneIsMoving ||= entity.moving;
-			} );
-			
-			if (someoneIsMoving) {
-				trace("Someone is moving, delay mode change");
-				var timer:Timer = new Timer(1000, 1);
-				timer.addEventListener(TimerEvent.TIMER_COMPLETE, ensureMovementFinishedThenChangeMode);
-				timer.start();
-			} else {
-				mode = (changingModeTo == null ? null : new changingModeTo(this));
-			}
+			mode = (newModeClass == null ? null : new newModeClass(this));
 		}
 		
 		public function pauseGameTimeIndefinitely():void {
@@ -190,8 +176,12 @@ package angel.game {
 		}
 		
 		public function startConversation(entity:SimpleEntity, conversationData:ConversationData):void {
-			var conversation:ConversationInterface = new ConversationInterface(entity, conversationData);
-			stage.addChild(conversation); // Conversation takes over ui when added to stage, removes itself & restores when finished
+			if (conversationInProgress != null) {
+				Alert.show("Error! Cannot start a conversation inside another conversation.");
+			} else {
+				conversationInProgress = new ConversationInterface(entity, conversationData);
+				stage.addChild(conversationInProgress); // Conversation takes over ui when added to stage, removes itself & restores when finished
+			}
 		}
 		
 		/********** Player UI-related  ****************/
@@ -235,8 +225,9 @@ package angel.game {
 		}
 			
 		//UNDONE
-		public function restoreLastUi():void {
+		public function restoreUiAfterConversation():void {
 			Assert.assertTrue(lastUiPlayer.room == this, "Active player was removed from room. This WILL break things.");
+			conversationInProgress = null;
 			enableUi(disabledUi, lastUiPlayer);
 			disabledUi = null;
 		}
@@ -381,6 +372,9 @@ package angel.game {
 		}
 		
 		public function entityInRoomWithId(entityId:String):SimpleEntity {
+			if (entityId == Script.FROBBED_ENTITY_ID) {
+				return frobbedEntity;
+			}
 			for (var i:int = 0; i < size.x; i++) {
 				for (var j:int = 0; j < size.y; j++) {
 					for each (var prop:Prop in cells[i][j].contents) {
@@ -422,7 +416,9 @@ package angel.game {
 				mainPlayerCharacter = entity;
 			}
 			addEntity(entity, location);
-			entity.changePlayerControl(true);
+			if (!entity.isReallyPlayer) {
+				entity.changePlayerControl(true);
+			}
 		}
 		
 		// This will generally be called by the entity as it crosses the boundary between one floor tile
@@ -492,21 +488,57 @@ package angel.game {
 			}
 		}
 		
-		public function scrollToCenter(tileLoc: Point):void {
+		public function scrollToCenter(tileLoc:Point):void {
 			scrollingTo = PositionOfRoomToCenterTile(tileLoc);
 		}
 
-		public function snapToCenter(tileLoc: Point):void {
+		public function snapToCenter(tileLoc:Point):void {
 			scrollingTo = null;
-			var whereToMove: Point = PositionOfRoomToCenterTile(tileLoc);
+			var whereToMove:Point = PositionOfRoomToCenterTile(tileLoc);
 			this.x = whereToMove.x;
 			this.y = whereToMove.y;
 		}
 	
 		private function PositionOfRoomToCenterTile(tileLoc: Point): Point {
 			var desiredTileCenter:Point = Floor.centerOf(tileLoc);
-			return new Point(stage.stageWidth / 2 - desiredTileCenter.x - Floor.FLOOR_TILE_X / 2, 
-							 stage.stageHeight / 2 - desiredTileCenter.y - Floor.FLOOR_TILE_Y / 2 );
+			return new Point(Settings.STAGE_WIDTH / 2 - desiredTileCenter.x - Floor.FLOOR_TILE_X / 2, 
+							 Settings.STAGE_HEIGHT / 2 - desiredTileCenter.y - Floor.FLOOR_TILE_Y / 2 );
+		}
+		
+		public static function createFromXml(xml:XML, filename:String = ""):Room {
+			if (xml.floor.length() == 0) {
+				Alert.show("Invalid room file " + filename);
+				return null;
+			}
+			
+			var floor:Floor = new Floor();
+			floor.loadFromXml(Settings.catalog, xml.floor[0]);
+			
+			var room:Room = new Room(floor);
+			
+			if (xml.contents.length() > 0) {
+				room.initContentsFromXml(Settings.catalog, xml.contents[0]);
+			}
+			if (xml.spots.length() > 0) {
+				room.initSpotsFromXml(xml.spots[0]);
+			}
+			
+			return room;
+		}
+		
+		public function addPlayerCharactersFromSettings(startSpot:String = null):void {
+			var startLoc:Point;
+			if ((startSpot == null) || (startSpot == "")) {
+				startSpot = "start";
+			}
+			startLoc = spotLocationWithDefault(startSpot);
+			
+			snapToCenter(startLoc);
+			
+			for each (var entity:ComplexEntity in Settings.pcs) {
+				// UNDONE: start followers near main PC instead of stacked on the same square
+				addPlayerCharacter(entity, startLoc);
+			}
 		}
 		
 		// During development we'll support reading (but not writing) some older formats.

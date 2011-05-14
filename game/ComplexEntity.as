@@ -56,7 +56,7 @@ package angel.game {
 			]);
 		
 		// Entity stats!  Eventually these will be initialized from data files.  They may go in a separate object.
-		public var displayName:String;
+		protected var myDisplayName:String;
 		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
 		public var combatMovePoints:int;
 		public var maxDistanceForGait:Vector.<int>;
@@ -95,6 +95,7 @@ package angel.game {
 		}
 		
 		override public function cleanup():void {
+			// NOTE: if entity is a pc, a reference to it will still exist through the player list in Settings.
 			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
 			super.cleanup();
 		}
@@ -111,6 +112,10 @@ package angel.game {
 			if (marker != null) {
 				marker.y = this.y + Tileset.TILE_HEIGHT / 2;
 			}
+		}
+		
+		override public function get displayName():String {
+			return myDisplayName;
 		}
 		
 		public function attachMarker(newMarker:DisplayObject):void {
@@ -360,10 +365,7 @@ package angel.game {
 				frameOfMove = 0;
 				// Change the "real" location to the next tile.  Doing this on first frame of move rather than
 				// halfway through the move circumvents a whole host of problems!
-				var oldLocation:Point = myLocation;
-				myLocation = movingTo;
-				room.changeEntityLocation(this, oldLocation, myLocation);
-				dispatchEvent(new EntityEvent(EntityEvent.MOVED, true, false, this));
+				changeLocationAsPartOfMove();
 			}
 			adjustImageForMove();
 			x = coordsForEachFrameOfMove[frameOfMove].x;
@@ -383,12 +385,24 @@ package angel.game {
 			
 			frameOfMove++;
 			if (frameOfMove == coordsForEachFrameOfMove.length) {
-				movingTo = null;
-				coordsForEachFrameOfMove = null;
-				adjustImageForMove(); // make sure we end up in "standing" posture even if move was ultra-fast
-				dispatchEvent(new EntityEvent(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, true, false, this));
+				finishOneTileOfMove();
 			}
 		}
+		
+		private function finishOneTileOfMove():void {
+			movingTo = null;
+			coordsForEachFrameOfMove = null;
+			adjustImageForMove(); // make sure we end up in "standing" posture even if move was ultra-fast
+			dispatchEvent(new EntityEvent(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, true, false, this));
+		}
+		
+		
+		private function changeLocationAsPartOfMove():void {
+			var oldLocation:Point = myLocation;
+			myLocation = movingTo;
+			room.changeEntityLocation(this, oldLocation, myLocation);
+			dispatchEvent(new EntityEvent(EntityEvent.MOVED, true, false, this));
+		}		
 		
 		private function finishedMoving():void {
 			movingTo = null;
@@ -400,6 +414,19 @@ package angel.game {
 		
 		public function get moving():Boolean {
 			return (path != null);
+		}
+		
+		public function endMoveImmediately():void {
+			if (path != null) {
+				if ((movingTo != null) && !tileBlocked(movingTo)) {
+					if (!movingTo.equals(myLocation)) {
+						changeLocationAsPartOfMove();
+					}
+					location = movingTo; // this will move us to center of square
+					finishOneTileOfMove();
+				}
+				finishedMoving();
+			}
 		}
 		
 		// if from is null, find path from current location

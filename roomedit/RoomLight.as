@@ -132,28 +132,40 @@ package angel.roomedit {
 			}
 		}
 		
-		public function addPropByName(id:String, location:Point):void {
-			var propImage:PropImage = catalog.retrievePropImage(id);
-			var prop:Prop = Prop.createFromPropImage(propImage);
-			addContentItem(prop, CatalogEntry.PROP, id, location);
-		}
-		
-		private static const walkerXmlAttributes:Vector.<String> = Vector.<String>(["explore", "combat", "talk", "exploreParam", "combatParam"]);
-		public function addWalkerByName(id:String, location:Point, xml:XML):void {
-			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(id);
-			var prop:Prop = Prop.createFromBitmapData(walkerImage.bitsFacing(1));
-			var attributes:Object = null;
+		private static const contentItemXmlAttributes:Vector.<String> = Vector.<String>(
+				["explore", "combat", "script", "exploreParam", "combatParam"]);
+		public function addContentItemByName(type:int, id:String, location:Point, xml:XML):void {
 			trace("adding", id);
-			for each (var attributeName:String in walkerXmlAttributes) {
+			var prop:Prop;
+			if (type == CatalogEntry.PROP) {
+				var propImage:PropImage = catalog.retrievePropImage(id);
+				prop = Prop.createFromPropImage(propImage);
+			} else if (type == CatalogEntry.WALKER) {
+				var walkerImage:WalkerImage = catalog.retrieveWalkerImage(id);
+				prop = Prop.createFromBitmapData(walkerImage.bitsFacing(1));
+			}
+			
+			var attributes:Object = null;
+			for each (var attributeName:String in contentItemXmlAttributes) {
 				if (String(xml.@[attributeName]) != "") {
 					if (attributes == null) {
 						attributes = new Object();
 					}
-					attributes[attributeName] = xml.@[attributeName];
+					attributes[attributeName] = String(xml.@[attributeName]);
 					trace("  added attribute", attributeName, attributes[attributeName]);
 				}
 			}
-			addContentItem(prop, CatalogEntry.WALKER, id, location, attributes);
+			
+			//UNDONE This converts older format of file, delete it eventually
+			if (String(xml.@talk) != "") {
+				if (attributes == null) {
+					attributes = new Object();
+				}
+				attributes["script"] = String(xml.@talk);
+				trace("  converted attribute talk to script", attributes["script"]);				
+			}
+			
+			addContentItem(prop, type, id, location, attributes);
 		}
 		
 		public function occupied(location:Point):Boolean {
@@ -267,11 +279,11 @@ package angel.roomedit {
 			var id:String;
 			for each (var propXml:XML in contentsXml.prop) {
 				id = propXml;
-				addPropByName(id, new Point(propXml.@x, propXml.@y));
+				addContentItemByName(CatalogEntry.PROP, id, new Point(propXml.@x, propXml.@y), propXml);
 			}
 			for each (var walkerXml:XML in contentsXml.walker) {
 				id = walkerXml;
-				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml);
+				addContentItemByName(CatalogEntry.WALKER, id, new Point(walkerXml.@x, walkerXml.@y), walkerXml);
 			}
 		}
 
@@ -279,11 +291,11 @@ package angel.roomedit {
 			var id:String;
 			for each (var propXml:XML in contentsXml.prop) {
 				id = propXml.@id;
-				addPropByName(id, new Point(propXml.@x, propXml.@y));
+				addContentItemByName(CatalogEntry.PROP, id, new Point(propXml.@x, propXml.@y), propXml);
 			}
 			for each (var walkerXml:XML in contentsXml.walker) {
 				id = walkerXml.@id;
-				addWalkerByName(id, new Point(walkerXml.@x, walkerXml.@y), walkerXml);
+				addContentItemByName(CatalogEntry.WALKER, id, new Point(walkerXml.@x, walkerXml.@y), walkerXml);
 			}
 		}
 		
