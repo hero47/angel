@@ -50,7 +50,7 @@ package angel.game.test {
 				enemyId += "X";
 			}
 			var mainPc:Walker = new Walker(Settings.catalog.retrieveWalkerImage(mainPcId), mainPcId);
-			var enemy:Walker = new Walker(Settings.catalog.retrieveWalkerImage(mainPcId), enemyId);
+			var enemy:Walker = new Walker(Settings.catalog.retrieveWalkerImage(enemyId), enemyId);
 			enemy.combatBrainClass = CombatBrainWander;
 			Autotest.assertAlerted("Catalog should have alerted and then created default WalkerImage");
 			
@@ -85,6 +85,7 @@ package angel.game.test {
 			Autotest.testFunction(testAddRemoveCharacterActions);
 			Autotest.testFunction(testChangeToFromPc);
 			//Autotest.testFunction(testChangeRoom); This doesn't work because it uses a callback
+			Autotest.testFunction(testChangeAction);
 			
 			Settings.currentRoom.changeModeTo(null);
 			Autotest.assertEqual(Settings.currentRoom.mode, null, modeChangeFail);
@@ -110,6 +111,7 @@ package angel.game.test {
 		private const addneiAt12:XML = <addNpc id="nei" x="1" y="2" />;
 		private const addneiAtTestSpot:XML = <addNpc id="nei" spot="test" />;
 		private const addNeiWithBrains:XML = <addNpc id="nei" explore="fidget" combat="wander" />
+		// Can't test adding with script because that loads from file, which is a delayed callback
 		
 		private function testAddRemoveCharacterActions():void {
 			var entry:CatalogEntry = Settings.catalog.entry("nei");
@@ -170,7 +172,7 @@ package angel.game.test {
 		
 		private const changeNeiToPc:XML = <changeToPc id="nei" />;
 		private const changeNeiToNpc:XML = <changeToNpc id="nei" />;
-		private const changeNeiToNpcWithBrains:XML = <changeToNpc id="nei" explore="wander" combat="patrolWalk" />
+		private const changeNeiToNpcWithBrains:XML = <changeToNpc id="nei" explore="wander" combat="patrolWalk" combatParam="testSpot" />
 		
 		private function testChangeToFromPc():void {
 			var room:Room = Settings.currentRoom;
@@ -209,10 +211,12 @@ package angel.game.test {
 			Autotest.assertEqual(nei.combatBrainClass, null, "No combat brain specified should default to null");
 			Autotest.assertEqual(nei.brain, null);
 			
+			Settings.currentRoom.addOrMoveSpot("testSpot", new Point(0, 0));
 			testActionFromXml(changeNeiToPc);
 			testActionFromXml(changeNeiToNpcWithBrains);
 			Autotest.assertEqual(nei.exploreBrainClass, BrainWander);
 			Autotest.assertEqual(nei.combatBrainClass, CombatBrainPatrolWalk);
+			Autotest.assertEqual(nei.combatBrainParam, "testSpot");
 			if (Settings.currentRoom.mode is RoomExplore) {
 				Autotest.assertTrue(nei.brain is BrainWander);
 			} else if (Settings.currentRoom.mode is RoomCombat) {
@@ -220,6 +224,7 @@ package angel.game.test {
 			} else {
 				Autotest.assertEqual(nei.brain, null);
 			}
+			Settings.currentRoom.removeSpot("testSpot");
 			
 			testActionFromXml(changeNeiToPc);
 			testActionFromXml(removenei);
@@ -244,6 +249,56 @@ package angel.game.test {
 			Autotest.assertEqual(Settings.currentRoom.mainPlayerCharacter, mainPc, "Same character should be main pc");
 		}
 		*/
+		
+		private const changeNeiSpot:XML = <change id="nei" spot="testSpot"/>;
+		private const changeNeiWithXY:XML = <change id="nei" x="4" y="7" />;
+		private const changeNeiSpotAndXY:XML = <change id="nei" spot="testSpot" x="1" y="1" />;
+		private const changeNeiBrain:XML = <change id="nei" explore="wander" combat="patrolWalk" combatParam="testSpot" />;
+		private const changeFoo:XML = <change id="foo" explore="wander" combat="patrolWalk" combatParam="testSpot" spot="testSpot"/>;
+		private const removeFoo:XML = <removeFromRoom id="foo" />;
+		private function testChangeAction():void {
+			var room:Room = Settings.currentRoom;
+			Settings.currentRoom.addOrMoveSpot("testSpot", new Point(3, 5));
+			
+			testActionFromXml(addneiAt12);
+			var nei:SimpleEntity = room.entityInRoomWithId("nei");
+			Autotest.assertTrue(nei.location.equals(new Point(1, 2)), "Initial location wrong");
+			testActionFromXml(changeNeiSpot);
+			Autotest.assertTrue(nei.location.equals(new Point(3, 5)), "Didn't move correctly with spot");
+			testActionFromXml(changeNeiWithXY);
+			Autotest.assertTrue(nei.location.equals(new Point(4, 7)), "Didn't move correctly with X & Y parameters");
+			testActionFromXml(changeNeiSpotAndXY);
+			Autotest.assertAlertText("Error: change action with both spot and x,y");
+			
+			testActionFromXml(changeNeiBrain);
+			var neiComplex:ComplexEntity = ComplexEntity(nei);
+			Autotest.assertEqual(neiComplex.exploreBrainClass, BrainWander);
+			Autotest.assertEqual(neiComplex.combatBrainClass, CombatBrainPatrolWalk);
+			Autotest.assertEqual(neiComplex.combatBrainParam, "testSpot");
+			if (Settings.currentRoom.mode is RoomExplore) {
+				Autotest.assertTrue(neiComplex.brain is BrainWander);
+			} else if (Settings.currentRoom.mode is RoomCombat) {
+				Autotest.assertTrue(neiComplex.brain is CombatBrainPatrolWalk, "Note: This will fail if controlEnemies==true");
+			} else {
+				Autotest.assertEqual(neiComplex.brain, null);
+			}
+			
+			var fooXml:XML = <prop id="foo" x="6" y="5"/>
+			var foo:SimpleEntity = SimpleEntity.createFromRoomContentsXml(fooXml, 1, Settings.catalog);
+			Autotest.clearAlert();
+			Autotest.assertNotEqual(foo, null, "couldn't create prop foo");
+			Settings.currentRoom.addEntityUsingItsLocation(foo);
+			var foo1:SimpleEntity = Settings.currentRoom.entityInRoomWithId("foo");
+			Autotest.assertEqual(foo, foo1, "foo not added to room");
+			Autotest.assertTrue(foo.location.equals(new Point(6, 5)), "foo location wrong");
+			testActionFromXml(changeFoo);
+			Autotest.assertNoAlert("Changing brains on simple entity should be ignored, not cause error");
+			Autotest.assertTrue(foo.location.equals(new Point(3, 5)), "foo didn't move to spot");
+			testActionFromXml(removeFoo);
+			
+			testActionFromXml(removenei);
+			Settings.currentRoom.removeSpot("testSpot");
+		}
 		
 		private function testActionFromXml(xml:XML, shouldDelayUntilEnd:Boolean = false):void {
 			var doAtEnd:Vector.<Function> = new Vector.<Function>();

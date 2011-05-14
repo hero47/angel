@@ -135,6 +135,20 @@ package angel.game {
 			}
 		}
 		
+		public function setBrain(forExplore:Boolean, newBrainClass:Class, newParam:String):void {
+			if (forExplore) {
+				exploreBrainClass = newBrainClass;
+				exploreBrainParam = newParam;
+			} else {
+				combatBrainClass = newBrainClass;
+				combatBrainParam = newParam;
+			}
+			
+			if (room != null) {
+				adjustBrainForRoomMode(room.mode);
+			}
+		}
+		
 		//NOTE: set brain classes and anything they will need for instantiation before calling.
 		public function changePlayerControl(willBePc:Boolean):void {
 			if (playerControlled == willBePc) {
@@ -418,11 +432,8 @@ package angel.game {
 		
 		public function endMoveImmediately():void {
 			if (path != null) {
-				if ((movingTo != null) && !tileBlocked(movingTo)) {
-					if (!movingTo.equals(myLocation)) {
-						changeLocationAsPartOfMove();
-					}
-					location = movingTo; // this will move us to center of square
+				if (movingTo != null) {
+					location = myLocation; // this will move my sprite to center of square
 					finishOneTileOfMove();
 				}
 				finishedMoving();
@@ -464,7 +475,10 @@ package angel.game {
 			if (tileBlocked(target)) {
 				return null;
 			}
-			if (step.x == 0 || step.y == 0) {
+			if (!(solidness & Prop.SOLID)) { // if I'm ghost/hologram then hard corners don't bother me
+				return target;
+			}
+			if (step.x == 0 || step.y == 0) { // if move isn't diagonal then hard corners are irrelevant
 				return target;
 			}
 			if ( (room.solidness(from.x, from.y + step.y) & Prop.HARD_CORNER) &&

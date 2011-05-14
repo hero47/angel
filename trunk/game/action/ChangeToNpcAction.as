@@ -12,20 +12,30 @@ package angel.game.action {
 	 */
 	public class ChangeToNpcAction implements IAction {
 		private var id:String;
+		private var commonXml:XML;
 		private var exploreBrainClass:Class;
 		private var combatBrainClass:Class;
 		private var exploreParam:String;
 		private var combatParam:String;
 		
-		public function ChangeToNpcAction(id:String, explore:Class, exploreParam:String, combat:Class, combatParam:String) {
+		public function ChangeToNpcAction(id:String, explore:Class, exploreParam:String, combat:Class, combatParam:String, otherXml:XML) {
 			this.id = id;
 			this.exploreBrainClass = explore;
 			this.combatBrainClass = combat;
+			this.exploreParam = exploreParam;
+			this.combatParam = combatParam;
+			this.commonXml = otherXml;
 		}
 		
 		public static function createFromXml(actionXml:XML):IAction {
+			var otherXml:XML = actionXml.copy();
+			for each (var attributeName:String in ["explore", "exploreParam", "combat", "combatParam", "id", "x", "y", "spot"]) {
+				if (otherXml.@[attributeName].length() > 0) {
+					delete otherXml.@[attributeName];
+				}
+			}
 			return new ChangeToNpcAction(actionXml.@id, Walker.exploreBrainClassFromString(actionXml.@explore), actionXml.@exploreParam,
-				Walker.combatBrainClassFromString(actionXml.@combat), actionXml.@combatParam);
+				Walker.combatBrainClassFromString(actionXml.@combat), actionXml.@combatParam, otherXml);
 		}
 		
 		/* INTERFACE angel.game.action.IAction */
@@ -35,8 +45,9 @@ package angel.game.action {
 			if (entityWithId is ComplexEntity) {
 				var entity:ComplexEntity = ComplexEntity(entityWithId);
 				if (entity.isReallyPlayer) {
-					entity.combatBrainClass = combatBrainClass;
-					entity.exploreBrainClass = exploreBrainClass;
+					entity.setBrain(false, combatBrainClass, combatParam);
+					entity.setBrain(true, exploreBrainClass, exploreParam);
+					entity.setCommonPropertiesFromXml(commonXml);
 					entity.changePlayerControl(false);
 					Settings.removeFromPlayerList(entity);
 				}
