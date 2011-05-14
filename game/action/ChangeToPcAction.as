@@ -25,9 +25,8 @@ package angel.game.action {
 			var entityWithId:SimpleEntity = Settings.currentRoom.entityInRoomWithId(id);
 			if (entityWithId is ComplexEntity) {
 				var entity:ComplexEntity = ComplexEntity(entityWithId);
-				entity.combatBrainClass = null;
-				entity.exploreBrainClass = BrainFollow;
-				entity.exploreBrainParam = Settings.currentRoom.mainPlayerCharacter.id;
+				entity.setBrain(false, null, null);
+				entity.setBrain(true, BrainFollow, Settings.currentRoom.mainPlayerCharacter.id);
 				entity.changePlayerControl(true);
 				Settings.addToPlayerList(entity);
 			} else {

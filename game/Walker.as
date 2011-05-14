@@ -123,11 +123,8 @@ package angel.game {
 			}
 			
 			var walker:Walker = new Walker(catalog.retrieveWalkerImage(id), id);
-			walker.exploreBrainClass = exploreBrainClassFromString(walkerXml.@explore);
-			walker.combatBrainClass = combatBrainClassFromString(walkerXml.@combat);
-			walker.exploreBrainParam = walkerXml.@exploreParam;
-			walker.combatBrainParam = walkerXml.@combatParam;
-			
+			walker.setBrain(true, exploreBrainClassFromString(walkerXml.@explore), walkerXml.@exploreParam);
+			walker.setBrain(false, combatBrainClassFromString(walkerXml.@combat), walkerXml.@combatParam);
 			walker.setCommonPropertiesFromXml(walkerXml);
 			return walker;
 		}

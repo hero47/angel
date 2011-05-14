@@ -83,6 +83,7 @@ package angel.game.combat {
 			//addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
 			addEventListener(Event.ENTER_FRAME, scrollRoomSpriteToMatchRealRoom);
 			combat.room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, someoneMoved);
+			combat.room.addEventListener(EntityEvent.LOCATION_CHANGED_DIRECTLY, someoneMoved);
 			combat.room.addEventListener(EntityEvent.START_TURN, someoneStartedTurn);
 			combat.room.addEventListener(EntityEvent.DEATH, someoneDied);
 			combat.room.addEventListener(EntityEvent.JOINED_COMBAT, someoneJoinedCombat);
@@ -156,6 +157,7 @@ package angel.game.combat {
 			//removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
 			removeEventListener(Event.ENTER_FRAME, scrollRoomSpriteToMatchRealRoom);
 			combat.room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, someoneMoved);
+			combat.room.removeEventListener(EntityEvent.LOCATION_CHANGED_DIRECTLY, someoneMoved);
 			combat.room.removeEventListener(EntityEvent.START_TURN, someoneStartedTurn);
 			combat.room.removeEventListener(EntityEvent.DEATH, someoneDied);
 			combat.room.removeEventListener(EntityEvent.JOINED_COMBAT, someoneJoinedCombat);
@@ -209,6 +211,10 @@ package angel.game.combat {
 		}
 		
 		public function someoneMoved(event:EntityEvent):void {
+			if (entityToMapIcon[event.entity] == null) {
+				// Whatever moved isn't one of our fighters
+				return;
+			}
 			if (ComplexEntity(event.entity).isPlayerControlled) {
 				setIconPositionFromEntityLocation(entityToMapIcon[event.entity], event.entity);
 				adjustAllEnemyIconsForVisibility();

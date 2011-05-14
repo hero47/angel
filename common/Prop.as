@@ -41,6 +41,7 @@ package angel.common {
 				imageBitmap.y = -imageBitmap.height + Tileset.TILE_HEIGHT;
 				addChild(imageBitmap);
 			}
+			location = new Point(0, 0);
 		}
 		
 		public function cleanup():void {
@@ -62,7 +63,8 @@ package angel.common {
 			//Assert.assertTrue(parent != null, "Getting location of an entity not on stage");
 			return myLocation;
 		}
-		
+
+		//WARNING! If this prop is in a Room, use room.changeEntityLocation or the cell contents won't match location!
 		public function set location(newLocation:Point):void {
 			myLocation = newLocation;
 			myDepth = newLocation.x + newLocation.y;

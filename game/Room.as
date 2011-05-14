@@ -423,7 +423,7 @@ package angel.game {
 		
 		// This will generally be called by the entity as it crosses the boundary between one floor tile
 		// and another during movement.
-		public function changeEntityLocation(entity:ComplexEntity, oldLocation:Point, newLocation:Point):void {
+		public function changeEntityLocation(entity:SimpleEntity, oldLocation:Point, newLocation:Point):void {
 			cells[oldLocation.x][oldLocation.y].remove(entity);
 			cells[newLocation.x][newLocation.y].add(entity);
 			
@@ -432,6 +432,7 @@ package angel.game {
 				// location along with appropriate depth.  If not, we need to directly set the location, which will
 				// put entity at the center-of-tile depth.
 				entity.location = newLocation;
+				entity.dispatchEvent(new EntityEvent(EntityEvent.LOCATION_CHANGED_DIRECTLY, true, false, entity));
 			}
 		}
 		

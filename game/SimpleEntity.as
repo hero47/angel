@@ -52,11 +52,13 @@ package angel.game {
 		}
 		
 		public function setCommonPropertiesFromXml(xml:XML):void {
-			myLocation = new Point(xml.@x, xml.@y);
-			
-			//UNDONE: @talk is pre-5/13/11 version; get rid of it eventually
-			var talk:String = xml.@talk;
+			if ((String(xml.@x) != "") || (String(xml.@y) != "")) {
+				myLocation = new Point(xml.@x, xml.@y);
+			}
 			var scriptFile:String = xml.@script;
+			
+			//UNDONE: @talk is pre-5/13/11 version; get rid of this eventually
+			var talk:String = xml.@talk;
 			if (talk != "") {
 				if (scriptFile != "") {
 					Alert.show("Error! @talk and @script on same room item, id " + id);
@@ -64,8 +66,7 @@ package angel.game {
 				var conversationData:ConversationData = new ConversationData();
 				conversationData.loadFromXmlFile(talk);
 				frobScript = new Script();
-				//CONSIDER: may need a special id meaning "entity that was frobbed"
-				frobScript.addAction(new ConversationAction(conversationData, this.id));
+				frobScript.addAction(new ConversationAction(conversationData, Script.FROBBED_ENTITY_ID));
 			}
 			
 			if (scriptFile != "") {

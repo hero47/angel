@@ -9,16 +9,17 @@ package angel.game.action {
 	public class Action {
 		
 		private static const actionNameToClass:Object = {
-			"goto":GotoAction,
-			"add":AddFlagAction,
-			"remove":RemoveFlagAction,
 			"addNpc":AddNpcAction,
-			"startCombat":StartCombatAction,
-			"removeFromRoom":RemoveFromRoomAction,
-			"changeToPc":ChangeToPcAction,
-			"changeToNpc":ChangeToNpcAction,
+			"add":AddFlagAction,
+			"change":ChangeAction,
 			"changeRoom":ChangeRoomAction,
-			"conversation":ConversationAction
+			"changeToNpc":ChangeToNpcAction,
+			"changeToPc":ChangeToPcAction,
+			"conversation":ConversationAction,
+			"goto":GotoAction,
+			"remove":RemoveFlagAction,
+			"removeFromRoom":RemoveFromRoomAction,
+			"startCombat":StartCombatAction
 		};
 		
 		public function Action() {
