@@ -42,14 +42,14 @@ package angel.game {
 			solidness = solidnessWhenAlive = Prop.DEFAULT_CHARACTER_SOLIDITY;
 		}
 
-		override protected function adjustImageForMove():void {
+		override public function adjustImageForMove(frameOfMove:int, totalFramesInMove:int):void {
 			Assert.assertTrue(currentHealth >= 0, "Dead entity " + aaId + " moving");
 			stopDying();
 			var step:int;
-			if (coordsForEachFrameOfMove == null) {
+			if ((totalFramesInMove == 0) || (frameOfMove >= totalFramesInMove)) {
 				step = WalkerImage.STAND;
 			} else {
-				var foot:int = frameOfMove * WALK_FRAMES.length / coordsForEachFrameOfMove.length;
+				var foot:int = frameOfMove * WALK_FRAMES.length / totalFramesInMove;
 				step = WALK_FRAMES[foot];
 			}
 			imageBitmap.bitmapData = walkerImage.bitsFacing(facing, step);

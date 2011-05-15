@@ -3,6 +3,7 @@ package angel.game.combat {
 	import angel.common.Floor;
 	import angel.common.Util;
 	import angel.game.ComplexEntity;
+	import angel.game.EntityMovement;
 	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.geom.Point;
@@ -87,14 +88,14 @@ package angel.game.combat {
 		// Color of path dot, and of tile hilight that follows mouse in Move ui
 		public static function colorForGait(gait:int):uint {
 			switch (gait) {
-				case ComplexEntity.GAIT_NO_MOVE:
-				case ComplexEntity.GAIT_WALK:
+				case EntityMovement.GAIT_NO_MOVE:
+				case EntityMovement.GAIT_WALK:
 					return WALK_COLOR;
 				break;
-				case ComplexEntity.GAIT_RUN:
+				case EntityMovement.GAIT_RUN:
 					return RUN_COLOR;
 				break;
-				case ComplexEntity.GAIT_SPRINT:
+				case EntityMovement.GAIT_SPRINT:
 					return SPRINT_COLOR;
 				break;
 			}
@@ -107,8 +108,8 @@ package angel.game.combat {
 		
 		public function dotColorIfExtendPathTo(entity:ComplexEntity, location:Point):uint {
 			var distance:int = 1000;
-			if (!entity.tileBlocked(location) && (path.length < entity.combatMovePoints)) {
-				var nextSegment:Vector.<Point> = entity.findPathTo(location, endOfCurrentPath() );
+			if (!entity.movement.tileBlocked(location) && (path.length < entity.movement.combatMovePoints)) {
+				var nextSegment:Vector.<Point> = entity.movement.findPathTo(location, endOfCurrentPath() );
 				if (nextSegment != null) {
 					distance = path.length + nextSegment.length;
 				}
@@ -116,11 +117,11 @@ package angel.game.combat {
 			if (shootFromCoverValid(entity, distance)) {
 				return RETURN_COLOR;
 			}
-			return colorForGait(entity.minGaitForDistance(distance));
+			return colorForGait(entity.movement.minGaitForDistance(distance));
 		}
 		
 		public function minimumGaitForPath(entity:ComplexEntity):int {
-			return entity.minGaitForDistance(path.length);
+			return entity.movement.minGaitForDistance(path.length);
 		}
 		
 		/******** Routines sharing elements of actual movement & visual elements **********/
@@ -137,7 +138,7 @@ package angel.game.combat {
 			}
 			dots.length = path.length;
 			var endIndexIndex:int = 0;
-			var gait:int = entity.minGaitForDistance(path.length);
+			var gait:int = entity.movement.minGaitForDistance(path.length);
 			for (var i:int = 0; i < path.length; i++) {
 				var isEnd:Boolean = (i == endIndexes[endIndexIndex]);
 				if (path.length == 1 && shootFromCoverValidForCurrentLocationAndPath(entity)) {
@@ -158,11 +159,11 @@ package angel.game.combat {
 		}
 		
 		public function extendPathIfLegalMove(entity:ComplexEntity, location:Point):void {
-			if (!entity.tileBlocked(location)) {
+			if (!entity.movement.tileBlocked(location)) {
 				var currentEnd:Point = endOfCurrentPath();
 				if ((currentEnd == null) || !location.equals(currentEnd)) {
-					var nextSegment:Vector.<Point> = entity.findPathTo(location, currentEnd);
-					if ((nextSegment != null) && (path.length + nextSegment.length <= entity.combatMovePoints)) {
+					var nextSegment:Vector.<Point> = entity.movement.findPathTo(location, currentEnd);
+					if ((nextSegment != null) && (path.length + nextSegment.length <= entity.movement.combatMovePoints)) {
 						extendPath(entity, nextSegment);
 					}
 				}
@@ -199,7 +200,7 @@ package angel.game.combat {
 		/******** Actual movement routines, separate from the visual elements *************/
 		
 		public function unusedMovePoints(entity:ComplexEntity):int {
-			return entity.combatMovePoints - path.length;
+			return entity.movement.combatMovePoints - path.length;
 		}
 		
 		public function hasPath():Boolean {
@@ -207,7 +208,7 @@ package angel.game.combat {
 		}
 		
 		public function startEntityFollowingPath(entity:ComplexEntity, gait:int):void {
-			entity.startMovingAlongPath(path, gait); //CAUTION: this path now belongs to entity!
+			entity.movement.startMovingAlongPath(path, gait); //CAUTION: this path now belongs to entity.movement!
 			path = new Vector.<Point>();
 			endIndexes.length = 0;
 		}
