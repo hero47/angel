@@ -45,6 +45,7 @@ package angel.game.action {
 		public function doAction(doAtEnd:Vector.<Function>):Object {
 			var id:String = xml.@id;
 			var entity:SimpleEntity = Settings.currentRoom.entityInRoomWithId(id);
+			var complexEntity:ComplexEntity = entity as ComplexEntity;
 			if (entity == null) {
 				Alert.show("Script error: no id " + id + " in room for changeAttributes");
 				return null;
@@ -70,25 +71,24 @@ package angel.game.action {
 			}
 			
 			if (newLocation != null) {
-				if (entity is ComplexEntity) {
-					ComplexEntity(entity).endMoveImmediately();
+				if ((complexEntity != null) && (complexEntity.moving())) {
+					complexEntity.movement.endMoveImmediately();
 				}
 				Settings.currentRoom.changeEntityLocation(entity, entity.location, newLocation);
 			}
 			
-			if (entity is ComplexEntity) {
-				var complex:ComplexEntity = ComplexEntity(entity);
+			if (complexEntity != null) {
 				if ((String(xml.@explore) != "") || (String(xml.@exploreParam) != "")) {
-					var exploreBrainClass:Class = (String(xml.@explore) == "") ? complex.exploreBrainClass :
+					var exploreBrainClass:Class = (String(xml.@explore) == "") ? complexEntity.exploreBrainClass :
 							Walker.exploreBrainClassFromString(xml.@explore);
-					var exploreParam:String = (String(xml.@exploreParam) == "") ? complex.exploreBrainParam : xml.@exploreParam;
-					complex.setBrain(true, exploreBrainClass, exploreParam);
+					var exploreParam:String = (String(xml.@exploreParam) == "") ? complexEntity.exploreBrainParam : xml.@exploreParam;
+					complexEntity.setBrain(true, exploreBrainClass, exploreParam);
 				}
 				if ((String(xml.@combat) != "") || (String(xml.@combatParam) != "")) {
-					var combatBrainClass:Class = (String(xml.@combat) == "") ? complex.combatBrainClass :
+					var combatBrainClass:Class = (String(xml.@combat) == "") ? complexEntity.combatBrainClass :
 							Walker.combatBrainClassFromString(xml.@combat);
-					var combatParam:String = (String(xml.@combatParam) == "") ? complex.combatBrainParam : xml.@combatParam;
-					complex.setBrain(false, combatBrainClass, combatParam);
+					var combatParam:String = (String(xml.@combatParam) == "") ? complexEntity.combatBrainParam : xml.@combatParam;
+					complexEntity.setBrain(false, combatBrainClass, combatParam);
 				}
 			}
 			

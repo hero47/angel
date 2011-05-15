@@ -1,6 +1,7 @@
 package angel.game.brain {
 	import angel.common.Assert;
 	import angel.game.ComplexEntity;
+	import angel.game.EntityMovement;
 	import angel.game.RoomExplore;
 	import flash.geom.Point;
 	/**
@@ -20,7 +21,9 @@ package angel.game.brain {
 			// Set the first twitch opportunity to a random fraction of a second, so all the NPCs in
 			// the room aren't acting in unison.
 			// This is not a listener; it will automatically go away when room explore mode ends
-			roomExplore.addTimedEvent(Math.random(), twitchOpportunity);
+			if (me.canMove()) {
+				roomExplore.addTimedEvent(Math.random(), twitchOpportunity);
+			}
 		}
 		
 		public function cleanup():void {
@@ -34,7 +37,7 @@ package angel.game.brain {
 			if (Math.random() < 0.25) {
 				var goal:Point = chooseVacantNeighbor();
 				if (goal != null) {
-					me.startMovingToward(goal);
+					me.movement.startMovingToward(goal);
 					wait = 2;
 				}
 			}
@@ -47,8 +50,8 @@ package angel.game.brain {
 			var facing:int;
 			var choices:Vector.<Point> = new Vector.<Point>;
 			for (facing = 0; facing < 8; ++facing) {
-				var goal:Point = me.location.add(ComplexEntity.facingToNeighbor[facing]);
-				if (!me.tileBlocked(goal)) {
+				var goal:Point = me.location.add(EntityMovement.facingToNeighbor[facing]);
+				if (!me.movement.tileBlocked(goal)) {
 					choices.push(goal);
 				}
 			}

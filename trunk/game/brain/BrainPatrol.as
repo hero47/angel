@@ -20,7 +20,7 @@ package angel.game.brain {
 			me = entity;
 			if ((param != null) && (param != "")) {
 				goals = UtilBrain.pointsFromCommaSeparatedSpots(me.room, param, " in explore patrol route for " + entity.id);
-				if (goals.length > 0) {
+				if (me.canMove() && (goals.length > 0)) {
 					me.addEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
 					continuePatrol(roomExplore);
 				}
@@ -42,11 +42,11 @@ package angel.game.brain {
 				currentGoalIndex = (currentGoalIndex + 1) % goals.length;
 				roomExplore.addTimedEvent(DELAY_AT_EACH_SPOT, continuePatrol);
 			} else {
-				var path:Vector.<Point> = me.findPathTo(goals[currentGoalIndex]);
+				var path:Vector.<Point> = me.movement.findPathTo(goals[currentGoalIndex]);
 				if (path == null) {
 					roomExplore.addTimedEvent(DELAY_AT_EACH_SPOT, continuePatrol);
 				} else {
-					me.startMovingAlongPath(path);
+					me.movement.startMovingAlongPath(path);
 				}
 			}
 		}

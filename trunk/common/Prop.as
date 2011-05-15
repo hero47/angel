@@ -27,7 +27,7 @@ package angel.common {
 		
 		// Depth represents distance to the "camera" plane, in our orthogonal view
 		// The fractional part of depth indicates distance away from that line of cell-centers
-		protected var myDepth:Number = -Infinity;
+		public var depth:Number = -Infinity;
 		
 		// Size of art assets for prop
 		// NOTE: the prop itself may be shorter than this!
@@ -67,8 +67,17 @@ package angel.common {
 		//WARNING! If this prop is in a Room, use room.changeEntityLocation or the cell contents won't match location!
 		public function set location(newLocation:Point):void {
 			myLocation = newLocation;
-			myDepth = newLocation.x + newLocation.y;
-			var pixels:Point = pixelLocStandingOnTile(newLocation);
+			moveToCenterOfTile();
+		}
+		
+		//This should only be called by routines that are manipulating partial depth (for positions "between" tiles)
+		public function setLocationWithoutChangingDepth(newLocation:Point):void {
+			myLocation = newLocation;
+		}
+		
+		public function moveToCenterOfTile():void {
+			depth = myLocation.x + myLocation.y;
+			var pixels:Point = pixelLocStandingOnTile(myLocation);
 			this.x = pixels.x;
 			this.y = pixels.y;
 			//Assert.assertTrue(parent != null, "Setting location of an entity not on stage");
@@ -77,24 +86,20 @@ package angel.common {
 			}
 		}
 		
-		protected function pixelLocStandingOnTile(tileLoc:Point):Point {
+		public function pixelLocStandingOnTile(tileLoc:Point):Point {
 			var tilePixelLoc:Point = Floor.tileBoxCornerOf(tileLoc);
 			return new Point(tilePixelLoc.x, tilePixelLoc.y);
 		}
-		
-		protected function get depth():Number {
-			return myDepth;
-		}
 
 		// CAUTION: Depends on all children in content layer being Prop
-		protected function adjustDrawOrder():void {
+		public function adjustDrawOrder():void {
 			var index:int = parent.getChildIndex(this);
 			var correctIndex:int;
 			var other:Prop = null;
 			// Assuming depth is currently correct or too low, find index I should move to
 			for (correctIndex = index; correctIndex > 0; correctIndex--) {
 				other = Prop(parent.getChildAt(correctIndex - 1));
-				if (other.depth < myDepth) {
+				if (other.depth < depth) {
 					break;
 				}
 			}
@@ -102,7 +107,7 @@ package angel.common {
 				//That didn't find a move, so depth must be correct or too high.
 				for (correctIndex = index; correctIndex < parent.numChildren-1; correctIndex++) {
 					other = Prop(parent.getChildAt(correctIndex + 1));
-					if (other.depth > myDepth) {
+					if (other.depth > depth) {
 						break;
 					}
 				}

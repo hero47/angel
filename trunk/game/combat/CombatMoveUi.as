@@ -3,6 +3,7 @@ package angel.game.combat {
 	import angel.common.FloorTile;
 	import angel.common.Util;
 	import angel.game.ComplexEntity;
+	import angel.game.EntityMovement;
 	import angel.game.Icon;
 	import angel.game.IRoomUi;
 	import angel.game.PieSlice;
@@ -109,10 +110,10 @@ package angel.game.combat {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFireFromCover), doPlayerFireFromCover));
 				}
 				var minGait:int = combat.mover.minimumGaitForPath(player);
-				if (minGait <= ComplexEntity.GAIT_WALK) {
+				if (minGait <= EntityMovement.GAIT_WALK) {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doPlayerMoveWalk));
 				}
-				if (minGait <= ComplexEntity.GAIT_RUN) {
+				if (minGait <= EntityMovement.GAIT_RUN) {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.Run), doPlayerMoveRun));
 				}
 				slices.push(new PieSlice(Icon.bitmapData(Icon.Sprint), doPlayerMoveSprint));
@@ -121,11 +122,11 @@ package angel.game.combat {
 			return slices;
 		}
 		
-		private function doPlayerMove(gaitChoice:int = ComplexEntity.GAIT_UNSPECIFIED):void {
+		private function doPlayerMove(gaitChoice:int = EntityMovement.GAIT_UNSPECIFIED):void {
 			var playerMoving:ComplexEntity = player;
 			room.disableUi();
 			
-			if (gaitChoice == ComplexEntity.GAIT_UNSPECIFIED) {
+			if (gaitChoice == EntityMovement.GAIT_UNSPECIFIED) {
 				gaitChoice = combat.mover.minimumGaitForPath(playerMoving);
 			}
 			playerMoving.centerRoomOnMe();
@@ -134,25 +135,25 @@ package angel.game.combat {
 		
 		private function doPlayerMoveStay():void {
 			removePath();
-			doPlayerMove(ComplexEntity.GAIT_NO_MOVE);
+			doPlayerMove(EntityMovement.GAIT_NO_MOVE);
 		}
 		
 		private function doPlayerMoveWalk():void {
-			doPlayerMove(ComplexEntity.GAIT_WALK);
+			doPlayerMove(EntityMovement.GAIT_WALK);
 		}
 		
 		private function doPlayerMoveRun():void {
-			doPlayerMove(ComplexEntity.GAIT_RUN);
+			doPlayerMove(EntityMovement.GAIT_RUN);
 		}
 		
 		private function doPlayerMoveSprint():void {
-			doPlayerMove(ComplexEntity.GAIT_SPRINT);
+			doPlayerMove(EntityMovement.GAIT_SPRINT);
 		}
 		
 		private function doPlayerFireFromCover():void {
 			combat.mover.displayReturnMarker(player.location);
 			combat.setupFireFromCoverMove(player);
-			doPlayerMove(ComplexEntity.GAIT_RUN);
+			doPlayerMove(EntityMovement.GAIT_RUN);
 		}
 		
 		private function removePath():void {

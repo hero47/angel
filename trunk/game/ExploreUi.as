@@ -55,7 +55,7 @@ package angel.game {
 				case Keyboard.SPACE:
 					// if move in progress, stop moving as soon as possible.
 					if (playerIsMoving) {
-						player.startMovingToward(player.location);
+						player.movement.startMovingToward(player.location);
 					}
 				break;
 				case Keyboard.BACKSPACE:
@@ -66,7 +66,7 @@ package angel.game {
 		
 		public function mouseMove(tile:FloorTile):void {
 			if (tile != null) {
-				if (player.tileBlocked(tile.location)) {
+				if (player.movement.tileBlocked(tile.location)) {
 					var target:SimpleEntity = room.firstEntityIn(tile.location);
 					if (target != null && target.frobOk(player)) {
 						room.moveHilight(tile, FROB_COLOR);
@@ -74,7 +74,7 @@ package angel.game {
 						room.moveHilight(null, 0);
 					}
 				} else {
-					var pathToMouse:Vector.<Point> = player.findPathTo(tile.location);
+					var pathToMouse:Vector.<Point> = player.movement.findPathTo(tile.location);
 					if (pathToMouse == null) {
 						room.moveHilight(null, 0);
 					} else {
@@ -87,7 +87,7 @@ package angel.game {
 		public function mouseClick(tile:FloorTile):void {
 			var loc:Point = tile.location;
 			
-			if (player.tileBlocked(tile.location)) {
+			if (player.movement.tileBlocked(tile.location)) {
 				var target:SimpleEntity = room.firstEntityIn(tile.location);
 				if (target != null && target.frobOk(player)) {
 					target.frob(player);
@@ -95,8 +95,8 @@ package angel.game {
 				}
 			}
 			
-			if (!loc.equals(player.location) && !player.tileBlocked(loc)) {
-				playerIsMoving = player.startMovingToward(loc);
+			if (!loc.equals(player.location) && !player.movement.tileBlocked(loc)) {
+				playerIsMoving = player.movement.startMovingToward(loc);
 				if (playerIsMoving) {
 					player.addEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
 					if (!(Settings.testExploreScroll > 0)) {

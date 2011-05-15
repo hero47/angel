@@ -45,9 +45,9 @@ package angel.game {
 						continue;
 					}
 					
-					var neighbor:Point = entity.checkBlockage(current, stepToNextNeighbor);
+					var neighbor:Point = entity.movement.checkBlockage(current, stepToNextNeighbor);
 					if (neighbor == null) {
-						if (entity.tileBlocked(new Point(xNext, yNext))) {
+						if (entity.movement.tileBlocked(new Point(xNext, yNext))) {
 							steps[xNext][yNext] = -1;
 						}
 					} else {
@@ -81,7 +81,7 @@ package angel.game {
 						continue;
 					}
 					if (steps[xNext][yNext] == lookingFor) {
-						var neighbor:Point = entity.checkBlockage(current, stepToNextNeighbor);
+						var neighbor:Point = entity.movement.checkBlockage(current, stepToNextNeighbor);
 						if (neighbor != null) {
 							current = neighbor;
 							path.push(current);
@@ -111,7 +111,7 @@ package angel.game {
 		public static function findReachableTiles(entity:ComplexEntity):Vector.<Vector.<int>> {
 			var room:Room = entity.room;
 			var from:Point = entity.location;
-			var range:int = entity.combatMovePoints;
+			var range:int = entity.movement.combatMovePoints;
 			// 0 = unvisited. -1 = blocked.  other number = distance counting start point as 1
 			var steps:Vector.<Vector.<int>> = new Vector.<Vector.<int>>(room.size.x);
 			for (var i:int = 0; i < room.size.x; i++) {
@@ -139,9 +139,9 @@ package angel.game {
 						continue;
 					}
 					
-					var neighbor:Point = entity.checkBlockage(current, stepToNextNeighbor);
+					var neighbor:Point = entity.movement.checkBlockage(current, stepToNextNeighbor);
 					if (neighbor == null) {
-						if (entity.tileBlocked(new Point(xNext, yNext))) {
+						if (entity.movement.tileBlocked(new Point(xNext, yNext))) {
 							steps[xNext][yNext] = -1;
 						}
 					} else {

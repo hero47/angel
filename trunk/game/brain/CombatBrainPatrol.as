@@ -31,15 +31,15 @@ package angel.game.brain {
 		
 		public function chooseMoveAndDrawDots():void {
 			trace(me.aaId, "Patrol: Choose move and draw dots");
-			if (UtilBrain.getFirstAvailableTarget(me, combat) != null) {
-				//If we have a target in sight, just stand still and shoot for max damage.
+			if (me.canMove() || (UtilBrain.getFirstAvailableTarget(me, combat) != null)) {
+				//If we can't move, or have a target in sight, just stand still and shoot for max damage.
 				return;
 			}
 			if (me.location.equals(goals[currentGoalIndex])) {
 				currentGoalIndex = (currentGoalIndex + 1) % goals.length;
 			}
-			var path:Vector.<Point> = me.findPathTo(goals[currentGoalIndex]);
-			var maxDistance:int = me.maxDistanceForGait[gait]; // get this each time in case something changed my movement points
+			var path:Vector.<Point> = me.movement.findPathTo(goals[currentGoalIndex]);
+			var maxDistance:int = me.movement.maxDistanceForGait[gait]; // get this each time in case something changed my movement points
 			if (path.length > maxDistance) {
 				path.length = maxDistance;
 			}
@@ -54,6 +54,7 @@ package angel.game.brain {
 		
 		public function doMove():void {
 			trace(me.aaId, "do move");
+			//CONSIDER: can we skip this if !me.canMove(), or is it needed for turn phase flow? I think it's needed.
 			combat.mover.startEntityFollowingPath(me, gait);		
 		}
 		

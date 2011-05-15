@@ -24,7 +24,9 @@ package angel.game.brain {
 		public function BrainFollow(entity:ComplexEntity, roomExplore:RoomExplore, param:String) {
 			me = entity;
 			friendId = param;
-			roomExplore.addTimedEvent(Math.random()*INTERVAL, twitchOpportunity);
+			if (me.canMove()) {
+				roomExplore.addTimedEvent(Math.random() * INTERVAL, twitchOpportunity);
+			}
 		}
 		
 		public function cleanup():void {
@@ -35,11 +37,11 @@ package angel.game.brain {
 
 		private function twitchOpportunity(roomExplore:RoomExplore):void {
 			var friend:SimpleEntity = me.room.entityInRoomWithId(friendId);
-			if ((friend != null) && !me.moving) {
-				var path:Vector.<Point> = me.findPathTo(friend.location);
+			if ((friend != null) && !me.moving()) {
+				var path:Vector.<Point> = me.movement.findPathTo(friend.location);
 				if ((path != null) && (path.length > 1)) {
 					path.length = path.length - 1;
-					me.startMovingAlongPath(path);
+					me.movement.startMovingAlongPath(path);
 				}
 			}
 			roomExplore.addTimedEvent(INTERVAL, twitchOpportunity);

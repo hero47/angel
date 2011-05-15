@@ -98,8 +98,10 @@ package angel.game {
 			}
 			Assert.assertTrue(activeUi == null, "UI didn't get shut down by mode cleanup");
 			while (contentsLayer.numChildren > 0) {
-				var prop:Prop = Prop(contentsLayer.getChildAt(0));
-				prop.cleanup();
+				//NOTE: if/when we add things like tossed grenades, they will be props and this will fail
+				var entity:SimpleEntity = SimpleEntity(contentsLayer.getChildAt(0));
+				//UNDONE: See comment on SimpleEntity.detachFromRoom()
+				entity.detachFromRoom();
 			}
 			contentsLayer = null;
 			// UNDONE: Does floor need a cleanup?
@@ -114,7 +116,9 @@ package angel.game {
 		
 		public function changeModeTo(newModeClass:Class):void {
 			forEachComplexEntity(function(entity:ComplexEntity):void {
-				entity.endMoveImmediately();
+				if (entity.moving()) {
+					entity.movement.endMoveImmediately();
+				}
 			} );
 			if (mode != null) {
 				mode.cleanup();
@@ -367,7 +371,7 @@ package angel.game {
 				var location:Point = entity.location;
 				cells[location.x][location.y].remove(entity);		
 				entity.dispatchEvent(new EntityEvent(EntityEvent.REMOVED_FROM_ROOM, true, false, entity));
-				entity.cleanup();
+				entity.detachFromRoom();
 			}
 		}
 		

@@ -1,6 +1,7 @@
 package angel.game.brain {
 	import angel.game.combat.RoomCombat;
 	import angel.game.ComplexEntity;
+	import angel.game.EntityMovement;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -8,7 +9,7 @@ package angel.game.brain {
 	public class CombatBrainPatrolWalk extends CombatBrainPatrol {
 		
 		public function CombatBrainPatrolWalk(entity:ComplexEntity, combat:RoomCombat, param:String) {
-			super(entity, combat, param, ComplexEntity.GAIT_WALK);
+			super(entity, combat, param, EntityMovement.GAIT_WALK);
 		}
 		
 	}
