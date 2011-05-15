@@ -2,8 +2,10 @@ package angel.game {
 	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.Catalog;
+	import angel.common.CharacterStats;
 	import angel.common.Prop;
-	import angel.common.WalkerImage;
+	import angel.common.RoomContentResource;
+	import angel.common.WalkerAnimationData;
 	import angel.game.brain.BrainFidget;
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.BrainPatrol;
@@ -22,24 +24,29 @@ package angel.game {
 	
 	public class Walker extends ComplexEntity {
 		
-		private var walkerImage:WalkerImage;
+		private var resource:RoomContentResource;
+		private var animationData:WalkerAnimationData;
 		private var deathTimer:Timer;
 		private var solidnessWhenAlive:uint;
 		
 		private static const DEATH_DURATION:int = 500; // milliseconds
-		private static const WALK_FRAMES:Vector.<int> = Vector.<int>([WalkerImage.LEFT, WalkerImage.STAND,
-			WalkerImage.RIGHT, WalkerImage.STAND, WalkerImage.LEFT, WalkerImage.STAND, WalkerImage.RIGHT, WalkerImage.STAND]);
+		private static const WALK_FRAMES:Vector.<int> = Vector.<int>([WalkerAnimationData.LEFT, WalkerAnimationData.STAND,
+			WalkerAnimationData.RIGHT, WalkerAnimationData.STAND, WalkerAnimationData.LEFT, WalkerAnimationData.STAND,
+			WalkerAnimationData.RIGHT, WalkerAnimationData.STAND]);
 		
 		// id is for debugging use only
-		public function Walker(walkerImage:WalkerImage, id:String="") {
-			this.walkerImage = walkerImage;
-			facing = WalkerImage.FACE_CAMERA;
-			super(new Bitmap(walkerImage.bitsFacing(facing)), id);
-			this.maxHealth = this.currentHealth = walkerImage.health;
-			myDisplayName = walkerImage.displayName;
-			setMovePoints(walkerImage.movePoints);
-			inventory.add(new Gun(walkerImage.damage));
-			solidness = solidnessWhenAlive = Prop.DEFAULT_CHARACTER_SOLIDITY;
+		public function Walker(resource:RoomContentResource, id:String="") {
+			this.resource = resource;
+			animationData = WalkerAnimationData(resource.animationData);
+			facing = ComplexEntity.FACE_CAMERA;
+			super(resource, id);
+			
+			var characterStats:CharacterStats = resource.characterStats;
+			this.maxHealth = this.currentHealth = characterStats.health;
+			myDisplayName = characterStats.displayName;
+			setMovePoints(characterStats.movePoints);
+			inventory.add(new Gun(characterStats.damage));
+			solidness = solidnessWhenAlive = resource.solidness;
 		}
 
 		override public function adjustImageForMove(frameOfMove:int, totalFramesInMove:int):void {
@@ -47,25 +54,25 @@ package angel.game {
 			stopDying();
 			var step:int;
 			if ((totalFramesInMove == 0) || (frameOfMove >= totalFramesInMove)) {
-				step = WalkerImage.STAND;
+				step = WalkerAnimationData.STAND;
 			} else {
 				var foot:int = frameOfMove * WALK_FRAMES.length / totalFramesInMove;
 				step = WALK_FRAMES[foot];
 			}
-			imageBitmap.bitmapData = walkerImage.bitsFacing(facing, step);
+			imageBitmap.bitmapData = animationData.bitsFacing(facing, step);
 		}
 		override public function turnToFacing(newFacing:int):void {
 			Assert.assertTrue(currentHealth >= 0, "Dead entity " + aaId + " turning");
 			stopDying();
 			super.turnToFacing(newFacing);
-			imageBitmap.bitmapData = walkerImage.bitsFacing(facing);
+			imageBitmap.bitmapData = animationData.bitsFacing(facing);
 		}
 		
 		override public function initHealth():void {
 			super.initHealth();
 			stopDying();
 			solidness = solidnessWhenAlive;
-			imageBitmap.bitmapData = walkerImage.bitsFacing(facing); // stand back up if we were dead
+			imageBitmap.bitmapData = animationData.bitsFacing(facing); // stand back up if we were dead
 		}
 		
 		private function stopDying():void {
@@ -78,7 +85,7 @@ package angel.game {
 		// NOTE: this is a real-time animation; it continues even when game pauses.
 		override public function startDeathAnimation():void {
 			if (deathTimer == null) {
-				imageBitmap.bitmapData = walkerImage.bitsFacing(WalkerImage.FACE_DYING, 0);
+				imageBitmap.bitmapData = animationData.bitsFacing(WalkerAnimationData.FACE_DYING, 0);
 				deathTimer = new Timer(DEATH_DURATION / 2, 2);
 				deathTimer.addEventListener(TimerEvent.TIMER, advanceDeathAnimation);
 				deathTimer.start();
@@ -86,7 +93,7 @@ package angel.game {
 		}
 		
 		private function advanceDeathAnimation(event:TimerEvent):void {
-			imageBitmap.bitmapData = walkerImage.bitsFacing(WalkerImage.FACE_DYING, deathTimer.currentCount);
+			imageBitmap.bitmapData = animationData.bitsFacing(WalkerAnimationData.FACE_DYING, deathTimer.currentCount);
 			if (deathTimer.currentCount == 2) {
 				deathTimer.stop();
 				deathTimer.removeEventListener(TimerEvent.TIMER, advanceDeathAnimation);
@@ -122,7 +129,7 @@ package angel.game {
 				id = walkerXml.@id
 			}
 			
-			var walker:Walker = new Walker(catalog.retrieveWalkerImage(id), id);
+			var walker:Walker = new Walker(catalog.retrieveCharacterResource(id), id);
 			walker.setBrain(true, exploreBrainClassFromString(walkerXml.@explore), walkerXml.@exploreParam);
 			walker.setBrain(false, combatBrainClassFromString(walkerXml.@combat), walkerXml.@combatParam);
 			walker.setCommonPropertiesFromXml(walkerXml);

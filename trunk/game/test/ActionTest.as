@@ -35,10 +35,10 @@ package angel.game.test {
 			Autotest.testFunction(testMessageAction);
 			Autotest.testFunction(testIfAction);
 			
-			var xxTest:Walker = new Walker(Settings.catalog.retrieveWalkerImage("xxTest"), "xxTest");
+			var xxTest:Walker = new Walker(Settings.catalog.retrieveCharacterResource("xxTest"), "xxTest");
 			Autotest.assertAlertText("Error: xxTest not in catalog.");
 			Autotest.assertNotEqual(xxTest, null, "Should create with default settings if not in catalog");
-			var xxTest2:Walker = new Walker(Settings.catalog.retrieveWalkerImage("xxTest"), "xxTest");
+			var xxTest2:Walker = new Walker(Settings.catalog.retrieveCharacterResource("xxTest"), "xxTest");
 			Autotest.assertNoAlert("No alert expected on second reference to unknown id");
 			
 			// Explore mode requires a player character.
@@ -51,8 +51,8 @@ package angel.game.test {
 			while (Settings.catalog.entry(enemyId) != null) {
 				enemyId += "X";
 			}
-			var mainPc:Walker = new Walker(Settings.catalog.retrieveWalkerImage(mainPcId), mainPcId);
-			var enemy:Walker = new Walker(Settings.catalog.retrieveWalkerImage(enemyId), enemyId);
+			var mainPc:Walker = new Walker(Settings.catalog.retrieveCharacterResource(mainPcId), mainPcId);
+			var enemy:Walker = new Walker(Settings.catalog.retrieveCharacterResource(enemyId), enemyId);
 			enemy.combatBrainClass = CombatBrainWander;
 			Autotest.assertAlerted("Catalog should have alerted and then created default WalkerImage");
 			

@@ -1,11 +1,12 @@
 package angel.roomedit {
 	import angel.common.CatalogEntry;
+	import angel.common.CharacterStats;
 	import angel.common.Defaults;
 	import angel.common.Prop;
-	import angel.common.PropImage;
+	import angel.common.RoomContentResource;
 	import angel.common.SimplerButton;
 	import angel.common.Util;
-	import angel.common.WalkerImage;
+	import angel.common.WalkerAnimationData;
 	import fl.controls.CheckBox;
 	import fl.controls.ComboBox;
 	import flash.display.Bitmap;
@@ -61,13 +62,13 @@ package angel.roomedit {
 			addChild(propChooser);
 			
 			nameTextField = Util.createTextEditControlBelow(propChooser, "Display Name", 100, 100,
-					function(event:Event):void { changeWalkerImageProperty(event.target.text, "displayName", Defaults.DISPLAY_NAME) }, 0);
+					function(event:Event):void { changeCharacterProperty(event.target.text, "displayName", Defaults.DISPLAY_NAME) }, 0);
 			healthTextField = Util.createTextEditControlBelow(nameTextField, "Hits", 100, 40,
-					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "health", Defaults.HEALTH) }, 0);
+					function(event:Event):void { changeCharacterProperty(int(event.target.text), "health", Defaults.HEALTH) }, 0);
 			damageTextField = Util.createTextEditControlBelow(healthTextField, "Damage", 100, 40,
-					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "damage", Defaults.DAMAGE) }, 0);
+					function(event:Event):void { changeCharacterProperty(int(event.target.text), "damage", Defaults.DAMAGE) }, 0);
 			movePointsTextField = Util.createTextEditControlBelow(damageTextField, "Move Points", 100, 40,
-					function(event:Event):void { changeWalkerImageProperty(int(event.target.text), "movePoints", Defaults.MOVE_POINTS) }, 0 );
+					function(event:Event):void { changeCharacterProperty(int(event.target.text), "movePoints", Defaults.MOVE_POINTS) }, 0 );
 			changeImageControl = FilenameControl.createBelow(movePointsTextField, false, "Image", 0, 220,
 					function(event:Event):void { 
 							var walkerId:String = propCombo.selectedLabel;
@@ -90,22 +91,23 @@ package angel.roomedit {
 		
 		private function changeProp(event:Event):void {
 			var walkerId:String = propCombo.selectedLabel;
+
+			var resource:RoomContentResource = catalog.retrieveCharacterResource(walkerId);
+			propBitmap.bitmapData = resource.standardImage();
 			
-			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
-			propBitmap.bitmapData = walkerImage.bitsFacing(WalkerImage.FACE_CAMERA);
-			
-			nameTextField.text = walkerImage.displayName;
-			healthTextField.text = String(walkerImage.health);
-			damageTextField.text = String(walkerImage.damage);
-			movePointsTextField.text = String(walkerImage.movePoints);
+			var characterStats:CharacterStats = resource.characterStats;
+			nameTextField.text = characterStats.displayName;
+			healthTextField.text = String(characterStats.health);
+			damageTextField.text = String(characterStats.damage);
+			movePointsTextField.text = String(characterStats.movePoints);
 			changeImageControl.text = catalog.getFilenameFromId(walkerId);
 		}
 		
-		private function changeWalkerImageProperty(newValue:*, propertyName:String, defaultValue:* = null):void {
+		private function changeCharacterProperty(newValue:*, propertyName:String, defaultValue:* = null):void {
 			var walkerId:String = propCombo.selectedLabel;
-			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
+			var characterStats:CharacterStats = catalog.retrieveCharacterResource(walkerId).characterStats;
 			
-			walkerImage[propertyName] = newValue;
+			characterStats[propertyName] = newValue;
 			if (newValue == defaultValue) {
 				catalog.deleteXmlAttribute(walkerId, propertyName);
 			} else {
@@ -115,20 +117,20 @@ package angel.roomedit {
 
 		private function setTopByPixelScan(event:Event):void {
 			var walkerId:String = propCombo.selectedLabel;
-			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
 			
-			var blankRows:int = countBlankRowsAtTop(walkerImage);
-			walkerImage.increaseTop(blankRows);
+			var resource:RoomContentResource = catalog.retrieveCharacterResource(walkerId);
 			
-			catalog.changeXmlAttribute(walkerId, "top", String(walkerImage.unusedPixelsAtTopOfCell));
+			var blankRows:int = countBlankRowsAtTop(resource.standardImage());
+			var newUnusedPixels:int = WalkerAnimationData(resource.animationData).increaseTop(blankRows);
+			resource.characterStats.unusedPixelsAtTopOfCell = newUnusedPixels;
+			
+			catalog.changeXmlAttribute(walkerId, "top", String(newUnusedPixels));
 		}
 		
-		private function countBlankRowsAtTop(walkerImage:WalkerImage):int {
-			var bits:BitmapData = walkerImage.bitsFacing(WalkerImage.FACE_CAMERA, WalkerImage.STAND);
+		private function countBlankRowsAtTop(bits:BitmapData):int {
 			for (var y:int = 0; y < bits.rect.height; y++) {
 				for (var x:int = 0; x < bits.rect.width; x++) {
 					if (bits.getPixel32(x, y) != 0) {
-						trace("first non-transparent bit at", x, y);
 						return y;
 					}
 				}

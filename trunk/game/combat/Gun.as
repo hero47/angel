@@ -32,8 +32,8 @@ package angel.game.combat {
 			
 			var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(Settings.FRAMES_PER_SECOND);
 			uglyFireLineThatViolates3D.graphics.lineStyle(2, (shooter.isPlayerControlled ? 0xff0000 : 0xffa500));
-			uglyFireLineThatViolates3D.graphics.moveTo(shooter.center().x, shooter.center().y);
-			uglyFireLineThatViolates3D.graphics.lineTo(target.center().x, target.center().y);
+			uglyFireLineThatViolates3D.graphics.moveTo(shooter.centerOfImage().x, shooter.centerOfImage().y);
+			uglyFireLineThatViolates3D.graphics.lineTo(target.centerOfImage().x, target.centerOfImage().y);
 			shooter.room.addChild(uglyFireLineThatViolates3D);
 			
 			if (!shooter.isPlayerControlled) {

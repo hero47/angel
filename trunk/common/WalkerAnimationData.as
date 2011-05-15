@@ -1,84 +1,60 @@
 package angel.common {
-	import angel.common.Prop;
-	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.text.TextField;
-
-	// UNDONE: This has expanded to more than just an image, and should be renamed at some point
-	// or the non-image stuff moved.  Same with PropImage.
-	public class WalkerImage implements ICatalogedResource {
+	/**
+	 * ...
+	 * @author Beth Moursund
+	 */
+	public class WalkerAnimationData implements IAnimationData {
 		public static const STAND:int = 0;
 		public static const RIGHT:int = 1;
 		public static const LEFT:int = 2;
 		
-		// Facing == rotation/45 if we were in a top-down view.
-		// This will make it convenient if we ever want to determine facing from actual angles
-		public static const FACE_CAMERA:int = 1;
-		public static const FACE_DYING:int = 8;
-		
-		public var health:int = Defaults.HEALTH;
-		public var damage:int = Defaults.DAMAGE;
-		public var movePoints:int = Defaults.MOVE_POINTS;
-		public var displayName:String = Defaults.DISPLAY_NAME;
-		public var unusedPixelsAtTopOfCell:int = Defaults.TOP;
-		
 		[Embed(source = '../../../EmbeddedAssets/temp_default_walker.png')]
-		private var DefaultWalkerBitmap:Class;
+		private static const DefaultWalkerBitmap:Class;
 		
-		private var entry:CatalogEntry;
+		public var unusedPixelsAtTopOfCell:int = Defaults.TOP;
 		
 		//mapping from facing to position on image sheet
 		//(facing 8 == DYING holds the death images)
 		private static const imageColumn:Vector.<int> = Vector.<int>([1, 0, 7, 6, 5, 4, 3, 2, 8]);
+		public static const FACE_DYING:int = 8;
 		
 		private var bits:Vector.<Vector.<BitmapData>>;
 		
-		public function WalkerImage() {
+		public function WalkerAnimationData() {
 			
 		}
-		
-		public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry):void {
-			this.entry = entry;
+
+		//NOTE: set unusedPixelsAtTopOfCell before calling this
+		public function prepareTemporaryVersionForUse(labelForTemporaryVersion:String):void {
+			// Prepare temporary version for use until bitmap data is loaded from file
+			createBlankBits();
+			copyBitsFromImagePane((new DefaultWalkerBitmap()).bitmapData);
 			
-			parseAndDeleteCatalogXml(entry);	
-			createPlaceholderImages(id);
-		}
-		
-		private function parseAndDeleteCatalogXml(entry:CatalogEntry):void {
-			if (entry.xml != null) {
-				setIntFromXml(this, "health", entry, "health");
-				setIntFromXml(this, "damage", entry, "damage");
-				setIntFromXml(this, "unusedPixelsAtTopOfCell", entry, "top");
-				setIntFromXml(this, "movePoints", entry, "movePoints");
-				setTextFromXml(this, "displayName", entry, "displayName");
-				entry.xml = null;
+			var label:TextField = new TextField();
+			label.text = labelForTemporaryVersion;
+			for (var facing:int = 0; facing < 9; facing++) {
+				for (var foot:int = 0; foot < 3; foot++) {
+					bits[facing][foot].draw(label);
+				}
 			}
 		}
 		
-		private static function setIntFromXml(setInto:Object, objectPropertyName:String, entry:CatalogEntry, xmlPropertyName:String):void {
-			var valueAsString:String = entry.xml.attribute(xmlPropertyName);
-			if (valueAsString != "") {
-				setInto[objectPropertyName] = int(valueAsString);
-			}
-		}
-		
-		private static function setTextFromXml(setInto:Object, objectPropertyName:String, entry:CatalogEntry, xmlPropertyName:String):void {
-			var valueAsString:String = entry.xml.attribute(xmlPropertyName);
-			if (valueAsString != "") {
-				setInto[objectPropertyName] = valueAsString;
-			}
-		}
-		
-		public function get catalogEntry():CatalogEntry {
-			return entry;
-		}
-		
-		// Copy new images over the already-existing bitmapData (which may already be displayed)
 		public function dataFinishedLoading(bitmapData:BitmapData):void {
 			copyBitsFromImagePane(bitmapData);
 			bitmapData.dispose();
+		}
+		
+		public function standardImage():BitmapData {
+			return bitsFacing(0);
+		}
+		
+		// Facing == rotation/45 if we were in a top-down view.
+		public function bitsFacing(facing:int, step:int=0):BitmapData {
+			return bits[facing][step];
 		}
 		
 		private function createPlaceholderImages(id:String):void {
@@ -126,13 +102,8 @@ package angel.common {
 			}
 		}
 		
-		// Facing == rotation/45 if we were in a top-down view.
-		public function bitsFacing(facing:int, step:int=0):BitmapData {
-			return bits[facing][step];
-		}
-		
-		// for use in editor only
-		public function increaseTop(additionalTop:int):void {
+		// for use in editor only; this (plus code in editor) is ugly.
+		public function increaseTop(additionalTop:int):int {
 			unusedPixelsAtTopOfCell += additionalTop;
 			var zerozero:Point = new Point(0, 0);
 			var sourceRect:Rectangle = new Rectangle(0, additionalTop, Prop.WIDTH, Prop.HEIGHT - unusedPixelsAtTopOfCell);
@@ -143,7 +114,10 @@ package angel.common {
 					bits[facing][foot].fillRect(clearRect, 0xffffffff);
 				}
 			}
+			return unusedPixelsAtTopOfCell;
 		}
+		
+		
 		
 	}
 

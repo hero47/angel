@@ -78,14 +78,16 @@ package angel.common {
 			return entry;
 		}
 		
-		// call the function, passing bitmapData as parameter
-		public function retrievePropImage(propId:String):PropImage {
-			return loadOrRetrieveCatalogEntry(propId, CatalogEntry.PROP, PropImage) as PropImage;
+		public function retrievePropResource(id:String):RoomContentResource {
+			return retrieveRoomContentResource(id, CatalogEntry.PROP);
 		}
 		
-		// call the function, passing walkerImage as parameter
-		public function retrieveWalkerImage(walkerId:String):WalkerImage {
-			return loadOrRetrieveCatalogEntry(walkerId, CatalogEntry.WALKER, WalkerImage) as WalkerImage;
+		public function retrieveCharacterResource(id:String):RoomContentResource {
+			return retrieveRoomContentResource(id, CatalogEntry.WALKER);
+		}
+		
+		public function retrieveRoomContentResource(id:String, type:int):RoomContentResource {
+			return loadOrRetrieveCatalogEntry(id, type, RoomContentResource) as RoomContentResource;
 		}
 
 		// call the function, passing tileset as parameter

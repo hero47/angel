@@ -46,6 +46,20 @@ package angel.common {
 			fr.save( ba, defaultFilename );
 		}
 		
+		public static function setIntFromXml(setInto:Object, objectPropertyName:String, xml:XML, xmlPropertyName:String):void {
+			var valueAsString:String = xml.attribute(xmlPropertyName);
+			if (valueAsString != "") {
+				setInto[objectPropertyName] = int(valueAsString);
+			}
+		}
+		
+		public static function setTextFromXml(setInto:Object, objectPropertyName:String, xml:XML, xmlPropertyName:String):void {
+			var valueAsString:String = xml.attribute(xmlPropertyName);
+			if (valueAsString != "") {
+				setInto[objectPropertyName] = valueAsString;
+			}
+		}
+		
 		public static function addBelow(newObject:DisplayObject, existingObject:DisplayObject, gap:int = 0):void {
 			newObject.x = existingObject.x;
 			newObject.y = existingObject.y + existingObject.height + gap;

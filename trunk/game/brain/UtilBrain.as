@@ -14,6 +14,25 @@ package angel.game.brain {
 		public function UtilBrain() {
 			
 		}
+
+		private static const exploreBrain:Object = { fidget:BrainFidget, follow:BrainFollow, patrol:BrainPatrol, wander:BrainWander };
+		private static const combatBrain:Object = { patrolWalk:CombatBrainPatrolWalk, patrolRun:CombatBrainPatrolRun, 
+		patrolSprint:CombatBrainPatrolSprint, wander:CombatBrainWander };
+
+		public static function exploreBrainClassFromString(brainName:String):Class {
+			if ((brainName == null) || (brainName == "")) {
+				return null;
+			}
+			return exploreBrain[brainName];
+		}
+
+		public static function combatBrainClassFromString(brainName:String):Class {
+			if ((brainName == null) || (brainName == "")) {
+				return null;
+			}
+			return combatBrain[brainName];
+		}
+		
 		
 		public static function pointsFromCommaSeparatedSpots(room:Room, spots:String, errorMessageTail:String = ""):Vector.<Point> {
 			var points:Vector.<Point> = new Vector.<Point>();

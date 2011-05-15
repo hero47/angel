@@ -6,9 +6,8 @@ package angel.roomedit {
 	import angel.common.Floor;
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Prop;
-	import angel.common.PropImage;
+	import angel.common.RoomContentResource;
 	import angel.common.Util;
-	import angel.common.WalkerImage;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
@@ -136,14 +135,8 @@ package angel.roomedit {
 				["explore", "combat", "script", "exploreParam", "combatParam"]);
 		public function addContentItemByName(type:int, id:String, location:Point, xml:XML):void {
 			trace("adding", id);
-			var prop:Prop;
-			if (type == CatalogEntry.PROP) {
-				var propImage:PropImage = catalog.retrievePropImage(id);
-				prop = Prop.createFromPropImage(propImage);
-			} else if (type == CatalogEntry.WALKER) {
-				var walkerImage:WalkerImage = catalog.retrieveWalkerImage(id);
-				prop = Prop.createFromBitmapData(walkerImage.bitsFacing(1));
-			}
+			var resource:RoomContentResource = catalog.retrieveRoomContentResource(id, type);
+			var prop:Prop = Prop.createFromBitmapData(resource.standardImage());
 			
 			var attributes:Object = null;
 			for each (var attributeName:String in contentItemXmlAttributes) {

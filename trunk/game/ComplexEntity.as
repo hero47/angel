@@ -1,34 +1,28 @@
 package angel.game {
-	import angel.common.Alert;
-	import angel.common.Assert;
+	import angel.common.Catalog;
 	import angel.common.Defaults;
-	import angel.common.Floor;
 	import angel.common.Prop;
-	import angel.common.PropImage;
+	import angel.common.RoomContentResource;
 	import angel.common.Tileset;
 	import angel.common.Util;
-	import angel.common.WalkerImage;
 	import angel.game.brain.IBrain;
+	import angel.game.brain.UtilBrain;
 	import angel.game.combat.Gun;
 	import angel.game.combat.RoomCombat;
 	import flash.display.Bitmap;
-	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
-	import flash.display.DisplayObjectContainer;
-	import flash.display.Shape;
-	import flash.display.Sprite;
-	import flash.events.Event;
-	import flash.filters.GlowFilter;
 	import flash.geom.Point;
-	import flash.geom.Rectangle;
 	import flash.text.TextField;
 	import flash.text.TextFieldAutoSize;
-	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
 
 	// A physical object in the game world -- we aren't yet distinguishing between pc/npc/mobile/immobile.
 	
 	public class ComplexEntity extends SimpleEntity {
+		// Facing == rotation/45 if we were in a top-down view.
+		// This will make it convenient if we ever want to determine facing from actual angles
+		public static const FACE_CAMERA:int = 1;
+		
 		
 		private static const TEXT_OVER_HEAD_HEIGHT:int = 20;
 		
@@ -54,11 +48,28 @@ package angel.game {
 		
 		public var movement:EntityMovement;
 		
-		public function ComplexEntity(image:Bitmap, id:String = "") {
-			super(image, Prop.DEFAULT_SOLIDITY, id);
+		public function ComplexEntity(resource:RoomContentResource, id:String = "") {
+			super(new Bitmap(resource.standardImage()), Prop.DEFAULT_SOLIDITY, id);
 			if (Defaults.MOVE_POINTS > 0) {
 				movement = new EntityMovement(this, Defaults.MOVE_POINTS);
 			}
+		}
+		
+		public static function createFromRoomContentsXml(walkerXml:XML, version:int, catalog:Catalog):ComplexEntity {
+			var id:String;
+			
+			//Delete older version support eventually
+			if (version < 1) {
+				id = walkerXml;
+			} else {
+				id = walkerXml.@id
+			}
+			
+			var entity:ComplexEntity = new ComplexEntity(catalog.retrieveCharacterResource(id), id);
+			entity.setBrain(true, UtilBrain.exploreBrainClassFromString(walkerXml.@explore), walkerXml.@exploreParam);
+			entity.setBrain(false, UtilBrain.combatBrainClassFromString(walkerXml.@combat), walkerXml.@combatParam);
+			entity.setCommonPropertiesFromXml(walkerXml);
+			return entity;
 		}
 		
 		override public function detachFromRoom():void {

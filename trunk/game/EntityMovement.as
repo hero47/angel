@@ -1,7 +1,6 @@
 package angel.game {
 	import angel.common.Prop;
 	import angel.common.Tileset;
-	import angel.common.WalkerImage;
 	import flash.events.Event;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
@@ -27,7 +26,7 @@ package angel.game {
 
 		// This array maps from a one-tile movement (offset by one) to facing, with arbitrary "face camera" for center
 		public static const neighborToFacing:Vector.<Vector.<int>> = Vector.<Vector.<int>>([
-				Vector.<int>([5,4,3]), Vector.<int>([6,WalkerImage.FACE_CAMERA,2]), Vector.<int>([7,0,1])
+				Vector.<int>([5,4,3]), Vector.<int>([6,1,2]), Vector.<int>([7,0,1])
 			]);
 		public static const facingToNeighbor:Vector.<Point> = Vector.<Point>([
 				new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point( -1, 1),
