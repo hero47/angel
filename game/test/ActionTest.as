@@ -32,6 +32,8 @@ package angel.game.test {
 		//CONSIDER: Room initialization will probably want to be pulled out so other tests can use it as well
 		public function ActionTest() {
 			Autotest.testFunction(testFlagActions);
+			Autotest.testFunction(testMessageAction);
+			Autotest.testFunction(testIfAction);
 			
 			var xxTest:Walker = new Walker(Settings.catalog.retrieveWalkerImage("xxTest"), "xxTest");
 			Autotest.assertAlertText("Error: xxTest not in catalog.");
@@ -104,6 +106,35 @@ package angel.game.test {
 			Autotest.assertTrue(Flags.getValue("xxTest"));
 			testActionFromXml(removeTestFlag);
 			Autotest.assertFalse(Flags.getValue("xxTest"));
+		}
+		
+		private function testMessageAction():void {
+			var messageActionXml:XML = <message text="Hello, world!" />;
+			testActionFromXml(messageActionXml);
+			Autotest.assertAlertText("Hello, world!");
+		}
+		
+		private static const ifTestXml:XML = <if flag="xxTest">
+			<message text="yes" />
+		</if>;
+		private static const ifNotTestXml:XML = <if notFlag="xxTest">
+			<message text="yes" />
+		</if>;
+		private function testIfAction():void {
+			Autotest.assertFalse(Flags.getValue("xxTest"));
+			Autotest.assertNoAlert();
+			
+			testActionFromXml(ifTestXml);
+			Autotest.assertNoAlert();
+			testActionFromXml(ifNotTestXml);
+			Autotest.assertAlertText("yes");
+			
+			Flags.setValue("xxTest", true);
+			
+			testActionFromXml(ifTestXml);
+			Autotest.assertAlertText("yes");
+			testActionFromXml(ifNotTestXml);
+			Autotest.assertNoAlert();
 		}
 		
 		private const addnei:XML = <addNpc id="nei" />;

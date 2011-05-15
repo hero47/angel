@@ -42,16 +42,17 @@ package angel.game.conversation {
 		}
 		
 		private function scriptXmlLoaded(event:Event, filename:String):void {
-			initializeFromXml(new XML(event.target.data), "Error in script file " + filename + ":\n");
+			try {
+				initializeFromXml(new XML(event.target.data), "Error in script file " + filename + ":\n");
+			} catch (error:Error) {
+				Alert.show("Error in file " + filename + " --> " + error);
+			}
 		}
 		
 		public function run():void {
 			var doAtEnd:Vector.<Function> = new Vector.<Function>();
 			
-			var nextEntryReference:Object = doActionsAndGetNextEntryId(doAtEnd);
-			if (nextEntryReference != null) {
-				Alert.show("Error! 'goto' only valid in Conversation");
-			}
+			doActions(doAtEnd);
 			
 			while (doAtEnd.length > 0) {
 				var f:Function = doAtEnd.shift();
@@ -71,7 +72,19 @@ package angel.game.conversation {
 			}
 		}
 		
-		public function doActionsAndGetNextEntryId(doAtEnd:Vector.<Function>):Object {
+		public function doActions(doAtEnd:Vector.<Function>):void {
+			if (actions == null) {
+				return;
+			}
+			for (var i:int = 0; i < actions.length; ++i) {
+				var gotoReference:Object = actions[i].doAction(doAtEnd);
+				if (gotoReference != null) {
+					Alert.show("Error! 'goto' only valid in Conversation");
+				}
+			}
+		}
+		
+		public function doActionsForConversationSegment(doAtEnd:Vector.<Function>):Object {
 			if (actions == null) {
 				return null;
 			}
@@ -87,6 +100,7 @@ package angel.game.conversation {
 			}
 			return nextEntryReference;
 		}
+		
 		
 	}
 

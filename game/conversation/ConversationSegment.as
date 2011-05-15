@@ -59,7 +59,7 @@ package angel.game.conversation {
 			if (script == null) {
 				return null;
 			}
-			return script.doActionsAndGetNextEntryId(doAtEnd);
+			return script.doActionsForConversationSegment(doAtEnd);
 		}
 		
 	}

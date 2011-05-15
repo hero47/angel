@@ -17,6 +17,8 @@ package angel.game.action {
 			"changeToPc":ChangeToPcAction,
 			"conversation":ConversationAction,
 			"goto":GotoAction,
+			"if":IfAction,
+			"message":MessageAction,
 			"remove":RemoveFlagAction,
 			"removeFromRoom":RemoveFromRoomAction,
 			"startCombat":StartCombatAction
