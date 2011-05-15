@@ -1,7 +1,7 @@
 package angel.roomedit {
 	import angel.common.CatalogEntry;
 	import angel.common.Prop;
-	import angel.common.PropImage;
+	import angel.common.RoomContentResource;
 	import angel.common.Util;
 	import fl.controls.CheckBox;
 	import fl.controls.ComboBox;
@@ -61,22 +61,21 @@ package angel.roomedit {
 		
 		private function changeProp(event:Event):void {
 			var propId:String = propCombo.selectedLabel;
-			
-			var propImage:PropImage = catalog.retrievePropImage(propId);
-			propBitmap.bitmapData = propImage.imageData;
 
+			var resource:RoomContentResource = catalog.retrievePropResource(propId);
+			propBitmap.bitmapData = resource.standardImage();
 			
-			ghostCheck.selected = ((propImage.solid & Prop.SOLID) == 0);
+			ghostCheck.selected = ((resource.solidness & Prop.SOLID) == 0);
 			hardCornerCheck.enabled = !ghostCheck.selected;
 			fillsTileCheck.enabled = !ghostCheck.selected;
-			hardCornerCheck.selected = ((propImage.solid & Prop.HARD_CORNER) != 0);
-			shortCheck.selected = ((propImage.solid & Prop.TALL) == 0);
-			fillsTileCheck.selected = ((propImage.solid & Prop.FILLS_TILE) != 0);
+			hardCornerCheck.selected = ((resource.solidness & Prop.HARD_CORNER) != 0);
+			shortCheck.selected = ((resource.solidness & Prop.TALL) == 0);
+			fillsTileCheck.selected = ((resource.solidness & Prop.FILLS_TILE) != 0);
 		}
 		
 		private function changeSolidness(event:Event):void {
 			var propId:String = propCombo.selectedLabel;
-			var propImage:PropImage = catalog.retrievePropImage(propId);
+			var resource:RoomContentResource = catalog.retrievePropResource(propId);
 			
 			if (event.target == ghostCheck) {
 				hardCornerCheck.enabled = !ghostCheck.selected;
@@ -87,24 +86,24 @@ package angel.roomedit {
 				}
 			}
 			
-			propImage.solid = 0;
+			resource.solidness = 0;
 			if (!ghostCheck.selected) {
-				propImage.solid |= Prop.SOLID;
+				resource.solidness |= Prop.SOLID;
 			}
 			if (hardCornerCheck.selected) {
-				propImage.solid |= Prop.HARD_CORNER;
+				resource.solidness |= Prop.HARD_CORNER;
 			}
 			if (!shortCheck.selected) {
-				propImage.solid |= Prop.TALL;
+				resource.solidness |= Prop.TALL;
 			}
 			if (fillsTileCheck.selected) {
-				propImage.solid |= Prop.FILLS_TILE;
+				resource.solidness |= Prop.FILLS_TILE;
 			}
 			
-			if (propImage.solid == Prop.DEFAULT_SOLIDITY) {
+			if (resource.solidness == Prop.DEFAULT_SOLIDITY) {
 				catalog.deleteXmlAttribute(propId, "solid");
 			} else {
-				catalog.changeXmlAttribute(propId, "solid", "0x" + propImage.solid.toString(16));
+				catalog.changeXmlAttribute(propId, "solid", "0x" + resource.solidness.toString(16));
 			}
 		}
 		

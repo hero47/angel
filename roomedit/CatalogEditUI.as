@@ -1,15 +1,11 @@
 package angel.roomedit {
-	import angel.common.Alert;
 	import angel.common.CatalogEntry;
 	import angel.common.KludgeDialogBox;
 	import angel.common.SimplerButton;
 	import angel.common.Tileset;
-	import angel.common.WalkerImage;
 	import fl.controls.ComboBox;
-	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.events.Event;
-	import flash.text.TextField;
 	
 	/**
 	 * ...

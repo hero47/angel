@@ -3,14 +3,13 @@ package angel.game {
 	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.Prop;
-	import angel.common.PropImage;
+	import angel.common.RoomContentResource;
 	import angel.common.Util;
 	import angel.game.action.ConversationAction;
 	import angel.game.conversation.ConversationData;
 	import angel.game.conversation.Script;
 	import flash.display.Bitmap;
 	import flash.geom.Point;
-	import flash.utils.describeType;
 	
 	public class SimpleEntity extends Prop {
 		public var room:Room;
@@ -57,8 +56,8 @@ package angel.game {
 				id = propXml.@id
 			}
 			
-			var propImage:PropImage = catalog.retrievePropImage(id);
-			var simpleEntity:SimpleEntity = new SimpleEntity(new Bitmap(propImage.imageData), propImage.solid, id);
+			var resource:RoomContentResource = catalog.retrievePropResource(id);
+			var simpleEntity:SimpleEntity = new SimpleEntity(new Bitmap(resource.standardImage()), resource.solidness, id);
 			simpleEntity.setCommonPropertiesFromXml(propXml);
 			return simpleEntity;
 		}
@@ -126,7 +125,7 @@ package angel.game {
 			dispatchEvent(new EntityEvent(EntityEvent.ADDED_TO_ROOM, true, false, this));
 		}
 		
-		public function center():Point {
+		public function centerOfImage():Point {
 			return new Point(this.width / 2 + this.x, imageBitmap.height / 2 + imageBitmap.y + this.y);
 		}
 

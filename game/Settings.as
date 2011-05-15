@@ -2,6 +2,7 @@ package angel.game {
 	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.Catalog;
+	import angel.common.CatalogEntry;
 	import angel.common.Defaults;
 	import angel.game.brain.BrainFollow;
 	import angel.game.combat.Grenade;
@@ -110,7 +111,7 @@ package angel.game {
 		public static function initPlayersFromXml(xml:XMLList, catalog:Catalog):void {
 			var entity:Walker;
 			if (xml.length() == 0) {
-				entity = new Walker(catalog.retrieveWalkerImage("PLAYER"), "PLAYER");
+				entity = new Walker(catalog.retrieveCharacterResource("PLAYER"), "PLAYER");
 				entity.currentHealth = 100;
 				pcs.push(entity);
 				return;
@@ -124,7 +125,7 @@ package angel.game {
 					id = "PLAYER-" + i;
 				}
 				++i;
-				entity = new Walker(catalog.retrieveWalkerImage(id), id);
+				entity = new Walker(catalog.retrieveCharacterResource(id), id);
 				entity.exploreBrainClass = entity.combatBrainClass = null;
 				if (pc.@health.length() > 0) {
 					entity.maxHealth = entity.currentHealth = pc.@health;

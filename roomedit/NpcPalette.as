@@ -2,12 +2,9 @@ package angel.roomedit {
 	import angel.common.Alert;
 	import angel.common.CatalogEntry;
 	import angel.common.Prop;
-	import angel.common.SimplerButton;
+	import angel.common.RoomContentResource;
 	import angel.common.Util;
-	import angel.common.WalkerImage;
 	import fl.controls.ComboBox;
-	import flash.display.Bitmap;
-	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.geom.Point;
@@ -69,8 +66,8 @@ package angel.roomedit {
 		override protected function itemComboBoxChanged(event:Event = null):void {
 			var walkerId:String = itemCombo.selectedLabel;
 			
-			var walkerImage:WalkerImage = catalog.retrieveWalkerImage(walkerId);
-			itemImage.bitmapData = walkerImage.bitsFacing(1);
+			var resource:RoomContentResource = catalog.retrieveCharacterResource(walkerId);
+			itemImage.bitmapData = resource.standardImage();
 			
 			updateAvailabilityAndAttributes();
 			if ((event != null) && (locationOfCurrentSelection != null)) {

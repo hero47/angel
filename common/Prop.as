@@ -54,8 +54,8 @@ package angel.common {
 			return new Prop(new Bitmap(bitmapData));
 		}
 		
-		public static function createFromPropImage(propImage:PropImage):Prop {
-			return new Prop(new Bitmap(propImage.imageData));
+		public function changeImage(bitmapData:BitmapData):void {
+			imageBitmap.bitmapData = bitmapData;
 		}
 		
 

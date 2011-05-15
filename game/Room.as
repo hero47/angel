@@ -5,26 +5,19 @@ package angel.game {
 	import angel.common.Floor;
 	import angel.common.FloorTile;
 	import angel.common.Prop;
-	import angel.common.PropImage;
 	import angel.common.Util;
-	import angel.game.combat.RoomCombat;
 	import angel.game.conversation.ConversationData;
 	import angel.game.conversation.ConversationInterface;
 	import angel.game.conversation.Script;
 	import angel.game.test.ConversationNonAutoTest;
-	import flash.display.DisplayObject;
-	import flash.display.Graphics;
-	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
-	import flash.events.TimerEvent;
 	import flash.filters.GlowFilter;
 	import flash.geom.Point;
 	import flash.ui.Keyboard;
 	import flash.utils.getTimer;
-	import flash.utils.Timer;
 
 	public class Room extends Sprite {
 		static public const UNPAUSED_ENTER_FRAME:String = "unpausedEnterFrame"; // only triggers when not paused
