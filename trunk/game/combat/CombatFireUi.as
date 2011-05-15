@@ -161,19 +161,11 @@ package angel.game.combat {
 			var slices:Vector.<PieSlice> = new Vector.<PieSlice>()
 			if (targetLocked) {
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFire), doPlayerFire));
+				addGrenadePieSliceIfLegal(slices, tile.location);
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatCancelTarget), doCancelTarget));
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade), function():void {
-					doPlayerThrowGrenadeAt(targetEnemy.location);
-				}));
 			} else {
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatNoTarget), null));
-				if (!room.blocksGrenade(tile.location.x, tile.location.y) &&
-							player.inventory.findA(Grenade) != null &&
-							Util.entityHasLineOfSight(player, tile.location)) {
-					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade), function():void {
-						doPlayerThrowGrenadeAt(tile.location);
-					}));
-				}
+				addGrenadePieSliceIfLegal(slices, tile.location);
 			}
 			slices.push(new PieSlice(Icon.bitmapData(Icon.CombatReserveFire), doReserveFire));
 			return slices;
@@ -181,6 +173,16 @@ package angel.game.combat {
 	
 		
 		/************ Private ****************/
+		
+		private function addGrenadePieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point):void {
+			if (!room.blocksGrenade(targetLocation.x, targetLocation.y) &&
+						player.inventory.findA(Grenade) != null &&
+						Util.entityHasLineOfSight(player, targetLocation)) {
+				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade), function():void {
+					doPlayerThrowGrenadeAt(targetLocation);
+				}));
+			}
+		}
 		
 		private function adjustAimCursorImage():void {
 			aimCursorBitmap.bitmapData = Icon.bitmapData(targetLocked ? Icon.CombatCursorInactive : Icon.CombatCursorActive);
