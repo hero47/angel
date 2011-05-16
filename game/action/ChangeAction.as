@@ -1,10 +1,10 @@
 package angel.game.action {
 	import angel.common.Alert;
 	import angel.common.Util;
+	import angel.game.brain.UtilBrain;
 	import angel.game.ComplexEntity;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
-	import angel.game.Walker;
 	import flash.geom.Point;
 	/**
 	 * ...
@@ -80,13 +80,13 @@ package angel.game.action {
 			if (complexEntity != null) {
 				if ((String(xml.@explore) != "") || (String(xml.@exploreParam) != "")) {
 					var exploreBrainClass:Class = (String(xml.@explore) == "") ? complexEntity.exploreBrainClass :
-							Walker.exploreBrainClassFromString(xml.@explore);
+							UtilBrain.exploreBrainClassFromString(xml.@explore);
 					var exploreParam:String = (String(xml.@exploreParam) == "") ? complexEntity.exploreBrainParam : xml.@exploreParam;
 					complexEntity.setBrain(true, exploreBrainClass, exploreParam);
 				}
 				if ((String(xml.@combat) != "") || (String(xml.@combatParam) != "")) {
 					var combatBrainClass:Class = (String(xml.@combat) == "") ? complexEntity.combatBrainClass :
-							Walker.combatBrainClassFromString(xml.@combat);
+							UtilBrain.combatBrainClassFromString(xml.@combat);
 					var combatParam:String = (String(xml.@combatParam) == "") ? complexEntity.combatBrainParam : xml.@combatParam;
 					complexEntity.setBrain(false, combatBrainClass, combatParam);
 				}

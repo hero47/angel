@@ -1,4 +1,5 @@
 package angel.common {
+	import angel.game.WalkerAnimation;
 	import flash.display.BitmapData;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
@@ -26,6 +27,10 @@ package angel.common {
 		
 		public function WalkerAnimationData() {
 			
+		}
+		
+		public function get animationClass():Class {
+			return WalkerAnimation;
 		}
 
 		//NOTE: set unusedPixelsAtTopOfCell before calling this

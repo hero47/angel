@@ -2,10 +2,10 @@ package angel.game.action {
 	import angel.common.Alert;
 	import angel.common.Util;
 	import angel.game.brain.BrainFollow;
+	import angel.game.brain.UtilBrain;
 	import angel.game.ComplexEntity;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
-	import angel.game.Walker;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -34,8 +34,8 @@ package angel.game.action {
 					delete otherXml.@[attributeName];
 				}
 			}
-			return new ChangeToNpcAction(actionXml.@id, Walker.exploreBrainClassFromString(actionXml.@explore), actionXml.@exploreParam,
-				Walker.combatBrainClassFromString(actionXml.@combat), actionXml.@combatParam, otherXml);
+			return new ChangeToNpcAction(actionXml.@id, UtilBrain.exploreBrainClassFromString(actionXml.@explore), actionXml.@exploreParam,
+				UtilBrain.combatBrainClassFromString(actionXml.@combat), actionXml.@combatParam, otherXml);
 		}
 		
 		/* INTERFACE angel.game.action.IAction */

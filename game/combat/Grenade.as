@@ -8,7 +8,6 @@ package angel.game.combat {
 	import angel.game.Room;
 	import angel.game.Settings;
 	import angel.game.TimedSprite;
-	import angel.game.Walker;
 	import flash.display.Sprite;
 	import flash.geom.Point;
 	import flash.text.TextField;

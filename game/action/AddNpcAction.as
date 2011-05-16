@@ -1,7 +1,7 @@
 package angel.game.action {
 	import angel.common.Alert;
+	import angel.game.ComplexEntity;
 	import angel.game.Settings;
-	import angel.game.Walker;
 	import flash.geom.Point;
 	/**
 	 * ...
@@ -29,7 +29,7 @@ package angel.game.action {
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(doAtEnd:Vector.<Function>):Object {
-			var walker:Walker = Walker.createFromRoomContentsXml(walkerXml, CONTENTS_VERSION, Settings.catalog);
+			var walker:ComplexEntity = ComplexEntity.createFromRoomContentsXml(walkerXml, CONTENTS_VERSION, Settings.catalog);
 			var spotId:String = walkerXml.@spot;
 			var location:Point;
 			if (spotId != "") {

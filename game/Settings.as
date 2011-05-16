@@ -109,9 +109,9 @@ package angel.game {
 		// This part will probably be going away or moving eventually -- identity of main PC and followers will be
 		// script-controlled and stats will carry over from one scene to the next
 		public static function initPlayersFromXml(xml:XMLList, catalog:Catalog):void {
-			var entity:Walker;
+			var entity:ComplexEntity;
 			if (xml.length() == 0) {
-				entity = new Walker(catalog.retrieveCharacterResource("PLAYER"), "PLAYER");
+				entity = new ComplexEntity(catalog.retrieveCharacterResource("PLAYER"), "PLAYER");
 				entity.currentHealth = 100;
 				pcs.push(entity);
 				return;
@@ -125,7 +125,7 @@ package angel.game {
 					id = "PLAYER-" + i;
 				}
 				++i;
-				entity = new Walker(catalog.retrieveCharacterResource(id), id);
+				entity = new ComplexEntity(catalog.retrieveCharacterResource(id), id);
 				entity.exploreBrainClass = entity.combatBrainClass = null;
 				if (pc.@health.length() > 0) {
 					entity.maxHealth = entity.currentHealth = pc.@health;

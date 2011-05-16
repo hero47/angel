@@ -551,7 +551,7 @@ package angel.game {
 				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXml(propXml, version, catalog));
 			}
 			for each (var walkerXml: XML in contentsXml.walker) {
-				addEntityUsingItsLocation(Walker.createFromRoomContentsXml(walkerXml, version, catalog));
+				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(walkerXml, version, catalog));
 			}
 		}
 

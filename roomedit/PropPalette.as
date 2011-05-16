@@ -91,7 +91,6 @@ package angel.roomedit {
 		}
 		
 		override protected function updateAvailabilityAndAttributes():void {
-			trace("prop palette update, currentSelection=", currentSelection);
 			if (currentSelection != null) {
 				attributeDisplay.visible = true;
 				var attributes:Object = room.attributesOfItemAt(locationOfCurrentSelection);
