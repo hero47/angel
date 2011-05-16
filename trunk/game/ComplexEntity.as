@@ -1,5 +1,6 @@
 package angel.game {
 	import angel.common.Catalog;
+	import angel.common.CharacterStats;
 	import angel.common.Defaults;
 	import angel.common.Prop;
 	import angel.common.RoomContentResource;
@@ -23,7 +24,6 @@ package angel.game {
 		// This will make it convenient if we ever want to determine facing from actual angles
 		public static const FACE_CAMERA:int = 1;
 		
-		
 		private static const TEXT_OVER_HEAD_HEIGHT:int = 20;
 		
 		// Entity stats!  Eventually these will be initialized from data files.  They may go in a separate object.
@@ -45,14 +45,23 @@ package angel.game {
 		public var marker:DisplayObject; // if non-null, drawn on decorations layer centered directly under me
 		private var textOverHead:TextField;
 		protected var facing:int;
+		private var solidnessWhenAlive:uint;
 		
 		public var movement:EntityMovement;
+		private var animation:IEntityAnimation;
 		
 		public function ComplexEntity(resource:RoomContentResource, id:String = "") {
-			super(new Bitmap(resource.standardImage()), Prop.DEFAULT_SOLIDITY, id);
-			if (Defaults.MOVE_POINTS > 0) {
-				movement = new EntityMovement(this, Defaults.MOVE_POINTS);
-			}
+			super(new Bitmap(resource.standardImage()), resource.solidness, id);
+			
+			var characterStats:CharacterStats = resource.characterStats;
+			maxHealth = currentHealth = characterStats.health;
+			myDisplayName = characterStats.displayName;
+			setMovePoints(characterStats.movePoints);
+			inventory.add(new Gun(characterStats.damage));
+			solidness = solidnessWhenAlive = resource.solidness;
+			
+			facing = FACE_CAMERA;
+			animation = new resource.animationData.animationClass(resource.animationData, this.imageBitmap);
 		}
 		
 		public static function createFromRoomContentsXml(walkerXml:XML, version:int, catalog:Catalog):ComplexEntity {
@@ -229,6 +238,8 @@ package angel.game {
 		// Reset health at start and end of combat.
 		public function initHealth():void {
 			currentHealth = maxHealth;
+			animation.turnToFacing(facing); // stands back up if we were dead
+			solidness = solidnessWhenAlive;
 		}
 		
 		public function setTextOverHead(value:String):void {
@@ -248,15 +259,16 @@ package angel.game {
 		}
 				
 		public function startDeathAnimation():void {
-			// Does nothing for standard entity
+			animation.startDeathAnimation();
 		}
 		
 		public function adjustImageForMove(frameOfMove:int, totalFramesInMove:int):void {
-			// Does nothing in the case of a basic single-image entity
+			animation.adjustImageForMove(facing, frameOfMove, totalFramesInMove);
 		}
 		
 		public function turnToFacing(newFacing:int):void {
 			facing = newFacing;
+			animation.turnToFacing(facing);
 		}
 		
 		// Turn to the facing that closest approximates that direction

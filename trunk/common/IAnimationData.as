@@ -7,6 +7,7 @@ package angel.common {
 	 */
 	public interface IAnimationData {
 		
+		function get animationClass():Class;
 		function prepareTemporaryVersionForUse(labelForTemporaryVersion:String):void;
 		function dataFinishedLoading(bitmapData:BitmapData):void;
 		function standardImage():BitmapData;

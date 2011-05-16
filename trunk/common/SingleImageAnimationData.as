@@ -1,4 +1,5 @@
 package angel.common {
+	import angel.game.SingleImageAnimation;
 	import flash.display.BitmapData;
 	import flash.geom.Point;
 	import flash.text.TextField;
@@ -11,6 +12,10 @@ package angel.common {
 		
 		public function SingleImageAnimationData() {
 			
+		}
+		
+		public function get animationClass():Class {
+			return SingleImageAnimation;
 		}
 
 		public function prepareTemporaryVersionForUse(labelForTemporaryVersion:String):void {

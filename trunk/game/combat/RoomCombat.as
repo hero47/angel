@@ -1,10 +1,6 @@
 package angel.game.combat {
 	import angel.common.Alert;
 	import angel.common.Assert;
-	import angel.common.Floor;
-	import angel.common.FloorTile;
-	import angel.common.Prop;
-	import angel.common.Tileset;
 	import angel.common.Util;
 	import angel.game.brain.ICombatBrain;
 	import angel.game.ComplexEntity;
@@ -16,26 +12,11 @@ package angel.game.combat {
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import angel.game.TimedSprite;
-	import angel.game.Walker;
 	import flash.display.Bitmap;
-	import flash.display.Graphics;
 	import flash.display.Shape;
-	import flash.display.Sprite;
-	import flash.display.Stage;
-	import flash.events.Event;
-	import flash.events.KeyboardEvent;
-	import flash.events.MouseEvent;
-	import flash.events.TimerEvent;
-	import flash.filters.GlowFilter;
 	import flash.geom.Point;
 	import flash.text.TextField;
-	import flash.text.TextFieldAutoSize;
-	import flash.text.TextFieldType;
-	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
-	import flash.ui.Keyboard;
-	import flash.utils.Dictionary;
-	import flash.utils.Timer;
 
 	
 	public class RoomCombat implements RoomMode {
