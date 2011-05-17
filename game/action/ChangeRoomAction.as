@@ -1,6 +1,7 @@
 package angel.game.action {
 	import angel.common.Alert;
 	import angel.common.LoaderWithErrorCatching;
+	import angel.common.Util;
 	import angel.game.combat.RoomCombat;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
@@ -51,7 +52,10 @@ package angel.game.action {
 		}
 		
 		private function roomXmlLoaded(event:Event, filename:String):void {
-			var xml:XML = new XML(event.target.data);
+			var xml:XML = Util.parseXml(event.target.data, filename);
+			if (xml == null) {
+				return;
+			}
 			var newRoom:Room = Room.createFromXml(xml, filename);
 			if (newRoom != null) {
 				var newMode:Class = startMode;
@@ -65,7 +69,7 @@ package angel.game.action {
 				
 				newRoom.addPlayerCharactersFromSettings(startSpot);
 				if (newMode != null) {
-					newRoom.changeModeTo(newMode);
+					newRoom.changeModeTo(newMode, true);
 				}
 				
 			}

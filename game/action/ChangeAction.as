@@ -3,6 +3,7 @@ package angel.game.action {
 	import angel.common.Util;
 	import angel.game.brain.UtilBrain;
 	import angel.game.ComplexEntity;
+	import angel.game.script.Script;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import flash.geom.Point;
@@ -44,7 +45,7 @@ package angel.game.action {
 		
 		public function doAction(doAtEnd:Vector.<Function>):Object {
 			var id:String = xml.@id;
-			var entity:SimpleEntity = Settings.currentRoom.entityInRoomWithId(id);
+			var entity:SimpleEntity = Script.entityWithScriptId(id);
 			var complexEntity:ComplexEntity = entity as ComplexEntity;
 			if (entity == null) {
 				Alert.show("Script error: no id " + id + " in room for changeAttributes");

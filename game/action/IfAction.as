@@ -1,8 +1,7 @@
 package angel.game.action {
 	import angel.common.Alert;
-	import angel.common.Util;
-	import angel.game.conversation.Script;
 	import angel.game.Flags;
+	import angel.game.script.Script;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -38,8 +37,7 @@ package angel.game.action {
 			}
 			Flags.getValue(flag); // if flag is undefined, show error now rather than waiting for script execution
 			
-			var script:Script = new Script();
-			script.initializeFromXml(actionXml, "In if action: ");
+			var script:Script = new Script(actionXml, "In if action: ");
 			return new IfAction(flag, desiredFlagValue, script);
 		}
 		

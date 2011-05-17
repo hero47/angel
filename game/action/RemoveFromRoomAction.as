@@ -1,5 +1,6 @@
 package angel.game.action {
 	import angel.game.ComplexEntity;
+	import angel.game.script.Script;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	/**
@@ -20,11 +21,11 @@ package angel.game.action {
 		}
 		
 		public function doAction(doAtEnd:Vector.<Function>):Object {
-			var entity:SimpleEntity = Settings.currentRoom.entityInRoomWithId(id);
+			var entity:SimpleEntity = Script.entityWithScriptId(id);
 			if (Settings.isOnPlayerList(entity)) {
 				Settings.removeFromPlayerList(entity);
 			}
-			Settings.currentRoom.removeEntityWithId(id);
+			Settings.currentRoom.removeEntity(entity);
 			return null;
 		}
 		

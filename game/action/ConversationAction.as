@@ -1,6 +1,6 @@
 package angel.game.action {
-	import angel.common.Alert;
-	import angel.game.conversation.ConversationData;
+	import angel.game.script.ConversationData;
+	import angel.game.script.Script;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	/**
@@ -32,7 +32,7 @@ package angel.game.action {
 		private function startConversation():void {
 			var targetEntity:SimpleEntity;
 			if ((targetId != null) && (targetId != "")) {
-				targetEntity = Settings.currentRoom.entityInRoomWithId(targetId);
+				targetEntity = Script.entityWithScriptId(targetId);
 			}
 			if (targetEntity == null) {
 				targetEntity = Settings.currentRoom.mainPlayerCharacter;

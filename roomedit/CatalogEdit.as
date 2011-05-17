@@ -27,7 +27,10 @@ package angel.roomedit {
 		override protected function catalogXmlLoaded(event:Event, filename:String):void {
 			// Cache catalog xml so we can re-save it later, rather than re-creating
 			// This should hopefully preserve any comments & formatting the author may have inserted
-			catalogXml = new XML(event.target.data);
+			var catalogXml:XML = Util.parseXml(event.target.data, filename);
+			if (catalogXml == null) {
+				return;
+			}
 			super.catalogXmlLoaded(event, filename);
 		}
 		

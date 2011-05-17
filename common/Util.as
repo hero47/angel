@@ -31,9 +31,13 @@ package angel.common {
 		}
 		
 		public static function traceXml(xml:XML):void {
-			var debug:XML = new XML("<debug/>");
-			debug.appendChild(xml.copy());
-			trace(debug);
+			if (xml == null) {
+				trace("xml is null");
+			} else {
+				var debug:XML = new XML("<debug/>");
+				debug.appendChild(xml.copy());
+				trace(debug);
+			}
 		}
 		
 		public static function saveXmlToFile(xml:XML, defaultFilename:String):void {
@@ -58,6 +62,16 @@ package angel.common {
 			if (valueAsString != "") {
 				setInto[objectPropertyName] = valueAsString;
 			}
+		}
+		
+		public static function parseXml(data:Object, errorSource:String):XML {
+			var xml:XML;
+			try {
+				xml = new XML(data);
+			} catch (error:Error) {
+				Alert.show((errorSource == null ? "" : ("Error in " + errorSource + " --> ")) + error);
+			}
+			return xml;
 		}
 		
 		public static function addBelow(newObject:DisplayObject, existingObject:DisplayObject, gap:int = 0):void {

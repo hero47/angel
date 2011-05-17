@@ -30,6 +30,9 @@ package angel.game.action {
 		
 		public static function createFromXml(actionXml:XML, errorPrefix:String=""):IAction {
 			var name:String = actionXml.name();
+			if (name == "comment") {
+				return null;
+			}
 			if (actionNameToClass[name] == null) {
 				Alert.show(errorPrefix + "Unknown action " + name);
 				return null;

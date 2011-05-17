@@ -30,7 +30,10 @@ package angel.common {
 		
 		protected function catalogXmlLoaded(event:Event, filename:String):void {
 			var duplicateNames:String = "";
-			var xml:XML = new XML(event.target.data);
+			var xml:XML = Util.parseXml(event.target.data, filename);
+			if (xml == null) {
+				return;
+			}
 			var entry:CatalogEntry;
 			for each (var propXml:XML in xml.prop) {
 				entry = addCatalogEntry(propXml.@id, propXml.@file, CatalogEntry.PROP, duplicateNames);

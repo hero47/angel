@@ -26,7 +26,9 @@ package angel.game {
 		
 		private static const TEXT_OVER_HEAD_HEIGHT:int = 20;
 		
-		// Entity stats!  Eventually these will be initialized from data files.  They may go in a separate object.
+		// Entity stats!
+		// CONSIDER: Initial values for some of these come from a CharacterStats. I could have a CharacterStats embedded
+		// here rather than individual variables for the ones that overlap, but currently (5/15/11) that's only two.
 		protected var myDisplayName:String;
 		public var maxHealth:int = 1;
 		public var currentHealth:int;
