@@ -1,6 +1,7 @@
 package angel.game.brain {
 	import angel.common.Alert;
 	import angel.common.Util;
+	import angel.game.combat.Gun;
 	import angel.game.combat.RoomCombat;
 	import angel.game.ComplexEntity;
 	import angel.game.Room;
@@ -16,8 +17,8 @@ package angel.game.brain {
 		}
 
 		private static const exploreBrain:Object = { fidget:BrainFidget, follow:BrainFollow, patrol:BrainPatrol, wander:BrainWander };
-		private static const combatBrain:Object = { patrolWalk:CombatBrainPatrolWalk, patrolRun:CombatBrainPatrolRun, 
-		patrolSprint:CombatBrainPatrolSprint, wander:CombatBrainWander };
+		private static const combatBrain:Object = { patrol:CombatBrainPatrol, patrolNoStops:CombatBrainPatrolNoStops,
+		wander:CombatBrainWander };
 
 		public static function exploreBrainClassFromString(brainName:String):Class {
 			if ((brainName == null) || (brainName == "")) {
@@ -60,6 +61,10 @@ package angel.game.brain {
 				}
 			}
 			return null;
+		}
+		
+		public static function canShoot(me:ComplexEntity,  combat:RoomCombat):Boolean {
+			return (me.inventory.findA(Gun) != null) && (UtilBrain.getFirstAvailableTarget(me, combat) != null);
 		}
 		
 	}
