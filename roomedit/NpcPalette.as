@@ -24,7 +24,7 @@ package angel.roomedit {
 		private var scriptFile:FilenameControl;
 		
 		private static const exploreChoices:Vector.<String> = Vector.<String>(["", "fidget", "follow", "patrol", "wander"]);
-		private static const combatChoices:Vector.<String> = Vector.<String>(["", "patrolWalk", "patrolRun", "patrolSprint", "wander"]);
+		private static const combatChoices:Vector.<String> = Vector.<String>(["", "patrol", "patrolNoStops", "wander"]);
 		
 		public function NpcPalette(catalog:CatalogEdit, room:RoomLight) {
 			super(catalog, room);

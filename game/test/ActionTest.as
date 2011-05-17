@@ -6,7 +6,7 @@ package angel.game.test {
 	import angel.game.brain.BrainFidget;
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.BrainWander;
-	import angel.game.brain.CombatBrainPatrolWalk;
+	import angel.game.brain.CombatBrainPatrol;
 	import angel.game.brain.CombatBrainWander;
 	import angel.game.combat.RoomCombat;
 	import angel.game.ComplexEntity;
@@ -200,7 +200,7 @@ package angel.game.test {
 		
 		private const changeNeiToPc:XML = <changeToPc id="nei" />;
 		private const changeNeiToNpc:XML = <changeToNpc id="nei" />;
-		private const changeNeiToNpcWithBrains:XML = <changeToNpc id="nei" explore="wander" combat="patrolWalk" combatParam="testSpot" />
+		private const changeNeiToNpcWithBrains:XML = <changeToNpc id="nei" explore="wander" combat="patrol" combatParam="3:testSpot" />
 		
 		private function testChangeToFromPc():void {
 			var room:Room = Settings.currentRoom;
@@ -243,12 +243,12 @@ package angel.game.test {
 			testActionFromXml(changeNeiToPc);
 			testActionFromXml(changeNeiToNpcWithBrains);
 			Autotest.assertEqual(nei.exploreBrainClass, BrainWander);
-			Autotest.assertEqual(nei.combatBrainClass, CombatBrainPatrolWalk);
-			Autotest.assertEqual(nei.combatBrainParam, "testSpot");
+			Autotest.assertEqual(nei.combatBrainClass, CombatBrainPatrol);
+			Autotest.assertEqual(nei.combatBrainParam, "3:testSpot");
 			if (Settings.currentRoom.mode is RoomExplore) {
 				Autotest.assertTrue(nei.brain is BrainWander);
 			} else if (Settings.currentRoom.mode is RoomCombat) {
-				Autotest.assertTrue(nei.brain is CombatBrainPatrolWalk, "Note: This will fail if controlEnemies==true");
+				Autotest.assertTrue(nei.brain is CombatBrainPatrol, "Note: This will fail if controlEnemies==true");
 			} else {
 				Autotest.assertEqual(nei.brain, null);
 			}
@@ -281,8 +281,8 @@ package angel.game.test {
 		private const changeNeiSpot:XML = <change id="nei" spot="testSpot"/>;
 		private const changeNeiWithXY:XML = <change id="nei" x="4" y="7" />;
 		private const changeNeiSpotAndXY:XML = <change id="nei" spot="testSpot" x="1" y="1" />;
-		private const changeNeiBrain:XML = <change id="nei" explore="wander" combat="patrolWalk" combatParam="testSpot" />;
-		private const changeFoo:XML = <change id="foo" explore="wander" combat="patrolWalk" combatParam="testSpot" spot="testSpot"/>;
+		private const changeNeiBrain:XML = <change id="nei" explore="wander" combat="patrol" combatParam="testSpot" />;
+		private const changeFoo:XML = <change id="foo" explore="wander" combat="patrol" combatParam="testSpot" spot="testSpot"/>;
 		private const removeFoo:XML = <removeFromRoom id="foo" />;
 		private function testChangeAction():void {
 			var room:Room = Settings.currentRoom;
@@ -301,12 +301,12 @@ package angel.game.test {
 			testActionFromXml(changeNeiBrain);
 			var neiComplex:ComplexEntity = ComplexEntity(nei);
 			Autotest.assertEqual(neiComplex.exploreBrainClass, BrainWander);
-			Autotest.assertEqual(neiComplex.combatBrainClass, CombatBrainPatrolWalk);
+			Autotest.assertEqual(neiComplex.combatBrainClass, CombatBrainPatrol);
 			Autotest.assertEqual(neiComplex.combatBrainParam, "testSpot");
 			if (Settings.currentRoom.mode is RoomExplore) {
 				Autotest.assertTrue(neiComplex.brain is BrainWander);
 			} else if (Settings.currentRoom.mode is RoomCombat) {
-				Autotest.assertTrue(neiComplex.brain is CombatBrainPatrolWalk, "Note: This will fail if controlEnemies==true");
+				Autotest.assertTrue(neiComplex.brain is CombatBrainPatrol, "Note: This will fail if controlEnemies==true");
 			} else {
 				Autotest.assertEqual(neiComplex.brain, null);
 			}

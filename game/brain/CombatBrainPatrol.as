@@ -1,4 +1,5 @@
 package angel.game.brain {
+	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.game.combat.RoomCombat;
 	import angel.game.ComplexEntity;
@@ -17,12 +18,23 @@ package angel.game.brain {
 		private var goals:Vector.<Point>;
 		private var currentGoalIndex:int = 0;
 		
-		public function CombatBrainPatrol(entity:ComplexEntity, combat:RoomCombat, param:String, gait:int) {
+		public function CombatBrainPatrol(entity:ComplexEntity, combat:RoomCombat, param:String) {
 			me = entity;
 			this.combat = combat;
-			this.gait = gait;
+			gait = 1;
 			if ((param != null) && (param != "")) {
-				goals = UtilBrain.pointsFromCommaSeparatedSpots(entity.room, param, " in combat patrol route for " + entity.id);
+				var splitParam:Array = param.split(":");
+				var route:String;
+				if (splitParam.length == 1) {
+					route = param;
+				} else {
+					gait = int(splitParam[0]);
+					route = splitParam[1];
+					if (splitParam.length > 2) {
+						Alert.show("Extra : in route for " + entity.id);
+					}
+				}
+				goals = UtilBrain.pointsFromCommaSeparatedSpots(entity.room, route, " in route for " + entity.id);
 			}
 			
 		}
@@ -31,15 +43,15 @@ package angel.game.brain {
 		
 		public function chooseMoveAndDrawDots():void {
 			trace(me.aaId, "Patrol: Choose move and draw dots");
-			if (!me.canMove() || (UtilBrain.getFirstAvailableTarget(me, combat) != null)) {
-				//If we can't move, or have a target in sight, just stand still and shoot for max damage.
+			if (!me.canMove() || shouldStop()) {
+				//If we can't move, or have a gun and a target in sight, just stand still and shoot for max damage.
 				return;
 			}
 			if (me.location.equals(goals[currentGoalIndex])) {
 				currentGoalIndex = (currentGoalIndex + 1) % goals.length;
 			}
 			var path:Vector.<Point> = me.movement.findPathTo(goals[currentGoalIndex]);
-			var maxDistance:int = me.movement.maxDistanceForGait[gait]; // get this each time in case something changed my movement points
+			var maxDistance:int = me.movement.maxDistanceForGait(gait); // get this each time in case something changed my movement points
 			if (path.length > maxDistance) {
 				path.length = maxDistance;
 			}
@@ -65,6 +77,10 @@ package angel.game.brain {
 		
 		public function cleanup():void {
 			me = null;
+		}
+		
+		protected function shouldStop():Boolean {
+			return UtilBrain.canShoot(me, combat);
 		}
 		
 	}

@@ -37,7 +37,7 @@ package angel.game {
 		
 		public var combatMovePoints:int;
 		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
-		public var maxDistanceForGait:Vector.<int>;
+		private var gaitDistances:Vector.<int>;
 		public var mostRecentGait:int = GAIT_WALK;	// gait for move in progress, or last move if none in progress
 		
 		private var moveGoal:Point; // the tile we're trying to get to
@@ -100,7 +100,7 @@ package angel.game {
 			
 			runPoints += walkPoints;
 			sprintPoints += runPoints;
-			maxDistanceForGait = Vector.<int>( [0, walkPoints, runPoints, sprintPoints] );
+			gaitDistances = Vector.<int>( [0, walkPoints, runPoints, sprintPoints] );
 		}
 		
 		//return true if moving, false if goal is unreachable or already there
@@ -130,11 +130,21 @@ package angel.game {
 		
 		public function minGaitForDistance(distance:int):int {
 			for (var gait:int = GAIT_NO_MOVE; gait < GAIT_TOO_FAR; ++gait) {
-				if (distance <= maxDistanceForGait[gait]) {
+				if (distance <= gaitDistances[gait]) {
 					return gait;
 				}
 			}
 			return GAIT_TOO_FAR;
+		}
+		
+		public function maxDistanceForGait(gait:int):int {
+			if (gait <= GAIT_NO_MOVE) {
+				return 0;
+			}
+			if (gait >= GAIT_TOO_FAR) {
+				gait = GAIT_SPRINT
+			}
+			return gaitDistances[gait];
 		}
 		
 		// fills in coordsForEachFrameOfMove, depthChangePerFrame, and facing
