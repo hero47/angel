@@ -1,4 +1,5 @@
 package angel.game.action {
+	import angel.common.Alert;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -17,6 +18,10 @@ package angel.game.action {
 			var topic:String = actionXml.@topic;
 			if (topic == "") {
 				topic = null;
+			}
+			if (id == "") {
+				Alert.show("Error! Goto action with no id.");
+				return null;
 			}
 			return new GotoAction(id, topic);
 		}
