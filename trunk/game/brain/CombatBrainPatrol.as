@@ -31,7 +31,7 @@ package angel.game.brain {
 		
 		public function chooseMoveAndDrawDots():void {
 			trace(me.aaId, "Patrol: Choose move and draw dots");
-			if (me.canMove() || (UtilBrain.getFirstAvailableTarget(me, combat) != null)) {
+			if (!me.canMove() || (UtilBrain.getFirstAvailableTarget(me, combat) != null)) {
 				//If we can't move, or have a target in sight, just stand still and shoot for max damage.
 				return;
 			}

@@ -1,26 +1,9 @@
 package angel.game {
-	import angel.common.Alert;
 	import angel.common.Assert;
-	import angel.common.Catalog;
 	import angel.common.IAnimationData;
-	import angel.common.Prop;
-	import angel.common.RoomContentResource;
 	import angel.common.WalkerAnimationData;
-	import angel.game.brain.BrainFidget;
-	import angel.game.brain.BrainFollow;
-	import angel.game.brain.BrainPatrol;
-	import angel.game.brain.BrainWander;
-	import angel.game.brain.CombatBrainPatrolRun;
-	import angel.game.brain.CombatBrainPatrolSprint;
-	import angel.game.brain.CombatBrainPatrolWalk;
-	import angel.game.brain.CombatBrainWander;
-	import angel.game.combat.Gun;
-	import angel.game.conversation.ConversationData;
 	import flash.display.Bitmap;
-	import flash.display.Sprite;
-	import flash.events.Event;
 	import flash.events.TimerEvent;
-	import flash.geom.Point;
 	import flash.utils.Timer;
 	/**
 	 * ...

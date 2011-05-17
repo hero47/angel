@@ -41,13 +41,16 @@ package angel.game {
 		}
 		
 		private function roomXmlLoaded(event:Event, filename:String):void {
-			var xml:XML = new XML(event.target.data);
+			var xml:XML = Util.parseXml(event.target.data, filename);
+			if (xml == null) {
+				return;
+			}
 			var room:Room = Room.createFromXml(xml, filename);
 			if (room != null) {
 				room.addPlayerCharactersFromSettings(startSpot);
 				addChild(room);
 				Settings.currentRoom = room;
-				room.changeModeTo(RoomExplore);
+				room.changeModeTo(RoomExplore, true);
 			}
 		}
 		

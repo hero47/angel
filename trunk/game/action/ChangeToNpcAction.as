@@ -4,6 +4,7 @@ package angel.game.action {
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.UtilBrain;
 	import angel.game.ComplexEntity;
+	import angel.game.script.Script;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	/**
@@ -41,7 +42,7 @@ package angel.game.action {
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(doAtEnd:Vector.<Function>):Object {
-			var entityWithId:SimpleEntity = Settings.currentRoom.entityInRoomWithId(id);
+			var entityWithId:SimpleEntity = Script.entityWithScriptId(id);
 			if (entityWithId is ComplexEntity) {
 				var entity:ComplexEntity = ComplexEntity(entityWithId);
 				if (entity.isReallyPlayer) {

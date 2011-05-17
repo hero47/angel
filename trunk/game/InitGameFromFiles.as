@@ -2,6 +2,7 @@ package angel.game {
 	import angel.common.Alert;
 	import angel.common.Catalog;
 	import angel.common.LoaderWithErrorCatching;
+	import angel.common.Util;
 	import flash.events.Event;
 	/**
 	 * ...
@@ -30,7 +31,10 @@ package angel.game {
 		}
 
 		private function xmlLoadedForInit(event:Event, filename:String):void {
-			var xmlData:XML = new XML(event.target.data);
+			var xmlData:XML = Util.parseXml(event.target.data, filename);
+			if (xmlData == null) {
+				return;
+			}
 			if (xmlData.room.length == 0) {
 				Alert.show("ERROR: Bad init file! " + filename);
 				return;

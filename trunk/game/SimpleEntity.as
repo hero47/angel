@@ -6,8 +6,8 @@ package angel.game {
 	import angel.common.RoomContentResource;
 	import angel.common.Util;
 	import angel.game.action.ConversationAction;
-	import angel.game.conversation.ConversationData;
-	import angel.game.conversation.Script;
+	import angel.game.script.ConversationData;
+	import angel.game.script.Script;
 	import flash.display.Bitmap;
 	import flash.geom.Point;
 	
@@ -77,7 +77,7 @@ package angel.game {
 				var conversationData:ConversationData = new ConversationData();
 				conversationData.loadFromXmlFile(talk);
 				frobScript = new Script();
-				frobScript.addAction(new ConversationAction(conversationData, Script.FROBBED_ENTITY_ID));
+				frobScript.addAction(new ConversationAction(conversationData, Script.TRIGGERING_ENTITY_ID));
 			}
 			
 			if (scriptFile != "") {
@@ -103,9 +103,7 @@ package angel.game {
 		// Eventually, entity properties and/or scripting will control what happens when entity is frobbed
 		public function frob(player:ComplexEntity):void {
 			if (frobScript != null) {
-				room.frobbedEntity = this;
-				frobScript.run();
-				room.frobbedEntity = null;
+				frobScript.run(this);
 			} else {
 				var nameOrIt:String = displayName;
 				if ((nameOrIt == null) || (nameOrIt == "")) {

@@ -23,10 +23,19 @@ package angel.roomedit {
 		public var spotLayer:Sprite;
 		public var spots:Object = new Object(); // associative array mapping from spotId to location
 		public var currentFilename:String;
+		public var scriptXml:XML;
 		private var catalog:CatalogEdit;
 		private var contentsLayer:Sprite;
 		private var propGrid:Vector.<Vector.<ContentItem>>;
 		private var xy:Point = new Point();
+		
+		
+		private static const DEFAULT_SCRIPT:XML = 
+<script>
+	<comment>
+		*** Room script goes here ***
+	</comment>
+</script>;
 		
 		public function RoomLight(floor:FloorEdit, catalog:CatalogEdit) {
 			this.floor = floor;
@@ -230,12 +239,21 @@ package angel.roomedit {
 		}
 		
 		private function roomXmlLoaded(event:Event, filename:String):void {
-			var xml:XML = new XML(event.target.data);
+			var xml:XML = Util.parseXml(event.target.data, filename);
+			if (xml == null) {
+				return;
+			}
 			
 			if (xml.floor.length() == 0) {
 				Alert.show("Invalid room file.");
 				return;
 			}
+			
+			scriptXml = xml.script[0];
+			if (scriptXml == null) {
+				scriptXml = DEFAULT_SCRIPT;
+			}
+			
 			
 			currentFilename = filename;
 			floor.loadFromXml(catalog, xml.floor[0]);
@@ -344,9 +362,10 @@ package angel.roomedit {
 		
 		public function saveRoomAsXmlFile():void {
 			var roomXml:XML = new XML(<room/>);
-			roomXml.appendChild( floor.buildFloorXml() );
-			roomXml.appendChild( buildContentsXml() );
+			roomXml.appendChild( scriptXml );
 			roomXml.appendChild( buildSpotsXml() );
+			roomXml.appendChild( buildContentsXml() );
+			roomXml.appendChild( floor.buildFloorXml() );
 			Util.saveXmlToFile(roomXml, currentFilename == null ? "room.xml" : currentFilename);
 		}
 

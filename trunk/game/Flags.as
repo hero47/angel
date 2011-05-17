@@ -1,6 +1,7 @@
 package angel.game {
 	import angel.common.Alert;
 	import angel.common.LoaderWithErrorCatching;
+	import angel.common.Util;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	/**
@@ -26,7 +27,10 @@ package angel.game {
 		private static function flagListXmlLoaded(event:Event, filename:String):void {
 			var duplicateNames:String = "";
 			flags = new Object();
-			var xml:XML = new XML(event.target.data);
+			var xml:XML = Util.parseXml(event.target.data, filename);
+			if (xml == null) {
+				return;
+			}
 			
 			for each (var flagXml:XML in xml.flag) {
 				var flagId:String = flagXml.@id;

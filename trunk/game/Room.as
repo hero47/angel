@@ -6,9 +6,10 @@ package angel.game {
 	import angel.common.FloorTile;
 	import angel.common.Prop;
 	import angel.common.Util;
-	import angel.game.conversation.ConversationData;
-	import angel.game.conversation.ConversationInterface;
-	import angel.game.conversation.Script;
+	import angel.game.script.ConversationData;
+	import angel.game.script.ConversationInterface;
+	import angel.game.script.RoomScripts;
+	import angel.game.script.Script;
 	import angel.game.test.ConversationNonAutoTest;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -33,7 +34,6 @@ package angel.game {
 		private var contentsLayer:Sprite;
 		public var cells:Vector.<Vector.<Cell>>;
 		public var mainPlayerCharacter:ComplexEntity;
-		public var frobbedEntity:SimpleEntity;
 		public var size:Point;
 		public var mode:RoomMode;
 		private var spots:Object = new Object(); // associative array mapping from spotId to location
@@ -44,6 +44,7 @@ package angel.game {
 		private var dragging:Boolean = false;
 		
 		private var conversationInProgress:ConversationInterface;
+		private var roomScripts:RoomScripts;
 		
 		private var pauseGameTimeUntil:int = 0;
 		private var gameTimePauseCallback:Function;		
@@ -97,6 +98,7 @@ package angel.game {
 				entity.detachFromRoom();
 			}
 			contentsLayer = null;
+			cells = null;
 			// UNDONE: Does floor need a cleanup?
 			floor = null;
 			if (parent != null) {
@@ -107,7 +109,7 @@ package angel.game {
 			}
 		}
 		
-		public function changeModeTo(newModeClass:Class):void {
+		public function changeModeTo(newModeClass:Class, entering:Boolean = false):void {
 			forEachComplexEntity(function(entity:ComplexEntity):void {
 				if (entity.moving()) {
 					entity.movement.endMoveImmediately();
@@ -117,6 +119,9 @@ package angel.game {
 				mode.cleanup();
 			}
 			mode = (newModeClass == null ? null : new newModeClass(this));
+			if (entering) {
+				roomScripts.runOnEnter();
+			}
 		}
 		
 		public function pauseGameTimeIndefinitely():void {
@@ -356,7 +361,10 @@ package angel.game {
 		}
 		
 		public function removeEntityWithId(entityId:String):void {
-			var entity:SimpleEntity = entityInRoomWithId(entityId);
+			removeEntity( entityInRoomWithId(entityId) );
+		}
+		
+		public function removeEntity(entity:SimpleEntity):void {
 			if (entity != null) {
 				if (mode != null) {
 					mode.entityWillBeRemovedFromRoom(entity);
@@ -369,9 +377,6 @@ package angel.game {
 		}
 		
 		public function entityInRoomWithId(entityId:String):SimpleEntity {
-			if (entityId == Script.FROBBED_ENTITY_ID) {
-				return frobbedEntity;
-			}
 			for (var i:int = 0; i < size.x; i++) {
 				for (var j:int = 0; j < size.y; j++) {
 					for each (var prop:Prop in cells[i][j].contents) {
@@ -457,6 +462,16 @@ package angel.game {
 			return (location == null ? new Point(0, 0) : location);
 		}
 		
+		public function spotsMatchingLocation(location:Point):Vector.<String> {
+			var matches:Vector.<String> = new Vector.<String>();
+			for (var spotId:String in spots) {
+				if (location.equals(spots[spotId])) {
+					matches.push(spotId);
+				}
+			}
+			return matches;
+		}
+		
 		public function addOrMoveSpot(spotId:String, location:Point):void {
 			spots[spotId] = location;
 		}
@@ -520,6 +535,7 @@ package angel.game {
 			if (xml.spots.length() > 0) {
 				room.initSpotsFromXml(xml.spots[0]);
 			}
+			room.roomScripts = new RoomScripts(room, xml, filename);
 			
 			return room;
 		}
