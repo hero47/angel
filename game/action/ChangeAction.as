@@ -72,10 +72,11 @@ package angel.game.action {
 			}
 			
 			if (newLocation != null) {
-				if ((complexEntity != null) && (complexEntity.moving())) {
+				var wasMoving:Boolean = (complexEntity != null) && (complexEntity.moving());
+				Settings.currentRoom.changeEntityLocation(entity, entity.location, newLocation);
+				if (wasMoving) { // Whatever path they were following is no longer valid
 					complexEntity.movement.endMoveImmediately();
 				}
-				Settings.currentRoom.changeEntityLocation(entity, entity.location, newLocation);
 			}
 			
 			if (complexEntity != null) {

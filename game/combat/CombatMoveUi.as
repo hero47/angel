@@ -110,13 +110,15 @@ package angel.game.combat {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFireFromCover), doPlayerFireFromCover));
 				}
 				var minGait:int = combat.mover.minimumGaitForPath(player);
-				if (minGait <= EntityMovement.GAIT_WALK) {
+				if ((minGait <= EntityMovement.GAIT_WALK) && (player.movement.maxGait >= EntityMovement.GAIT_WALK)) {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doPlayerMoveWalk));
 				}
-				if (minGait <= EntityMovement.GAIT_RUN) {
+				if ((minGait <= EntityMovement.GAIT_RUN) && (player.movement.maxGait >= EntityMovement.GAIT_RUN))  {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.Run), doPlayerMoveRun));
 				}
-				slices.push(new PieSlice(Icon.bitmapData(Icon.Sprint), doPlayerMoveSprint));
+				if (player.movement.maxGait >= EntityMovement.GAIT_SPRINT) {
+					slices.push(new PieSlice(Icon.bitmapData(Icon.Sprint), doPlayerMoveSprint));
+				}
 			}
 			
 			return slices;

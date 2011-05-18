@@ -163,7 +163,7 @@ package angel.game.combat {
 				var currentEnd:Point = endOfCurrentPath();
 				if ((currentEnd == null) || !location.equals(currentEnd)) {
 					var nextSegment:Vector.<Point> = entity.movement.findPathTo(location, currentEnd);
-					if ((nextSegment != null) && (path.length + nextSegment.length <= entity.movement.combatMovePoints)) {
+					if ((nextSegment != null) && (path.length + nextSegment.length <= entity.movement.maxDistanceForGait())) {
 						extendPath(entity, nextSegment);
 					}
 				}
@@ -208,6 +208,7 @@ package angel.game.combat {
 		}
 		
 		public function startEntityFollowingPath(entity:ComplexEntity, gait:int):void {
+			Assert.assertTrue(gait >= minimumGaitForPath(entity), "Bad gait for this path");
 			entity.movement.startMovingAlongPath(path, gait); //CAUTION: this path now belongs to entity.movement!
 			path = new Vector.<Point>();
 			endIndexes.length = 0;

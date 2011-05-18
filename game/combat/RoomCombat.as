@@ -330,6 +330,7 @@ package angel.game.combat {
 		// (specifically, during ENTER_FRAME for last frame of movement)
 		// Advance to that entity's fire phase.
 		private function finishedMovingListener(event:EntityEvent):void {
+			mover.clearPath();	// If movement finished unexpectedly (via ChangeAction or ??) dots may still be hanging around
 			trace(event.entity.aaId, "finished moving, iFighter", iFighterTurnInProgress);
 			if (checkForCombatOver()) {
 				// don't allow next enemy to fire, don't enable player UI, just wait for them to OK the message,

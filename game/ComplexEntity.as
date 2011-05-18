@@ -58,7 +58,7 @@ package angel.game {
 			var characterStats:CharacterStats = resource.characterStats;
 			maxHealth = currentHealth = characterStats.health;
 			myDisplayName = characterStats.displayName;
-			setMovePoints(characterStats.movePoints);
+			initMovement(characterStats.movePoints, characterStats.maxGait);
 			inventory.add(new Gun(characterStats.damage));
 			solidness = solidnessWhenAlive = resource.solidness;
 			
@@ -117,7 +117,8 @@ package angel.game {
 			return ((movement != null) && movement.moving());
 		}
 		
-		public function setMovePoints(points:int):void {
+		// CONSIDER: maxGait is a hack, it will probably eventually be based on armor
+		public function initMovement(points:int, maxGait:int):void {
 			if (points == 0) {
 				if (movement != null) {
 					movement.cleanup();
@@ -125,7 +126,7 @@ package angel.game {
 				}
 			} else {
 				if (movement == null) {
-					movement = new EntityMovement(this, points);
+					movement = new EntityMovement(this, points, maxGait);
 				} else {
 					movement.setMovePoints(points);
 				}

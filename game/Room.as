@@ -104,6 +104,9 @@ package angel.game {
 			if (parent != null) {
 				parent.removeChild(this);
 			}
+			if (roomScripts != null) {
+				roomScripts.cleanup();
+			}
 			if (Settings.currentRoom == this) {
 				Settings.currentRoom = null;
 			}

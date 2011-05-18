@@ -108,10 +108,9 @@ package angel.game {
 		// Fill a grid with the number of steps to all reachable points within a given range
 		// (Used by NPC brains when choosing move)
 		// Mostly matches findShortestPathTo(), just different enough to make them tough to merge ;)
-		public static function findReachableTiles(entity:ComplexEntity):Vector.<Vector.<int>> {
+		public static function findReachableTiles(entity:ComplexEntity, range:int):Vector.<Vector.<int>> {
 			var room:Room = entity.room;
 			var from:Point = entity.location;
-			var range:int = entity.movement.combatMovePoints;
 			// 0 = unvisited. -1 = blocked.  other number = distance counting start point as 1
 			var steps:Vector.<Vector.<int>> = new Vector.<Vector.<int>>(room.size.x);
 			for (var i:int = 0; i < room.size.x; i++) {

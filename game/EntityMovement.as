@@ -36,6 +36,7 @@ package angel.game {
 		private var me:ComplexEntity;
 		
 		public var combatMovePoints:int;
+		public var maxGait:int;
 		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
 		private var gaitDistances:Vector.<int>;
 		public var mostRecentGait:int = GAIT_WALK;	// gait for move in progress, or last move if none in progress
@@ -48,8 +49,9 @@ package angel.game {
 		private var depthChangePerFrame:Number;
 		protected var frameOfMove:int;
 		
-		public function EntityMovement(entity:ComplexEntity, movePoints:int) {
+		public function EntityMovement(entity:ComplexEntity, movePoints:int, maxGait:int = GAIT_SPRINT) {
 			me = entity;
+			this.maxGait = maxGait;
 			setMovePoints(movePoints);
 			setSpeeds(false);
 		}
@@ -123,13 +125,13 @@ package angel.game {
 			// next time we get an ENTER_FRAME which is really asynchronous.
 			path = (newPath == null ? new Vector.<Point> : newPath);
 			moveGoal = (path.length > 0 ? path[path.length - 1] : me.location);
-			mostRecentGait = (path.length == 0 ? GAIT_NO_MOVE : Math.min(gait, GAIT_SPRINT));
+			mostRecentGait = (path.length == 0 ? GAIT_NO_MOVE : Math.min(gait, maxGait));
 			moveSpeed = gaitSpeeds[mostRecentGait];
 			me.room.addEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
 		}
 		
 		public function minGaitForDistance(distance:int):int {
-			for (var gait:int = GAIT_NO_MOVE; gait < GAIT_TOO_FAR; ++gait) {
+			for (var gait:int = GAIT_NO_MOVE; gait <= maxGait; ++gait) {
 				if (distance <= gaitDistances[gait]) {
 					return gait;
 				}
@@ -137,12 +139,13 @@ package angel.game {
 			return GAIT_TOO_FAR;
 		}
 		
-		public function maxDistanceForGait(gait:int):int {
+		// call with no param returns max distance for max gait
+		public function maxDistanceForGait(gait:int = GAIT_TOO_FAR):int {
 			if (gait <= GAIT_NO_MOVE) {
 				return 0;
 			}
-			if (gait >= GAIT_TOO_FAR) {
-				gait = GAIT_SPRINT
+			if (gait > maxGait) {
+				gait = maxGait;
 			}
 			return gaitDistances[gait];
 		}

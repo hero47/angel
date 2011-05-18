@@ -29,6 +29,7 @@ package angel.roomedit {
 		private var movePointsTextField:TextField;
 		private var nameTextField:TextField;
 		private var changeImageControl:FilenameControl;
+		private var noSprintHackCheckbox:CheckBox;
 		
 		private static const WIDTH:int = 220;
 		
@@ -74,6 +75,8 @@ package angel.roomedit {
 							var walkerId:String = propCombo.selectedLabel;
 							catalog.changeFilename(walkerId, changeImageControl.text);
 					}, 0 );
+			noSprintHackCheckbox = Util.createCheckboxEditControlBelow(changeImageControl, "No Sprint Hack", 120,
+					function(event:Event):void { changeCharacterProperty( (event.target.selected ? 2 : 3), "maxGait", Defaults.MAX_GAIT) }, 0 );
 			
 			if (startId == null) {
 				propCombo.selectedIndex = 0;
@@ -101,6 +104,7 @@ package angel.roomedit {
 			damageTextField.text = String(characterStats.damage);
 			movePointsTextField.text = String(characterStats.movePoints);
 			changeImageControl.text = catalog.getFilenameFromId(walkerId);
+			noSprintHackCheckbox.selected = (characterStats.maxGait < 3);
 		}
 		
 		private function changeCharacterProperty(newValue:*, propertyName:String, defaultValue:* = null):void {
