@@ -13,6 +13,7 @@ package angel.game.combat {
 	import angel.game.SimpleEntity;
 	import angel.game.TimedSprite;
 	import flash.display.Bitmap;
+	import flash.display.DisplayObject;
 	import flash.display.Shape;
 	import flash.geom.Point;
 	import flash.text.TextField;
@@ -195,8 +196,10 @@ package angel.game.combat {
 		public function fireAndAdvanceToNextPhase(shooter:ComplexEntity, target:ComplexEntity):void {
 			if (target == null) {
 				trace(shooter.aaId, "reserve fire");
-				if (shooter.isPlayerControlled || anyPlayerCanSeeLocation(shooter.location)) {
-					displayReserveFireGraphic(shooter);
+				if (shooter.isPlayerControlled) {
+					displayTemporaryBitmapAboveHead(shooter, (shooter.currentGun() == null ? Icon.NoGunFloater : Icon.ReserveFireFloater));
+				} else if (anyPlayerCanSeeLocation(shooter.location)) {
+					displayTemporaryBitmapAboveHead(shooter, Icon.ReserveFireFloater);
 				}
 			} else {
 				trace(shooter.aaId, "firing at", target.aaId, target.location);
@@ -305,13 +308,13 @@ package angel.game.combat {
 			}
 		}
 		
-		private function displayReserveFireGraphic(shooter:ComplexEntity):void {
-			var reserveFireBitmap:Bitmap = new Icon.ReserveFireFloater();
-			var reserveFireSprite:TimedSprite = new TimedSprite(room.stage.frameRate);
-			reserveFireSprite.addChild(reserveFireBitmap);
-			reserveFireSprite.x = shooter.x;
-			reserveFireSprite.y = shooter.y - reserveFireSprite.height;
-			room.addChild(reserveFireSprite);
+		private function displayTemporaryBitmapAboveHead(shooter:ComplexEntity, graphicClass:Class):void {
+			var tempGraphic:DisplayObject = new graphicClass();
+			var tempSprite:TimedSprite = new TimedSprite(room.stage.frameRate);
+			tempSprite.addChild(tempGraphic);
+			tempSprite.x = shooter.x;
+			tempSprite.y = shooter.y - tempSprite.height;
+			room.addChild(tempSprite);
 		}
 
 		/*********** Turn-structure related **************/

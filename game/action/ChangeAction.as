@@ -80,16 +80,16 @@ package angel.game.action {
 			}
 			
 			if (complexEntity != null) {
-				if ((String(xml.@explore) != "") || (String(xml.@exploreParam) != "")) {
-					var exploreBrainClass:Class = (String(xml.@explore) == "") ? complexEntity.exploreBrainClass :
+				if ((xml.@explore.length() > 0) || (xml.@exploreParam.length() > 0)) {
+					var exploreBrainClass:Class = (xml.@explore.length() == 0) ? complexEntity.exploreBrainClass :
 							UtilBrain.exploreBrainClassFromString(xml.@explore);
-					var exploreParam:String = (String(xml.@exploreParam) == "") ? complexEntity.exploreBrainParam : xml.@exploreParam;
+					var exploreParam:String = (xml.@exploreParam.length() == 0) ? complexEntity.exploreBrainParam : xml.@exploreParam;
 					complexEntity.setBrain(true, exploreBrainClass, exploreParam);
 				}
-				if ((String(xml.@combat) != "") || (String(xml.@combatParam) != "")) {
-					var combatBrainClass:Class = (String(xml.@combat) == "") ? complexEntity.combatBrainClass :
+				if ((xml.@combat.length() > 0) || (xml.@combatParam.length() > 0)) {
+					var combatBrainClass:Class = (xml.@combat.length() == 0) ? complexEntity.combatBrainClass :
 							UtilBrain.combatBrainClassFromString(xml.@combat);
-					var combatParam:String = (String(xml.@combatParam) == "") ? complexEntity.combatBrainParam : xml.@combatParam;
+					var combatParam:String = (xml.@combatParam.length() == 0) ? complexEntity.combatBrainParam : xml.@combatParam;
 					complexEntity.setBrain(false, combatBrainClass, combatParam);
 				}
 			}

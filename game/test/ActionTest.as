@@ -282,6 +282,8 @@ package angel.game.test {
 		private const changeNeiWithXY:XML = <change id="nei" x="4" y="7" />;
 		private const changeNeiSpotAndXY:XML = <change id="nei" spot="testSpot" x="1" y="1" />;
 		private const changeNeiBrain:XML = <change id="nei" explore="wander" combat="patrol" combatParam="testSpot" />;
+		private const clearNeiBrain:XML = <change id="nei" explore="" combat="" />;
+		
 		private const changeFoo:XML = <change id="foo" explore="wander" combat="patrol" combatParam="testSpot" spot="testSpot"/>;
 		private const removeFoo:XML = <removeFromRoom id="foo" />;
 		private function testChangeAction():void {
@@ -310,6 +312,10 @@ package angel.game.test {
 			} else {
 				Autotest.assertEqual(neiComplex.brain, null);
 			}
+			testActionFromXml(clearNeiBrain);
+			Autotest.assertEqual(neiComplex.exploreBrainClass, null);
+			Autotest.assertEqual(neiComplex.combatBrainClass, null);
+			Autotest.assertEqual(neiComplex.combatBrainParam, null, "Removing behavior should auto-remove corresponding param");
 			
 			var fooXml:XML = <prop id="foo" x="6" y="5"/>
 			var foo:SimpleEntity = SimpleEntity.createFromRoomContentsXml(fooXml, 1, Settings.catalog);

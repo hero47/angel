@@ -24,6 +24,7 @@ package angel.game.combat {
 		private var room:Room;
 		private var combat:RoomCombat;
 		private var player:ComplexEntity;
+		private var haveGun:Boolean;
 		private var oldMarkerColorTransform:ColorTransform;
 		private var aimCursor:Sprite;
 		private var aimCursorBitmap:Bitmap;
@@ -59,6 +60,7 @@ package angel.game.combat {
 		public function enable(player:ComplexEntity):void {
 			trace("entering player fire phase for", player.aaId);
 			this.player = player;
+			haveGun = (player.currentGun() != null);
 			oldMarkerColorTransform = player.marker.transform.colorTransform;
 			player.marker.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
 			targetEnemy = null;
@@ -101,7 +103,7 @@ package angel.game.combat {
 				break;
 				
 				case Keyboard.ENTER:
-					if (targetLocked) {
+					if (targetLocked && haveGun) {
 						doPlayerFire();
 					} else {
 						doReserveFire();
@@ -157,10 +159,13 @@ package angel.game.combat {
 		public function pieMenuForTile(tile:FloorTile):Vector.<PieSlice> {
 			var slices:Vector.<PieSlice> = new Vector.<PieSlice>()
 			if (targetLocked) {
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFire), doPlayerFire));
+				if (haveGun) {
+					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFire), doPlayerFire));
+				}
 				addGrenadePieSliceIfLegal(slices, tile.location);
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatCancelTarget), doCancelTarget));
 			} else {
+				
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatNoTarget), null));
 				addGrenadePieSliceIfLegal(slices, tile.location);
 			}
@@ -191,10 +196,14 @@ package angel.game.combat {
 		}
 		
 		private function doPlayerFire():void {
-			var target:ComplexEntity = targetEnemy;
-			var playerFiring:ComplexEntity = player;
-			room.disableUi();
-			combat.fireAndAdvanceToNextPhase(playerFiring, target);
+			if (haveGun) {
+				var target:ComplexEntity = targetEnemy;
+				var playerFiring:ComplexEntity = player;
+				room.disableUi();
+				combat.fireAndAdvanceToNextPhase(playerFiring, target);
+			} else {
+				doReserveFire();
+			}
 		}
 		
 		private function doPlayerThrowGrenadeAt(loc:Point):void {

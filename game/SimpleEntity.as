@@ -80,9 +80,13 @@ package angel.game {
 				frobScript.addAction(new ConversationAction(conversationData, Script.TRIGGERING_ENTITY_ID));
 			}
 			
-			if (scriptFile != "") {
-				frobScript = new Script();
-				frobScript.loadFromXmlFile(scriptFile);
+			if (xml.@script.length() > 0) {
+				if (scriptFile == "") {
+					frobScript = null;
+				} else {
+					frobScript = new Script();
+					frobScript.loadFromXmlFile(scriptFile);
+				}
 			}
 		}
 		
