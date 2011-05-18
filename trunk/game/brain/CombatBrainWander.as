@@ -43,7 +43,7 @@ package angel.game.brain {
 			}
 			var randomGait:int;
 			do {
-				randomGait = Math.floor(Math.random() * EntityMovement.GAIT_SPRINT) + 1;
+				randomGait = Math.floor(Math.random() * me.movement.maxGait) + 1;
 			} while (reachable[randomGait].length == 0);
 			var goal:Point = reachable[randomGait][Math.floor(Math.random() * reachable[randomGait].length)];
 			
@@ -68,11 +68,11 @@ package angel.game.brain {
 		
 		// return total number of reachable tiles
 		private function fillListWithReachableTiles():int {
-			for (var i:int = 0; i <= EntityMovement.GAIT_SPRINT; ++i) {
+			for (var i:int = 0; i <= me.movement.maxGait; ++i) {
 				reachable[i].length = 0;
 			}
 			var count:int = 0;
-			var steps:Vector.<Vector.<int>> = Pathfinder.findReachableTiles(me);
+			var steps:Vector.<Vector.<int>> = Pathfinder.findReachableTiles(me, me.movement.maxDistanceForGait());
 			for (var x:int = 0; x < combat.room.size.x; ++x) {
 				for (var y:int = 0; y < combat.room.size.y; ++y) {
 					if (steps[x][y] > 0) {

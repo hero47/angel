@@ -107,11 +107,14 @@ package angel.common {
 			return textField;
 		}
 
-		public static function createCheckboxEditControlBelow(previousControl:DisplayObject, labelText:String, width:int, changeHandler:Function):CheckBox {
+		public static function createCheckboxEditControlBelow(previousControl:DisplayObject, labelText:String, width:int, changeHandler:Function, optionalXInsteadOfAligning:int = int.MAX_VALUE):CheckBox {
 			var checkBox:CheckBox = new CheckBox();
 			checkBox.label = labelText;
 			checkBox.width = width;
 			addBelow(checkBox, previousControl, 5);
+			if (optionalXInsteadOfAligning != int.MAX_VALUE) {
+				checkBox.x = optionalXInsteadOfAligning;
+			}
 			if (changeHandler != null) {
 				checkBox.addEventListener(Event.CHANGE, changeHandler);
 			}
