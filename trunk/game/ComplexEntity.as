@@ -59,7 +59,9 @@ package angel.game {
 			maxHealth = currentHealth = characterStats.health;
 			myDisplayName = characterStats.displayName;
 			initMovement(characterStats.movePoints, characterStats.maxGait);
-			inventory.add(new Gun(characterStats.damage));
+			if (characterStats.damage > 0) {
+				inventory.add(new Gun(characterStats.damage));
+			}
 			solidness = solidnessWhenAlive = resource.solidness;
 			
 			facing = FACE_CAMERA;
@@ -186,10 +188,10 @@ package angel.game {
 		public function setBrain(forExplore:Boolean, newBrainClass:Class, newParam:String):void {
 			if (forExplore) {
 				exploreBrainClass = newBrainClass;
-				exploreBrainParam = newParam;
+				exploreBrainParam = (newBrainClass == null ? null : newParam);
 			} else {
 				combatBrainClass = newBrainClass;
-				combatBrainParam = newParam;
+				combatBrainParam = (newBrainClass == null ? null : newParam);
 			}
 			
 			if (room != null) {

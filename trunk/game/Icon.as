@@ -49,6 +49,8 @@ package angel.game {
 		
 		[Embed(source='../../../EmbeddedAssets/ReserveFire.png')]
 		public static const ReserveFireFloater:Class;
+		[Embed(source='../../../EmbeddedAssets/NoGun.png')]
+		public static const NoGunFloater:Class;
 		
 	}
 
