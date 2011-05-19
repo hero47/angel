@@ -98,14 +98,21 @@ package angel.game {
 			return aaId + super.toString();
 		}
 		
-		public function frobOk(player:ComplexEntity):Boolean {
-			// Later, Wm has indicated that NPCs will be frobbable ("hail") from a greater distance, and there may be other
-			// special cases.  Also, some entities may not be frobbable at all.
-			return Util.chessDistance(player.location, myLocation) == 1;
+		public function frobOk(whoFrobbedMe:ComplexEntity):Boolean {
+			var maxDistance:int = (this is ComplexEntity) ? 2 : 1;
+			return Util.chessDistance(whoFrobbedMe.location, myLocation) <= maxDistance;
 		}
 		
-		// Eventually, entity properties and/or scripting will control what happens when entity is frobbed
-		public function frob(player:ComplexEntity):void {
+		// NOTE: The frob-ee is passed to the script for reference by "*this".
+		public function frob(whoFrobbedMe:ComplexEntity):void {
+			if (!frobOk(whoFrobbedMe)) {
+				//NOTE: currently (5/17/11) shouldn't ever get here -- UI will only call frob if frobOk is true.
+				//We may change that, either frob anyway (and get here), or make clicking on a too-far-away object
+				//cause the player to attempt to walk up to frobbing distance and then frob. (Complicated, user-friendly
+				//for majority cases, but horribly not-what-I-meant!-unfriendly for some cases.)
+				Alert.show("Too far away.");
+				return;
+			}
 			if (frobScript != null) {
 				frobScript.run(this);
 			} else {

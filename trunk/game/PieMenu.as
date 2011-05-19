@@ -20,7 +20,7 @@ package angel.game {
 		private static const PIE_COLOR:uint = 0x888888;
 		private static const PIE_BORDER_COLOR:uint = 0xcccccc;
 		private static const PIE_ALPHA:Number = 0.5;
-		private static const ICON_ALPHA:Number = .75;
+		private static const ICON_ALPHA:Number = 1;
 		private static const CENTER_OF_FIRST_SLICE:int = 180;
 		public static const ICON_SIZE:int = 28; // square
 		
@@ -133,18 +133,19 @@ package angel.game {
 		private function mouseOverPie(event:MouseEvent):void {
 			var sliceIndex:int = sliceIndexFromMouseEvent(event);
 			var newOverIcon:Bitmap = Bitmap(pie.getChildAt(sliceIndex));
-			adjustOverIcon(newOverIcon);
+			adjustOverIcon(newOverIcon, slices[sliceIndex].text);
 		}
 		
 		private function mouseAnywhere(event:MouseEvent):void {
 			if (event.target == this) {
 				//De-hilight the icon if we're only over the PieMenu (which occupies the full stage), but
 				//not over the sprite that forms the visual menu
-				adjustOverIcon(null);
+				adjustOverIcon();
 			}
 		}
 		
-		private function adjustOverIcon(newOverIcon:Bitmap):void {
+		private function adjustOverIcon(newOverIcon:Bitmap = null, popupText:String = ""):void {
+			/*
 			if (newOverIcon != overIcon) {
 				if (overIcon != null) {
 					overIcon.alpha = ICON_ALPHA;
@@ -153,6 +154,17 @@ package angel.game {
 					newOverIcon.alpha = 1;
 				}
 				overIcon = newOverIcon;
+			}
+			*/
+			if (newOverIcon != overIcon) {
+				if (overIcon != null) {
+					ToolTip.removeToolTip();
+				}
+				if (newOverIcon != null) {
+					ToolTip.displayToolTip(pie, popupText, newOverIcon.x + newOverIcon.width, newOverIcon.y);
+				}
+				overIcon = newOverIcon;
+				
 			}
 		}
 		

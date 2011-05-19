@@ -160,16 +160,16 @@ package angel.game.combat {
 			var slices:Vector.<PieSlice> = new Vector.<PieSlice>()
 			if (targetLocked) {
 				if (haveGun) {
-					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFire), doPlayerFire));
+					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFire), "Fire", doPlayerFire));
 				}
 				addGrenadePieSliceIfLegal(slices, tile.location);
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatCancelTarget), doCancelTarget));
+				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatCancelTarget), "Cancel target lock", doCancelTarget));
 			} else {
 				
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatNoTarget), null));
+				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatNoTarget), "This slice does nothing", null));
 				addGrenadePieSliceIfLegal(slices, tile.location);
 			}
-			slices.push(new PieSlice(Icon.bitmapData(Icon.CombatReserveFire), doReserveFire));
+			slices.push(new PieSlice(Icon.bitmapData(Icon.CombatReserveFire), "Reserve Fire", doReserveFire));
 			return slices;
 		}
 	
@@ -177,12 +177,14 @@ package angel.game.combat {
 		/************ Private ****************/
 		
 		private function addGrenadePieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point):void {
-			if (!room.blocksGrenade(targetLocation.x, targetLocation.y) &&
-						player.inventory.findA(Grenade) != null &&
+			var grenades:int = player.inventory.count(Grenade);
+			if ( (grenades > 0) &&
+						!room.blocksGrenade(targetLocation.x, targetLocation.y) &&
 						Util.entityHasLineOfSight(player, targetLocation)) {
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade), function():void {
-					doPlayerThrowGrenadeAt(targetLocation);
-				}));
+				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade),
+					"Throw grenade (" + grenades + " in inventory) at this square",
+					function():void { doPlayerThrowGrenadeAt(targetLocation); }
+				));
 			}
 		}
 		

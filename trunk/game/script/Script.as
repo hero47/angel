@@ -67,12 +67,12 @@ package angel.game.script {
 			}
 			Script.triggeringEntity = triggeredBy;
 			doActions(doAtEnd);
-			Script.triggeringEntity = previousTrigger;
-			
 			while (doAtEnd.length > 0) {
 				var f:Function = doAtEnd.shift();
 				f();
 			}
+			Script.triggeringEntity = previousTrigger;
+			
 			if (Settings.currentRoom.mode is RoomCombat) {
 				RoomCombat(Settings.currentRoom.mode).checkForCombatOver();
 			}

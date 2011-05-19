@@ -102,22 +102,22 @@ package angel.game.combat {
 			var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
 			
 			if (combat.mover.hasPath()) {
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CancelMove), removePath));
+				slices.push(new PieSlice(Icon.bitmapData(Icon.CancelMove), "Cancel", removePath));
 			}
-			slices.push(new PieSlice(Icon.bitmapData(Icon.Stay), doPlayerMoveStay));
+			slices.push(new PieSlice(Icon.bitmapData(Icon.Stay), "Stand still", doPlayerMoveStay));
 			if (combat.mover.hasPath()) {
 				if (combat.mover.shootFromCoverValidForCurrentLocationAndPath(player)) {
-					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFireFromCover), doPlayerFireFromCover));
+					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFireFromCover), "Fire from cover", doPlayerFireFromCover));
 				}
 				var minGait:int = combat.mover.minimumGaitForPath(player);
 				if ((minGait <= EntityMovement.GAIT_WALK) && (player.movement.maxGait >= EntityMovement.GAIT_WALK)) {
-					slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), doPlayerMoveWalk));
+					slices.push(new PieSlice(Icon.bitmapData(Icon.Walk), "Walk", doPlayerMoveWalk));
 				}
 				if ((minGait <= EntityMovement.GAIT_RUN) && (player.movement.maxGait >= EntityMovement.GAIT_RUN))  {
-					slices.push(new PieSlice(Icon.bitmapData(Icon.Run), doPlayerMoveRun));
+					slices.push(new PieSlice(Icon.bitmapData(Icon.Run), "Run", doPlayerMoveRun));
 				}
 				if (player.movement.maxGait >= EntityMovement.GAIT_SPRINT) {
-					slices.push(new PieSlice(Icon.bitmapData(Icon.Sprint), doPlayerMoveSprint));
+					slices.push(new PieSlice(Icon.bitmapData(Icon.Sprint), "Sprint", doPlayerMoveSprint));
 				}
 			}
 			

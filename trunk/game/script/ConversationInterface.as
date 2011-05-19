@@ -58,17 +58,25 @@ package angel.game.script {
 		}
 		
 		public function startSegment(npcSegment:ConversationSegment, pcSegments:Vector.<ConversationSegment>):void {
+			var havePcSegments:Boolean = pcSegments.length > 0;
 			// This is a bit scary, and it's implementing a UI choice that I personally detest and am trying to
-			// get Wm to eliminate.  I don't WANT to have to click the NPC box before I can see the PC box!
+			// get Wm to eliminate.  I don't WANT to have to click the NPC box before I can see the PC box if both exist!
+			// PARTICULARLY now that sometimes ONLY the NPC box will exist, so I can't just automatically click it,
+			// since that will make it go away if there's no PC box.
 			var pcSegmentFunction:Function = function(event:Event):void {
 				if (event != null) {
 					event.target.removeEventListener(ConversationEvent.SEGMENT_FINISHED, pcSegmentFunction);
 				}
-				pcBox = displayConversationSegment(new PcPortrait(), true, pcSegments, 500, 300, pcBoxComplete);
+				if (havePcSegments) {
+					pcBox = displayConversationSegment(new PcPortrait(), true, pcSegments, 500, 300, pcBoxComplete);
+				} else {
+					pcBoxComplete(null);
+				}
 			}
 			
 			if (npcSegment != null) {
-				npcBox = displayConversationSegment(new NpcPortrait(), false, Vector.<ConversationSegment>([npcSegment]), 500, 100, pcSegmentFunction);	
+				npcBox = displayConversationSegment(new NpcPortrait(), false, Vector.<ConversationSegment>([npcSegment]),
+						500, 100, pcSegmentFunction);	
 			} else {
 				pcSegmentFunction(null);
 			}
@@ -85,13 +93,15 @@ package angel.game.script {
 		}
 		
 		private function pcBoxComplete(event:ConversationEvent):void {
-			pcBox.removeEventListener(ConversationEvent.SEGMENT_FINISHED, pcBoxComplete);
+			if (pcBox != null) {
+				pcBox.removeEventListener(ConversationEvent.SEGMENT_FINISHED, pcBoxComplete);
+				removeChild(pcBox);
+				pcBox = null;
+			}
 			if (npcBox != null) {
 				removeChild(npcBox);
 				npcBox = null;
 			}
-			removeChild(pcBox);
-			pcBox = null;
 		}
 		
 		public function cleanup():void {
