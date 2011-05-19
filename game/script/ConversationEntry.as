@@ -29,9 +29,6 @@ package angel.game.script {
 			for each (var pcSegmentXml:XML in entryXml.pc) {
 				entry.pcSegments.push(ConversationSegment.createFromXml(pcSegmentXml, errorPrefix));
 			}
-			if (entry.pcSegments.length == 0) {
-				Alert.show("Missing PC segment:\n" + entryXml);
-			}
 			
 			return entry;
 		}

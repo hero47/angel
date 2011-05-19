@@ -28,13 +28,6 @@ package angel.game.script {
 		private static const TEXT_COLOR:uint = 0xffffff;
 		private static const TEXT_PORTRAIT_MARGIN:uint = 100;
 		private static const TEXT_OTHER_MARGIN:uint = 20;
-		
-		[Embed(source='../../../../EmbeddedAssets/conversation_action_box.png')]
-		private static const ActionBox:Class;
-		[Embed(source='../../../../EmbeddedAssets/conversation_npc_arrow.png')]
-		private static const NpcActionIcon:Class;
-		[Embed(source='../../../../EmbeddedAssets/conversation_pc_arrow.png')]
-		private static const PcActionIcon:Class;
 
 		/*
 		[Embed(source = '../../../EmbeddedAssets/arial.ttf', fontName="Ariel", mimeType='application/x-font-truetype')]
@@ -51,28 +44,15 @@ package angel.game.script {
 			graphics.beginFill(BOX_COLOR, 0.8);
 			graphics.drawRoundRect( -BOX_WIDTH / 2, 0, BOX_WIDTH, BOX_HEIGHT, 20);
 			
-			var actionBox:Bitmap = new ActionBox();
-			actionBox.x = -actionBox.width/2;
-			actionBox.y = BOX_HEIGHT - (actionBox.height / 2);
-			addChild(actionBox);
-				//textField.height = BOX_HEIGHT - (actionBox.height / 2);
-			
-			var actionIcon:Bitmap;
-			
 			addChild(portraitBitmap);
 			portraitBitmap.y = (BOX_HEIGHT - portraitBitmap.height) / 2;
 			if (pc) {
 				portraitBitmap.x = (BOX_WIDTH - portraitBitmap.width) / 2;
-				actionIcon = new PcActionIcon();
 				textX = -BOX_WIDTH/2 + TEXT_OTHER_MARGIN;
 			} else {
 				portraitBitmap.x = -(BOX_WIDTH + portraitBitmap.width) / 2;
-				actionIcon = new NpcActionIcon();
 				textX = -BOX_WIDTH/2 + TEXT_PORTRAIT_MARGIN;
 			}
-			actionIcon.x = actionBox.x;
-			actionIcon.y = actionBox.y;
-			addChild(actionIcon);
 			
 			addEventListener(MouseEvent.CLICK, clickListener);
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
@@ -133,12 +113,10 @@ package angel.game.script {
 			}
 		}
 		
-		private function keyDownListener(event:KeyboardEvent):void {
-			if (mySegments.length >= 2) {
-				var i:int = event.charCode - "1".charCodeAt(0);
-				if (i >= 0 && i < mySegments.length) {
-					finished(mySegments[i]);
-				}
+	private function keyDownListener(event:KeyboardEvent):void {
+			var i:int = event.charCode - "1".charCodeAt(0);
+			if (i >= 0 && i < mySegments.length) {
+				finished(mySegments[i]);
 			} else {
 				switch (event.keyCode) {
 					case Keyboard.SPACE:
