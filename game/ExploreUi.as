@@ -65,22 +65,35 @@ package angel.game {
 		}
 		
 		public function mouseMove(tile:FloorTile):void {
-			if (tile != null) {
-				if (player.movement.tileBlocked(tile.location)) {
-					var target:SimpleEntity = room.firstEntityIn(tile.location);
-					if (target != null && target.frobOk(player)) {
-						room.moveHilight(tile, FROB_COLOR);
-					} else {
-						room.moveHilight(null, 0);
-					}
+			if (tile == null) {
+				return;
+			}
+			var location:Point = tile.location;
+			if (player.movement.tileBlocked(location)) {
+				//NOTE: if two entities are on the same tile, only the first is currently frob-able.
+				//CONSIDER: if this becomes a problem, we could check for this case and put up a dialog or menu
+				//allowing them to pick which entity to frob.
+				var target:SimpleEntity = room.firstEntityIn(location);
+				if (target != null && target.frobOk(player)) {
+					room.moveHilight(tile, FROB_COLOR);
 				} else {
-					var pathToMouse:Vector.<Point> = player.movement.findPathTo(tile.location);
-					if (pathToMouse == null) {
-						room.moveHilight(null, 0);
-					} else {
-						room.moveHilight(tile, MOVE_COLOR);
-					}
+					room.moveHilight(null, 0);
 				}
+			} else {
+				var pathToMouse:Vector.<Point> = player.movement.findPathTo(location);
+				if (pathToMouse == null) {
+					room.moveHilight(null, 0);
+				} else {
+					room.moveHilight(tile, MOVE_COLOR);
+				}
+			}
+			
+			var character:ComplexEntity = room.firstComplexEntityIn(location);
+			if (character == null) {
+				ToolTip.removeToolTip();
+			} else {
+				var tipLocation:Point = character.centerOfImage();
+				ToolTip.displayToolTip(room, character.displayName, tipLocation.x, tipLocation.y);
 			}
 		}
 		
