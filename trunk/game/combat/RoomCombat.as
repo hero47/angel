@@ -340,29 +340,36 @@ package angel.game.combat {
 		// (specifically, during ENTER_FRAME for last frame of movement)
 		// Advance to that entity's fire phase.
 		private function finishedMovingListener(event:EntityEvent):void {
-			mover.clearPath();	// If movement finished unexpectedly (via ChangeAction or ??) dots may still be hanging around
 			trace(event.entity.aaId, "finished moving, iFighter", iFighterTurnInProgress);
+			mover.clearPath();	// If movement finished unexpectedly (via ChangeAction or ??) dots may still be hanging around
+			currentFighterHasOpportunityFireCoverFrom.length = 0;
 			if (checkForCombatOver()) {
 				// don't allow next enemy to fire, don't enable player UI, just wait for them to OK the message,
 				// which will end combat mode.
 				return;
 			}
 			
-			currentFighterHasOpportunityFireCoverFrom.length = 0;
+			var fighter:ComplexEntity = currentFighter();
 			
 			//event.entity won't match currentFighter() if moving entity was killed by opportunity fire
-			if (event.entity != currentFighter()) {
+			if (event.entity != fighter) {
 				trace(event.entity.aaId, "was killed, don't give them a fire phase");
 				finishedFire();
 				return;
 			}
-			currentFighter().actionsRemaining = 1; // everyone gets one action per turn, at least for now
-			if (currentFighter().isPlayerControlled) {
-				room.enableUi(fireUi, currentFighter());
+			fighter.actionsRemaining = 1; // everyone gets one action per turn, at least for now
+			if (fighter.isPlayerControlled) {
 				modeLabel.text = PLAYER_FIRE;
-			} else {
-				ICombatBrain(currentFighter().brain).doFire();
+				if (fighter.hasAWeapon()) {
+					room.enableUi(fireUi, currentFighter());
+				} else {
+					fireAndAdvanceToNextPhase(fighter, null);
+				}
+			} else if (fighter.brain != null) {
+				ICombatBrain(fighter.brain).doFire();
 				modeLabel.text = ENEMY_FIRE;
+			} else {
+				finishedFire();
 			}
 		}
 		

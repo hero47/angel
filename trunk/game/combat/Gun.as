@@ -9,7 +9,7 @@ package angel.game.combat {
 	 */
 	
 	 // This may become an interface once we have more types of guns, or the others may extend it
-	public class Gun implements CanBeInInventory {
+	public class Gun implements IWeapon {
 		public var baseDamage:int;
 		
 		public function Gun(baseDamage:int) {

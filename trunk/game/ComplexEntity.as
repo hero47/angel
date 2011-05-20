@@ -9,6 +9,7 @@ package angel.game {
 	import angel.game.brain.IBrain;
 	import angel.game.brain.UtilBrain;
 	import angel.game.combat.Gun;
+	import angel.game.combat.IWeapon;
 	import angel.game.combat.RoomCombat;
 	import flash.display.Bitmap;
 	import flash.display.DisplayObject;
@@ -313,6 +314,10 @@ package angel.game {
 				}
 			}
 			return false;
+		}
+		
+		public function hasAWeapon():Boolean {
+			return inventory.findA(IWeapon) != null;
 		}
 		
 		// Eventually entities will be able to switch between different weapons

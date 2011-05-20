@@ -19,7 +19,7 @@ package angel.game.combat {
 	 */
 	
 	 // This may become an interface once we have more types of area weapons, or the others may extend it
-	public class Grenade implements CanBeInInventory {
+	public class Grenade implements IWeapon {
 		
 		private static const singleton:Grenade = new Grenade();
 		
