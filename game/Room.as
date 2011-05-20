@@ -344,6 +344,16 @@ package angel.game {
 			}
 		}
 		
+		public function updateToolTip(location:Point):void {
+			var character:ComplexEntity = firstComplexEntityIn(location);
+			if (character == null) {
+				ToolTip.removeToolTip();
+			} else {
+				var tipLocation:Point = character.centerOfImage();
+				ToolTip.displayToolTip(this, character.displayName, tipLocation.x, tipLocation.y);
+			}
+		}
+		
 		public function toggleVisibility():void {
 			contentsLayer.alpha = 1.5 - contentsLayer.alpha;
 		}

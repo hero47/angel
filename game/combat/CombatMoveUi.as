@@ -9,6 +9,7 @@ package angel.game.combat {
 	import angel.game.PieSlice;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
+	import angel.game.ToolTip;
 	import flash.geom.ColorTransform;
 	import flash.geom.Point;
 	import flash.text.TextField;
@@ -77,6 +78,12 @@ package angel.game.combat {
 		public function mouseMove(tile:FloorTile):void {
 			if (tile != null) {
 				room.moveHilight(tile, combat.mover.dotColorIfExtendPathTo(player, tile.location));
+				
+				if (Util.entityHasLineOfSight(player, tile.location)) {
+					room.updateToolTip(tile.location);
+				} else {
+					ToolTip.removeToolTip();
+				}
 			}
 		}
 		

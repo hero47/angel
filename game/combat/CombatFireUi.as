@@ -8,6 +8,7 @@ package angel.game.combat {
 	import angel.game.Room;
 	import angel.game.RoomExplore;
 	import angel.game.Settings;
+	import angel.game.ToolTip;
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.filters.GlowFilter;
@@ -137,6 +138,12 @@ package angel.game.combat {
 					var enemy:ComplexEntity = room.firstComplexEntityIn(tile.location, filterIsEnemy);
 					room.moveHilight(tile, (enemy == null ? NO_TARGET_TILE_HILIGHT_COLOR : TARGET_TILE_HILIGHT_COLOR));
 					moveTargetHilight(enemy);
+				}
+				
+				if (lineOfSight) {
+					room.updateToolTip(tile.location);
+				} else {
+					ToolTip.removeToolTip();
 				}
 			}
 			aimCursor.x = room.mouseX;
