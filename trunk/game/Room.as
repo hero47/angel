@@ -569,8 +569,14 @@ package angel.game {
 			for each (var propXml: XML in contentsXml.prop) {
 				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXml(propXml, version, catalog));
 			}
+			
+			//UNDONE For backwards compatibility; remove this eventually
 			for each (var walkerXml: XML in contentsXml.walker) {
 				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(walkerXml, version, catalog));
+			}
+			
+			for each (var charXml: XML in contentsXml.char) {
+				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(charXml, version, catalog));
 			}
 		}
 

@@ -32,7 +32,7 @@ package angel.game.brain {
 
 		
 		public function chooseMoveAndDrawDots():void {
-			if (me.movement == null) {
+			if (!me.canMove()) {
 				return;
 			}
 			trace(me.aaId, "Wander: Choose move and draw dots");

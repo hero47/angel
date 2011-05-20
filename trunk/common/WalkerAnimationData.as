@@ -1,5 +1,4 @@
 package angel.common {
-	import angel.game.WalkerAnimation;
 	import flash.display.BitmapData;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
@@ -8,15 +7,21 @@ package angel.common {
 	 * ...
 	 * @author Beth Moursund
 	 */
+	
+	
+	// Walker image file has three rows of images (first column facing camera, rotating 45 degrees
+	// counterclockwise each image).  The first row of images are standing, second row right foot forward,
+	// third row left foot forward.  The ninth column contains a three-frame "death animation": first row
+	// starting to collapse, second row fallen further, third row dead.
 	public class WalkerAnimationData implements IAnimationData {
 		public static const STAND:int = 0;
 		public static const RIGHT:int = 1;
 		public static const LEFT:int = 2;
 		
+		private var paddingAtTop:int = Defaults.TOP;
+		
 		[Embed(source = '../../../EmbeddedAssets/temp_default_walker.png')]
 		private static const DefaultWalkerBitmap:Class;
-		
-		public var unusedPixelsAtTopOfCell:int = Defaults.TOP;
 		
 		//mapping from facing to position on image sheet
 		//(facing 8 == DYING holds the death images)
@@ -25,8 +30,9 @@ package angel.common {
 		
 		private var bits:Vector.<Vector.<BitmapData>>;
 		
-		public function WalkerAnimationData() {
-			
+		public function WalkerAnimationData(labelForTemporaryVersion:String, unusedPixelsAtTopOfCell:int) {
+			paddingAtTop = unusedPixelsAtTopOfCell;
+			prepareTemporaryVersionForUse(labelForTemporaryVersion);
 		}
 		
 		public function get animationClass():Class {
@@ -34,7 +40,7 @@ package angel.common {
 		}
 
 		//NOTE: set unusedPixelsAtTopOfCell before calling this
-		public function prepareTemporaryVersionForUse(labelForTemporaryVersion:String):void {
+		private function prepareTemporaryVersionForUse(labelForTemporaryVersion:String):void {
 			// Prepare temporary version for use until bitmap data is loaded from file
 			createBlankBits();
 			copyBitsFromImagePane((new DefaultWalkerBitmap()).bitmapData);
@@ -48,13 +54,16 @@ package angel.common {
 			}
 		}
 		
-		public function dataFinishedLoading(bitmapData:BitmapData):void {
+		public function dataFinishedLoading(bitmapData:BitmapData, entry:CatalogEntry):void {
+			if ((bitmapData.width != Prop.WIDTH * 9) || (bitmapData.height != Prop.HEIGHT * 3)) {
+				Alert.show("Warning: expected " + entry.filename + " to be a walker animation, but image size is wrong.");
+			}
 			copyBitsFromImagePane(bitmapData);
 			bitmapData.dispose();
 		}
 		
 		public function standardImage():BitmapData {
-			return bitsFacing(0);
+			return bitsFacing(1);
 		}
 		
 		// Facing == rotation/45 if we were in a top-down view.
@@ -82,36 +91,36 @@ package angel.common {
 				bits[facing] = new Vector.<BitmapData>(3);
 				bits[facing].fixed = true;
 				for (var foot:int = 0; foot < 3; foot++) {
-					bits[facing][foot] = new BitmapData(Prop.WIDTH, Prop.HEIGHT - unusedPixelsAtTopOfCell);
+					bits[facing][foot] = new BitmapData(Prop.WIDTH, Prop.HEIGHT - paddingAtTop);
 				}
 			}
 		}
 
 		private function copyBitsFromImagePane(bitmapData:BitmapData):void {
-			var fullPane:Boolean = true;
-			// If we were given a single image instead of a pane of images, copy it into every animation frame
-			// so we at least show something meaningful
-			if (bitmapData.height == Prop.HEIGHT && bitmapData.width == Prop.WIDTH) {
-				fullPane = false;
-			}
+			// If image file is an odd size, try to do something reasonable with it.
+			var useFullWidth:Boolean = (bitmapData.width > Prop.WIDTH);
+			var useFullHeight:Boolean = (bitmapData.height > Prop.HEIGHT);
+			
 			var zerozero:Point = new Point(0, 0);
-			var sourceRect:Rectangle = new Rectangle(0, 0, Prop.WIDTH, Prop.HEIGHT - unusedPixelsAtTopOfCell); // x,y will change as we loop
+			var sourceRect:Rectangle = new Rectangle(0, paddingAtTop, Prop.WIDTH, Prop.HEIGHT - paddingAtTop); // x,y will change as we loop
 			for (var facing:int = 0; facing < 9; facing++) {
 				for (var foot:int = 0; foot < 3; foot++) {
-					if (fullPane) {
+					if (useFullWidth) {
 						sourceRect.x = imageColumn[facing] * Prop.WIDTH;
-						sourceRect.y = (foot * Prop.HEIGHT) + unusedPixelsAtTopOfCell;
+					}
+					if (useFullHeight) {
+						sourceRect.y = (foot * Prop.HEIGHT) + paddingAtTop;
 					}
 					bits[facing][foot].copyPixels(bitmapData, sourceRect, zerozero);
 				}
 			}
 		}
 		
-		// for use in editor only; this (plus code in editor) is ugly.
+		// for use in editor only; this (plus code in editor) is awkward.
 		public function increaseTop(additionalTop:int):int {
-			unusedPixelsAtTopOfCell += additionalTop;
+			paddingAtTop += additionalTop;
 			var zerozero:Point = new Point(0, 0);
-			var sourceRect:Rectangle = new Rectangle(0, additionalTop, Prop.WIDTH, Prop.HEIGHT - unusedPixelsAtTopOfCell);
+			var sourceRect:Rectangle = new Rectangle(0, additionalTop, Prop.WIDTH, Prop.HEIGHT - paddingAtTop);
 			var clearRect:Rectangle = new Rectangle(0, bits[0][0].rect.height - additionalTop, Prop.WIDTH, additionalTop);
 			for (var facing:int = 0; facing < 9; facing++) {
 				for (var foot:int = 0; foot < 3; foot++) {
@@ -119,7 +128,7 @@ package angel.common {
 					bits[facing][foot].fillRect(clearRect, 0xffffffff);
 				}
 			}
-			return unusedPixelsAtTopOfCell;
+			return paddingAtTop;
 		}
 		
 		

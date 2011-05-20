@@ -7,11 +7,18 @@ package angel.common {
 	 */
 	public class RoomContentResource implements ICatalogedResource {
 		
-		private static var typeNameToAnimationDataClass:Object = { walker:WalkerAnimationData, prop:SingleImageAnimationData };
+		private static var animationNameToDataClass:Object = {
+				prop:SingleImageAnimationData,
+				single:SingleImageAnimationData,
+				spinner:SpinnerAnimationData,
+				walker:WalkerAnimationData,
+				unknown:UnknownAnimationData // temporary, when new character being created in editor
+		};
 		
 		private var entry:CatalogEntry;
 		public var animationData:IAnimationData;
 		public var solidness:uint = Prop.DEFAULT_SOLIDITY;
+		public var unusedPixelsAtTopOfCell:int = 0;
 		public var characterStats:CharacterStats;
 		
 		public function RoomContentResource() {
@@ -26,47 +33,49 @@ package angel.common {
 		
 		public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry):void {
 			this.entry = entry;
-			var typeName:String = CatalogEntry.xmlTag[entry.type]; //NOTE: this may be replaced by an attribute later
 			
 			if (animationData == null) { // first time we've been created
-				// NOTE: this will be all characters, once that's decoupled from walker-ness
-				if (entry.type == CatalogEntry.WALKER) {
+				if (entry.type == CatalogEntry.CHARACTER) {
 					characterStats = new CharacterStats();
 					solidness = Prop.DEFAULT_CHARACTER_SOLIDITY; // characters can't change this currently
 				} else {
 					solidness = Prop.DEFAULT_SOLIDITY;
 				}
 				
-				if (entry.xml != null) { 
-					// NOTE: this will be all characters, once that's decoupled from walker-ness
-					if (characterStats != null) {
-						characterStats.setFromCatalogXml(entry.xml);
-					}
-					if (String(entry.xml.@solid) != "") {
-						solidness = uint(entry.xml.@solid);
-					}
-					entry.xml = null;
+				if (characterStats != null) {
+					characterStats.setFromCatalogXml(entry.xml);
+				}
+				Util.setUintFromXml(this, "solidness", entry.xml, "solid");
+				Util.setIntFromXml(this, "unusedPixelsAtTopOfCell", entry.xml, "top");
+				
+				var animationName:String = (entry.xml == null ? "" : entry.xml.@animate);
+				
+				//UNDONE For backwards compatibility; remove this once old catalogs have been rewritten
+				if ((entry.xml != null) && (entry.xml.name() == "walker")) {
+					animationName = "walker";
 				}
 				
-				var animationDataClass:Class = typeNameToAnimationDataClass[typeName];
+				entry.xml = null;
+				
+				var animationDataClass:Class;
+				if (animationName != "") {
+					animationDataClass = animationNameToDataClass[animationName];
+					if (animationDataClass == null) {
+						Alert.show("Unknown animation type [" + animationName + "] in catalog for id " + id);
+					}
+				}
 				if (animationDataClass == null) {
-					Alert.show("Unknown animation type [" + typeName + "] in catalog for id " + id);
 					animationDataClass = SingleImageAnimationData;
 				}
-				animationData = new animationDataClass();
 				
-				// CONSIDER: Might extend this to all types later, and make prepareTemporaryVersion into constructor
-				if (animationData is WalkerAnimationData) {
-					(animationData as WalkerAnimationData).unusedPixelsAtTopOfCell = characterStats.unusedPixelsAtTopOfCell;
-				}
+				animationData = new animationDataClass(id, unusedPixelsAtTopOfCell);
 				
-				animationData.prepareTemporaryVersionForUse(id);
 			}
 			
 		}
 		
 		public function dataFinishedLoading(bitmapData:BitmapData):void {
-			animationData.dataFinishedLoading(bitmapData);
+			animationData.dataFinishedLoading(bitmapData, entry);
 		}
 		
 		public function standardImage():BitmapData {

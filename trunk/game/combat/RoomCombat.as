@@ -288,6 +288,10 @@ package angel.game.combat {
 		/*********** Miscellaneous *************/
 		
 		public function anyPlayerCanSeeLocation(target:Point):Boolean {
+			if (combatOver) {
+				// When combat ends, player gets omniscient vision.
+				return true;
+			}
 			for each (var fighter:ComplexEntity in fighters) {
 				if (fighter.isPlayerControlled && Util.entityHasLineOfSight(fighter, target)) {
 					return true;
@@ -305,6 +309,9 @@ package angel.game.combat {
 			if (isFighter(entity)) {
 				removeFighterFromCombat(entity);
 				checkForCombatOver();
+				if (combatOver) {
+					augmentedReality.adjustAllEnemyVisibility();
+				}
 			}
 		}
 		

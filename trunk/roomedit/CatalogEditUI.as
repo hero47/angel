@@ -162,16 +162,19 @@ package angel.roomedit {
 			}
 			
 			var id:String = values[0];
+			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, CatalogEntry.CHARACTER);
 			
-			if (!catalog.addCatalogEntry(id, newFilename, CatalogEntry.WALKER)) {
+			if (entry == null) {
 				launchIdDialog("character", userEnteredNameForNewChar, "Error -- id '" + id + "' already in use.");
 				return;
 			}
 			
-			var xml:XML = <walker/>;
+			var xml:XML = <char/>;
 			xml.@file = newFilename;
 			xml.@id = id;
+			xml.@animate = "unknown";
 			catalog.appendXml(xml);
+			entry.xml = xml;
 			
 			showEditCharDialog(id);
 		}
@@ -182,8 +185,9 @@ package angel.roomedit {
 			}
 			
 			var id:String = values[0];
+			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, CatalogEntry.PROP);
 			
-			if (!catalog.addCatalogEntry(id, newFilename, CatalogEntry.PROP)) {
+			if (entry == null) {
 				launchIdDialog("prop", userEnteredNameForNewProp, "Error -- id '" + id + "' already in use.");
 				return;
 			}
@@ -192,6 +196,7 @@ package angel.roomedit {
 			xml.@file = newFilename;
 			xml.@id = id;
 			catalog.appendXml(xml);
+			entry.xml = xml;
 			
 			showEditPropDialog(id);
 		}

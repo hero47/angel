@@ -1,4 +1,4 @@
-package angel.game {
+package angel.common {
 	
 	/**
 	 * ...

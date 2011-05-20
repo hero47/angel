@@ -143,7 +143,7 @@ package angel.game.test {
 		
 		private function testAddRemoveCharacterActions():void {
 			var entry:CatalogEntry = Settings.catalog.entry("nei");
-			var neiOK:Boolean = (entry != null) && (entry.type == CatalogEntry.WALKER);
+			var neiOK:Boolean = (entry != null) && (entry.type == CatalogEntry.CHARACTER);
 			Autotest.assertTrue(neiOK, "This test requires nei character in catalog.");
 			if (!neiOK) {
 				return;

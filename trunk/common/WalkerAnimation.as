@@ -1,7 +1,4 @@
-package angel.game {
-	import angel.common.Assert;
-	import angel.common.IAnimationData;
-	import angel.common.WalkerAnimationData;
+package angel.common {
 	import flash.display.Bitmap;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
@@ -14,14 +11,12 @@ package angel.game {
 		private var imageBitmap:Bitmap;
 		private var animationData:WalkerAnimationData;
 		private var deathTimer:Timer;
-		private var solidnessWhenAlive:uint;
 		
 		private static const DEATH_DURATION:int = 500; // milliseconds
 		private static const WALK_FRAMES:Vector.<int> = Vector.<int>([WalkerAnimationData.LEFT, WalkerAnimationData.STAND,
 			WalkerAnimationData.RIGHT, WalkerAnimationData.STAND, WalkerAnimationData.LEFT, WalkerAnimationData.STAND,
 			WalkerAnimationData.RIGHT, WalkerAnimationData.STAND]);
 		
-		// id is for debugging use only
 		public function WalkerAnimation(animationData:IAnimationData, imageBitmap:Bitmap) {
 			Assert.assertTrue(animationData is WalkerAnimationData, "Mismatched animation type");
 			this.animationData = WalkerAnimationData(animationData);

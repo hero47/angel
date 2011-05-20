@@ -294,7 +294,7 @@ package angel.roomedit {
 			}
 			for each (var walkerXml:XML in contentsXml.walker) {
 				id = walkerXml;
-				addContentItemByName(CatalogEntry.WALKER, id, new Point(walkerXml.@x, walkerXml.@y), walkerXml);
+				addContentItemByName(CatalogEntry.CHARACTER, id, new Point(walkerXml.@x, walkerXml.@y), walkerXml);
 			}
 		}
 
@@ -304,9 +304,16 @@ package angel.roomedit {
 				id = propXml.@id;
 				addContentItemByName(CatalogEntry.PROP, id, new Point(propXml.@x, propXml.@y), propXml);
 			}
+			
+			//UNDONE For backwards compatibility; remove this eventually
 			for each (var walkerXml:XML in contentsXml.walker) {
 				id = walkerXml.@id;
-				addContentItemByName(CatalogEntry.WALKER, id, new Point(walkerXml.@x, walkerXml.@y), walkerXml);
+				addContentItemByName(CatalogEntry.CHARACTER, id, new Point(walkerXml.@x, walkerXml.@y), walkerXml);
+			}
+			
+			for each (var charXml:XML in contentsXml.char) {
+				id = charXml.@id;
+				addContentItemByName(CatalogEntry.CHARACTER, id, new Point(charXml.@x, charXml.@y), charXml);
 			}
 		}
 		

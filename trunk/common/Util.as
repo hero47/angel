@@ -51,15 +51,22 @@ package angel.common {
 		}
 		
 		public static function setIntFromXml(setInto:Object, objectPropertyName:String, xml:XML, xmlPropertyName:String):void {
-			var valueAsString:String = xml.attribute(xmlPropertyName);
-			if (valueAsString != "") {
+			if ((xml != null) && (xml.attribute(xmlPropertyName).length() > 0)) {
+				var valueAsString:String = xml.attribute(xmlPropertyName);
 				setInto[objectPropertyName] = int(valueAsString);
 			}
 		}
 		
+		public static function setUintFromXml(setInto:Object, objectPropertyName:String, xml:XML, xmlPropertyName:String):void {
+			if ((xml != null) && (xml.attribute(xmlPropertyName).length() > 0)) {
+				var valueAsString:String = xml.attribute(xmlPropertyName);
+				setInto[objectPropertyName] = uint(valueAsString);
+			}
+		}
+		
 		public static function setTextFromXml(setInto:Object, objectPropertyName:String, xml:XML, xmlPropertyName:String):void {
-			var valueAsString:String = xml.attribute(xmlPropertyName);
-			if (valueAsString != "") {
+			if ((xml != null) && (xml.attribute(xmlPropertyName).length() > 0)) {
+				var valueAsString:String = xml.attribute(xmlPropertyName);
 				setInto[objectPropertyName] = valueAsString;
 			}
 		}
