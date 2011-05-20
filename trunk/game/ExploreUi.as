@@ -88,14 +88,9 @@ package angel.game {
 				}
 			}
 			
-			var character:ComplexEntity = room.firstComplexEntityIn(location);
-			if (character == null) {
-				ToolTip.removeToolTip();
-			} else {
-				var tipLocation:Point = character.centerOfImage();
-				ToolTip.displayToolTip(room, character.displayName, tipLocation.x, tipLocation.y);
-			}
+			room.updateToolTip(location);
 		}
+		
 		
 		public function mouseClick(tile:FloorTile):void {
 			var loc:Point = tile.location;
