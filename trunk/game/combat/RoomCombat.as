@@ -423,7 +423,7 @@ package angel.game.combat {
 				}
 				room.enableUi(moveUi, fighter);
 				modeLabel.text = PLAYER_MOVE;
-			} else {
+			} else if (fighter.brain != null) {
 				room.stage.addChild(enemyTurnOverlay);
 				modeLabel.text = ENEMY_MOVE;
 				trace("Begin turn for npc (pause timer will start before move calc)", fighter.aaId);
@@ -436,6 +436,9 @@ package angel.game.combat {
 				room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_MOVE_SECONDS, doPlottedEnemyMove);
 				
 				ICombatBrain(fighter.brain).chooseMoveAndDrawDots();
+			} else {
+				// Fighter must have had its brain removed by script sometime after combat started; skip that turn.
+				finishedFire();
 			}
 		}
 		
