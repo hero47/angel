@@ -8,9 +8,11 @@ package angel.common {
 	public interface IAnimationData {
 		
 		function get animationClass():Class;
-		function prepareTemporaryVersionForUse(labelForTemporaryVersion:String):void;
-		function dataFinishedLoading(bitmapData:BitmapData):void;
+		function dataFinishedLoading(bitmapData:BitmapData, entry:CatalogEntry):void;
 		function standardImage():BitmapData;
+		
+		// for use in editor only; this (plus code in editor) is rather awkward.
+		function increaseTop(additionalTop:int):int;
 		
 	}
 	

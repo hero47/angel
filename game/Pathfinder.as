@@ -123,7 +123,7 @@ package angel.game {
 			while (edge.length > 0) {
 				var current:Point = edge.shift();
 				var stepsFromStart:int = steps[current.x][current.y] + 1;
-				if (stepsFromStart == range + 1) {
+				if (stepsFromStart > range+1) {
 					return steps;
 				}
 				Assert.assertTrue(stepsFromStart != 0, "Edge contains blocked cell");

@@ -19,12 +19,12 @@ package angel.roomedit {
 		}
 		
 		override public function loadFromXmlFile(filename:String):void {
-			// Cache filename so we can use it later to re-save
-			this.filename = filename;
 			super.loadFromXmlFile(filename);
 		}
 		
 		override protected function catalogXmlLoaded(event:Event, filename:String):void {
+			// Cache filename so we can use it later to re-save
+			this.filename = filename;
 			// Cache catalog xml so we can re-save it later, rather than re-creating
 			// This should hopefully preserve any comments & formatting the author may have inserted
 			catalogXml = Util.parseXml(event.target.data, filename);
@@ -32,6 +32,12 @@ package angel.roomedit {
 				return;
 			}
 			super.catalogXmlLoaded(event, filename);
+						
+			//UNDONE For backwards compatibility; remove this once old catalogs have been rewritten
+			for each (var walkerXml:XML in catalogXml.walker) {
+				walkerXml.setName("char");
+				walkerXml.@animate = "walker";
+			}
 		}
 		
 		public function save():void {
@@ -115,13 +121,16 @@ package angel.roomedit {
 			if (entry != null) {
 				changeXmlAttribute(id, "file", newFilename);
 				entry.filename = newFilename;
+				discardCachedData(id);
+				/*
 				LoaderWithErrorCatching.LoadBytesFromFile(entry.filename,
 					function(event:Event, filename:String):void {
 						var bitmap:Bitmap = event.target.content;
-						warnIfBitmapIsWrongSize(entry, bitmap.bitmapData);
-						entry.data.dataFinishedLoading(bitmap.bitmapData);
+						//warnIfBitmapIsWrongSize(entry, bitmap.bitmapData);
+						//entry.data.dataFinishedLoading(bitmap.bitmapData);
 					}
 				);
+				*/
 			}
 		}
 		

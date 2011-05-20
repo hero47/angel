@@ -24,6 +24,7 @@ package angel.game.script {
 		private var onEnterScripts:Vector.<TriggeredScript>;
 		private var onMoveScripts:Vector.<TriggeredScript>;
 		private var onDeathScripts:Vector.<TriggeredScript>;
+		private var anyMoveScriptCaresAboutSpots:Boolean;
 		
 		public function RoomScripts(room:Room, roomXml:XML, filename:String) {
 			this.room = room;
@@ -39,6 +40,12 @@ package angel.game.script {
 			
 			if (onMoveScripts != null) {
 				room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, moveListener);
+				for each (var thisScript:TriggeredScript in onMoveScripts) {
+					if (thisScript.spotIds != null) {
+						anyMoveScriptCaresAboutSpots = true;
+						break;
+					}
+				}
 			}
 			if (onDeathScripts != null) {
 				room.addEventListener(EntityEvent.DEATH, deathListener);
@@ -52,7 +59,7 @@ package angel.game.script {
 		
 		public function runOnEnter():void {
 			if (onEnterScripts != null) {
-				runTriggeredScripts(onEnterScripts, null);
+				runTriggeredScripts(onEnterScripts, null, false);
 			}
 		}
 		
@@ -68,14 +75,14 @@ package angel.game.script {
 				var spotsParam:String = xml.@spots;
 				if (idsParam != "") {
 					if (canFilterOnId) {
-						one.entityIds = idsParam;
+						one.entityIds = Vector.<String>(idsParam.split(","));
 					} else {
 						Alert.show("Warning: ids ignored " + errorLocation);
 					}
 				}
 				if (spotsParam != "") {
 					if (canFilterOnSpot) {
-						one.spotIds = spotsParam;
+						one.spotIds = Vector.<String>(spotsParam.split(","));
 					} else {
 						Alert.show("Warning: spots ignored " + errorLocation);
 					}
@@ -88,10 +95,16 @@ package angel.game.script {
 			return triggeredScripts;
 		}
 		
-		private function runTriggeredScripts(scripts:Vector.<TriggeredScript>, entityWhoTriggered:SimpleEntity):void {
+		private function runTriggeredScripts(scripts:Vector.<TriggeredScript>, entityWhoTriggered:SimpleEntity, anyoneCaresAboutSpots:Boolean):void {			
+			var spotsThisEntityIsOn:Vector.<String>;
+			if (anyoneCaresAboutSpots) {
+				spotsThisEntityIsOn = room.spotsMatchingLocation(entityWhoTriggered.location);
+			}
 			for each (var thisScript:TriggeredScript in scripts) {
-				if (passesIdFilter(thisScript, entityWhoTriggered) && passesSpotFilter(thisScript, entityWhoTriggered)) {
-					thisScript.script.run(entityWhoTriggered);
+				if (passesIdFilter(thisScript, entityWhoTriggered)) {
+					if (!anyoneCaresAboutSpots || passesSpotFilter(thisScript, spotsThisEntityIsOn)) {
+						thisScript.script.run(entityWhoTriggered);
+					}
 				}
 			}
 		}
@@ -103,12 +116,11 @@ package angel.game.script {
 			return (thisScript.entityIds.indexOf(entity.id) >= 0);
 		}
 		
-		private function passesSpotFilter(thisScript:TriggeredScript, entity:SimpleEntity):Boolean {
+		private function passesSpotFilter(thisScript:TriggeredScript, spotsThisEntityIsOn:Vector.<String>):Boolean {
 			if (thisScript.spotIds == null) {
 				return true;
 			}
 			
-			var spotsThisEntityIsOn:Vector.<String> = room.spotsMatchingLocation(entity.location);
 			for each (var spotId:String in spotsThisEntityIsOn) {
 				if (thisScript.spotIds.indexOf(spotId) >= 0) {
 					return true;
@@ -119,11 +131,11 @@ package angel.game.script {
 		
 		
 		private function moveListener(event:EntityEvent):void {
-			runTriggeredScripts(onMoveScripts, event.entity);
+			runTriggeredScripts(onMoveScripts, event.entity, anyMoveScriptCaresAboutSpots);
 		}
 		
 		private function deathListener(event:EntityEvent):void {
-			runTriggeredScripts(onDeathScripts, event.entity);
+			runTriggeredScripts(onDeathScripts, event.entity, false);
 		}
 		
 	}
@@ -133,8 +145,8 @@ package angel.game.script {
 import angel.game.script.Script;
 class TriggeredScript {
 	public var script:Script;
-	public var entityIds:String;
-	public var spotIds:String;
+	public var entityIds:Vector.<String>;
+	public var spotIds:Vector.<String>;
 	public function TriggeredScript() {
 		
 	}

@@ -7,9 +7,9 @@ import flash.display.BitmapData;
 		
 		public static const NO_TYPE:int = 0;
 		public static const PROP:int = 1;
-		public static const WALKER:int = 2;
+		public static const CHARACTER:int = 2;
 		public static const TILESET:int = 3;
-		public static const xmlTag:Vector.<String> = Vector.<String>(["unknown", "prop", "walker", "tileset"]);
+		public static const xmlTag:Vector.<String> = Vector.<String>(["unknown", "prop", "char", "tileset"]);
 		
 		public var filename:String;
 		public var type:int;

@@ -41,12 +41,22 @@ package angel.common {
 					entry.xml = propXml;
 				}
 			}
+			for each (var charXml:XML in xml.char) {
+				entry = addCatalogEntry(charXml.@id, charXml.@file, CatalogEntry.CHARACTER, duplicateNames);
+				if (entry != null) {
+					entry.xml = charXml;
+				}
+			}
+			
+			//UNDONE For backwards compatibility; remove this once old catalogs have been rewritten
 			for each (var walkerXml:XML in xml.walker) {
-				entry = addCatalogEntry(walkerXml.@id, walkerXml.@file, CatalogEntry.WALKER, duplicateNames);
+				entry = addCatalogEntry(walkerXml.@id, walkerXml.@file, CatalogEntry.CHARACTER, duplicateNames);
 				if (entry != null) {
 					entry.xml = walkerXml;
 				}
 			}
+			
+			
 			for each (var tilesetXml:XML in xml.tileset) {
 				entry = addCatalogEntry(tilesetXml.@id, tilesetXml.@file, CatalogEntry.TILESET, duplicateNames);
 				if (entry != null) {
@@ -86,7 +96,7 @@ package angel.common {
 		}
 		
 		public function retrieveCharacterResource(id:String):RoomContentResource {
-			return retrieveRoomContentResource(id, CatalogEntry.WALKER);
+			return retrieveRoomContentResource(id, CatalogEntry.CHARACTER);
 		}
 		
 		public function retrieveRoomContentResource(id:String, type:int):RoomContentResource {
@@ -134,6 +144,10 @@ package angel.common {
 		}
 		
 		protected function warnIfBitmapIsWrongSize(entry:CatalogEntry, bitmapData:BitmapData):void {
+			if (entry.type == CatalogEntry.CHARACTER) {
+				//NOTE: CatalogEntry.CHARACTER will check this itself since it can take several different sizes
+				return;
+			}
 			var typeName:String;
 			var correctWidth:int;
 			var correctHeight:int;
@@ -142,11 +156,6 @@ package angel.common {
 					typeName = "Prop";
 					correctWidth = Prop.WIDTH;
 					correctHeight = Prop.HEIGHT;
-				break;
-				case CatalogEntry.WALKER:
-					typeName = "Walker";
-					correctWidth = Prop.WIDTH * 9;
-					correctHeight = Prop.HEIGHT * 3;
 				break;
 				case CatalogEntry.TILESET:
 					typeName = "Tileset";

@@ -43,7 +43,7 @@ package angel.roomedit {
 		}
 		
 		override protected function get catalogEntryType():int {
-			return CatalogEntry.WALKER;
+			return CatalogEntry.CHARACTER;
 		}
 		
 		override protected function roomLoaded(event:Event):void {
@@ -84,7 +84,7 @@ package angel.roomedit {
 			if (locationOfCurrentSelection == null) {
 				//CONSIDER: this will need revision if we add resource management
 				var prop:Prop = Prop.createFromBitmapData(itemImage.bitmapData);
-				room.addContentItem(prop, CatalogEntry.WALKER, itemCombo.selectedLabel, location);
+				room.addContentItem(prop, CatalogEntry.CHARACTER, itemCombo.selectedLabel, location);
 			} else {
 				room.snapToCenter(locationOfCurrentSelection);
 				Alert.show("Cannot place " + itemCombo.selectedLabel + " -- already in room.");

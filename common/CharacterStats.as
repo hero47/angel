@@ -8,7 +8,6 @@ package angel.common {
 		public var damage:int = Defaults.DAMAGE;
 		public var movePoints:int = Defaults.MOVE_POINTS;
 		public var displayName:String = Defaults.DISPLAY_NAME;
-		public var unusedPixelsAtTopOfCell:int = Defaults.TOP;
 		public var maxGait:int = Defaults.MAX_GAIT;
 		
 		public function CharacterStats() {
@@ -18,7 +17,6 @@ package angel.common {
 		public function setFromCatalogXml(xml:XML):void {
 			Util.setIntFromXml(this, "health", xml, "health");
 			Util.setIntFromXml(this, "damage", xml, "damage");
-			Util.setIntFromXml(this, "unusedPixelsAtTopOfCell", xml, "top");
 			Util.setIntFromXml(this, "movePoints", xml, "movePoints");
 			Util.setTextFromXml(this, "displayName", xml, "displayName");
 			Util.setIntFromXml(this, "maxGait", xml, "maxGait");

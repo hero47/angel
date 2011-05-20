@@ -1,9 +1,5 @@
-package angel.game {
-	import angel.common.Assert;
-	import angel.common.IAnimationData;
-	import angel.common.Prop;
-	import angel.common.RoomContentResource;
-	import angel.common.SingleImageAnimationData;
+package angel.common {
+	import angel.game.SimpleEntity;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.text.TextField;
@@ -13,7 +9,8 @@ package angel.game {
 	 */
 	
 	// The simple case, a one-frame non-animated entity. Does nothing in response to all calls!
-	// CONSIDER: do an explosion for death animation.
+	// CONSIDER: do an explosion for death animation.  Actually, that might be better as a character property that can
+	// be applied on top of any animation.
 	public class SingleImageAnimation implements IEntityAnimation {
 		
 		private var me:SimpleEntity;
