@@ -7,49 +7,48 @@ package angel.game.action {
 	 * @author Beth Moursund
 	 */
 	public class IfAction implements IAction {
-		private var flagId:String;
-		private var desiredFlagValue:Boolean;
-		private var script:Script;
+		private var cases:Vector.<ConditionAndScript>;
 		
-		public function IfAction(flagId:String, desiredFlagValue:Boolean, script:Script) {
-			this.flagId = flagId;
-			this.desiredFlagValue = desiredFlagValue;
-			this.script = script;
+		public function IfAction(condition:FlagCondition, script:Script) {
+			cases = new Vector.<ConditionAndScript>();
+			cases.push(new ConditionAndScript(condition, script));
 		}
 		
 		public static function createFromXml(actionXml:XML):IAction {
-			var flag:String = actionXml.@flag;
-			var notFlag:String = actionXml.@notFlag;
-			var desiredFlagValue:Boolean;
-			
-			if ((flag != "") && (notFlag != "")) {
-				Alert.show("Error! If action cannot have both flag and notFlag.");
-				return null;
-			} else if ((flag == "") && (notFlag == "")) {
-				Alert.show("Error! If action requires flag or notFlag.");
-				return null;
-			}
-			
-			if (flag != "") {
-				desiredFlagValue = true;
-			} else {
-				flag = notFlag;
-			}
-			Flags.getValue(flag); // if flag is undefined, show error now rather than waiting for script execution
-			
+			var condition:FlagCondition = FlagCondition.createFromXml(actionXml);
 			var script:Script = new Script(actionXml, "In if action: ");
-			return new IfAction(flag, desiredFlagValue, script);
+			return new IfAction(condition, script);
 		}
 		
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(doAtEnd:Vector.<Function>):Object {
-			if (Flags.getValue(flagId) == desiredFlagValue) {
-				script.doActions(doAtEnd);
+			for (var i:int = 0; i < cases.length; ++i) {
+				var condition:FlagCondition = cases[i].condition;
+				if ((condition == null) || condition.isMet()) {
+					cases[i].script.doActions(doAtEnd);
+					return null;
+				}
 			}
 			return null;
 		}
 		
+		public function addCase(action:IActionToBeMergedWithPreviousIf):void {
+			cases.push(new ConditionAndScript(action.condition, action.script));
+		}
+		
 	}
 
+}
+
+import angel.game.action.FlagCondition;
+import angel.game.script.Script;
+class ConditionAndScript {
+	public var condition:FlagCondition;
+	public var script:Script;
+	
+	public function ConditionAndScript(condition:FlagCondition, script:Script) {
+		this.condition = condition;
+		this.script = script;
+	}
 }

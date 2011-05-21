@@ -45,6 +45,7 @@ package angel.game {
 			tip.height = FONT_HEIGHT + 6;
 			tip.autoSize = TextFieldAutoSize.LEFT;
 			tip.defaultTextFormat = new TextFormat(null, FONT_HEIGHT, TEXT_COLOR);
+			tip.mouseEnabled = false;
 		}
 		
 	}
