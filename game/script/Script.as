@@ -5,6 +5,8 @@ package angel.game.script {
 	import angel.game.action.Action;
 	import angel.game.action.ConversationAction;
 	import angel.game.action.IAction;
+	import angel.game.action.IActionToBeMergedWithPreviousIf;
+	import angel.game.action.IfAction;
 	import angel.game.combat.RoomCombat;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
@@ -15,6 +17,7 @@ package angel.game.script {
 	 */
 	public class Script {
 		private var actions:Vector.<IAction>;
+		private var lastActionAddedIfItWasAnIf:IfAction;
 		
 		public static const TRIGGERING_ENTITY_ID:String = "*this";
 		
@@ -83,7 +86,16 @@ package angel.game.script {
 				if (actions == null) {
 					actions = new Vector.<IAction>();
 				}
-				actions.push(newAction);
+				if (newAction is IActionToBeMergedWithPreviousIf) {
+					if (lastActionAddedIfItWasAnIf != null) {
+						lastActionAddedIfItWasAnIf.addCase(newAction as IActionToBeMergedWithPreviousIf);
+					} else {
+						Alert.show("Error! Else/Elseif can only follow an If action");
+					}
+				} else {
+					actions.push(newAction);
+					lastActionAddedIfItWasAnIf = (newAction as IfAction);
+				}
 			}
 		}
 		
