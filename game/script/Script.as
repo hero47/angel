@@ -75,10 +75,6 @@ package angel.game.script {
 				f();
 			}
 			Script.triggeringEntity = previousTrigger;
-			
-			if (Settings.currentRoom.mode is RoomCombat) {
-				RoomCombat(Settings.currentRoom.mode).checkForCombatOver();
-			}
 		}
 		
 		public function addAction(newAction:IAction):void {

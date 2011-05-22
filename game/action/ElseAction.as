@@ -27,7 +27,7 @@ package angel.game.action {
 		}
 		
 		/* INTERFACE angel.game.action.IActionToBeMergedWithPrevioiusIf */
-		public function get condition():FlagCondition {
+		public function get condition():ICondition {
 			return null;
 		}
 		

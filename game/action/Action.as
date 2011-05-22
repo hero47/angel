@@ -28,7 +28,7 @@ package angel.game.action {
 		};
 		
 		public function Action() {
-			Assert.assertTrue(true, "Should never be called");
+			Assert.fail("Should never be called");
 		}
 		
 		public static function createFromXml(actionXml:XML, errorPrefix:String=""):IAction {
@@ -36,12 +36,13 @@ package angel.game.action {
 			if (name == "comment") {
 				return null;
 			}
-			if (actionNameToClass[name] == null) {
+			
+			var actionClass:Class = actionNameToClass[name];
+			if (actionClass == null) {
 				Alert.show(errorPrefix + "Unknown action " + name);
 				return null;
 			}
 			
-			var actionClass:Class = actionNameToClass[name];
 			return actionClass.createFromXml(actionXml);
 		}
 		

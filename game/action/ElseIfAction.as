@@ -1,7 +1,6 @@
 package angel.game.action {
 	import angel.common.Assert;
 	import angel.game.script.Script;
-	import angel.game.action.FlagCondition;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -9,22 +8,21 @@ package angel.game.action {
 	public class ElseIfAction implements IActionToBeMergedWithPreviousIf {
 				
 		private var myScript:Script;
-		private var myCondition:FlagCondition;
+		private var myCondition:ICondition;
 		
-		public function ElseIfAction(condition:FlagCondition, script:Script) {
+		public function ElseIfAction(condition:ICondition, script:Script) {
 			myCondition = condition;
 			myScript = script;
 		}
 		
 		public static function createFromXml(actionXml:XML):IAction {
-			var condition:FlagCondition = FlagCondition.createFromXml(actionXml);
-			var script:Script = new Script(actionXml, "In elseIf action: ");
-			return new ElseIfAction(condition, script);
+			var conditionAndScript:Object = IfAction.conditionAndScriptFromXml(actionXml);
+			return (conditionAndScript.script == null ? null : new ElseIfAction(conditionAndScript.condition, conditionAndScript.script));
 		}
 		
 		/* INTERFACE angel.game.action.IActionToBeMergedWithPreviousIf */
 		
-		public function get condition():FlagCondition {
+		public function get condition():ICondition {
 			return myCondition;
 		}
 		

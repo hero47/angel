@@ -9,22 +9,43 @@ package angel.game.action {
 	public class IfAction implements IAction {
 		private var cases:Vector.<ConditionAndScript>;
 		
-		public function IfAction(condition:FlagCondition, script:Script) {
+		public function IfAction(condition:ICondition, script:Script) {
 			cases = new Vector.<ConditionAndScript>();
 			cases.push(new ConditionAndScript(condition, script));
 		}
 		
 		public static function createFromXml(actionXml:XML):IAction {
-			var condition:FlagCondition = FlagCondition.createFromXml(actionXml);
-			var script:Script = new Script(actionXml, "In if action: ");
-			return new IfAction(condition, script);
+			var conditionAndScript:ConditionAndScript = conditionAndScriptFromXml(actionXml);
+			return (conditionAndScript.script == null ? null : new IfAction(conditionAndScript.condition, conditionAndScript.script));
+		}
+		
+		public static function conditionAndScriptFromXml(actionXml:XML):ConditionAndScript {
+			var condition:ICondition;
+			var scriptXml:XML;
+			condition = Condition.checkForShortcutVersion(actionXml);
+			if (condition != null) {
+				scriptXml = actionXml;
+			} else {
+				condition = Condition.createFromXml(actionXml, true);
+				if (condition == null) {
+					return null;
+				}
+				var scriptXmlList:XMLList = actionXml.script;
+				if (scriptXmlList.length() != 1) {
+					Alert.show("Error! Long version of 'if' action requires exactly one 'script' child.");
+					return null;
+				}
+				scriptXml = scriptXmlList[0];
+			}
+			var script:Script = new Script(scriptXml, "In if action: ");
+			return new ConditionAndScript(condition, script);
 		}
 		
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(doAtEnd:Vector.<Function>):Object {
 			for (var i:int = 0; i < cases.length; ++i) {
-				var condition:FlagCondition = cases[i].condition;
+				var condition:ICondition = cases[i].condition;
 				if ((condition == null) || condition.isMet()) {
 					cases[i].script.doActions(doAtEnd);
 					return null;
@@ -41,13 +62,13 @@ package angel.game.action {
 
 }
 
-import angel.game.action.FlagCondition;
+import angel.game.action.ICondition;
 import angel.game.script.Script;
 class ConditionAndScript {
-	public var condition:FlagCondition;
+	public var condition:ICondition;
 	public var script:Script;
 	
-	public function ConditionAndScript(condition:FlagCondition, script:Script) {
+	public function ConditionAndScript(condition:ICondition, script:Script) {
 		this.condition = condition;
 		this.script = script;
 	}

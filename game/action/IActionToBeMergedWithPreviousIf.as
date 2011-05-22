@@ -7,7 +7,7 @@ package angel.game.action {
 	 */
 	public interface IActionToBeMergedWithPreviousIf extends IAction {
 	
-		function get condition():FlagCondition;
+		function get condition():ICondition;
 		function get script():Script;
 	}
 	
