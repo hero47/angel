@@ -62,6 +62,10 @@ package angel.game {
 		}
 		
 		public static function setValue(id:String, value:Boolean):void {
+			if ((id == null) || (id == "")) {
+				Alert.show("Error: empty flag id");
+				return;
+			}
 			if (flags[id] == null) {
 				Alert.show("Warning: unknown flag [" + id + "].");
 			}
@@ -69,6 +73,10 @@ package angel.game {
 		}
 		
 		public static function getValue(id:String):Boolean {
+			if ((id == null) || (id == "")) {
+				Alert.show("Error: empty flag id");
+				return false;
+			}
 			if (flags[id] == null) {
 				Alert.show("Warning: unknown flag [" + id + "].");
 				flags[id] = false;

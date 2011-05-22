@@ -18,7 +18,7 @@ package angel.game.action {
 		}
 		
 		public static function createFromXml(conditionXml:XML):ICondition {
-			var andVersion:ICondition = Condition.createFromXml(conditionXml);
+			var andVersion:ICondition = Condition.createFromEnclosingXml(conditionXml);
 			if (andVersion is AndCondition) {
 				return new OrCondition(AndCondition(andVersion).conditions, AndCondition(andVersion).desiredValue);
 			} else {

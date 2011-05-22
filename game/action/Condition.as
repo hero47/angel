@@ -25,11 +25,17 @@ package angel.game.action {
 			}
 			return null;
 		}
+		
+		public static function createFromXml(conditionXml:XML):ICondition {
+			//Compiler bug: can't call createFromXml on a Class variable unless *this* class has one!!
+			Assert.fail("Should never call this!");
+			return null;
+		}
 	
 		// If the xml contains just one condition element, create a condition from that.
 		// If it contains more than one, create a condition and-ing them all together.
 		// If ignoreScriptElement is true, ignore any element named "script" (for use directly inside an "if" action)
-		public static function createFromXml(actionXml:XML, ignoreScriptElement:Boolean = false):ICondition {
+		public static function createFromEnclosingXml(actionXml:XML, ignoreScriptElement:Boolean = false):ICondition {
 			var conditions:Vector.<ICondition> = new Vector.<ICondition>();
 			for each (var checkXml:XML in actionXml.children()) {
 				if (ignoreScriptElement && (checkXml.name() == "script")) {
@@ -39,6 +45,11 @@ package angel.game.action {
 				if (classAndDesiredValue != null) {
 					var oneCondition:ICondition;
 					if (isSimpleCondition(classAndDesiredValue.conditionClass)) {
+						var param:String = checkXml.@param;
+						if (param == "") {
+							Alert.show("Error! '" + checkXml.name() + "' condition requires param.");
+							continue;
+						}
 						oneCondition = new classAndDesiredValue.conditionClass(checkXml.@param, classAndDesiredValue.desiredValue);
 					} else {
 						oneCondition = classAndDesiredValue.conditionClass.createFromXml(checkXml);
