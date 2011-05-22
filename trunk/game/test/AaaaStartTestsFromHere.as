@@ -27,7 +27,9 @@ package angel.game.test {
 		}
 		
 		private function testsRequiringGameInit():void {
+			Autotest.runTest(FlagTest);
 			Autotest.runTest(ActionTest);
+			Autotest.runTest(ConditionTest);
 		}
 		
 		private function runAllStandaloneTests():void {
@@ -48,9 +50,7 @@ package angel.game.test {
 			Autotest.failCount = 0;
 			testsRequiringGameInit();
 			trace("Game tests finished, failCount", Autotest.failCount);
-			if (Settings.currentRoom != null) {
-				
-			}
+			Autotest.assertEqual(Settings.currentRoom, null, "Initialization shouldn't create room");
 		}
 		
 		private function timeout(event:TimerEvent):void {

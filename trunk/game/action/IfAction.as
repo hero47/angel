@@ -26,7 +26,7 @@ package angel.game.action {
 			if (condition != null) {
 				scriptXml = actionXml;
 			} else {
-				condition = Condition.createFromXml(actionXml, true);
+				condition = Condition.createFromEnclosingXml(actionXml, true);
 				if (condition == null) {
 					return null;
 				}

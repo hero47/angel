@@ -19,7 +19,7 @@ package angel.game.action {
 		}
 		
 		public static function createFromXml(conditionXml:XML):ICondition {
-			return Condition.createFromXml(conditionXml);
+			return Condition.createFromEnclosingXml(conditionXml);
 		}
 			
 		
