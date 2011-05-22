@@ -410,16 +410,16 @@ package angel.game.combat {
 		
 		private function beginTurnForCurrentFighter():void {
 			var fighter:ComplexEntity = currentFighter();
+			if (checkForCombatOver()) {
+				// don't allow next enemy to move, don't enable player UI, just wait for them to OK the message,
+				// which will end combat mode.
+				return;
+			}
 			fighter.dispatchEvent(new EntityEvent(EntityEvent.START_TURN, true, false, fighter));
 			if (fighter.isPlayerControlled) {
 				trace("Begin turn for PC", fighter.aaId);
 				if (enemyTurnOverlay.parent != null) {
 					enemyTurnOverlay.parent.removeChild(enemyTurnOverlay);
-				}
-				if (checkForCombatOver()) {
-					// don't allow next enemy to move, don't enable player UI, just wait for them to OK the message,
-					// which will end combat mode.
-					return;
 				}
 				room.enableUi(moveUi, fighter);
 				modeLabel.text = PLAYER_MOVE;

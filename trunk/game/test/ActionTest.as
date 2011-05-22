@@ -13,6 +13,7 @@ package angel.game.test {
 	import angel.game.Flags;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
+	import angel.game.script.Script;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import flash.geom.Point;
@@ -31,6 +32,7 @@ package angel.game.test {
 			Autotest.testFunction(testFlagActions);
 			Autotest.testFunction(testMessageAction);
 			Autotest.testFunction(testIfAction);
+			Autotest.testFunction(testIfElse);
 			
 			var xxTest:ComplexEntity = new ComplexEntity(Settings.catalog.retrieveCharacterResource("xxTest"), "xxTest");
 			Autotest.assertAlertText("Error: xxTest not in catalog.");
@@ -111,20 +113,73 @@ package angel.game.test {
 			Autotest.assertAlertText("Hello, world!");
 		}
 		
-		private static const ifTestXml:XML = <if flag="xxTest">
+		private static const ifTestShortcutXml:XML = <if flag="xxTest">
 			<message text="yes" />
 		</if>;
-		private static const ifNotTestXml:XML = <if notFlag="xxTest">
-			<message text="yes" />
+		private static const ifNotTestShortcutXml:XML = <if notFlag="xxTest">
+			<message text="no" />
+		</if>;
+		private static const ifTestXml:XML = <if>
+			<flag param="xxTest" />
+			<script>
+				<message text="yes" />
+			</script>
+		</if>;
+		private static const ifNotTestXml:XML = <if>
+			<notFlag param="xxTest" />
+			<script>
+				<message text="no" />
+			</script>
+		</if>;
+		private static const ifWithTwoConditionsXml:XML = <if>
+			<flag param="xxTest" />
+			<flag param="yyTest" />
+			<script>
+				<message text="yes" />
+			</script>
+		</if>;
+		private static const ifWithAllOfConditionXml:XML = <if>
+			<allOf>
+				<flag param="xxTest" />
+				<flag param="yyTest" />
+			</allOf>
+			<script>
+				<message text="yes" />
+			</script>
+		</if>;
+		private static const ifWithAnyOfConditionXml:XML = <if>
+			<anyOf>
+				<flag param="xxTest" />
+				<flag param="yyTest" />
+			</anyOf>
+			<script>
+				<message text="yes" />
+			</script>
 		</if>;
 		private function testIfAction():void {
 			Autotest.assertFalse(Flags.getValue("xxTest"));
+			Autotest.assertFalse(Flags.getValue("yyTest"));
+			Autotest.clearAlert();
+			
+			testActionFromXml(ifTestShortcutXml);
 			Autotest.assertNoAlert();
+			testActionFromXml(ifNotTestShortcutXml);
+			Autotest.assertAlertText("no");
+			
+			Flags.setValue("xxTest", true);
+			
+			testActionFromXml(ifTestShortcutXml);
+			Autotest.assertAlertText("yes");
+			testActionFromXml(ifNotTestShortcutXml);
+			Autotest.assertNoAlert();
+			
+			
+			Flags.setValue("xxTest", false);
 			
 			testActionFromXml(ifTestXml);
 			Autotest.assertNoAlert();
 			testActionFromXml(ifNotTestXml);
-			Autotest.assertAlertText("yes");
+			Autotest.assertAlertText("no");
 			
 			Flags.setValue("xxTest", true);
 			
@@ -132,7 +187,91 @@ package angel.game.test {
 			Autotest.assertAlertText("yes");
 			testActionFromXml(ifNotTestXml);
 			Autotest.assertNoAlert();
+			
+			
+			testXxAndYy(ifWithTwoConditionsXml, "two conditions");
+			testXxAndYy(ifWithAllOfConditionXml, "allOf condition");
+			testXxOrYy(ifWithAnyOfConditionXml, "anyOf condition");
+			
 		}
+		
+		private function testXxAndYy(xml:XML, what:String):void {
+			Flags.setValue("xxTest", false);
+			Flags.setValue("yyTest", false);
+			testActionFromXml(xml);
+			Autotest.assertNoAlert(what);
+			
+			Flags.setValue("xxTest", true);
+			Flags.setValue("yyTest", false);
+			testActionFromXml(xml);
+			Autotest.assertNoAlert(what);
+			
+			Flags.setValue("xxTest", false);
+			Flags.setValue("yyTest", true);
+			testActionFromXml(xml);
+			Autotest.assertNoAlert(what);
+			
+			Flags.setValue("xxTest", true);
+			Flags.setValue("yyTest", true);
+			testActionFromXml(xml);
+			Autotest.assertAlertText("yes", what);
+		}
+		
+		private function testXxOrYy(xml:XML, what:String):void {
+			Flags.setValue("xxTest", false);
+			Flags.setValue("yyTest", false);
+			testActionFromXml(xml);
+			Autotest.assertNoAlert(what);
+			
+			Flags.setValue("xxTest", true);
+			Flags.setValue("yyTest", false);
+			testActionFromXml(xml);
+			Autotest.assertAlertText("yes", what);
+			
+			Flags.setValue("xxTest", false);
+			Flags.setValue("yyTest", true);
+			testActionFromXml(xml);
+			Autotest.assertAlertText("yes", what);
+			
+			Flags.setValue("xxTest", true);
+			Flags.setValue("yyTest", true);
+			testActionFromXml(xml);
+			Autotest.assertAlertText("yes", what);
+		}
+		
+		private static const ifElseScript:XML = <script>
+			<if flag="xxTest">
+				<message text="xx" />
+			</if>
+			<elseIf flag="yyTest">
+				<message text="yy and not xx" />
+			</elseIf>
+			<else>
+				<message text="neither" />
+			</else>
+		</script>;
+		
+		private function testIfElse():void {
+			var script:Script = new Script(ifElseScript, "testIfElse");
+			Autotest.assertNoAlert("ifElse script parsing failed");
+			
+			Flags.setValue("xxTest", true);
+			Flags.setValue("yyTest", false);
+			Autotest.clearAlert();
+			script.run();
+			Autotest.assertAlertText("xx");
+			
+			Flags.setValue("xxTest", false);
+			Flags.setValue("yyTest", false);
+			script.run();
+			Autotest.assertAlertText("neither");
+			
+			Flags.setValue("xxTest", false);
+			Flags.setValue("yyTest", true);
+			script.run();
+			Autotest.assertAlertText("yy and not xx");
+		}
+		
 		
 		private const addnei:XML = <addNpc id="nei" />;
 		private const removenei:XML = <removeFromRoom id="nei" />;
