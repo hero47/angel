@@ -11,6 +11,8 @@ package angel.game.action {
 		private static const conditionNameToClass:Object = {
 			"allOf":AndCondition,
 			"anyOf":OrCondition,
+			"alive":CharAliveCondition,
+			"empty":SpotEmptyCondition,
 			"flag":FlagCondition
 		}
 		
