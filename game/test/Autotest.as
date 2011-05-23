@@ -1,6 +1,12 @@
 package angel.game.test {
 	import angel.common.Alert;
+	import angel.common.Floor;
+	import angel.game.brain.CombatBrainWander;
+	import angel.game.ComplexEntity;
+	import angel.game.Room;
+	import angel.game.Settings;
 	import flash.display.Sprite;
+	import flash.geom.Point;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -9,6 +15,8 @@ package angel.game.test {
 		
 		public static var failCount:int = 0;
 		public static var runningFromRoot:Sprite;
+		public static const TEST_ROOM_MAIN_PC_ID:String = "xxMainPc";
+		public static const TEST_ROOM_ENEMY_ID:String = "xxEnemy";
 		
 		public function Autotest() {
 		}
@@ -34,6 +42,12 @@ package angel.game.test {
 		public static function assertNotEqual(val1:*, val2:*, message:String = ""):void {
 			if (val1 == val2) {
 				fail("[" + val1 + "] " + message);
+			}
+		}
+		
+		public static function assertClass(val1:*, val2:Class, message:String = ""):void {
+			if (!(val1 is val2)) {
+				fail("[" + val1 + "] is not [" + val2 + "] " + message);
 			}
 		}
 		
@@ -111,6 +125,23 @@ package angel.game.test {
 			}
 			return newStack;
 			*/
+		}
+		
+		private static const floorXml:XML = <floor x="10" y="10"/>;
+		public static function setupTestRoom():void {
+			var mainPc:ComplexEntity = new ComplexEntity(Settings.catalog.retrieveCharacterResource(TEST_ROOM_MAIN_PC_ID), TEST_ROOM_MAIN_PC_ID);
+			var enemy:ComplexEntity = new ComplexEntity(Settings.catalog.retrieveCharacterResource(TEST_ROOM_ENEMY_ID), TEST_ROOM_ENEMY_ID);
+			Autotest.clearAlert(); // should alert the first time we're called, since these aren't in catalog
+			enemy.combatBrainClass = CombatBrainWander;
+			
+			var floor:Floor = new Floor();
+			floor.loadFromXml(Settings.catalog, floorXml);			
+			Settings.currentRoom = new Room(floor);
+			Settings.currentRoom.addPlayerCharacter(mainPc, new Point(9, 8));
+			Settings.currentRoom.addEntity(enemy, new Point(8, 9));
+			
+			Autotest.runningFromRoot.addChild(Settings.currentRoom);
+			Autotest.assertNoAlert();
 		}
 		
 	}

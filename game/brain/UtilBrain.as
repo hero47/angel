@@ -64,7 +64,7 @@ package angel.game.brain {
 		}
 		
 		public static function canShoot(me:ComplexEntity,  combat:RoomCombat):Boolean {
-			return (me.inventory.findA(Gun) != null) && (UtilBrain.getFirstAvailableTarget(me, combat) != null);
+			return (me.currentGun() != null) && (UtilBrain.getFirstAvailableTarget(me, combat) != null);
 		}
 		
 	}

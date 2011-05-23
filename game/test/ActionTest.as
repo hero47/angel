@@ -23,7 +23,6 @@ package angel.game.test {
 	 */
 	public class ActionTest {
 		
-		private const floorXml:XML = <floor x="10" y="10"/>;
 		
 		
 		//CONSIDER: Parts of this are really flag tests and catalog tests, could be separated out
@@ -34,7 +33,7 @@ package angel.game.test {
 			Autotest.testFunction(testIfAction);
 			Autotest.testFunction(testIfElse);
 			
-			setupTestRoom();
+			Autotest.setupTestRoom();
 			
 			trace("Testing actions for no room mode");
 			runTestsForMode(null);
@@ -452,38 +451,6 @@ package angel.game.test {
 					doThis();
 				}
 			}
-		}
-		
-		public function setupTestRoom():void {
-			var xxTest:ComplexEntity = new ComplexEntity(Settings.catalog.retrieveCharacterResource("xxTest"), "xxTest");
-			Autotest.assertAlertText("Error: xxTest not in catalog.");
-			Autotest.assertNotEqual(xxTest, null, "Should create with default settings if not in catalog");
-			var xxTest2:ComplexEntity = new ComplexEntity(Settings.catalog.retrieveCharacterResource("xxTest"), "xxTest");
-			Autotest.assertNoAlert("No alert expected on second reference to unknown id");
-			
-			// Explore mode requires a player character.
-			// Combat mode requires a player character and an enemy (or it will immediately declare that combat is over).
-			var mainPcId:String = "mainPcForTesting";
-			while (Settings.catalog.entry(mainPcId) != null) {
-				mainPcId += "X";
-			}
-			var enemyId:String = "enemyForTesting";
-			while (Settings.catalog.entry(enemyId) != null) {
-				enemyId += "X";
-			}
-			var mainPc:ComplexEntity = new ComplexEntity(Settings.catalog.retrieveCharacterResource(mainPcId), mainPcId);
-			var enemy:ComplexEntity = new ComplexEntity(Settings.catalog.retrieveCharacterResource(enemyId), enemyId);
-			enemy.combatBrainClass = CombatBrainWander;
-			Autotest.assertAlerted("Catalog should have alerted and then created default WalkerImage");
-			
-			var floor:Floor = new Floor();
-			floor.loadFromXml(Settings.catalog, floorXml);			
-			Settings.currentRoom = new Room(floor);
-			Settings.currentRoom.addPlayerCharacter(mainPc, new Point(9, 8));
-			Settings.currentRoom.addEntity(enemy, new Point(8, 9));
-			
-			Autotest.runningFromRoot.addChild(Settings.currentRoom);
-			Autotest.assertNoAlert();
 		}
 		
 		
