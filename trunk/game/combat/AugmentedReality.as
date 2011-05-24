@@ -137,6 +137,7 @@ package angel.game.combat {
 			} else {
 				statDisplay.adjustCombatStatDisplay(null);
 				++lastSeenMarkers[fighter].age;
+				updateLastSeenLocation(fighter); // so last seen marker will fade even if entity doesn't move
 			}
 		}
 		
