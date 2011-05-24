@@ -37,7 +37,7 @@ package angel.game.brain {
 			if (Math.random() < 0.25) {
 				var goal:Point = chooseVacantNeighbor();
 				if (goal != null) {
-					me.movement.startMovingToward(goal);
+					me.movement.startFreeMovementToward(goal);
 					wait = 2;
 				}
 			}

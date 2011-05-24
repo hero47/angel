@@ -451,11 +451,12 @@ package angel.game {
 			}
 		}
 		
-		public function solidness(x:int, y:int):uint {
+		// If ignoreInvisible is true, pretend anything invisible doesn't exist.
+		public function solidness(x:int, y:int, ignoreInvisible:Boolean = false):uint {
 			if ((x < 0) || (x >= size.x) || (y < 0) || (y >= size.y)) {
 				return Prop.OFF_MAP;
 			}
-			return cells[x][y].solidness();
+			return cells[x][y].solidness(ignoreInvisible);
 		}
 		
 		public function blocksSight(x:int, y:int):Boolean {

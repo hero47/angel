@@ -149,8 +149,12 @@ package angel.game.combat {
 		}
 		
 		private function adjustVisibilityOfEnemy(enemy:ComplexEntity):void {
+			var wasVisible:Boolean = enemy.visible;
 			enemy.visible = enemy.marker.visible = combat.anyPlayerCanSeeLocation(enemy.location);
 			updateLastSeenLocation(enemy);
+			if (!wasVisible && enemy.visible) {
+				enemy.dispatchEvent(new EntityEvent(EntityEvent.BECAME_VISIBLE, true, false, enemy));
+			}
 		}
 		
 		private function initialiseAllFighterDisplayElements():void {

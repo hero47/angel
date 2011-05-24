@@ -19,7 +19,8 @@ package angel.game {
 		
 		// Fill in path.  Return false if there is no path.
 		// NOTE: Does not check whether the goal tile itself is blocked!
-		public static function findShortestPathTo(entity:ComplexEntity, from:Point, goal:Point, path:Vector.<Point>):Boolean {
+		public static function findShortestPathTo(entity:ComplexEntity, from:Point, goal:Point, path:Vector.<Point>,
+						ignoreInvisible:Boolean = false):Boolean {
 			var room:Room = entity.room;
 			// 0 = unvisited. -1 = blocked.  other number = steps to reach goal, counting goal itself as 1.
 			var steps:Vector.<Vector.<int>> = new Vector.<Vector.<int>>(room.size.x);
@@ -45,9 +46,9 @@ package angel.game {
 						continue;
 					}
 					
-					var neighbor:Point = entity.movement.checkBlockage(current, stepToNextNeighbor);
+					var neighbor:Point = entity.movement.checkBlockage(current, stepToNextNeighbor, ignoreInvisible);
 					if (neighbor == null) {
-						if (entity.movement.tileBlocked(new Point(xNext, yNext))) {
+						if (entity.movement.tileBlocked(new Point(xNext, yNext), ignoreInvisible)) {
 							steps[xNext][yNext] = -1;
 						}
 					} else {
@@ -55,7 +56,7 @@ package angel.game {
 						edge.push(neighbor);
 					
 						if ((xNext == from.x) && (yNext == from.y)) {
-							extractPathFromStepGrid(entity, from, goal, steps, path);
+							extractPathFromStepGrid(entity, from, goal, steps, path, ignoreInvisible);
 							//trace(path);
 							return true;
 						}
@@ -67,7 +68,8 @@ package angel.game {
 			return false;
 		}
 		
-		private static function extractPathFromStepGrid(entity:ComplexEntity, from:Point, goal:Point, steps:Vector.<Vector.<int>>, path:Vector.<Point>):void {
+		private static function extractPathFromStepGrid(entity:ComplexEntity, from:Point, goal:Point, steps:Vector.<Vector.<int>>,
+						path:Vector.<Point>, ignoreInvisible:Boolean = false):void {
 			//traceStepGrid(steps);
 			path.length = 0;
 			var current:Point = from.clone();
@@ -81,7 +83,7 @@ package angel.game {
 						continue;
 					}
 					if (steps[xNext][yNext] == lookingFor) {
-						var neighbor:Point = entity.movement.checkBlockage(current, stepToNextNeighbor);
+						var neighbor:Point = entity.movement.checkBlockage(current, stepToNextNeighbor, ignoreInvisible);
 						if (neighbor != null) {
 							current = neighbor;
 							path.push(current);
@@ -108,7 +110,7 @@ package angel.game {
 		// Fill a grid with the number of steps to all reachable points within a given range
 		// (Used by NPC brains when choosing move)
 		// Mostly matches findShortestPathTo(), just different enough to make them tough to merge ;)
-		public static function findReachableTiles(entity:ComplexEntity, range:int):Vector.<Vector.<int>> {
+		public static function findReachableTiles(entity:ComplexEntity, range:int, ignoreInvisible:Boolean = false):Vector.<Vector.<int>> {
 			var room:Room = entity.room;
 			var from:Point = entity.location;
 			// 0 = unvisited. -1 = blocked.  other number = distance counting start point as 1
@@ -138,9 +140,9 @@ package angel.game {
 						continue;
 					}
 					
-					var neighbor:Point = entity.movement.checkBlockage(current, stepToNextNeighbor);
+					var neighbor:Point = entity.movement.checkBlockage(current, stepToNextNeighbor, ignoreInvisible);
 					if (neighbor == null) {
-						if (entity.movement.tileBlocked(new Point(xNext, yNext))) {
+						if (entity.movement.tileBlocked(new Point(xNext, yNext), ignoreInvisible)) {
 							steps[xNext][yNext] = -1;
 						}
 					} else {

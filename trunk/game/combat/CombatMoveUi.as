@@ -27,7 +27,6 @@ package angel.game.combat {
 		private var player:ComplexEntity;
 		private var oldMarkerColorTransform:ColorTransform;
 		
-		
 		public function CombatMoveUi(room:Room, combat:RoomCombat) {
 			this.combat = combat;
 			this.room = room;
@@ -101,7 +100,6 @@ package angel.game.combat {
 			
 			return null;
 		}
-		
 		
 		/************ Private ****************/
 		

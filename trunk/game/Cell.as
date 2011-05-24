@@ -61,10 +61,14 @@ package angel.game {
 			return (contents != null && contents.length > 0);
 		}
 		
-		public function solidness():uint {
+		// If ignoreInvisible is true, pretend anything invisible doesn't exist.
+		public function solidness(ignoreInvisible:Boolean = false):uint {
 			if (contents != null) {
 				var solid:uint = 0;
 				for (var i:int = 0; i < contents.length; i++) {
+					if (ignoreInvisible && !contents[i].visible) {
+						continue;
+					}
 					solid |= contents[i].solidness;
 				}
 				return solid;

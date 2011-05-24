@@ -108,8 +108,8 @@ package angel.game.combat {
 		
 		public function dotColorIfExtendPathTo(entity:ComplexEntity, location:Point):uint {
 			var distance:int = 1000;
-			if (!entity.movement.tileBlocked(location) && (path.length < entity.movement.combatMovePoints)) {
-				var nextSegment:Vector.<Point> = entity.movement.findPathTo(location, endOfCurrentPath() );
+			if (!entity.movement.tileBlocked(location, true) && (path.length < entity.movement.unusedMovePoints)) {
+				var nextSegment:Vector.<Point> = entity.movement.findPathTo(location, endOfCurrentPath(), true );
 				if (nextSegment != null) {
 					distance = path.length + nextSegment.length;
 				}
@@ -117,7 +117,7 @@ package angel.game.combat {
 			if (shootFromCoverValid(entity, distance)) {
 				return RETURN_COLOR;
 			}
-			return colorForGait(entity.movement.minGaitForDistance(distance));
+			return colorForGait(entity.movement.minGaitForDistance(distance + entity.movement.usedMovePoints));
 		}
 		
 		public function minimumGaitForPath(entity:ComplexEntity):int {
@@ -159,11 +159,12 @@ package angel.game.combat {
 		}
 		
 		public function extendPathIfLegalMove(entity:ComplexEntity, location:Point):void {
-			if (!entity.movement.tileBlocked(location)) {
+			if (!entity.movement.tileBlocked(location, true)) {
 				var currentEnd:Point = endOfCurrentPath();
 				if ((currentEnd == null) || !location.equals(currentEnd)) {
-					var nextSegment:Vector.<Point> = entity.movement.findPathTo(location, currentEnd);
-					if ((nextSegment != null) && (path.length + nextSegment.length <= entity.movement.maxDistanceForGait())) {
+					var nextSegment:Vector.<Point> = entity.movement.findPathTo(location, currentEnd, true);
+					if ((nextSegment != null) && (path.length + nextSegment.length + entity.movement.usedMovePoints <= 
+										entity.movement.maxDistanceForGait())) {
 						extendPath(entity, nextSegment);
 					}
 				}
@@ -200,7 +201,7 @@ package angel.game.combat {
 		/******** Actual movement routines, separate from the visual elements *************/
 		
 		public function unusedMovePoints(entity:ComplexEntity):int {
-			return entity.movement.combatMovePoints - path.length;
+			return entity.movement.unusedMovePoints - path.length;
 		}
 		
 		public function hasPath():Boolean {
@@ -217,7 +218,7 @@ package angel.game.combat {
 		/*************** I don't know how to classify this or even if it belongs in this class ***************/
 		
 		public function shootFromCoverValid(entity:ComplexEntity, pathLength:int):Boolean {
-			return ((pathLength == 1) && entity.hasCover())
+			return ((pathLength == 1) && !entity.movement.gaitIsRestricted() && entity.hasCover());
 		}
 		
 		public function shootFromCoverValidForCurrentLocationAndPath(entity:ComplexEntity):Boolean {

@@ -55,7 +55,7 @@ package angel.game {
 				case Keyboard.SPACE:
 					// if move in progress, stop moving as soon as possible.
 					if (playerIsMoving) {
-						player.movement.startMovingToward(player.location);
+						player.movement.startFreeMovementToward(player.location);
 					}
 				break;
 				case Keyboard.BACKSPACE:
@@ -104,7 +104,7 @@ package angel.game {
 			}
 			
 			if (!loc.equals(player.location) && !player.movement.tileBlocked(loc)) {
-				playerIsMoving = player.movement.startMovingToward(loc);
+				playerIsMoving = player.movement.startFreeMovementToward(loc);
 				if (playerIsMoving) {
 					player.addEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
 					if (!(Settings.testExploreScroll > 0)) {
