@@ -18,6 +18,7 @@ package angel.game {
 		[Embed(source='../EmbeddedAssets/TestMenuItem.png')]
 		public static const TestIconBitmap:Class;
 		
+		// Combat move pie menu icons
 		[Embed(source = '../EmbeddedAssets/IconCancelMove.png')]
 		public static const CancelMove:Class;
 		[Embed(source = '../EmbeddedAssets/IconStay.png')]
@@ -28,25 +29,22 @@ package angel.game {
 		public static const Run:Class;
 		[Embed(source = '../EmbeddedAssets/IconSprint.png')]
 		public static const Sprint:Class;
-		
-		[Embed(source = '../EmbeddedAssets/combat_icon_fire.png')]
-		public static const CombatFire:Class;
-		[Embed(source='../EmbeddedAssets/combat_icon_cancel.png')]
-		public static const CombatCancelTarget:Class;
-		[Embed(source = '../EmbeddedAssets/combat_icon_hold.png')]
-		public static const CombatReserveFire:Class;
 		[Embed(source='../EmbeddedAssets/combat_icon_cover.png')]
 		public static const CombatFireFromCover:Class;
-		[Embed(source = '../EmbeddedAssets/combat_icon_notarget.png')]
-		public static const CombatNoTarget:Class;
+		
+		// Combat fire pie menu icons
+		[Embed(source = '../EmbeddedAssets/combat_icon_fire.png')]
+		public static const CombatFireFirstGun:Class;
+		[Embed(source = '../EmbeddedAssets/combat_icon_pass.png')]
+		public static const CombatPass:Class;
 		[Embed(source='../EmbeddedAssets/combat_icon_grenade.png')]
 		public static const CombatGrenade:Class;
 		
+		// Combat cursor
 		[Embed(source = '../EmbeddedAssets/combat_cursor_active.png')]
 		public static const CombatCursorActive:Class;
-		[Embed(source = '../EmbeddedAssets/combat_cursor_inactive.png')]
-		public static const CombatCursorInactive:Class;
 		
+		// Displayed in combat instead of weapon fire
 		[Embed(source='../EmbeddedAssets/ReserveFire.png')]
 		public static const ReserveFireFloater:Class;
 		[Embed(source='../EmbeddedAssets/NoGun.png')]

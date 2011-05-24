@@ -30,14 +30,9 @@ package angel.game.combat {
 		private var aimCursor:Sprite;
 		private var aimCursorBitmap:Bitmap;
 		
-		private var enemyHealthDisplay:TextField;
-		private static const ENEMY_HEALTH_PREFIX:String = "Enemy: ";
+		private var hilightedEnemy:ComplexEntity;
 		
-		private var targetEnemy:ComplexEntity;
-		private var targetLocked:Boolean = false;
-		
-		// Wm wants pressing space to alternate between centering on player and centering on target enemy
-		private var spaceLastCenteredOnPlayer:Boolean = false;
+		private var clickThisEnemyAgainForQuickFire:ComplexEntity;
 		
 		private static const LOS_BLOCKED_TILE_HILIGHT_COLOR:uint = 0x000000;
 		private static const NO_TARGET_TILE_HILIGHT_COLOR:uint = 0xffffff;
@@ -53,7 +48,6 @@ package angel.game.combat {
 			aimCursor = new Sprite();
 			aimCursor.mouseEnabled = false;
 			aimCursor.addChild(aimCursorBitmap);
-			createEnemyHealthDisplay();
 		}
 		
 		/* INTERFACE angel.game.IRoomUi */
@@ -64,9 +58,7 @@ package angel.game.combat {
 			haveGun = (player.currentGun() != null);
 			oldMarkerColorTransform = player.marker.transform.colorTransform;
 			player.marker.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
-			targetEnemy = null;
-			targetLocked = false;
-			adjustAimCursorImage();
+			clickThisEnemyAgainForQuickFire = null;
 			Mouse.hide();
 			room.addChild(aimCursor);
 			aimCursor.x = room.mouseX;
@@ -99,26 +91,16 @@ package angel.game.combat {
 					combat.augmentedReality.toggleMinimap();
 				break;
 				
-				case Keyboard.BACKSPACE:
-					doCancelTarget();
-				break;
-				
 				case Keyboard.ENTER:
-					if (targetLocked && haveGun) {
-						doPlayerFire();
+					if (clickThisEnemyAgainForQuickFire != null) {
+						doPlayerFireGunAt(clickThisEnemyAgainForQuickFire);
 					} else {
 						doReserveFire();
 					}
 				break;
 				
 				case Keyboard.SPACE:
-					if (spaceLastCenteredOnPlayer && targetEnemy != null) {
-						room.snapToCenter(targetEnemy.location);
-						spaceLastCenteredOnPlayer = false;
-					} else {
-						room.snapToCenter(player.location);
-						spaceLastCenteredOnPlayer = true;
-					}
+					room.snapToCenter(player.location);
 				break;
 			}
 		}
@@ -128,22 +110,13 @@ package angel.game.combat {
 				var lineOfSight:Boolean = Util.entityHasLineOfSight(player, tile.location);
 				if (!lineOfSight) {
 					room.moveHilight(tile, LOS_BLOCKED_TILE_HILIGHT_COLOR);
-					if (!targetLocked) {
-						moveTargetHilight(null);
-					}
-				} else if (targetLocked) {
-					//NOTE: we'll probably add some behavior here once Wm tries this
-					room.moveHilight(tile, NO_TARGET_TILE_HILIGHT_COLOR);
+					moveTargetHilight(null);
+					ToolTip.removeToolTip();
 				} else {
 					var enemy:ComplexEntity = room.firstComplexEntityIn(tile.location, filterIsEnemy);
 					room.moveHilight(tile, (enemy == null ? NO_TARGET_TILE_HILIGHT_COLOR : TARGET_TILE_HILIGHT_COLOR));
 					moveTargetHilight(enemy);
-				}
-				
-				if (lineOfSight) {
 					room.updateToolTip(tile.location);
-				} else {
-					ToolTip.removeToolTip();
 				}
 			}
 			aimCursor.x = room.mouseX;
@@ -151,32 +124,27 @@ package angel.game.combat {
 		}
 		
 		public function mouseClick(tile:FloorTile):void {
-			if (!targetLocked) {
-				if (targetEnemy != null) {
-					targetLocked = true;
-					adjustAimCursorImage();
-				}
+			if ((clickThisEnemyAgainForQuickFire != null) && (tile.location.equals(clickThisEnemyAgainForQuickFire.location))) {
+				doPlayerFireGunAt(clickThisEnemyAgainForQuickFire);
+			} else if (haveGun && Util.entityHasLineOfSight(player, tile.location)) {
+				clickThisEnemyAgainForQuickFire = room.firstComplexEntityIn(tile.location, filterIsEnemy);
 			} else {
-				if (tile != null && tile.location.equals(targetEnemy.location)) {
-					doPlayerFire();
-				}
+				clickThisEnemyAgainForQuickFire = null;
 			}
 		}
 		
 		public function pieMenuForTile(tile:FloorTile):Vector.<PieSlice> {
-			var slices:Vector.<PieSlice> = new Vector.<PieSlice>()
-			if (targetLocked) {
-				if (haveGun) {
-					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFire), "Fire", doPlayerFire));
-				}
-				addGrenadePieSliceIfLegal(slices, tile.location);
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatCancelTarget), "Cancel target lock", doCancelTarget));
-			} else {
-				
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatNoTarget), "This slice does nothing", null));
-				addGrenadePieSliceIfLegal(slices, tile.location);
+			var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
+			var lineOfSight:Boolean = Util.entityHasLineOfSight(player, tile.location);
+			
+			slices.push(new PieSlice(Icon.bitmapData(Icon.CombatPass), "Pass/Reserve Fire", doReserveFire));
+			addGrenadePieSliceIfLegal(slices, tile.location);
+			if (haveGun && (hilightedEnemy != null)) {
+				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFireFirstGun), "Fire", function():void {
+					doPlayerFireGunAt(hilightedEnemy);
+				} ));
 			}
-			slices.push(new PieSlice(Icon.bitmapData(Icon.CombatReserveFire), "Reserve Fire", doReserveFire));
+			
 			return slices;
 		}
 	
@@ -195,24 +163,15 @@ package angel.game.combat {
 			}
 		}
 		
-		private function adjustAimCursorImage():void {
-			aimCursorBitmap.bitmapData = Icon.bitmapData(targetLocked ? Icon.CombatCursorInactive : Icon.CombatCursorActive);
-		}
-		
 		private function constructPieMenu():Vector.<PieSlice> {
 			var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
 			return slices;
 		}
 		
-		private function doPlayerFire():void {
-			if (haveGun) {
-				var target:ComplexEntity = targetEnemy;
-				var playerFiring:ComplexEntity = player;
-				room.disableUi();
-				combat.fireAndAdvanceToNextPhase(playerFiring, target);
-			} else {
-				doReserveFire();
-			}
+		private function doPlayerFireGunAt(target:ComplexEntity):void {
+			var playerFiring:ComplexEntity = player;
+			room.disableUi();
+			combat.fireAndAdvanceToNextPhase(playerFiring, target);
 		}
 		
 		private function doPlayerThrowGrenadeAt(loc:Point):void {
@@ -227,43 +186,19 @@ package angel.game.combat {
 			combat.fireAndAdvanceToNextPhase(playerFiring, null);
 		}
 		
-		private function doCancelTarget():void {
-			targetLocked = false;
-			moveTargetHilight(null);
-			adjustAimCursorImage();
-		}
-		
 		private function filterIsEnemy(entity:ComplexEntity):Boolean {
 			return (entity.isEnemy() || Settings.controlEnemies);
 		}
 		
 		private function moveTargetHilight(target:ComplexEntity):void {
-			if (targetEnemy != null) {
-				targetEnemy.filters = [];
+			if (hilightedEnemy != null) {
+				hilightedEnemy.filters = [];
 			}
-			targetEnemy = target;
-			if (targetEnemy != null) {
+			hilightedEnemy = target;
+			if (hilightedEnemy != null) {
 				var glow:GlowFilter = new GlowFilter(TARGET_HILIGHT_COLOR, 1, 20, 20, 2, 1, false, false);
-				targetEnemy.filters = [ glow ];
+				hilightedEnemy.filters = [ glow ];
 			}
-			displayEnemyHealthFor(targetEnemy);
-		}
-		
-		private function createEnemyHealthDisplay():void {
-			enemyHealthDisplay = CombatStatDisplay.createHealthTextField();
-			enemyHealthDisplay.x = room.stage.stageWidth - enemyHealthDisplay.width - 10;
-			enemyHealthDisplay.y = 10;
-			displayEnemyHealthFor(null);
-			room.stage.addChild(enemyHealthDisplay);
-		}
-		
-		private function displayEnemyHealthFor(enemy:ComplexEntity):void {
-			if (enemy == null) {
-				enemyHealthDisplay.visible = false;
-			} else {
-				enemyHealthDisplay.text = ENEMY_HEALTH_PREFIX + String(enemy.currentHealth);
-				enemyHealthDisplay.visible = true;
-			}	
 		}
 	
 	} // end class CombatFireUi

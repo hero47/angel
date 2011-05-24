@@ -53,12 +53,9 @@ package angel.game {
 				break;
 				
 				case Keyboard.SPACE:
-					// if move in progress, stop moving as soon as possible.
 					if (playerIsMoving) {
-						player.movement.startFreeMovementToward(player.location);
+						player.movement.interruptMovementAfterTileFinished();
 					}
-				break;
-				case Keyboard.BACKSPACE:
 					room.snapToCenter(player.location);
 				break;
 			}

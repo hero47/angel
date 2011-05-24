@@ -71,6 +71,10 @@ package angel.game.combat {
 				case Keyboard.ENTER:
 					doPlayerMove();
 				break;
+				
+				case Keyboard.SPACE:
+					room.snapToCenter(player.location);
+				break;
 			}
 		}
 		

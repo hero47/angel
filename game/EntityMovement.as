@@ -269,7 +269,7 @@ package angel.game {
 			coordsForEachFrameOfMove = null;
 			me.adjustImageForMove(0,0); // make sure we end up in "standing" posture even if move was ultra-fast
 			me.dispatchEvent(new EntityEvent(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, true, false, me));
-			if (interruptAfterThisTile && path.length > 0) {
+			if (interruptAfterThisTile) {
 				finishedMoving(true);
 			}
 		}
@@ -286,6 +286,7 @@ package angel.game {
 			if (gaitRestrictedUntilMoveFinished) {
 				removeGaitRestriction();
 			}
+			interruptAfterThisTile = false;
 			movingTo = null;
 			path = null;
 			coordsForEachFrameOfMove = null;
@@ -298,7 +299,7 @@ package angel.game {
 			if (path != null) {
 				if (movingTo != null) {
 					me.moveToCenterOfTile();
-					interruptAfterThisTile = false;
+					interruptAfterThisTile = false; // we want this to end up as a move finished, not a move interrupted
 					finishOneTileOfMove();
 				}
 				finishedMoving();
@@ -308,7 +309,9 @@ package angel.game {
 		//When animation to reach the tile we're currently moving onto finishes, if that wasn't the last tile in
 		//the path, stop there and send MOVE_INTERRUPTED instead of FINISHED_MOVING.
 		public function interruptMovementAfterTileFinished():void {
-			interruptAfterThisTile = true;
+			if (path.length > 0) {
+				interruptAfterThisTile = true;
+			}
 		}
 		
 		// if from is null, find path from current location
