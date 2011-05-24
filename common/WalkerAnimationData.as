@@ -20,7 +20,7 @@ package angel.common {
 		
 		private var paddingAtTop:int = Defaults.TOP;
 		
-		[Embed(source = '../../../EmbeddedAssets/temp_default_walker.png')]
+		[Embed(source = '../EmbeddedAssets/temp_default_walker.png')]
 		private static const DefaultWalkerBitmap:Class;
 		
 		//mapping from facing to position on image sheet

@@ -19,15 +19,6 @@ package angel.game {
 			this.callback = callback;
 		}
 		
-				
-		[Embed(source='../../../EmbeddedAssets/TestMenuItem.png')]
-		public static const TestIconBitmap:Class;
-		
-		public static function testIconData():BitmapData {
-			var foo:Bitmap = new TestIconBitmap();
-			return foo.bitmapData;
-		}
-		
 	}
 
 }
