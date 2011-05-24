@@ -45,7 +45,7 @@ package angel.game.combat {
 		}
 		
 		
-		public static function createHealthTextField():TextField {
+		private function createHealthTextField():TextField {
 			var myTextField:TextField = Util.textBox("", 100, 20, TextFormatAlign.CENTER, false);
 			myTextField.border = true;
 			myTextField.background = true;
