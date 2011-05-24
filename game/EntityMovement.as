@@ -35,8 +35,15 @@ package angel.game {
 			
 		private var me:ComplexEntity;
 		
-		public var combatMovePoints:int;
+		private var combatMovePoints:int;
+		public var unusedMovePoints:int;
 		public var maxGait:int;
+		public var minGait:int = GAIT_WALK;
+		
+		private var gaitRestrictedUntilMoveFinished:Boolean;
+		private var realMaxGait:int;
+		private var realMinGait:int;
+		
 		public var gaitSpeeds:Vector.<Number> = Vector.<Number>([Settings.exploreSpeed, Settings.walkSpeed, Settings.runSpeed, Settings.sprintSpeed]);
 		private var gaitDistances:Vector.<int>;
 		public var mostRecentGait:int = GAIT_WALK;	// gait for move in progress, or last move if none in progress
@@ -45,9 +52,10 @@ package angel.game {
 		private var path:Vector.<Point>; // the tiles we're trying to move through to get there
 		private var movingTo:Point; // the tile we're immediately in the process of moving onto
 		private var moveSpeed:Number;
-		protected var coordsForEachFrameOfMove:Vector.<Point>;
+		private var coordsForEachFrameOfMove:Vector.<Point>;
 		private var depthChangePerFrame:Number;
-		protected var frameOfMove:int;
+		private var frameOfMove:int;
+		private var interruptAfterThisTile:Boolean = false;;
 		
 		public function EntityMovement(entity:ComplexEntity, movePoints:int, maxGait:int = GAIT_SPRINT) {
 			me = entity;
@@ -82,7 +90,7 @@ package angel.game {
 			// two speeds based on percent of total points, then give the third one whatever's left (so rounding
 			// errors fall into the unspecified one).
 			// Then, once that's figured out, convert them to totals.
-			combatMovePoints = points;
+			combatMovePoints = unusedMovePoints = points;
 			var walkPoints:int = combatMovePoints * Settings.walkPercent/100;
 			var runPoints:int = combatMovePoints * Settings.runPercent/100;
 			var sprintPoints:int = combatMovePoints * Settings.sprintPercent/100;
@@ -105,14 +113,39 @@ package angel.game {
 			gaitDistances = Vector.<int>( [0, walkPoints, runPoints, sprintPoints] );
 		}
 		
+		public function restrictGaitUntilMoveFinished(gait:int):void {
+			gaitRestrictedUntilMoveFinished = true;
+			realMaxGait = maxGait;
+			realMinGait = minGait;
+			maxGait = minGait = gait;
+		}
+		
+		public function gaitIsRestricted():Boolean {
+			return gaitRestrictedUntilMoveFinished;
+		}
+		
+		private function removeGaitRestriction():void {
+			gaitRestrictedUntilMoveFinished = false;
+			maxGait = realMaxGait;
+			minGait = realMinGait;
+		}
+		
 		//return true if moving, false if goal is unreachable or already there
-		public function startMovingToward(goal:Point, gait:int = GAIT_EXPLORE):Boolean {
+		public function startFreeMovementToward(goal:Point, gait:int = GAIT_EXPLORE):Boolean {
 			var newPath:Vector.<Point> = findPathTo(goal);
 			if (newPath != null) {
 				startMovingAlongPath(newPath, gait);
 				return true;
 			}
 			return false;
+		}
+		
+		public function initForCombatMove():void {
+			unusedMovePoints = combatMovePoints;
+		}
+		
+		public function get usedMovePoints():int {
+			return combatMovePoints - unusedMovePoints;
 		}
 		
 		public function startMovingAlongPath(newPath:Vector.<Point>, gait:int = GAIT_EXPLORE):void {
@@ -123,6 +156,7 @@ package angel.game {
 			// dispatchEvent does an immediate call rather than putting the event into a queue.
 			// So, we will pretend we have a path even if we don't, forcing that processing to happen
 			// next time we get an ENTER_FRAME which is really asynchronous.
+			interruptAfterThisTile = false;
 			path = (newPath == null ? new Vector.<Point> : newPath);
 			moveGoal = (path.length > 0 ? path[path.length - 1] : me.location);
 			mostRecentGait = (path.length == 0 ? GAIT_NO_MOVE : Math.min(gait, maxGait));
@@ -131,7 +165,10 @@ package angel.game {
 		}
 		
 		public function minGaitForDistance(distance:int):int {
-			for (var gait:int = GAIT_NO_MOVE; gait <= maxGait; ++gait) {
+			if (distance == 0) {
+				return GAIT_NO_MOVE;
+			}
+			for (var gait:int = minGait; gait <= maxGait; ++gait) {
 				if (distance <= gaitDistances[gait]) {
 					return gait;
 				}
@@ -232,44 +269,59 @@ package angel.game {
 			coordsForEachFrameOfMove = null;
 			me.adjustImageForMove(0,0); // make sure we end up in "standing" posture even if move was ultra-fast
 			me.dispatchEvent(new EntityEvent(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, true, false, me));
+			if (interruptAfterThisTile && path.length > 0) {
+				finishedMoving(true);
+			}
 		}
 		
-		
 		private function changeLocationAsPartOfMove():void {
+			--unusedMovePoints;
 			var oldLocation:Point = me.location;
 			me.setLocationWithoutChangingDepth(movingTo);
 			me.room.changeEntityLocation(me, oldLocation, movingTo);
 			me.dispatchEvent(new EntityEvent(EntityEvent.MOVED, true, false, me));
 		}		
 		
-		private function finishedMoving():void {
+		private function finishedMoving(wasInterrupted:Boolean = false):void {
+			if (gaitRestrictedUntilMoveFinished) {
+				removeGaitRestriction();
+			}
 			movingTo = null;
 			path = null;
 			coordsForEachFrameOfMove = null;
 			me.room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
-			me.dispatchEvent(new EntityEvent(EntityEvent.FINISHED_MOVING, true, false, me));
+			me.dispatchEvent(new EntityEvent( wasInterrupted ? EntityEvent.MOVE_INTERRUPTED : EntityEvent.FINISHED_MOVING,
+							true, false, me));
 		}
 		
 		public function endMoveImmediately():void {
 			if (path != null) {
 				if (movingTo != null) {
 					me.moveToCenterOfTile();
+					interruptAfterThisTile = false;
 					finishOneTileOfMove();
 				}
 				finishedMoving();
 			}
 		}
 		
+		//When animation to reach the tile we're currently moving onto finishes, if that wasn't the last tile in
+		//the path, stop there and send MOVE_INTERRUPTED instead of FINISHED_MOVING.
+		public function interruptMovementAfterTileFinished():void {
+			interruptAfterThisTile = true;
+		}
+		
 		// if from is null, find path from current location
 		// NOTE: does not check whether the goal tile itself is occupied!
 		// NOTE: path does not include the starting tile.
-		public function findPathTo(goal:Point, from:Point = null):Vector.<Point> {
+		// If ignoreInvisible is true, pretend anything invisible doesn't exist.
+		public function findPathTo(goal:Point, from:Point = null, ignoreInvisible:Boolean = false):Vector.<Point> {
 			if (from == null) {
 				from = me.location;
 			}
 			var myPath:Vector.<Point> = new Vector.<Point>();
 			
-			if (!Pathfinder.findShortestPathTo(me, from, goal, myPath)) {
+			if (!Pathfinder.findShortestPathTo(me, from, goal, myPath, ignoreInvisible)) {
 				return null;
 			}
 			return myPath;
@@ -279,7 +331,8 @@ package angel.game {
 		// as part of the same move (even if I somehow got accidentally placed onto another solid object) -- this
 		// avoids blocking my own move or getting stuck.
 		// Other than that, if I'm solid I can't move into a solid tile.
-		public function tileBlocked(loc:Point):Boolean {
+		// If ignoreInvisible is true, pretend anything invisible doesn't exist.
+		public function tileBlocked(loc:Point, ignoreInvisible:Boolean = false):Boolean {
 			if (loc.equals(me.location)) {
 				return false;
 			}
@@ -287,13 +340,14 @@ package angel.game {
 			if (!(me.solidness & Prop.SOLID)) {
 				return (loc.x < 0 || loc.x >= room.size.x || loc.y < 0 || loc.y >= room.size.y)
 			}
-			return (room.solidness(loc.x,loc.y) & Prop.SOLID) != 0;
+			return (room.solidness(loc.x, loc.y, ignoreInvisible) & Prop.SOLID) != 0;
 		}
 		
 		// step is a one-tile vector. Return from+step if legal, null if not
-		public function checkBlockage(from:Point, step:Point):Point {
+		// If ignoreInvisible is true, pretend anything invisible doesn't exist.
+		public function checkBlockage(from:Point, step:Point, ignoreInvisible:Boolean = false):Point {
 			var target:Point = from.add(step);
-			if (tileBlocked(target)) {
+			if (tileBlocked(target, ignoreInvisible)) {
 				return null;
 			}
 			if (!(me.solidness & Prop.SOLID)) { // if I'm ghost/hologram then hard corners don't bother me
@@ -302,8 +356,8 @@ package angel.game {
 			if (step.x == 0 || step.y == 0) { // if move isn't diagonal then hard corners are irrelevant
 				return target;
 			}
-			if ( (me.room.solidness(from.x, from.y + step.y) & Prop.HARD_CORNER) &&
-				 (me.room.solidness(from.x + step.x, from.y) & Prop.HARD_CORNER) ) {
+			if ( (me.room.solidness(from.x, from.y + step.y, ignoreInvisible) & Prop.HARD_CORNER) &&
+				 (me.room.solidness(from.x + step.x, from.y, ignoreInvisible) & Prop.HARD_CORNER) ) {
 				return null;
 			}
 			return target;

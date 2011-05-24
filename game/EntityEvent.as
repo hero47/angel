@@ -9,6 +9,7 @@ package angel.game {
 		public static const MOVED:String = "entityMoved";
 		public static const FINISHED_ONE_TILE_OF_MOVE:String = "entityFinishedTile";
 		public static const FINISHED_MOVING:String = "entityFinishedMoving";
+		public static const MOVE_INTERRUPTED:String = "entityMoveInterrupted"; // sent instead of FINISHED_MOVING if interrupted
 		public static const LOCATION_CHANGED_DIRECTLY:String = "entityLocationChanged"; // changed not as part of move
 		public static const START_TURN:String = "entityStartTurn";
 		public static const DEATH:String = "entityDied";
@@ -17,6 +18,7 @@ package angel.game {
 		public static const REMOVED_FROM_ROOM:String = "entityRemovedFromRoom";
 		public static const JOINED_COMBAT:String = "entityJoinedCombat";
 		public static const CHANGED_FACTION:String = "entityChangedFaction";
+		public static const BECAME_VISIBLE:String = "entityBecameVisible";
 		
 		public var entity:SimpleEntity;
 		

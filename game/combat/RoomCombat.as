@@ -5,6 +5,7 @@ package angel.game.combat {
 	import angel.game.brain.ICombatBrain;
 	import angel.game.ComplexEntity;
 	import angel.game.EntityEvent;
+	import angel.game.EntityMovement;
 	import angel.game.Icon;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
@@ -60,6 +61,8 @@ package angel.game.combat {
 			room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire, false, 100);
 			room.addEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener, false, 100);
 			room.addEventListener(EntityEvent.DEATH, deathListener, false, 100);
+			room.addEventListener(EntityEvent.BECAME_VISIBLE, enemyBecameVisible);
+			room.addEventListener(EntityEvent.MOVE_INTERRUPTED, moveInterruptedListener);
 			
 			enemyTurnOverlay = new Shape();
 			enemyTurnOverlay.graphics.beginFill(0x4E7DB1, 0.3); // color to match alert, no clue where that number came from, heh
@@ -90,6 +93,8 @@ package angel.game.combat {
 			room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire);
 			room.removeEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
 			room.removeEventListener(EntityEvent.DEATH, deathListener);
+			room.removeEventListener(EntityEvent.BECAME_VISIBLE, enemyBecameVisible);
+			room.removeEventListener(EntityEvent.MOVE_INTERRUPTED, moveInterruptedListener);
 			
 			augmentedReality.cleanup();
 			
@@ -402,6 +407,19 @@ package angel.game.combat {
 			beginTurnForCurrentFighter();
 		}
 		
+		private function moveInterruptedListener(event:EntityEvent):void {
+			trace("fighter", iFighterTurnInProgress, "(", currentFighter().aaId, ") move interrupted");
+			if (combatOver) {
+				// don't allow next enemy to move, don't enable player UI, just wait for them to OK the message,
+				// which will end combat mode.
+				return;
+			}
+			Assert.assertTrue(currentFighter().isPlayerControlled, "AI move can't be interrupted");
+			mover.clearPath();
+			currentFighter().movement.restrictGaitUntilMoveFinished(currentFighter().movement.mostRecentGait);
+			room.enableUi(moveUi, currentFighter());
+		}
+		
 		// Called each time the timer for gazing at the enemy's move dots expires
 		private function doPlottedEnemyMove():void {
 			trace("enemyMoveTimerListener for fighter #", iFighterTurnInProgress, currentFighter().aaId);
@@ -416,6 +434,7 @@ package angel.game.combat {
 				return;
 			}
 			fighter.dispatchEvent(new EntityEvent(EntityEvent.START_TURN, true, false, fighter));
+			fighter.movement.initForCombatMove();
 			if (fighter.isPlayerControlled) {
 				trace("Begin turn for PC", fighter.aaId);
 				if (enemyTurnOverlay.parent != null) {
@@ -454,6 +473,17 @@ package angel.game.combat {
 			if (iFighterTurnInProgress >= fighters.length) {
 				trace("All turns have been processed, go back to first player");
 				iFighterTurnInProgress = 0;
+			}
+		}
+		
+		//NOTE: currently (May 2011) AI brains have full access to map data, regardless of line-of-sight.
+		//Thus, the BECAME_VISIBLE event is only relevant for the player.
+		private function enemyBecameVisible(event:EntityEvent):void {
+			if (currentFighter().isPlayerControlled) {
+				var movement:EntityMovement = currentFighter().movement;
+				if ((movement != null) && movement.moving()) {
+					movement.interruptMovementAfterTileFinished();
+				}
 			}
 		}
 		
