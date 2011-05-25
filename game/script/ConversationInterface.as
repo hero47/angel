@@ -57,44 +57,34 @@ package angel.game.script {
 			conversationData.runConversation(this);
 		}
 		
-		public function startSegment(npcSegment:ConversationSegment, pcSegments:Vector.<ConversationSegment>):void {
+		public function startEntry(npcSegment:ConversationSegment, pcSegments:Vector.<ConversationSegment>):void {
 			var havePcSegments:Boolean = pcSegments.length > 0;
-			// This is a bit scary, and it's implementing a UI choice that I personally detest and am trying to
-			// get Wm to eliminate.  I don't WANT to have to click the NPC box before I can see the PC box if both exist!
-			// PARTICULARLY now that sometimes ONLY the NPC box will exist, so I can't just automatically click it,
-			// since that will make it go away if there's no PC box.
-			var pcSegmentFunction:Function = function(event:Event):void {
-				if (event != null) {
-					event.target.removeEventListener(ConversationEvent.SEGMENT_FINISHED, pcSegmentFunction);
-				}
-				if (havePcSegments) {
-					pcBox = displayConversationSegment(new PcPortrait(), true, pcSegments, 500, 300, pcBoxComplete);
-				} else {
-					pcBoxComplete(null);
-				}
-			}
 			
 			if (npcSegment != null) {
 				npcBox = displayConversationSegment(new NpcPortrait(), false, Vector.<ConversationSegment>([npcSegment]),
-						500, 100, pcSegmentFunction);	
-			} else {
-				pcSegmentFunction(null);
+						500, 100, (havePcSegments ? null : entryFinishedListener));	
 			}
+			
+			if (havePcSegments) {
+				pcBox = displayConversationSegment(new PcPortrait(), true, pcSegments, 500, 300, entryFinishedListener);				
+			}
+			
 		}
 		
 		private function displayConversationSegment(portraitBitmap:Bitmap, pc:Boolean, segments:Vector.<ConversationSegment>, x:int, y:int, listener:Function):ConversationBox {
-			var box:ConversationBox = new ConversationBox(portraitBitmap, pc);
+			var box:ConversationBox = new ConversationBox(portraitBitmap, pc, segments, listener != null);
 			addChild(box);
-			box.segments = segments;
 			box.x = x;
 			box.y = y;
-			box.addEventListener(ConversationEvent.SEGMENT_FINISHED, listener);
+			if (listener != null) {
+				box.addEventListener(ConversationEvent.ENTRY_FINISHED, listener);
+			}
 			return box;
 		}
 		
-		private function pcBoxComplete(event:ConversationEvent):void {
+		private function entryFinishedListener(event:ConversationEvent):void {
+			event.target.removeEventListener(ConversationEvent.ENTRY_FINISHED, entryFinishedListener);
 			if (pcBox != null) {
-				pcBox.removeEventListener(ConversationEvent.SEGMENT_FINISHED, pcBoxComplete);
 				removeChild(pcBox);
 				pcBox = null;
 			}

@@ -29,18 +29,15 @@ package angel.game.script {
 		private static const TEXT_PORTRAIT_MARGIN:uint = 100;
 		private static const TEXT_OTHER_MARGIN:uint = 20;
 
-		/*
-		[Embed(source = '../../../EmbeddedAssets/arial.ttf', fontName="Ariel", mimeType='application/x-font-truetype')]
-		private var Ariel:Class;
-		*/
-		
 		private var textX:int;
 		private var textFields:Vector.<TextField> = new Vector.<TextField>();
 		private var mySegments:Vector.<ConversationSegment>;
+		private var isPrimary:Boolean;
 		
 		// Currently taking bitmap, but this is likely to change to use a cataloged resource at some point
-		public function ConversationBox(portraitBitmap:Bitmap, pc:Boolean) {
-			
+		// If a conversation entry has only one conversation box, then that box is primary.  Otherwise, the PC box is
+		// primary.  The primary box sends ENTRY_FINISHED event when user makes a selection.
+		public function ConversationBox(portraitBitmap:Bitmap, pc:Boolean, rawSegments:Vector.<ConversationSegment>, primary:Boolean) {
 			graphics.beginFill(BOX_COLOR, 0.8);
 			graphics.drawRoundRect( -BOX_WIDTH / 2, 0, BOX_WIDTH, BOX_HEIGHT, 20);
 			
@@ -53,9 +50,12 @@ package angel.game.script {
 				portraitBitmap.x = -(BOX_WIDTH + portraitBitmap.width) / 2;
 				textX = -BOX_WIDTH/2 + TEXT_PORTRAIT_MARGIN;
 			}
+			segments = rawSegments;
 			
-			addEventListener(MouseEvent.CLICK, clickListener);
-			addEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
+			if (primary) {
+				addEventListener(MouseEvent.CLICK, clickListener);
+				addEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
+			}
 		}
 		
 		private function addedToStageListener(event:Event):void {
@@ -66,7 +66,7 @@ package angel.game.script {
 		private function finished(selected:ConversationSegment):void {
 			removeEventListener(MouseEvent.CLICK, clickListener);
 			stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
-			dispatchEvent(new ConversationEvent(ConversationEvent.SEGMENT_FINISHED, selected, true));
+			dispatchEvent(new ConversationEvent(ConversationEvent.ENTRY_FINISHED, selected, true));
 		}
 		
 		public function set segments(rawSegments:Vector.<ConversationSegment>):void {
@@ -113,22 +113,30 @@ package angel.game.script {
 			}
 		}
 		
-	private function keyDownListener(event:KeyboardEvent):void {
-			var i:int = event.charCode - "1".charCodeAt(0);
-			if (i >= 0 && i < mySegments.length) {
-				finished(mySegments[i]);
-			} else {
-				switch (event.keyCode) {
-					case Keyboard.SPACE:
-					case Keyboard.ENTER:
-						if (mySegments.length == 0) {
-							finished(null);
-						} else {
-							finished(mySegments[0]);
-						}
-					break;
+		// If there's only one choice, press any key at all to accept it.
+		// If there are multiple choices, "1" or space or enter picks the first one, other numbers pick that number,
+		// and other keys are ignored.
+		private function keyDownListener(event:KeyboardEvent):void {
+			var choice:ConversationSegment;
+			if (mySegments.length == 1) {
+				choice = mySegments[0];
+			} else if (mySegments.length > 1) {
+				var i:int = event.charCode - "1".charCodeAt(0);
+				if (i >= 0 && i < mySegments.length) {
+					choice = mySegments[i];
+				} else {
+					switch (event.keyCode) {
+						case Keyboard.SPACE:
+						case Keyboard.ENTER:
+							choice = mySegments[0];
+						break;
+						default:
+							return;
+						break;
+					}
 				}
 			}
+			finished(choice);
 		}
 		
 		private function chatTextField():TextField {

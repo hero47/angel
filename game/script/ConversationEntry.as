@@ -30,15 +30,20 @@ package angel.game.script {
 				entry.pcSegments.push(ConversationSegment.createFromXml(pcSegmentXml, errorPrefix));
 			}
 			
+			if ((entry.npcSegment == null) && (entry.pcSegments.length == 0)) {
+				Alert.show(errorPrefix + "Empty entry.");
+				entry.npcSegment = ConversationSegment.createFromXml(<npc text="" />, errorPrefix);
+			}
+			
 			return entry;
 		}
 		
 		public function start(ui:ConversationInterface):void {
-			ui.startSegment(npcSegment, pcSegments);
-			if (npcSegment != null) {
+			ui.startEntry(npcSegment, pcSegments);
+			if ((npcSegment != null) && (pcSegments.length > 0)) {
 				var illegalGoto:Object = npcSegment.doActionsAndGetNextEntryId(ui.doAtEnd);
 				if (illegalGoto != null) {
-					Alert.show("Error! NPC segment contains goto id " + illegalGoto.id);
+					Alert.show("Error! Entry has NPC segment with goto (id='" + illegalGoto.id + "') and PC segment.");
 				}
 			}
 		}

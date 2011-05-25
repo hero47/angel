@@ -95,17 +95,11 @@ package angel.game.script {
 			
 			currentEntry = currentTopic.entries["start"];
 			
-			ui.addEventListener(ConversationEvent.SEGMENT_FINISHED, segmentFinished);
+			ui.addEventListener(ConversationEvent.ENTRY_FINISHED, entryFinished);
 			currentEntry.start(ui);
 		}
 		
-		private function segmentFinished(event:ConversationEvent):void {
-			if ((event.choice == currentEntry.npcSegment) && (currentEntry.pcSegments.length > 0)) {
-				// We get called for NPC segment finished because Wm is convinced that it's a user-friendly UI to require
-				// user to click on the NPC box before we will display the PC box.  I think this is a poor decision, and
-				// I'm not going to any effort to clean the code for this because I'm hoping he'll change his mind.
-				return;
-			}
+		private function entryFinished(event:ConversationEvent):void {
 			var ui:ConversationInterface = ConversationInterface(event.currentTarget);
 			var nextEntryReference:Object = event.choice.doActionsAndGetNextEntryId(ui.doAtEnd);
 			currentEntry = null;
@@ -123,7 +117,7 @@ package angel.game.script {
 			}
 			
 			if (currentEntry == null) {
-				ui.removeEventListener(ConversationEvent.SEGMENT_FINISHED, segmentFinished);
+				ui.removeEventListener(ConversationEvent.ENTRY_FINISHED, entryFinished);
 				ui.cleanup();
 			} else {
 				currentEntry.start(ui);
