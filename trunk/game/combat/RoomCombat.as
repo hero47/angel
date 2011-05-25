@@ -358,7 +358,7 @@ package angel.game.combat {
 			
 			//event.entity won't match currentFighter() if moving entity was killed by opportunity fire
 			if (event.entity != fighter) {
-				trace(event.entity.aaId, "was killed, don't give them a fire phase");
+				trace(event.entity.aaId, "was killed, jump to end of (previous fighter's) turn");
 				finishedFire();
 				return;
 			}
@@ -408,14 +408,22 @@ package angel.game.combat {
 		}
 		
 		private function moveInterruptedListener(event:EntityEvent):void {
-			trace("fighter", iFighterTurnInProgress, "(", currentFighter().aaId, ") move interrupted");
+			mover.clearPath();
+			trace(event.entity.aaId, "move interrupted, iFighter", iFighterTurnInProgress);
 			if (combatOver) {
 				// don't allow next enemy to move, don't enable player UI, just wait for them to OK the message,
 				// which will end combat mode.
 				return;
 			}
+			
+			//event.entity won't match currentFighter() if moving entity was killed by opportunity fire
+			if (event.entity != currentFighter()) {
+				trace(event.entity.aaId, "was killed, jump to end of (previous fighter's) turn");
+				finishedFire();
+				return;
+			}
+			
 			Assert.assertTrue(currentFighter().isPlayerControlled, "AI move can't be interrupted");
-			mover.clearPath();
 			currentFighter().movement.restrictGaitUntilMoveFinished(currentFighter().movement.mostRecentGait);
 			room.enableUi(moveUi, currentFighter());
 		}
