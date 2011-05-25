@@ -154,8 +154,7 @@ package angel.roomedit {
 		}
 		
 		private function launchCreateSpotDialog(event:Event):void {
-			KludgeDialogBox.init(stage);
-			var options:Object = { buttons:["OK", "Cancel"], inputs:["id:"], callback:userEnteredNewSpotId };
+			var options:Object = { buttons:["OK", "Cancel"], inputs:["id:"], restricts:["A-Za-z0-9_"], callback:userEnteredNewSpotId };
 			KludgeDialogBox.show("Create new spot", options);
 		}
 		

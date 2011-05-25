@@ -1,4 +1,5 @@
 package angel.roomedit {
+	import angel.common.Alert;
 	import angel.common.CatalogEntry;
 	import angel.common.KludgeDialogBox;
 	import angel.common.SimplerButton;
@@ -17,6 +18,7 @@ package angel.roomedit {
 		public var tilesPalette:FloorTilePalette;
 		
 		private var finishedEditNamesButton:SimplerButton;
+		private var deleteTilesetButton:SimplerButton;
 		
 		private var newFilename:String;
 		private var tilesetId:String;
@@ -35,7 +37,7 @@ package angel.roomedit {
 			addChild(button);
 			left += button.width + 5;
 			
-			button = new SimplerButton("Edit tile names", clickedEditTileNames);
+			button = new SimplerButton("Edit tileset", clickedEditTileNames);
 			button.x = left;
 			button.y = 5;
 			button.width = 100;
@@ -85,12 +87,15 @@ package angel.roomedit {
 			left += button.width + 5;
 			
 			
-			finishedEditNamesButton = new SimplerButton("Keep these names", clickedEditNamesDone, 0xff0000);
+			finishedEditNamesButton = new SimplerButton("Keep these names", clickedEditNamesDone, 0x00ffff);
 			finishedEditNamesButton.width = 200;
 			addChild(finishedEditNamesButton);
 			finishedEditNamesButton.visible = false;
 			
-			
+			deleteTilesetButton = new SimplerButton("Delete from catalog", clickedDeleteTileset, 0xff0000);
+			deleteTilesetButton.width = 200;
+			addChild(deleteTilesetButton);
+			deleteTilesetButton.visible = false;
 		}
 		
 		private function clickedLoadTileset(event:Event):void {
@@ -124,13 +129,16 @@ package angel.roomedit {
 			//var filename:String = newlyLoadedTileset.catalogEntry.filename;
 			//var defaultIdBase:String = filename.slice(0, filename.lastIndexOf("."));
 			var defaultIdBase:String = newFilename.slice(0, newFilename.lastIndexOf("."));
+			while (defaultIdBase.indexOf("-") > 0) {
+				defaultIdBase = defaultIdBase.replace("-", "");
+			}
 			var defaultId:String = defaultIdBase;
 			var num:int = 1;
 			while (catalog.entry(defaultId) != null) {
 				defaultId = defaultIdBase + String(num++);
 			}
-			KludgeDialogBox.init(stage);
-			var options:Object = { buttons:["OK", "Cancel"], inputs:["id:"], defaultValues:[defaultId], callback:callback };
+			var options:Object = { buttons:["OK", "Cancel"], inputs:["id:"], restricts:["A-Za-z0-9_"], defaultValues:[defaultId],
+					callback:callback };
 			var text:String = "Enter catalog id for " + idForWhat;
 			if (previousError != null) {
 				text = previousError + "\n" + text;
@@ -206,7 +214,6 @@ package angel.roomedit {
 			var tilesetChooser:ComboHolder = catalog.createChooser(CatalogEntry.TILESET);
 			tilesetCombo = tilesetChooser.comboBox;
 
-			KludgeDialogBox.init(stage);
 			var options:Object = { buttons:["OK", "Cancel"], inputs:[], customControl:tilesetChooser,
 					callback:selectTilesetCallback };
 			var text:String = "Select tileset:";
@@ -234,6 +241,9 @@ package angel.roomedit {
 			finishedEditNamesButton.x = tilesPalette.x + tilesPalette.width + 10;
 			finishedEditNamesButton.y = tilesPalette.y;
 			finishedEditNamesButton.visible = true;
+			deleteTilesetButton.x = tilesPalette.x + tilesPalette.width + 10;
+			deleteTilesetButton.y = tilesPalette.y + 30;
+			deleteTilesetButton.visible = true;
 		}
 		
 		private function clickedEditProp(event:Event):void {
@@ -241,7 +251,6 @@ package angel.roomedit {
 		}
 		
 		private function showEditPropDialog(id:String = null):void {
-			KludgeDialogBox.init(stage);
 			var options:Object = { buttons:["Done"], inputs:[], customControl:new PropEditUI(catalog, id) };
 			var text:String = "Edit prop";
 			KludgeDialogBox.show(text, options);
@@ -252,7 +261,6 @@ package angel.roomedit {
 		}
 		
 		private function showEditCharDialog(id:String = null):void {
-			KludgeDialogBox.init(stage);
 			var options:Object = { buttons:["Done"], inputs:[], customControl:new CharEditUI(catalog, id) };
 			var text:String = "Edit Character";
 			KludgeDialogBox.show(text, options);
@@ -264,14 +272,40 @@ package angel.roomedit {
 		
 		private function clickedEditNamesDone(event:Event):void {
 			tilesPalette.setTileNamesFromPalette();
+			catalog.changeXml(tilesetId, catalog.retrieveTileset(tilesetId).renderAsXml(tilesetId));
+		}
+		
+		private function closeTilesPalette():void {
 			removeChild(tilesPalette);
 			tilesPalette = null;
 			finishedEditNamesButton.visible = false;
-			catalog.changeXml(tilesetId, catalog.retrieveTileset(tilesetId).renderAsXml(tilesetId));
+			deleteTilesetButton.visible = false;
+		}
+		
+		private function clickedDeleteTileset(event:Event):void {
+			confirmDelete(deleteTilesetCallback);
+		}
+		
+		private function deleteTilesetCallback(buttonClicked:String):void {
+			if (buttonClicked != "Delete") {
+				return;
+			}
+			catalog.deleteCatalogEntry(tilesetId);
+			closeTilesPalette();
+			warnSaveCatalogAndRestart();
 		}
 
 		private function clickedEditRoom(event:Event):void {
 			(parent as Main).editRoom();
+		}
+		
+		public static function confirmDelete(callback:Function):void {
+			var options:Object = { buttons:["Delete", "OMG no!"], callback:callback };
+			Alert.show("Do you really want to delete it, or\ndid you just click that big red button\nbecause it was so pretty and shiny)?", options);
+		}
+		
+		public static function warnSaveCatalogAndRestart():void {
+			Alert.show("Warning! You should save the catalog and\nrestart before editing rooms,\nor Things May Go Wrong.");
 		}
 		
 	}

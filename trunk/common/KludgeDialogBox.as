@@ -44,6 +44,7 @@ package angel.common {
 		buttons:Array			-	An array (maximum of 3) containing the Strings of the buttons to be shown in the Alert prompt
 		inputs:Array			-   An array containing labels for the text input fields
 		defaultValues:Array		-	An array containing default values for the text input fields
+		restricts:Array			-	An array containing restrictions for the text input fields (default: no restrictions)
 		customControl:DisplayObject	- Anything. Place this in the box and let it do its thing.
 		callBack:Function		-	The function to be called when OK has been clicked - returns array of strings for input fields
 		colour:int				-	Main colour for the Alert
@@ -95,6 +96,7 @@ package angel.common {
 					allInputs[0].removeEventListener(KeyboardEvent.KEY_DOWN, myEnterFunction);
 				}
 				closeAlert(myAlert);
+				stage.focus = stage;
 				if (alertOptions.callback != null) {
 					var inputValues:Array = new Array();
 					for (i = 0; i < allInputs.length; i++) {
@@ -294,7 +296,7 @@ package angel.common {
 			for (var i:int = 0; i < alertOptions.inputs.length; i++) {
 				var label:TextField = createInputLabel(alertOptions.inputs[i], alertOptions);
 				label.x = 10;
-				label.y = actualPrompt.height - 45 - heightForInputs + (i * (btnHeight +2));
+				label.y = myHeight - 45 - heightForInputs + (i * (btnHeight +2));
 				actualPrompt.addChild(label);
 				maxLabelWidth = Math.max(maxLabelWidth, label.width);
 			}
@@ -303,9 +305,12 @@ package angel.common {
 				if (alertOptions.defaultValues != null) {
 					input.text = alertOptions.defaultValues[i];
 				}
+				if (alertOptions.restricts != null) {
+					input.restrict = alertOptions.restricts[i];
+				}
 				input.x = 20 + maxLabelWidth;
 				input.width = actualPrompt.width - input.x - 15;
-				input.y = actualPrompt.height - 45 - heightForInputs + (i * (btnHeight +2));
+				input.y = myHeight - 45 - heightForInputs + (i * (btnHeight +2));
 				actualPrompt.addChild(input);
 				if (i == 0) {
 					stage.focus = input;
@@ -316,11 +321,11 @@ package angel.common {
 			if (alertOptions.customControl != null) {
 				actualPrompt.addChild(alertOptions.customControl);
 				alertOptions.customControl.x = (actualPrompt.width - alertOptions.customControl.width) / 2;
-				alertOptions.customControl.y = actualPrompt.height - 45 - alertOptions.customControl.height;
+				alertOptions.customControl.y = myHeight - 45 - alertOptions.customControl.height;
 			}	
 			
 			for (i=0;i<alertButtons.length;i++) {
-				alertButtons[i].y = actualPrompt.height-35;
+				alertButtons[i].y = myHeight-35;
 				actualPrompt.addChild(alertButtons[i]);
 			}
 			//
@@ -423,6 +428,7 @@ internal class AlertOptions {
 	public var background:String;
 	public var inputs:Array = new Array();
 	public var defaultValues:Array = new Array();
+	public var restricts:Array = new Array();
 	public var customControl:DisplayObject;
 	public var buttons:Array = new Array();
 	public var callback:Function;
@@ -451,6 +457,7 @@ internal class AlertOptions {
 			}
 			inputs = alertOptions.inputs;
 			defaultValues = alertOptions.defaultValues;
+			restricts = alertOptions.restricts;
 			customControl = alertOptions.customControl;
 			callback = alertOptions.callback; 
 			if (alertOptions.colour == null) {

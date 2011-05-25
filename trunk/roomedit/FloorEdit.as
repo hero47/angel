@@ -96,8 +96,7 @@ package angel.roomedit {
 		
 		// Puts up dialog for user to select save location, then writes data to the file.
 		public function launchChangeSizeDialog():void {
-			KludgeDialogBox.init(stage);
-			var options:Object = { buttons:["OK", "Cancel"], inputs:["X:", "Y:"], defaultValues:[xy.x, xy.y],
+			var options:Object = { buttons:["OK", "Cancel"], inputs:["X:", "Y:"], defaultValues:[xy.x, xy.y], restricts:["0-9"], 
 					callback:userEnteredSize };
 			KludgeDialogBox.show("New size for map:", options);
 		}
