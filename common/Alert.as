@@ -85,6 +85,7 @@ package angel.common {
 					allButtons[i].removeEventListener(MouseEvent.CLICK, myClickFunction);
 				}
 				closeAlert(myAlert);
+				stage.focus = stage;
 				if (alertOptions.callback != null) alertOptions.callback(event.target.name);
 			}
 		}

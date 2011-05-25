@@ -41,6 +41,7 @@ package angel.roomedit {
 		private var nameTextField:TextField;
 		private var changeImageControl:FilenameControl;
 		private var noSprintHackCheckbox:CheckBox;
+		private var deleteFromCatalogButton:SimplerButton;
 		
 		private static const WIDTH:int = 220;
 		
@@ -90,6 +91,10 @@ package angel.roomedit {
 			changeImageControl = FilenameControl.createBelow(movePointsTextField, false, "Image", 0, 220, changeFilename, 0);
 			noSprintHackCheckbox = Util.createCheckboxEditControlBelow(changeImageControl, "No Sprint Hack", 120,
 					function(event:Event):void { changeCharacterProperty( (event.target.selected ? 2 : 3), "maxGait", Defaults.MAX_GAIT) }, 0 );
+			
+			deleteFromCatalogButton = new SimplerButton("Delete from catalog", clickedDelete, 0xff0000);
+			deleteFromCatalogButton.width = WIDTH;
+			Util.addBelow(deleteFromCatalogButton, noSprintHackCheckbox, 50);
 			
 			if (startId == null) {
 				propCombo.selectedIndex = 0;
@@ -205,6 +210,23 @@ package angel.roomedit {
 			labelFromAnimationClass[SpinnerAnimation] = "(spinner)";
 			labelFromAnimationClass[WalkerAnimation] = "(walker)";
 			labelFromAnimationClass[null] = "(checking image file)";
+		}
+		
+		private function clickedDelete(event:Event):void {
+			CatalogEditUI.confirmDelete(deleteCallback);
+		}
+		
+		private function deleteCallback(buttonClicked:String):void {
+			if (buttonClicked != "Delete") {
+				return;
+			}
+			var charId:String = propCombo.selectedLabel;
+			catalog.deleteCatalogEntry(charId);
+			
+			propCombo.removeItem(propCombo.selectedItem);
+			propCombo.selectedIndex = 0;
+			changeProp(null);
+			CatalogEditUI.warnSaveCatalogAndRestart();
 		}
 		
 	} // end class PropEditUI

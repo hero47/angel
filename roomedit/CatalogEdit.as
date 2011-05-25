@@ -75,6 +75,17 @@ package angel.roomedit {
 			}
 		}
 		
+		public function deleteCatalogEntry(id:String):void {
+			var entry:CatalogEntry = lookup[id];
+			var tag:String = CatalogEntry.xmlTag[entry.type];
+			var entryXmlList:XMLList = catalogXml[tag].(@id == id);
+			if (entryXmlList.length() > 0) {
+				delete catalogXml[tag].(@id == id)[0];
+			}
+			
+			delete lookup[id];
+		}
+		
 		// Create a combobox holding all catalog ids for the given CatalogEntry type.
 		// Due to pecularities of ComboBox, we embed it in a holder object.
 		public function createChooser(type:int, width:int = 200):ComboHolder {

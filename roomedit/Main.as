@@ -17,6 +17,7 @@ package angel.roomedit {
 
 		public function Main():void {
 			Alert.init(stage);
+			KludgeDialogBox.init(stage);
 			catalog = new CatalogEdit();
 			catalog.addEventListener(Event.COMPLETE, catalogLoadedListener);
 			catalog.loadFromXmlFile("AngelCatalog.xml");

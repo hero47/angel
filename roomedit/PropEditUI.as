@@ -2,6 +2,7 @@ package angel.roomedit {
 	import angel.common.CatalogEntry;
 	import angel.common.Prop;
 	import angel.common.RoomContentResource;
+	import angel.common.SimplerButton;
 	import angel.common.Util;
 	import fl.controls.CheckBox;
 	import fl.controls.ComboBox;
@@ -22,6 +23,7 @@ package angel.roomedit {
 		private var hardCornerCheck:CheckBox;
 		private var shortCheck:CheckBox;
 		private var fillsTileCheck:CheckBox;
+		private var deleteFromCatalogButton:SimplerButton;
 
 		private static const SOLID_COMBO_MASK:uint = (Prop.SOLID | Prop.HARD_CORNER);
 		
@@ -44,6 +46,10 @@ package angel.roomedit {
 			hardCornerCheck = Util.createCheckboxEditControlBelow(ghostCheck, "Hard corners", 120, changeSolidness);
 			shortCheck = Util.createCheckboxEditControlBelow(hardCornerCheck, "Short", 120, changeSolidness);
 			fillsTileCheck = Util.createCheckboxEditControlBelow(shortCheck, "Fills Tile", 120, changeSolidness);
+			
+			deleteFromCatalogButton = new SimplerButton("Delete from catalog", clickedDelete, 0xff0000);
+			deleteFromCatalogButton.width = WIDTH;
+			Util.addBelow(deleteFromCatalogButton, fillsTileCheck, 50);
 
 			if (startId == null) {
 				propCombo.selectedIndex = 0;
@@ -105,6 +111,23 @@ package angel.roomedit {
 			} else {
 				catalog.changeXmlAttribute(propId, "solid", "0x" + resource.solidness.toString(16));
 			}
+		}
+		
+		private function clickedDelete(event:Event):void {
+			CatalogEditUI.confirmDelete(deleteCallback);
+		}
+		
+		private function deleteCallback(buttonClicked:String):void {
+			if (buttonClicked != "Delete") {
+				return;
+			}
+			var propId:String = propCombo.selectedLabel;
+			catalog.deleteCatalogEntry(propId);
+			
+			propCombo.removeItem(propCombo.selectedItem);
+			propCombo.selectedIndex = 0;
+			changeProp(null);
+			CatalogEditUI.warnSaveCatalogAndRestart();
 		}
 		
 	} // end class PropEditUI
