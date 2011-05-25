@@ -97,21 +97,19 @@ package angel.game.combat {
 		
 		public function pieMenuForTile(tile:FloorTile):Vector.<PieSlice> {
 			var endOfCurrentPath:Point = combat.mover.endOfCurrentPath();
-			if (tile.location.equals(player.location) || 
-							(endOfCurrentPath != null && tile.location.equals(endOfCurrentPath))) {
-				return constructPieMenu();
-			}
-			
-			return null;
-		}
-		
-		/************ Private ****************/
-		
-		private function constructPieMenu():Vector.<PieSlice> {
 			var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
 			
 			if (combat.mover.hasPath()) {
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CancelMove), "Cancel", removePath));
+				slices.push(new PieSlice(Icon.bitmapData(Icon.CancelMove), "Clear path", removePath));
+			}
+			if (combat.mover.hasPathWithMoreThanOneSegment()) {
+				slices.push(new PieSlice(Icon.bitmapData(Icon.TestIconBitmap), "Remove last waypoint", removeLastPathSegment));
+			}
+			if (combat.mover.isLegalPathExtension(player, tile.location)) {
+				slices.push(new PieSlice(Icon.bitmapData(Icon.TestIconBitmap), "Add waypoint", function():void {
+					combat.mover.extendPathIfLegalMove(player, tile.location);
+					adjustMovePointsDisplay();
+				} ));
 			}
 			slices.push(new PieSlice(Icon.bitmapData(Icon.Stay), "Stand still", doPlayerMoveStay));
 			if (combat.mover.hasPath()) {
@@ -132,6 +130,8 @@ package angel.game.combat {
 			
 			return slices;
 		}
+		
+		/************ Private ****************/
 		
 		private function doPlayerMove(gaitChoice:int = EntityMovement.GAIT_UNSPECIFIED):void {
 			var playerMoving:ComplexEntity = player;

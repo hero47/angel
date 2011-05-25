@@ -71,7 +71,7 @@ package angel.game.combat {
 			return dotShape;
 		}
 		
-		public function clearDots():void {
+		private function clearDots():void {
 			for (var i:int = 0; i < dots.length; i++) {
 				decorationsLayer.removeChild(dots[i]);
 			}
@@ -159,21 +159,35 @@ package angel.game.combat {
 		}
 		
 		public function extendPathIfLegalMove(entity:ComplexEntity, location:Point):void {
+			var nextSegment:Vector.<Point> = getNextSegmentIfLegalExtension(entity, location);
+			if (nextSegment != null) {
+				extendPath(entity, nextSegment);
+			}
+		}
+		
+		private function getNextSegmentIfLegalExtension(entity:ComplexEntity, location:Point):Vector.<Point> {
 			if (!entity.movement.tileBlocked(location, true)) {
 				var currentEnd:Point = endOfCurrentPath();
 				if ((currentEnd == null) || !location.equals(currentEnd)) {
 					var nextSegment:Vector.<Point> = entity.movement.findPathTo(location, currentEnd, true);
 					if ((nextSegment != null) && (path.length + nextSegment.length + entity.movement.usedMovePoints <= 
 										entity.movement.maxDistanceForGait())) {
-						extendPath(entity, nextSegment);
+						return nextSegment;
 					}
 				}
 			}
+			return null;
+		}
+		
+		public function isLegalPathExtension(entity:ComplexEntity, location:Point):Boolean {
+			var nextSegment:Vector.<Point> = getNextSegmentIfLegalExtension(entity, location);
+			return (nextSegment != null);
 		}
 		
 		public function clearPath():void {
 			clearDots();
 			path.length = 0;
+			endIndexes.length = 0;
 			removeReturnMarker();
 		}
 		
@@ -206,6 +220,10 @@ package angel.game.combat {
 		
 		public function hasPath():Boolean {
 			return path.length > 0;
+		}
+		
+		public function hasPathWithMoreThanOneSegment():Boolean {
+			return (endIndexes.length > 1);
 		}
 		
 		public function startEntityFollowingPath(entity:ComplexEntity, gait:int):void {
