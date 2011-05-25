@@ -6,7 +6,7 @@ package angel.game.script {
 	 * @author Beth Moursund
 	 */
 	public class ConversationEvent extends Event {
-		public static const SEGMENT_FINISHED:String = "SegmentFinished";
+		public static const ENTRY_FINISHED:String = "EntryFinished";
 		
 		public var choice:ConversationSegment;
 		
