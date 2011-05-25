@@ -300,6 +300,7 @@ package angel.game {
 				return;
 			}
 			if (!dragging && (event.target is FloorTile)) {
+				activeUi.mouseMove(event.target as FloorTile); // It's possible to get here without mousemove, so fake one first.
 				activeUi.mouseClick(event.target as FloorTile);
 			}
 		}
@@ -312,6 +313,8 @@ package angel.game {
 				return;
 			}
 			var tile:FloorTile = event.target as FloorTile;
+			activeUi.mouseMove(tile); // It's possible to get here without mousemove, so fake one first.
+			
 			var slices:Vector.<PieSlice> = activeUi.pieMenuForTile(tile);
 			launchPieMenu(tile, slices);
 		}
