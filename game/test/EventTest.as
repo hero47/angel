@@ -46,7 +46,7 @@ package angel.game.test {
 			Autotest.assertEqual(queue.numberOfListenersOn(this), 0, "Listener wasn't added to me");
 			Autotest.assertEqual(queue.numberOfListeners(source1), 0, "Sprite owns none");
 			
-			queue.dispatch(new QEvent("test", source1));
+			queue.dispatch(new QEvent(source1, "test"));
 			Autotest.assertEqual(queue.numberOfEventsInQueue(), 1, "Event was added to queue");
 			Autotest.assertNoAlert("Dispatch shouldn't trigger the listener");
 			
@@ -62,7 +62,7 @@ package angel.game.test {
 			Autotest.assertEqual(queue.numberOfListeners(this), 0, "I don't own it anymore");
 			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
 			
-			queue.dispatch(new QEvent("test", source1));
+			queue.dispatch(new QEvent(source1, "test"));
 			Autotest.assertEqual(queue.numberOfEventsInQueue(), 1, "Event was added to queue");
 			Autotest.assertNoAlert("Dispatch shouldn't trigger the listener");
 			queue.handleEvents();
@@ -72,7 +72,7 @@ package angel.game.test {
 		private function listenerWithParam():void {
 		var queue:EventQueue = new EventQueue();
 			queue.addListener(this, source1, "test", sayParam, "hello");
-			queue.dispatch(new QEvent("test", source1));
+			queue.dispatch(new QEvent(source1, "test"));
 			Autotest.assertNoAlert("Dispatch shouldn't trigger the listener");
 			queue.handleEvents();
 			Autotest.assertAlertText("hello");
@@ -88,13 +88,13 @@ package angel.game.test {
 			Autotest.assertEqual(queue.numberOfListenersOn(source2), 1, "One on second");
 			
 			foo = 1;
-			queue.dispatch(new QEvent("test", source1));
+			queue.dispatch(new QEvent(source1, "test"));
 			queue.handleEvents();
 			Autotest.assertEqual(foo, 3);
 			Autotest.assertAlertText("yes");
 			
 			foo = 1;
-			queue.dispatch(new QEvent("test", source2));
+			queue.dispatch(new QEvent(source2, "test"));
 			queue.handleEvents();
 			Autotest.assertEqual(foo, 1);
 			Autotest.assertAlertText("hello");
@@ -114,11 +114,11 @@ package angel.game.test {
 			queue.addListener(this, source1, "event2", setFooToParam, 2);
 			
 			foo = 0;
-			queue.dispatch(new QEvent("event1", source1));
+			queue.dispatch(new QEvent(source1, "event1"));
 			queue.handleEvents();
 			Autotest.assertEqual(foo, 1);
 			
-			queue.dispatch(new QEvent("event2", source1));
+			queue.dispatch(new QEvent(source1, "event2"));
 			queue.handleEvents();
 			Autotest.assertEqual(foo, 2);
 		}
@@ -131,9 +131,9 @@ package angel.game.test {
 
 			foo = 0;
 			bar = 0;
-			queue.dispatch(new QEvent("event1", source1));
-			queue.dispatch(new QEvent("event2", source1));
-			queue.dispatch(new QEvent("event1", source2));
+			queue.dispatch(new QEvent(source1, "event1"));
+			queue.dispatch(new QEvent(source1, "event2"));
+			queue.dispatch(new QEvent(source2, "event1"));
 			Autotest.assertEqual(foo, 0);
 			Autotest.assertEqual(bar, 0);
 			Autotest.assertNoAlert();
@@ -157,7 +157,7 @@ package angel.game.test {
 			Autotest.assertEqual(queue.numberOfListeners(otherListener), 1);
 			
 			foo = 0;
-			queue.dispatch(new QEvent("event1", source1));
+			queue.dispatch(new QEvent(source1, "event1"));
 			queue.handleEvents();
 			Autotest.assertEqual(foo, 1);
 			Autotest.assertAlertText("other");
@@ -172,7 +172,7 @@ package angel.game.test {
 		private function addAfterDispatchButBeforeProcessing():void {
 		var queue:EventQueue = new EventQueue();
 		
-			queue.dispatch(new QEvent("event1", source1));
+			queue.dispatch(new QEvent(source1, "event1"));
 			queue.addListener(this, source1, "event1", sayYes);
 			queue.handleEvents();
 			Autotest.assertAlertText("yes", "Listener added after dispatch but before processing starts SHOULD trigger");
@@ -183,7 +183,7 @@ package angel.game.test {
 		var queue:EventQueue = new EventQueue();
 		
 			queue.addListener(this, source1, "event1", sayYes);
-			queue.dispatch(new QEvent("event1", source1));
+			queue.dispatch(new QEvent(source1, "event1"));
 			queue.removeListener(source1, "event1", sayYes);
 			queue.handleEvents();
 			Autotest.assertNoAlert("Listener removed after dispatch but before processing starts should NOT trigger");
@@ -196,13 +196,13 @@ package angel.game.test {
 			}, source1);
 			
 			Autotest.assertEqual(queue.numberOfListenersOn(source1), 1);
-			queue.dispatch(new QEvent("event1", source1));
-			queue.dispatch(new QEvent("event2", source1));
+			queue.dispatch(new QEvent(source1, "event1"));
+			queue.dispatch(new QEvent(source1, "event2"));
 			queue.handleEvents();
 			Autotest.assertNoAlert("Listener added after event processing started should not trigger");
 			Autotest.assertEqual(queue.numberOfListenersOn(source1), 2);
 			
-			queue.dispatch(new QEvent("event2", source1));
+			queue.dispatch(new QEvent(source1, "event2"));
 			queue.handleEvents();
 			Autotest.assertAlertText("added");
 		}
@@ -215,8 +215,8 @@ package angel.game.test {
 			queue.addListener(this, source1, "event2", sayYes);
 			
 			Autotest.assertEqual(queue.numberOfListenersOn(source1), 2);
-			queue.dispatch(new QEvent("event1", source1));
-			queue.dispatch(new QEvent("event2", source1));
+			queue.dispatch(new QEvent(source1, "event1"));
+			queue.dispatch(new QEvent(source1, "event2"));
 			queue.handleEvents();
 			Autotest.assertNoAlert();
 			Autotest.assertEqual(queue.numberOfListenersOn(source1), 0);
@@ -236,11 +236,11 @@ package angel.game.test {
 			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
 			queue.addListener(this, container, "event1", sayTargetNames);
 			
-			queue.dispatch(new QEvent("event1", child1));
+			queue.dispatch(new QEvent(child1, "event1"));
 			queue.handleEvents();
 			Autotest.assertAlertText("child1,parent");
 			
-			queue.dispatch(new QEvent("event1", child2));
+			queue.dispatch(new QEvent(child2, "event1"));
 			queue.handleEvents();
 			Autotest.assertAlertText("child2,parent");
 		}

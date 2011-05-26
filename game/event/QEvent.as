@@ -11,7 +11,7 @@ package angel.game.event {
 		public var param:Object;
 		public var listenerParam:Object;
 		
-		public function QEvent(eventId:String, source:Object, param:Object = null) {
+		public function QEvent(source:Object, eventId:String, param:Object = null) {
 			this.eventId = eventId;
 			this.target = source;
 			this.param = param;
