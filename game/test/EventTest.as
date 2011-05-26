@@ -2,6 +2,7 @@ package angel.game.test {
 	import angel.common.Alert;
 	import angel.game.event.EventQueue;
 	import angel.game.event.QEvent;
+	import flash.display.DisplayObject;
 	import flash.display.Sprite;
 	/**
 	 * ...
@@ -9,7 +10,6 @@ package angel.game.test {
 	 */
 	public class EventTest {
 		
-		private var queue:EventQueue = new EventQueue();
 		private var source1:Sprite = new Sprite();
 		private var source2:Sprite = new Sprite();
 		private var foo:int;
@@ -23,9 +23,11 @@ package angel.game.test {
 			Autotest.testFunction(severalInQueue);
 			Autotest.testFunction(twoListeners);
 			Autotest.testFunction(removeDuringProcessing);
+			Autotest.testFunction(bubbling);
 		}
 		
 		private function basicFunctionality():void {
+			var queue:EventQueue = new EventQueue();
 			Autotest.assertEqual(queue.numberOfEventsInQueue(), 0, "Queue starts out empty");
 			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
 			Autotest.assertEqual(queue.numberOfListenersOn(source1), 0, "No listeners on the sprite");
@@ -62,22 +64,19 @@ package angel.game.test {
 			Autotest.assertNoAlert("Dispatch shouldn't trigger the listener");
 			queue.handleEvents();
 			Autotest.assertNoAlert("Nothing should happen");
-			
 		}
 		
 		private function listenerWithParam():void {
-			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
+		var queue:EventQueue = new EventQueue();
 			queue.addListener(this, source1, "test", sayParam, "hello");
 			queue.dispatch(new QEvent("test", source1));
 			Autotest.assertNoAlert("Dispatch shouldn't trigger the listener");
 			queue.handleEvents();
 			Autotest.assertAlertText("hello");
-			queue.removeListener(source1, "test", sayParam);
-			
 		}
 		
 		private function multipleSources():void {
-			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
+		var queue:EventQueue = new EventQueue();
 			queue.addListener(this, source1, "test", setFooToParam, 3);
 			queue.addListener(this, source1, "test", sayYes);
 			queue.addListener(this, source2, "test", sayParam, "hello");
@@ -107,7 +106,7 @@ package angel.game.test {
 		}
 		
 		private function differentEvents():void {
-			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
+		var queue:EventQueue = new EventQueue();
 			queue.addListener(this, source1, "event1", setFooToParam, 1);
 			queue.addListener(this, source1, "event2", setFooToParam, 2);
 			
@@ -119,11 +118,10 @@ package angel.game.test {
 			queue.dispatch(new QEvent("event2", source1));
 			queue.handleEvents();
 			Autotest.assertEqual(foo, 2);
-			queue.removeAllListenersOn(source1);
 		}
 		
 		private function severalInQueue():void {
-			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
+		var queue:EventQueue = new EventQueue();
 			queue.addListener(this, source1, "event1", setFooToParam, 1);
 			queue.addListener(this, source1, "event2", sayYes);
 			queue.addListener(this, source2, "event1", setBarToParam, 2);
@@ -140,17 +138,14 @@ package angel.game.test {
 			Autotest.assertEqual(foo, 1);
 			Autotest.assertEqual(bar, 2);
 			Autotest.assertAlertText("yes");
-			
-			queue.removeAllListenersOn(source1);
-			queue.removeAllListenersOn(source2);
 		}
 		
 		private function twoListeners():void {
+		var queue:EventQueue = new EventQueue();
 			var otherListener:Object = new Object;
 			otherListener.doIt = function(event:QEvent, param:Object):void {
 				Alert.show("other");
 			}
-			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
 			queue.addListener(this, source1, "event1", setFooToParam, 1);
 			queue.addListener(this, source1, "event2", sayYes);
 			queue.addListener(otherListener, source1, "event1", otherListener.doIt);
@@ -166,16 +161,13 @@ package angel.game.test {
 			
 			queue.removeAllListenersOwnedBy(this);
 			Autotest.assertEqual(queue.numberOfListeners(), 1);
-			queue.removeAllListenersOwnedBy(otherListener);
 		}
 		
 		private function removeDuringProcessing():void {
-			var otherListener:Object = new Object();
-			otherListener.doIt = function(event:QEvent, param:Object):void {
-				Alert.show("other");
-			}
-			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
-			queue.addListener(this, source1, "event1", removeListenersOnParam, source1);
+		var queue:EventQueue = new EventQueue();
+			queue.addListener(this, source1, "event1", function(event:QEvent, param:Object):void {
+				queue.removeAllListenersOn(param);
+			}, source1);
 			queue.addListener(this, source1, "event2", sayYes);
 			
 			Autotest.assertEqual(queue.numberOfListenersOn(source1), 2);
@@ -184,6 +176,29 @@ package angel.game.test {
 			queue.handleEvents();
 			Autotest.assertNoAlert();
 			Autotest.assertEqual(queue.numberOfListenersOn(source1), 0);
+		}
+		
+		private function bubbling():void {
+		var queue:EventQueue = new EventQueue();
+			var child1:Sprite = new Sprite();
+			child1.name = "child1";
+			var child2:Sprite = new Sprite();
+			child2.name = "child2";
+			var container:Sprite = new Sprite();
+			container.name = "parent";
+			container.addChild(child1);
+			container.addChild(child2);
+			
+			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
+			queue.addListener(this, container, "event1", sayTargetNames);
+			
+			queue.dispatch(new QEvent("event1", child1));
+			queue.handleEvents();
+			Autotest.assertAlertText("child1,parent");
+			
+			queue.dispatch(new QEvent("event1", child2));
+			queue.handleEvents();
+			Autotest.assertAlertText("child2,parent");
 		}
 		
 		private function sayYes(event:QEvent, param:Object):void {
@@ -203,8 +218,8 @@ package angel.game.test {
 			bar = int(param);
 		}
 		
-		private function removeListenersOnParam(event:QEvent, param:Object):void {
-			queue.removeAllListenersOn(param);
+		private function sayTargetNames(event:QEvent, param:Object):void {
+			Alert.show(DisplayObject(event.target).name + "," + DisplayObject(event.currentTarget).name);
 		}
 		
 	}
