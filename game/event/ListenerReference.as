@@ -5,21 +5,21 @@ package angel.game.event {
 	 */
 	public class ListenerReference {
 		public var owner:Object;
-		public var target:Object;
+		public var eventSource:Object;
 		public var eventId:String;
 		public var callback:Function;
 		public var optionalCallbackParam:Object;
 		
-		public function ListenerReference(owner:Object, target:Object, eventId:String, callback:Function, optionalCallbackParam:Object) {
+		public function ListenerReference(owner:Object, eventSource:Object, eventId:String, callback:Function, optionalCallbackParam:Object) {
 			this.owner = owner;
-			this.target = target;
+			this.eventSource = eventSource;
 			this.eventId = eventId;
 			this.callback = callback;
 			this.optionalCallbackParam = optionalCallbackParam;
 		}
 		
 		public function toString():String {
-			return "[ListenerReference eventId=" + eventId + ", owner=" + owner + ", target=" + target + 
+			return "[ListenerReference eventId=" + eventId + ", owner=" + owner + ", eventSource=" + eventSource + 
 				(optionalCallbackParam == null ? "" : ", param=" + optionalCallbackParam) +	"]";
 		}
 		

@@ -93,26 +93,26 @@ package angel.game.event {
 			queue.push(event);
 		}
 		
-		public function addListener(owner:Object, target:Object, eventId:String, callback:Function, optionalCallbackParam:Object = null):void {
-			var listener:ListenerReference = new ListenerReference(owner, target, eventId, callback, optionalCallbackParam);
+		public function addListener(owner:Object, eventSource:Object, eventId:String, callback:Function, optionalCallbackParam:Object = null):void {
+			var listener:ListenerReference = new ListenerReference(owner, eventSource, eventId, callback, optionalCallbackParam);
 			//UNDONE priority
-			var listenersOnThisTarget:Object = lookup[target];
-			if (listenersOnThisTarget == null) {
-				lookup[target] = listenersOnThisTarget = new Object();
+			var listenersOnThisSource:Object = lookup[eventSource];
+			if (listenersOnThisSource == null) {
+				lookup[eventSource] = listenersOnThisSource = new Object();
 			}
-			var forThisEvent:Vector.<ListenerReference> = listenersOnThisTarget[eventId];
+			var forThisEvent:Vector.<ListenerReference> = listenersOnThisSource[eventId];
 			if (forThisEvent == null) {
-				listenersOnThisTarget[eventId] = forThisEvent = new Vector.<ListenerReference>();
+				listenersOnThisSource[eventId] = forThisEvent = new Vector.<ListenerReference>();
 			}
 			forThisEvent.push(listener);
 		}
 		
-		public function removeListener(target:Object, eventId:String, callback:Function):void {
-			var listenersOnThisTarget:Object = lookup[target];
-			if (listenersOnThisTarget == null) {
+		public function removeListener(source:Object, eventId:String, callback:Function):void {
+			var listenersOnThisSource:Object = lookup[source];
+			if (listenersOnThisSource == null) {
 				return;
 			}
-			var list:Vector.<ListenerReference> = listenersOnThisTarget[eventId];
+			var list:Vector.<ListenerReference> = listenersOnThisSource[eventId];
 			if (list == null) {
 				return;
 			}
@@ -124,17 +124,17 @@ package angel.game.event {
 				}
 			}
 			if (list.length == 0) {
-				listenersOnThisTarget[eventId] = null;
+				listenersOnThisSource[eventId] = null;
 			}
 			
 			//NOTE: unclear whether I should do this, but I think benefits outweigh drawbacks
-			removeFromCallbacksIfMatch(target, eventId, callback);
+			removeFromCallbacksIfMatch(source, eventId, callback);
 		}
 		
-		private function removeFromCallbacksIfMatch(target:Object, eventId:String, callback:Function):void {
+		private function removeFromCallbacksIfMatch(eventSource:Object, eventId:String, callback:Function):void {
 			var i:int = 0;
 			while (i < callbacks.length) {
-				if ((callbacks[i].target == target) && (callbacks[i].eventId == eventId) && (callbacks[i].callback == callback)) {
+				if ((callbacks[i].eventSource == eventSource) && (callbacks[i].eventId == eventId) && (callbacks[i].callback == callback)) {
 					callbacks.splice(i, 1);
 				} else {
 					i++;
@@ -142,36 +142,36 @@ package angel.game.event {
 			}
 		}
 		
-		public function removeAllListenersOn(target:Object):void {
-			lookup[target] = null;
+		public function removeAllListenersOn(source:Object):void {
+			lookup[source] = null;
 			//NOTE: unclear whether I should do this, but I think benefits outweigh drawbacks
-			deleteFromListIfTarget(callbacks, target);
+			deleteReferencesWithThisEventSource(callbacks, source);
 		}
 		
 		public function removeAllListenersOwnedBy(owner:Object):void {
-			for (var target:Object in lookup) {
-				var listenersOnThisTarget:Object = lookup[target];
-				if (listenersOnThisTarget == null) {
+			for (var source:Object in lookup) {
+				var listenersOnThisSource:Object = lookup[source];
+				if (listenersOnThisSource == null) {
 					continue;
 				}
-				for (var eventId:String in listenersOnThisTarget) {
-					var list:Vector.<ListenerReference> = listenersOnThisTarget[eventId];
+				for (var eventId:String in listenersOnThisSource) {
+					var list:Vector.<ListenerReference> = listenersOnThisSource[eventId];
 					if (list != null) {
-						deleteFromListIfOwnedBy(list, owner);
+						deleteReferencesOwnedBy(list, owner);
 						if (list.length == 0) {
-							delete listenersOnThisTarget[eventId];
+							delete listenersOnThisSource[eventId];
 						}
 					}
 				}
-				if (isEmpty(listenersOnThisTarget)) {
-					delete lookup[target];
+				if (isEmpty(listenersOnThisSource)) {
+					delete lookup[source];
 				}
 			}
 			//NOTE: unclear whether I should do this, but I think benefits outweigh drawbacks
-			deleteFromListIfOwnedBy(callbacks, owner);
+			deleteReferencesOwnedBy(callbacks, owner);
 		}
 		
-		private function deleteFromListIfOwnedBy(list:Vector.<ListenerReference>, owner:Object):void {
+		private function deleteReferencesOwnedBy(list:Vector.<ListenerReference>, owner:Object):void {
 			var i:int = 0;
 			while (i < list.length) {
 				if (list[i].owner == owner) {
@@ -182,10 +182,10 @@ package angel.game.event {
 			}
 		}
 		
-		private function deleteFromListIfTarget(list:Vector.<ListenerReference>, target:Object):void {
+		private function deleteReferencesWithThisEventSource(list:Vector.<ListenerReference>, eventSource:Object):void {
 			var i:int = 0;
 			while (i < list.length) {
-				if (list[i].target == target) {
+				if (list[i].eventSource == eventSource) {
 					list.splice(i, 1);
 				} else {
 					i++;
@@ -207,8 +207,8 @@ package angel.game.event {
 		// * Listeners on a container will still trigger for bubbled events from its original children even if the child
 		// changes parentage during this processing.
 		// (This means that if, in an event handler, we try to delete a child: we set its parent to null and do
-		// removeAllListenersOn(it): listeners with pending events that targeted the child directly will not trigger,
-		// but those that targeted its parent will still trigger for the bubbled event.  I'm not sure if this is "good"
+		// removeAllListenersOn(it): listeners with pending events that listened to the child directly will not trigger,
+		// but those that listened to its parent will still trigger for the bubbled event.  I'm not sure if this is "good"
 		// or "bad"; repeat note above about waffling.)
 		public function handleEvents():void {
 			Assert.assertTrue(callbacks.length == 0, "Callbacks not empty at handleOneEvent!");
@@ -223,30 +223,30 @@ package angel.game.event {
 		}
 		
 		private function generateCallbacksForOneEvent(event:QEvent):void {
-			var currentTarget:Object = event.target;
+			var currentSource:Object = event.source;
 			do {
-				var listeners:Vector.<ListenerReference> = findListenersFor(currentTarget, event.eventId);
+				var listeners:Vector.<ListenerReference> = findListenersFor(currentSource, event.eventId);
 				if (listeners != null) {
 					for each (var oneListener:ListenerReference in listeners) {
-						callbacks.push(new ListenerReferenceForOneEvent(oneListener, event.target, event.param));
+						callbacks.push(new ListenerReferenceForOneEvent(oneListener, event.source, event.param));
 					}
 				}
 				//CONSIDER: implement my own separate containment for QEvent bubbling rather than display list
 				//Mickey *strongly* encourages this.
-				if (currentTarget is DisplayObject) {
-					currentTarget = currentTarget.parent;
+				if (currentSource is DisplayObject) {
+					currentSource = currentSource.parent;
 				} else {
-					currentTarget = null;
+					currentSource = null;
 				}
-			} while (currentTarget != null);
+			} while (currentSource != null);
 		}
 		
-		private function findListenersFor(target:Object, eventId:String):Vector.<ListenerReference> {
-			var listenersOnThisTarget:Object = lookup[target];
-			if (listenersOnThisTarget == null) {
+		private function findListenersFor(source:Object, eventId:String):Vector.<ListenerReference> {
+			var listenersOnThisSource:Object = lookup[source];
+			if (listenersOnThisSource == null) {
 				return null;
 			}
-			return listenersOnThisTarget[eventId];
+			return listenersOnThisSource[eventId];
 		}
 		
 		private function isEmpty(associativeArray:Object):Boolean {
@@ -256,15 +256,15 @@ package angel.game.event {
 			return true;
 		}
 		
-		public function numberOfListenersOn(target:Object):int {
-			var listenersOnThisTarget:Object = lookup[target];
-			if (listenersOnThisTarget == null) {
+		public function numberOfListenersOn(source:Object):int {
+			var listenersOnThisSource:Object = lookup[source];
+			if (listenersOnThisSource == null) {
 				return 0;
 			}
 			
 			var count:int;
-			for (var eventId:String in listenersOnThisTarget) {
-				var list:Vector.<ListenerReference> = listenersOnThisTarget[eventId];
+			for (var eventId:String in listenersOnThisSource) {
+				var list:Vector.<ListenerReference> = listenersOnThisSource[eventId];
 				if (list != null) {
 					count += list.length;
 				}
@@ -274,13 +274,13 @@ package angel.game.event {
 		
 		public function numberOfListeners(owner:Object = null):int {
 			var count:int = 0;
-			for (var target:Object in lookup) {
-				var listenersOnThisTarget:Object = lookup[target];
-				if (listenersOnThisTarget == null) {
+			for (var source:Object in lookup) {
+				var listenersOnThisSource:Object = lookup[source];
+				if (listenersOnThisSource == null) {
 					continue;
 				}
-				for (var eventId:String in listenersOnThisTarget) {
-					var list:Vector.<ListenerReference> = listenersOnThisTarget[eventId];
+				for (var eventId:String in listenersOnThisSource) {
+					var list:Vector.<ListenerReference> = listenersOnThisSource[eventId];
 					if (list != null) {
 						for (var i:int = 0; i < list.length; ++i) {
 							if ((owner == null) || (list[i].owner == owner)) {
@@ -297,17 +297,17 @@ package angel.game.event {
 			return queue.length;
 		}
 		
-		public function debugTraceListenersOn(target:Object):void {
-			trace("Listeners on", target, ":");
-			var listenersOnThisTarget:Object = lookup[target];
-			if (listenersOnThisTarget == null) {
+		public function debugTraceListenersOn(source:Object):void {
+			trace("Listeners on", source, ":");
+			var listenersOnThisSource:Object = lookup[source];
+			if (listenersOnThisSource == null) {
 				trace("  none");
 				return;
 			}
 			
-			for (var eventId:String in listenersOnThisTarget) {
+			for (var eventId:String in listenersOnThisSource) {
 				trace("  Event:", eventId);
-				var list:Vector.<ListenerReference> = listenersOnThisTarget[eventId];
+				var list:Vector.<ListenerReference> = listenersOnThisSource[eventId];
 				if (list == null) {
 					trace("    empty list -- something didn't delete it correctly");
 				} else {
@@ -326,13 +326,13 @@ package angel.game.event {
 			} else {
 				trace("Listeners owned by", owner, ":");
 			}
-			for (var target:Object in lookup) {
-				var listenersOnThisTarget:Object = lookup[target];
-				if (listenersOnThisTarget == null) {
+			for (var source:Object in lookup) {
+				var listenersOnThisSource:Object = lookup[source];
+				if (listenersOnThisSource == null) {
 					continue;
 				}
-				for (var eventId:String in listenersOnThisTarget) {
-					var list:Vector.<ListenerReference> = listenersOnThisTarget[eventId];
+				for (var eventId:String in listenersOnThisSource) {
+					var list:Vector.<ListenerReference> = listenersOnThisSource[eventId];
 					if (list == null) {
 						continue;						
 					}
