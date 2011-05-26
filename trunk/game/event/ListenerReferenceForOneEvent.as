@@ -14,7 +14,7 @@ package angel.game.event {
 		}
 		
 		public function get event():QEvent {
-			var event:QEvent = new QEvent(eventId, originalTarget, eventParam);
+			var event:QEvent = new QEvent(originalTarget, eventId, eventParam);
 			event.currentTarget = target;
 			event.listenerParam = optionalCallbackParam;
 			return event;
