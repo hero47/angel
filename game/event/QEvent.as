@@ -9,10 +9,11 @@ package angel.game.event {
 		public var target:Object;
 		public var currentTarget:Object;
 		public var param:Object;
+		public var listenerParam:Object;
 		
 		public function QEvent(eventId:String, source:Object, param:Object = null) {
 			this.eventId = eventId;
-			this.target = this.currentTarget = source;
+			this.target = source;
 			this.param = param;
 		}
 		

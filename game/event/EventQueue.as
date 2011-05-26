@@ -144,7 +144,8 @@ package angel.game.event {
 		
 		public function removeAllListenersOn(target:Object):void {
 			lookup[target] = null;
-			//NOTE: I am *not* removing events from the currently-in-process list, pending comments from Mickey
+			//NOTE: unclear whether I should do this, but I think benefits outweigh drawbacks
+			deleteFromListIfTarget(callbacks, target);
 		}
 		
 		public function removeAllListenersOwnedBy(owner:Object):void {
@@ -181,21 +182,53 @@ package angel.game.event {
 			}
 		}
 		
-		
-		public function handleEvents():void {
-			while (queue.length > 0) {
-				handleOneEvent(queue.shift());
+		private function deleteFromListIfTarget(list:Vector.<ListenerReference>, target:Object):void {
+			var i:int = 0;
+			while (i < list.length) {
+				if (list[i].target == target) {
+					list.splice(i, 1);
+				} else {
+					i++;
+				}
 			}
 		}
 		
-		private function handleOneEvent(event:QEvent):void {
+		// Make a list of all callback info for listeners *as they currently exist*, before any of the events are processed.
+		// Then process them.
+		// The following current choices are subject to change after talking with Mickey; they
+		// are based on my current intuitions and usage guesses.
+		// Once this processing has started
+		// * Listeners newly added will not trigger
+		// * Listeners individually removed (before they're reached) will not trigger
+		// * Listeners removed by removeAllListenersOwnedBy (before they're reached) will not trigger
+		// * Listeners removed by removeAllListenersOn (before they're reached) will not trigger
+		// (I'm still waffling over this, and unless Mickey provides some insight, I may continue
+		// to waffle until I come to a case in my non-test code where it makes a difference.)
+		// * Listeners on a container will still trigger for bubbled events from its original children even if the child
+		// changes parentage during this processing.
+		// (This means that if, in an event handler, we try to delete a child: we set its parent to null and do
+		// removeAllListenersOn(it): listeners with pending events that targeted the child directly will not trigger,
+		// but those that targeted its parent will still trigger for the bubbled event.  I'm not sure if this is "good"
+		// or "bad"; repeat note above about waffling.)
+		public function handleEvents():void {
 			Assert.assertTrue(callbacks.length == 0, "Callbacks not empty at handleOneEvent!");
+			while (queue.length > 0) {
+				generateCallbacksForOneEvent(queue.shift());
+			}
+			
+			while (callbacks.length > 0) {
+				var oneCallback:ListenerReferenceForOneEvent = callbacks.shift();
+				oneCallback.callback(oneCallback.event);
+			}
+		}
+		
+		private function generateCallbacksForOneEvent(event:QEvent):void {
 			var currentTarget:Object = event.target;
 			do {
 				var listeners:Vector.<ListenerReference> = findListenersFor(currentTarget, event.eventId);
 				if (listeners != null) {
 					for each (var oneListener:ListenerReference in listeners) {
-						callbacks.push(oneListener.cloneForNewTarget(currentTarget));
+						callbacks.push(new ListenerReferenceForOneEvent(oneListener, event.target, event.param));
 					}
 				}
 				//CONSIDER: implement my own separate containment for QEvent bubbling rather than display list
@@ -206,12 +239,6 @@ package angel.game.event {
 					currentTarget = null;
 				}
 			} while (currentTarget != null);
-			
-			while (callbacks.length > 0) {
-				var oneCallback:ListenerReference = callbacks.shift();
-				event.currentTarget = oneCallback.target;
-				oneCallback.callback(event, oneCallback.optionalCallbackParam);
-			}
 		}
 		
 		private function findListenersFor(target:Object, eventId:String):Vector.<ListenerReference> {
@@ -341,26 +368,3 @@ package angel.game.event {
 	} // end class EventQueue
 
 }
-
-class ListenerReference {
-	public var owner:Object;
-	public var target:Object;
-	public var eventId:String;
-	public var callback:Function;
-	public var optionalCallbackParam:Object;
-	public function ListenerReference(owner:Object, target:Object, eventId:String, callback:Function, optionalCallbackParam:Object) {
-		this.owner = owner;
-		this.target = target;
-		this.eventId = eventId;
-		this.callback = callback;
-		this.optionalCallbackParam = optionalCallbackParam;
-	}
-	public function cloneForNewTarget(currentTarget:Object):ListenerReference {
-		return new ListenerReference(owner, currentTarget, eventId, callback, optionalCallbackParam);
-	}
-	public function toString():String {
-		return "[ListenerReference eventId=" + eventId + ", owner=" + owner + ", target=" + target + 
-			(optionalCallbackParam == null ? "" : ", param=" + optionalCallbackParam) +	"]";
-	}
-}
-

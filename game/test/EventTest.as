@@ -22,6 +22,9 @@ package angel.game.test {
 			Autotest.testFunction(differentEvents);
 			Autotest.testFunction(severalInQueue);
 			Autotest.testFunction(twoListeners);
+			Autotest.testFunction(addAfterDispatchButBeforeProcessing);
+			Autotest.testFunction(removeAfterDispatchButBeforeProcessing);
+			Autotest.testFunction(addDuringProcessing);
 			Autotest.testFunction(removeDuringProcessing);
 			Autotest.testFunction(bubbling);
 		}
@@ -143,7 +146,7 @@ package angel.game.test {
 		private function twoListeners():void {
 		var queue:EventQueue = new EventQueue();
 			var otherListener:Object = new Object;
-			otherListener.doIt = function(event:QEvent, param:Object):void {
+			otherListener.doIt = function(event:QEvent):void {
 				Alert.show("other");
 			}
 			queue.addListener(this, source1, "event1", setFooToParam, 1);
@@ -163,10 +166,51 @@ package angel.game.test {
 			Autotest.assertEqual(queue.numberOfListeners(), 1);
 		}
 		
+		//NOTE: I am not sure whether this is the most useful behavior or not!
+		//May change after discussing with Mickey; in the meantime, keep it in mind and see if any of the code I'm writing
+		//is simplified or complicated by either of the possible behaviors.
+		private function addAfterDispatchButBeforeProcessing():void {
+		var queue:EventQueue = new EventQueue();
+		
+			queue.dispatch(new QEvent("event1", source1));
+			queue.addListener(this, source1, "event1", sayYes);
+			queue.handleEvents();
+			Autotest.assertAlertText("yes", "Listener added after dispatch but before processing starts SHOULD trigger");
+		}
+		
+		//NOTE: same note as previous!
+		private function removeAfterDispatchButBeforeProcessing():void {
+		var queue:EventQueue = new EventQueue();
+		
+			queue.addListener(this, source1, "event1", sayYes);
+			queue.dispatch(new QEvent("event1", source1));
+			queue.removeListener(source1, "event1", sayYes);
+			queue.handleEvents();
+			Autotest.assertNoAlert("Listener removed after dispatch but before processing starts should NOT trigger");
+		}
+		
+		private function addDuringProcessing():void {
+		var queue:EventQueue = new EventQueue();
+			queue.addListener(this, source1, "event1", function(event:QEvent):void {
+				queue.addListener(this, source1, "event2", sayParam, "added");
+			}, source1);
+			
+			Autotest.assertEqual(queue.numberOfListenersOn(source1), 1);
+			queue.dispatch(new QEvent("event1", source1));
+			queue.dispatch(new QEvent("event2", source1));
+			queue.handleEvents();
+			Autotest.assertNoAlert("Listener added after event processing started should not trigger");
+			Autotest.assertEqual(queue.numberOfListenersOn(source1), 2);
+			
+			queue.dispatch(new QEvent("event2", source1));
+			queue.handleEvents();
+			Autotest.assertAlertText("added");
+		}
+		
 		private function removeDuringProcessing():void {
 		var queue:EventQueue = new EventQueue();
-			queue.addListener(this, source1, "event1", function(event:QEvent, param:Object):void {
-				queue.removeAllListenersOn(param);
+			queue.addListener(this, source1, "event1", function(event:QEvent):void {
+				queue.removeAllListenersOn(event.listenerParam);
 			}, source1);
 			queue.addListener(this, source1, "event2", sayYes);
 			
@@ -201,24 +245,24 @@ package angel.game.test {
 			Autotest.assertAlertText("child2,parent");
 		}
 		
-		private function sayYes(event:QEvent, param:Object):void {
+		private function sayYes(event:QEvent):void {
 			Alert.show("yes");
 		}
 		
-		private function sayParam(event:QEvent, param:Object):void {
-			var message:String = String(param);
+		private function sayParam(event:QEvent):void {
+			var message:String = String(event.listenerParam);
 			Alert.show(message);
 		}
 		
-		private function setFooToParam(event:QEvent, param:Object):void {
-			foo = int(param);
+		private function setFooToParam(event:QEvent):void {
+			foo = int(event.listenerParam);
 		}
 		
-		private function setBarToParam(event:QEvent, param:Object):void {
-			bar = int(param);
+		private function setBarToParam(event:QEvent):void {
+			bar = int(event.listenerParam);
 		}
 		
-		private function sayTargetNames(event:QEvent, param:Object):void {
+		private function sayTargetNames(event:QEvent):void {
 			Alert.show(DisplayObject(event.target).name + "," + DisplayObject(event.currentTarget).name);
 		}
 		
