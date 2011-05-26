@@ -234,7 +234,7 @@ package angel.game.test {
 			container.addChild(child2);
 			
 			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
-			queue.addListener(this, container, "event1", sayTargetNames);
+			queue.addListener(this, container, "event1", saySourceNames);
 			
 			queue.dispatch(new QEvent(child1, "event1"));
 			queue.handleEvents();
@@ -262,8 +262,8 @@ package angel.game.test {
 			bar = int(event.listenerParam);
 		}
 		
-		private function sayTargetNames(event:QEvent):void {
-			Alert.show(DisplayObject(event.target).name + "," + DisplayObject(event.currentTarget).name);
+		private function saySourceNames(event:QEvent):void {
+			Alert.show(DisplayObject(event.source).name + "," + DisplayObject(event.currentSource).name);
 		}
 		
 	}
