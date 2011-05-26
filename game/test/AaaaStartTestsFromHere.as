@@ -16,12 +16,14 @@ package angel.game.test {
 		
 		public function AaaaStartTestsFromHere() {
 			Autotest.runningFromRoot = this;
-			Alert.testMode = true;			
+			Alert.testMode = true;
 			runAllStandaloneTests();
-			initializeGameAndRunAllGameTests();
+			//initializeGameAndRunAllGameTests();
 		}
 		
 		private function standaloneTests():void {
+			Autotest.runTest(EventTest);
+		return;
 			alertTest();
 			Autotest.runTest(InventoryTest);
 		}
