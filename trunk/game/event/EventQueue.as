@@ -1,4 +1,6 @@
 package angel.game.event {
+	import angel.common.Assert;
+	import flash.display.DisplayObject;
 	import flash.display.Stage;
 	import flash.events.Event;
 	import flash.utils.Dictionary;
@@ -81,15 +83,10 @@ package angel.game.event {
 	public class EventQueue {
 		
 		private var queue:Vector.<QEvent> = new Vector.<QEvent>();
-		private var lookup:Dictionary; // map event source to (associative array mapping eventId to Vector.<ListenerReference>)
+		private var callbacks:Vector.<ListenerReference> = new Vector.<ListenerReference>(); // Callbacks for the event currently being handled
+		private var lookup:Dictionary = new Dictionary(); // map event source to (associative array mapping eventId to Vector.<ListenerReference>)
 		
-		public function EventQueue(stage:Stage) {
-			if (singleton != null) {
-				trace("ERROR: creating second instance of EventQueue");
-				return;
-			}
-			singleton = this;
-			stage.addEventListener(Event.ENTER_FRAME, handleEvents);
+		public function EventQueue() {
 		}
 		
 		public function dispatch(event:QEvent):void {
@@ -97,7 +94,7 @@ package angel.game.event {
 		}
 		
 		public function addListener(owner:Object, target:Object, eventId:String, callback:Function, optionalCallbackParam:Object = null):void {
-			var listener = new ListenerReference(owner, target, eventId, callback, optionalCallbackParam);
+			var listener:ListenerReference = new ListenerReference(owner, target, eventId, callback, optionalCallbackParam);
 			//UNDONE priority
 			var listenersOnThisTarget:Object = lookup[target];
 			if (listenersOnThisTarget == null) {
@@ -129,10 +126,25 @@ package angel.game.event {
 			if (list.length == 0) {
 				listenersOnThisTarget[eventId] = null;
 			}
+			
+			//NOTE: unclear whether I should do this, but I think benefits outweigh drawbacks
+			removeFromCallbacksIfMatch(target, eventId, callback);
+		}
+		
+		private function removeFromCallbacksIfMatch(target:Object, eventId:String, callback:Function):void {
+			var i:int = 0;
+			while (i < callbacks.length) {
+				if ((callbacks[i].target == target) && (callbacks[i].eventId == eventId) && (callbacks[i].callback == callback)) {
+					callbacks.splice(i, 1);
+				} else {
+					i++;
+				}
+			}
 		}
 		
 		public function removeAllListenersOn(target:Object):void {
 			lookup[target] = null;
+			//NOTE: I am *not* removing events from the currently-in-process list, pending comments from Mickey
 		}
 		
 		public function removeAllListenersOwnedBy(owner:Object):void {
@@ -145,15 +157,17 @@ package angel.game.event {
 					var list:Vector.<ListenerReference> = listenersOnThisTarget[eventId];
 					if (list != null) {
 						deleteFromListIfOwnedBy(list, owner);
-					}
-					if (list.length == 0) {
-						listenersOnThisTarget[eventId] = null;
+						if (list.length == 0) {
+							delete listenersOnThisTarget[eventId];
+						}
 					}
 				}
 				if (isEmpty(listenersOnThisTarget)) {
 					delete lookup[target];
 				}
 			}
+			//NOTE: unclear whether I should do this, but I think benefits outweigh drawbacks
+			deleteFromListIfOwnedBy(callbacks, owner);
 		}
 		
 		private function deleteFromListIfOwnedBy(list:Vector.<ListenerReference>, owner:Object):void {
@@ -168,32 +182,34 @@ package angel.game.event {
 		}
 		
 		
-		private function handleEvents():void {
+		public function handleEvents():void {
 			while (queue.length > 0) {
 				handleOneEvent(queue.shift());
 			}
 		}
 		
 		private function handleOneEvent(event:QEvent):void {
-			// See notes at top, section ending with
-	// **** If possible, discuss with Mickey in terms of what rules he has found most useful in the past! ***
-			// May want callbacks to be a class variable, so the "removeAll" functions can remove
-			// from there, too.
-			var callbacks:Vector.<CallbackInfo> = new Vector.<CallbackInfo>();
+			Assert.assertTrue(callbacks.length == 0, "Callbacks not empty at handleOneEvent!");
 			var currentTarget:Object = event.target;
 			do {
 				var listeners:Vector.<ListenerReference> = findListenersFor(currentTarget, event.eventId);
 				if (listeners != null) {
 					for each (var oneListener:ListenerReference in listeners) {
-						callbacks.push(new CallbackInfo(oneListener.callback, oneListener.optionalCallbackParam, currentTarget));
+						callbacks.push(oneListener.cloneForNewTarget(currentTarget));
 					}
 				}
-				currentTarget = currentTarget.parent;
+				//CONSIDER: implement my own separate containment for QEvent bubbling rather than display list
+				//Mickey *strongly* encourages this.
+				if (currentTarget is DisplayObject) {
+					currentTarget = currentTarget.parent;
+				} else {
+					currentTarget = null;
+				}
 			} while (currentTarget != null);
 			
 			while (callbacks.length > 0) {
-				var oneCallback:CallbackInfo = callbacks.shift();
-				event.currentTarget = oneCallback.currentTarget;
+				var oneCallback:ListenerReference = callbacks.shift();
+				event.currentTarget = oneCallback.target;
 				oneCallback.callback(event, oneCallback.optionalCallbackParam);
 			}
 		}
@@ -213,7 +229,116 @@ package angel.game.event {
 			return true;
 		}
 		
-	}
+		public function numberOfListenersOn(target:Object):int {
+			var listenersOnThisTarget:Object = lookup[target];
+			if (listenersOnThisTarget == null) {
+				return 0;
+			}
+			
+			var count:int;
+			for (var eventId:String in listenersOnThisTarget) {
+				var list:Vector.<ListenerReference> = listenersOnThisTarget[eventId];
+				if (list != null) {
+					count += list.length;
+				}
+			}
+			return count;
+		}
+		
+		public function numberOfListeners(owner:Object = null):int {
+			var count:int = 0;
+			for (var target:Object in lookup) {
+				var listenersOnThisTarget:Object = lookup[target];
+				if (listenersOnThisTarget == null) {
+					continue;
+				}
+				for (var eventId:String in listenersOnThisTarget) {
+					var list:Vector.<ListenerReference> = listenersOnThisTarget[eventId];
+					if (list != null) {
+						for (var i:int = 0; i < list.length; ++i) {
+							if ((owner == null) || (list[i].owner == owner)) {
+								count++;
+							}
+						}
+					}
+				}
+			}
+			return count;
+		}
+		
+		public function numberOfEventsInQueue():int {
+			return queue.length;
+		}
+		
+		public function debugTraceListenersOn(target:Object):void {
+			trace("Listeners on", target, ":");
+			var listenersOnThisTarget:Object = lookup[target];
+			if (listenersOnThisTarget == null) {
+				trace("  none");
+				return;
+			}
+			
+			for (var eventId:String in listenersOnThisTarget) {
+				trace("  Event:", eventId);
+				var list:Vector.<ListenerReference> = listenersOnThisTarget[eventId];
+				if (list == null) {
+					trace("    empty list -- something didn't delete it correctly");
+				} else {
+					for (var i:int = 0; i < list.length; ++i) {
+						trace("   ", list[i]);
+					}
+				}
+			}
+			
+		}
+		
+		public function debugTraceListeners(owner:Object = null):void {
+			var count:int = 0;
+			if (owner == null) {
+				trace("Registered listeners:");
+			} else {
+				trace("Listeners owned by", owner, ":");
+			}
+			for (var target:Object in lookup) {
+				var listenersOnThisTarget:Object = lookup[target];
+				if (listenersOnThisTarget == null) {
+					continue;
+				}
+				for (var eventId:String in listenersOnThisTarget) {
+					var list:Vector.<ListenerReference> = listenersOnThisTarget[eventId];
+					if (list == null) {
+						continue;						
+					}
+					if (list != null) {
+						for (var i:int = 0; i < list.length; ++i) {
+							if ((owner == null) || (list[i].owner == owner)) {
+								trace("  ", list[i]);
+								count++;
+							}
+						}
+					}
+				}
+			}
+			trace("Total:", count);
+		}
+		
+		public function debugTraceQueue():void {
+			trace("Events in queue:");
+			for (var i:int = 0; i < queue.length; ++i) {
+				trace(i+":", queue[i]);
+			}
+			trace("Total:", queue.length);
+		}
+		
+		public function debugTraceCallbacks():void {
+			trace("Callbacks:");
+			for (var i:int = 0; i < callbacks.length; ++i) {
+				trace(i+":", callbacks[i]);
+			}
+			trace("Total:", callbacks.length);
+		}
+		
+	} // end class EventQueue
 
 }
 
@@ -230,16 +355,12 @@ class ListenerReference {
 		this.callback = callback;
 		this.optionalCallbackParam = optionalCallbackParam;
 	}
-}
-
-class CallbackInfo {
-	public var callback:Function;
-	public var optionalCallbackParam:Object;
-	public var currentTarget:Object;
-	public function CallbackInfo(callback:Function, optionalCallbackParam:Object, currentTarget:Object):void {
-		this.callback = callback;
-		this.optionalCallbackParam = optionalCallbackParam;
-		this.currentTarget = currentTarget;
+	public function cloneForNewTarget(currentTarget:Object):ListenerReference {
+		return new ListenerReference(owner, currentTarget, eventId, callback, optionalCallbackParam);
+	}
+	public function toString():String {
+		return "[ListenerReference eventId=" + eventId + ", owner=" + owner + ", target=" + target + 
+			(optionalCallbackParam == null ? "" : ", param=" + optionalCallbackParam) +	"]";
 	}
 }
 
