@@ -1,6 +1,8 @@
 package angel.game.test {
 	import angel.common.Alert;
 	import angel.common.Floor;
+	import angel.game.action.Action;
+	import angel.game.action.IAction;
 	import angel.game.brain.CombatBrainWander;
 	import angel.game.ComplexEntity;
 	import angel.game.Room;
@@ -152,9 +154,23 @@ package angel.game.test {
 			Autotest.assertNoAlert();
 		}
 		
-		public static function cleanupTestRoom():void {
-			
+		public static function testActionFromXml(xml:XML, shouldDelayUntilEnd:Boolean = false):void {
+			Autotest.assertEqual(Settings.gameEventQueue.numberOfEventsInQueue(), 0, "Queue not empty before testing action");
+			var doAtEnd:Vector.<Function> = new Vector.<Function>();
+			var action:IAction = Action.createFromXml(xml);
+			Autotest.assertNoAlert();
+			Autotest.assertNotEqual(action, null, "Action creation failed");
+			if (action != null) {
+				action.doAction(doAtEnd);
+				Autotest.assertEqual(shouldDelayUntilEnd, doAtEnd.length > 0, "Wrong delay status");
+				while (doAtEnd.length > 0) {
+					var doThis:Function = doAtEnd.shift();
+					doThis();
+				}
+			}
+			Settings.gameEventQueue.handleEvents();
 		}
+		
 		
 	}
 

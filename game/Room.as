@@ -6,6 +6,7 @@ package angel.game {
 	import angel.common.FloorTile;
 	import angel.common.Prop;
 	import angel.common.Util;
+	import angel.game.event.EntityQEvent;
 	import angel.game.event.QEvent;
 	import angel.game.script.ConversationData;
 	import angel.game.script.ConversationInterface;
@@ -23,7 +24,8 @@ package angel.game {
 
 	public class Room extends Sprite {
 		static public const GAME_ENTER_FRAME:String = "gameEnterFrame";
-		static public const UNPAUSED_ENTER_FRAME:String = "unpausedEnterFrame"; // only triggers when not paused
+		static public const ROOM_ENTER_FRAME:String = "roomEnterFrame";
+		static public const ROOM_ENTER_UNPAUSED_FRAME:String = "unpausedEnterFrame"; // only triggers when not paused
 		
 		static private const SCROLL_SPEED:Number = 3;
 		
@@ -175,8 +177,9 @@ package angel.game {
 				}
 				
 			}
+			Settings.gameEventQueue.dispatch(new QEvent(this, ROOM_ENTER_FRAME));
 			if (!gameTimeIsPaused) {
-				Settings.gameEventQueue.dispatch(new QEvent(this, UNPAUSED_ENTER_FRAME));
+				Settings.gameEventQueue.dispatch(new QEvent(this, ROOM_ENTER_UNPAUSED_FRAME));
 			}			
 		}
 		
@@ -386,8 +389,8 @@ package angel.game {
 					mode.entityWillBeRemovedFromRoom(entity);
 				}
 				var location:Point = entity.location;
-				cells[location.x][location.y].remove(entity);		
-				entity.dispatchEvent(new EntityEvent(EntityEvent.REMOVED_FROM_ROOM, true, false, entity));
+				cells[location.x][location.y].remove(entity);
+				Settings.gameEventQueue.dispatch(new EntityQEvent(entity, EntityQEvent.REMOVED_FROM_ROOM));
 				entity.detachFromRoom();
 			}
 		}

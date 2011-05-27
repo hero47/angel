@@ -1,7 +1,9 @@
 package angel.game.script {
 	import angel.common.Alert;
 	import angel.game.EntityEvent;
+	import angel.game.event.EntityQEvent;
 	import angel.game.Room;
+	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	/**
 	 * ...
@@ -48,13 +50,13 @@ package angel.game.script {
 				}
 			}
 			if (onDeathScripts != null) {
-				room.addEventListener(EntityEvent.DEATH, deathListener);
+				Settings.gameEventQueue.addListener(this, room, EntityQEvent.DEATH, deathListener);
 			}
 		}
 		
 		public function cleanup():void {
+			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
 			room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, moveListener);
-			room.removeEventListener(EntityEvent.DEATH, deathListener);
 		}
 		
 		public function runOnEnter():void {
@@ -134,8 +136,8 @@ package angel.game.script {
 			runTriggeredScripts(onMoveScripts, event.entity, anyMoveScriptCaresAboutSpots);
 		}
 		
-		private function deathListener(event:EntityEvent):void {
-			runTriggeredScripts(onDeathScripts, event.entity, false);
+		private function deathListener(event:EntityQEvent):void {
+			runTriggeredScripts(onDeathScripts, event.complexEntity, false);
 		}
 		
 	}

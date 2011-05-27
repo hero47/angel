@@ -7,7 +7,6 @@ package angel.game.event {
 	 */
 	public class EntityQEvent extends QEvent {
 		public static const START_TURN:String = "entityStartTurn";
-		public static const END_TURN:String = "entityEndTurn";
 		public static const MOVED:String = "entityMoved";
 		public static const FINISHED_ONE_TILE_OF_MOVE:String = "entityFinishedTile";
 		public static const FINISHED_MOVING:String = "entityFinishedMoving";
@@ -25,11 +24,11 @@ package angel.game.event {
 			super(source, eventId, param);
 		}
 		
-		public function get complexSource():ComplexEntity {
+		public function get complexEntity():ComplexEntity {
 			return source as ComplexEntity;
 		}
 		
-		public function get simpleSource():SimpleEntity {
+		public function get simpleEntity():SimpleEntity {
 			return source as SimpleEntity;
 		}
 		

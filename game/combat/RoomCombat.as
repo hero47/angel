@@ -6,6 +6,7 @@ package angel.game.combat {
 	import angel.game.ComplexEntity;
 	import angel.game.EntityEvent;
 	import angel.game.EntityMovement;
+	import angel.game.event.EntityQEvent;
 	import angel.game.Icon;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
@@ -60,9 +61,9 @@ package angel.game.combat {
 			// between phases because it seemed a little cleaner that way, but I'm not certain.
 			room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire, false, 100);
 			room.addEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener, false, 100);
-			room.addEventListener(EntityEvent.DEATH, deathListener, false, 100);
-			room.addEventListener(EntityEvent.BECAME_VISIBLE, enemyBecameVisible);
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.BECAME_VISIBLE, enemyBecameVisible);
 			room.addEventListener(EntityEvent.MOVE_INTERRUPTED, moveInterruptedListener);
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.DEATH, deathListener);
 			
 			enemyTurnOverlay = new Shape();
 			enemyTurnOverlay.graphics.beginFill(0x4E7DB1, 0.3); // color to match alert, no clue where that number came from, heh
@@ -90,10 +91,9 @@ package angel.game.combat {
 			room.unpauseGameTimeAndDeleteCallback();
 			
 			room.disableUi();
+			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
 			room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire);
 			room.removeEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
-			room.removeEventListener(EntityEvent.DEATH, deathListener);
-			room.removeEventListener(EntityEvent.BECAME_VISIBLE, enemyBecameVisible);
 			room.removeEventListener(EntityEvent.MOVE_INTERRUPTED, moveInterruptedListener);
 			
 			augmentedReality.cleanup();
@@ -114,7 +114,7 @@ package angel.game.combat {
 			if ((entity is ComplexEntity) && ComplexEntity(entity).canBeActiveInCombat()) {
 				initEntityForCombat(entity as ComplexEntity);
 				augmentedReality.addFighter(entity as ComplexEntity);
-				entity.dispatchEvent(new EntityEvent(EntityEvent.JOINED_COMBAT, true, false, entity));
+				Settings.gameEventQueue.dispatch(new EntityQEvent(entity, EntityQEvent.JOINED_COMBAT));
 			}
 		}
 		
@@ -142,7 +142,7 @@ package angel.game.combat {
 			} else if (shouldBeAFighter) {
 				initEntityForCombat(entity as ComplexEntity);
 				augmentedReality.addFighter(entity);
-				entity.dispatchEvent(new EntityEvent(EntityEvent.JOINED_COMBAT, true, false, entity));
+				Settings.gameEventQueue.dispatch(new EntityQEvent(entity, EntityQEvent.JOINED_COMBAT));
 			}
 		}
 		
@@ -309,8 +309,8 @@ package angel.game.combat {
 			return (fighters.indexOf(entity) >= 0);
 		}
 		
-		private function deathListener(event:EntityEvent):void {
-			var entity:ComplexEntity = ComplexEntity(event.entity);
+		private function deathListener(event:EntityQEvent):void {
+			var entity:ComplexEntity = event.complexEntity;
 			if (isFighter(entity)) {
 				removeFighterFromCombat(entity);
 				checkForCombatOver();
@@ -441,7 +441,7 @@ package angel.game.combat {
 				// which will end combat mode.
 				return;
 			}
-			fighter.dispatchEvent(new EntityEvent(EntityEvent.START_TURN, true, false, fighter));
+			Settings.gameEventQueue.dispatch(new EntityQEvent(fighter, EntityQEvent.START_TURN));
 			fighter.movement.initForCombatMove();
 			if (fighter.isPlayerControlled) {
 				trace("Begin turn for PC", fighter.aaId);
@@ -486,7 +486,7 @@ package angel.game.combat {
 		
 		//NOTE: currently (May 2011) AI brains have full access to map data, regardless of line-of-sight.
 		//Thus, the BECAME_VISIBLE event is only relevant for the player.
-		private function enemyBecameVisible(event:EntityEvent):void {
+		private function enemyBecameVisible(event:EntityQEvent):void {
 			if (currentFighter().isPlayerControlled) {
 				var movement:EntityMovement = currentFighter().movement;
 				if ((movement != null) && movement.moving()) {

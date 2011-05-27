@@ -3,7 +3,9 @@ package angel.game.combat {
 	import angel.common.Floor;
 	import angel.game.ComplexEntity;
 	import angel.game.EntityEvent;
+	import angel.game.event.EntityQEvent;
 	import angel.game.Room;
+	import angel.game.Settings;
 	import flash.display.Graphics;
 	import flash.display.Shape;
 	import flash.geom.Point;
@@ -46,15 +48,13 @@ package angel.game.combat {
 			createMinimap(); //CAUTION: create after enemy visibilities are adjusted, or it will show everyone as visible
 			
 			room.addEventListener(EntityEvent.MOVED, someoneMovedToNewSquare, false, 100);
-			room.addEventListener(EntityEvent.HEALTH_CHANGE, someonesHealthChanged);
-			room.addEventListener(EntityEvent.START_TURN, someoneStartedTurn);
-			
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.HEALTH_CHANGE, someonesHealthChanged);
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.START_TURN, someoneStartedTurn);
 		}
 		
 		public function cleanup():void {
 			room.removeEventListener(EntityEvent.MOVED, someoneMovedToNewSquare);
-			room.removeEventListener(EntityEvent.HEALTH_CHANGE, someonesHealthChanged);
-			room.removeEventListener(EntityEvent.START_TURN, someoneStartedTurn);
+			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
 			
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
 			room.stage.removeChild(statDisplay);						
@@ -121,16 +121,16 @@ package angel.game.combat {
 		}
 		
 		//UNDONE: upgrade stat display to track its own entity and do its own listening
-		private function someonesHealthChanged(event:EntityEvent):void {
-			var entity:ComplexEntity = ComplexEntity(event.entity);
+		private function someonesHealthChanged(event:EntityQEvent):void {
+			var entity:ComplexEntity = event.complexEntity;
 			//Current stat display is an ugly grab-bag of misc. bits with no coherence
 			if (entity.isPlayerControlled && (entity == combat.currentFighter())) {
 				statDisplay.adjustCombatStatDisplay(entity);
 			}
 		}
 		
-		public function someoneStartedTurn(event:EntityEvent):void {
-			var fighter:ComplexEntity = ComplexEntity(event.entity);
+		public function someoneStartedTurn(event:EntityQEvent):void {
+			var fighter:ComplexEntity = event.complexEntity;
 			if (fighter.isPlayerControlled) {
 				statDisplay.adjustCombatStatDisplay(fighter);
 				
@@ -154,7 +154,7 @@ package angel.game.combat {
 			enemy.visible = enemy.marker.visible = combat.anyPlayerCanSeeLocation(enemy.location);
 			updateLastSeenLocation(enemy);
 			if (!wasVisible && enemy.visible) {
-				enemy.dispatchEvent(new EntityEvent(EntityEvent.BECAME_VISIBLE, true, false, enemy));
+				Settings.gameEventQueue.dispatch(new EntityQEvent(enemy, EntityQEvent.BECAME_VISIBLE));
 			}
 		}
 		
