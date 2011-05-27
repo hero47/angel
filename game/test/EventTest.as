@@ -26,7 +26,10 @@ package angel.game.test {
 			Autotest.testFunction(removeAfterDispatchButBeforeProcessing);
 			Autotest.testFunction(addDuringProcessing);
 			Autotest.testFunction(removeDuringProcessing);
-			Autotest.testFunction(bubbling);
+			Autotest.testFunction(bubblingThroughDisplayList);
+			Autotest.testFunction(removeNonListener);
+			Autotest.testFunction(addSameListenerTwice);
+			Autotest.testFunction(handleAgainDuringHandle);
 		}
 		
 		private function basicFunctionality():void {
@@ -222,7 +225,7 @@ package angel.game.test {
 			Autotest.assertEqual(queue.numberOfListenersOn(source1), 0);
 		}
 		
-		private function bubbling():void {
+		private function bubblingThroughDisplayList():void {
 		var queue:EventQueue = new EventQueue();
 			var child1:Sprite = new Sprite();
 			child1.name = "child1";
@@ -243,6 +246,48 @@ package angel.game.test {
 			queue.dispatch(new QEvent(child2, "event1"));
 			queue.handleEvents();
 			Autotest.assertAlertText("child2,parent");
+		}
+		
+		private function removeNonListener():void {
+			var queue:EventQueue = new EventQueue();
+			queue.removeListener(source1, "event1", sayYes);
+			Autotest.assertNoAlert("Removing listener that doesn't exist should not cause error");
+		}
+		
+		private function addSameListenerTwice():void {
+			var queue:EventQueue = new EventQueue();
+			queue.addListener(this, source1, "event1", sayYes);
+			queue.addListener(this, source1, "event1", sayYes);
+			Autotest.assertEqual(queue.numberOfListeners(), 1, "Duplicate listener shouldn't be added");
+			Autotest.assertNoAlert("Pure duplicate shouldn't give error");
+			queue.removeListener(source1, "event1", sayYes);
+			Autotest.assertEqual(queue.numberOfListeners(), 0);
+			
+			queue.addListener(this, source1, "event1", sayParam, "hello");
+			queue.addListener(this, source1, "event1", sayParam, "hello");
+			Autotest.assertEqual(queue.numberOfListeners(), 1, "Duplicate listener with identical params shouldn't be added");
+			Autotest.assertNoAlert("Pure duplicate shouldn't give error");
+			queue.addListener(this, source1, "event1", sayParam, "goodbye");
+			Autotest.assertEqual(queue.numberOfListeners(), 1, "Duplicate listener with different params should replace");
+			Autotest.assertAlerted("Should have given stack dump");
+			queue.dispatch(new QEvent(source1, "event1"));
+			queue.handleEvents();
+			Autotest.assertAlertText("goodbye", "Second one added should have replaced the first");
+		}
+		
+		private function handleAgainDuringHandle():void {
+			var queue:EventQueue = new EventQueue();
+			queue.addListener(this, source1, "event1", function(event:QEvent):void {
+				queue.dispatch(new QEvent(source2, "event2"));
+				queue.handleEvents();
+			} );
+			queue.addListener(this, source2, "event2", setFooToParam, 3);
+			
+			foo = 0;
+			queue.dispatch(new QEvent(source1, "event1"));
+			queue.handleEvents();
+			Autotest.assertAlerted("Reentrant call to handleEvents should give stack dump");
+			Autotest.assertEqual(foo, 3, "Reentrant call should ensure that events dispatched after first call are handled");
 		}
 		
 		private function sayYes(event:QEvent):void {

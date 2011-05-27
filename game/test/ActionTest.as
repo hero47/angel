@@ -56,7 +56,7 @@ package angel.game.test {
 			
 			Autotest.testFunction(testAddRemoveCharacterActions);
 			Autotest.testFunction(testChangeToFromPc);
-			//Autotest.testFunction(testChangeRoom); This doesn't work because it uses a callback
+			//Autotest.testFunction(testChangeRoom); This doesn't work because it loads from file, which is a delayed callback
 			Autotest.testFunction(testChangeAction);
 			
 			Settings.currentRoom.changeModeTo(null);

@@ -19,6 +19,12 @@ package angel.common {
 			}
 		}
 		
+		public static function assertFalse(check:Boolean, message:String):void {
+			if (check) {
+				Alert.show("Assert failed!\n" + message + "\n" + GetStackTrace());
+			}
+		}
+		
 		/**
 		 * Returns the stack trace (filtered)
 		 * @return stack trace

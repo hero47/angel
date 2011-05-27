@@ -86,12 +86,18 @@ package angel.game.test {
 			clearAlert();
 			new testClass();
 			assertNoAlert("Something in " + testClass + " caused an alert.");
+			if (Settings.gameEventQueue != null) {
+				assertEqual(Settings.gameEventQueue.numberOfEventsInQueue(), 0, "Queue has leftover events after "+ testClass);
+			}
 		}
 		
 		public static function testFunction(testFunction:Function):void {
 			assertNoAlert("Leftover alert before testFunction");
 			testFunction();
 			assertNoAlert("Something in a tested function caused an alert.");
+			if (Settings.gameEventQueue != null) {
+				assertEqual(Settings.gameEventQueue.numberOfEventsInQueue(), 0, "Queue has leftover events after tested function");
+			}
 		}
 		
 		private static function failureFileAndLineNumber(): String {
@@ -142,6 +148,12 @@ package angel.game.test {
 			
 			Autotest.runningFromRoot.addChild(Settings.currentRoom);
 			Autotest.assertNoAlert();
+			Settings.gameEventQueue.handleEvents();
+			Autotest.assertNoAlert();
+		}
+		
+		public static function cleanupTestRoom():void {
+			
 		}
 		
 	}

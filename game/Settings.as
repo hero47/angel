@@ -6,6 +6,7 @@ package angel.game {
 	import angel.common.Defaults;
 	import angel.game.brain.BrainFollow;
 	import angel.game.combat.Grenade;
+	import angel.game.event.EventQueue;
 
 	
 	public class Settings {
@@ -20,6 +21,7 @@ package angel.game {
 		// CONSIDER: should Catalog itself enforce being a singleton, and provide public static var catalog?
 		public static var catalog:Catalog;
 		public static var currentRoom:Room;
+		public static var gameEventQueue:EventQueue;
 		
 		public static var testExploreScroll:int;
 		public static var showEnemyMoves:Boolean;

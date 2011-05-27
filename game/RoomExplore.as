@@ -3,6 +3,7 @@ package angel.game {
 	import angel.common.Assert;
 	import angel.common.Floor;
 	import angel.common.FloorTile;
+	import angel.game.event.QEvent;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
@@ -19,7 +20,7 @@ package angel.game {
 		
 		public function RoomExplore(room:Room) {
 			this.room = room;
-			room.addEventListener(Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
+			Settings.gameEventQueue.addListener(this, room, Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
 			room.forEachComplexEntity(initEntityForExplore);
 			
 			exploreUi = new ExploreUi(room, this);
@@ -30,7 +31,7 @@ package angel.game {
 
 		public function cleanup():void {
 			room.disableUi();
-			room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
+			Settings.gameEventQueue.removeListener(room, Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
 			room.forEachComplexEntity(cleanupEntityFromExplore);
 			timeQueue = null;
 		}
@@ -71,7 +72,7 @@ package angel.game {
 		private var time:int = 0;
 		
 		// called each frame except when game is paused
-		private function processTimedEvents(event:Event):void {
+		private function processTimedEvents(event:QEvent):void {
 			time++;
 			if (queueNeedsSort) {
 				timeQueue.sort(TimedEvent.compare);

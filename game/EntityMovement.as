@@ -1,6 +1,7 @@
 package angel.game {
 	import angel.common.Prop;
 	import angel.common.Tileset;
+	import angel.game.event.QEvent;
 	import flash.events.Event;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
@@ -70,7 +71,7 @@ package angel.game {
 		}
 		
 		public function detachFromRoom():void {
-			me.room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
+			Settings.gameEventQueue.removeListener(me.room, Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
 		}
 		
 		public function moving():Boolean {
@@ -161,7 +162,7 @@ package angel.game {
 			moveGoal = (path.length > 0 ? path[path.length - 1] : me.location);
 			mostRecentGait = (path.length == 0 ? GAIT_NO_MOVE : Math.min(gait, maxGait));
 			moveSpeed = gaitSpeeds[mostRecentGait];
-			me.room.addEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
+			Settings.gameEventQueue.addListener(this, me.room, Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
 		}
 		
 		public function minGaitForDistance(distance:int):int {
@@ -220,7 +221,7 @@ package angel.game {
 			coordsForEachFrameOfMove[i] = me.pixelLocStandingOnTile(movingTo);
 		}
 		
-		protected function moveOneFrameAlongPath(event:Event):void {
+		protected function moveOneFrameAlongPath(event:QEvent):void {
 			if (me.currentHealth <= 0) {
 				finishedMoving();
 				return;
@@ -290,7 +291,7 @@ package angel.game {
 			movingTo = null;
 			path = null;
 			coordsForEachFrameOfMove = null;
-			me.room.removeEventListener(Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
+			Settings.gameEventQueue.removeListener(me.room, Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
 			me.dispatchEvent(new EntityEvent( wasInterrupted ? EntityEvent.MOVE_INTERRUPTED : EntityEvent.FINISHED_MOVING,
 							true, false, me));
 		}
