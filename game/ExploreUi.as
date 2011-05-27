@@ -3,6 +3,7 @@ package angel.game {
 	import angel.common.Assert;
 	import angel.common.Util;
 	import angel.game.combat.RoomCombat;
+	import angel.game.event.EntityQEvent;
 	import angel.game.PieSlice;
 	import angel.common.FloorTile;
 	import flash.events.Event;
@@ -34,7 +35,7 @@ package angel.game {
 		
 		public function disable():void {
 			room.moveHilight(null, 0);
-			player.removeEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
+			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
 			this.player = null;
 		}
 		
@@ -103,7 +104,7 @@ package angel.game {
 			if (!loc.equals(player.location) && !player.movement.tileBlocked(loc)) {
 				playerIsMoving = player.movement.startFreeMovementToward(loc);
 				if (playerIsMoving) {
-					player.addEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
+					Settings.gameEventQueue.addListener(this, player, EntityQEvent.FINISHED_MOVING, playerFinishedMoving);
 					if (!(Settings.testExploreScroll > 0)) {
 						room.scrollToCenter(loc);
 					}
@@ -118,10 +119,10 @@ package angel.game {
 		
 		/************ Private ****************/
 		
-		private function playerFinishedMoving(event:EntityEvent):void {
-			Assert.assertTrue((event.entity == player), "Got a playerFinishedMoving event, but with an entity other than our player");
+		private function playerFinishedMoving(event:EntityQEvent):void {
+			Assert.assertTrue((event.complexEntity == player), "Got a playerFinishedMoving event, but with an entity other than our player");
 			playerIsMoving = false;
-			player.removeEventListener(EntityEvent.FINISHED_MOVING, playerFinishedMoving);
+			Settings.gameEventQueue.removeListener(player, EntityQEvent.FINISHED_MOVING, playerFinishedMoving);
 		}
 		
 	} // end class ExploreUi

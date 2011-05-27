@@ -3,12 +3,13 @@ package angel.game.script {
 	import angel.common.Assert;
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Util;
+	import angel.game.event.QEvent;
 	import angel.game.Flags;
+	import angel.game.Settings;
 	import flash.events.Event;
-	import flash.events.EventDispatcher;
 
 	
-	public class ConversationData extends EventDispatcher {
+	public class ConversationData {
 		
 		private var topics:Object = new Object; // associative array mapping topic id to topic
 		
@@ -31,7 +32,7 @@ package angel.game.script {
 				return;
 			}
 			initializeFromXml(xml, "Error in conversation file " + filename + ":\n");
-			dispatchEvent(new Event(Event.INIT));
+			Settings.gameEventQueue.dispatch(new QEvent(this, QEvent.INIT));
 		}
 			
 		public function initializeFromXml(xml:XML, errorPrefix:String):void {
@@ -95,13 +96,14 @@ package angel.game.script {
 			
 			currentEntry = currentTopic.entries["start"];
 			
-			ui.addEventListener(ConversationEvent.ENTRY_FINISHED, entryFinished);
+			Settings.gameEventQueue.addListener(this, ui, ConversationBox.CONVERSATION_ENTRY_FINISHED, entryFinished);
 			currentEntry.start(ui);
 		}
 		
-		private function entryFinished(event:ConversationEvent):void {
-			var ui:ConversationInterface = ConversationInterface(event.currentTarget);
-			var nextEntryReference:Object = event.choice.doActionsAndGetNextEntryId(ui.doAtEnd);
+		private function entryFinished(event:QEvent):void {
+			var ui:ConversationInterface = ConversationInterface(event.currentSource);
+			var choice:ConversationSegment = ConversationSegment(event.param);
+			var nextEntryReference:Object = choice.doActionsAndGetNextEntryId(ui.doAtEnd);
 			currentEntry = null;
 			if (nextEntryReference != null) {
 				if (nextEntryReference.topic != null) {
@@ -117,7 +119,7 @@ package angel.game.script {
 			}
 			
 			if (currentEntry == null) {
-				ui.removeEventListener(ConversationEvent.ENTRY_FINISHED, entryFinished);
+				Settings.gameEventQueue.removeListener(ui, ConversationBox.CONVERSATION_ENTRY_FINISHED, entryFinished);
 				ui.cleanup();
 			} else {
 				currentEntry.start(ui);

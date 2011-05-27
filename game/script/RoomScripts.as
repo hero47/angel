@@ -1,6 +1,5 @@
 package angel.game.script {
 	import angel.common.Alert;
-	import angel.game.EntityEvent;
 	import angel.game.event.EntityQEvent;
 	import angel.game.Room;
 	import angel.game.Settings;
@@ -41,7 +40,7 @@ package angel.game.script {
 			onDeathScripts = createTriggeredScripts(scriptXml.onDeath, true, false, errorPrefix + " onDeath");
 			
 			if (onMoveScripts != null) {
-				room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, moveListener);
+				Settings.gameEventQueue.addListener(this, room, EntityQEvent.FINISHED_ONE_TILE_OF_MOVE, moveListener);
 				for each (var thisScript:TriggeredScript in onMoveScripts) {
 					if (thisScript.spotIds != null) {
 						anyMoveScriptCaresAboutSpots = true;
@@ -56,7 +55,6 @@ package angel.game.script {
 		
 		public function cleanup():void {
 			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
-			room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, moveListener);
 		}
 		
 		public function runOnEnter():void {
@@ -132,8 +130,8 @@ package angel.game.script {
 		}
 		
 		
-		private function moveListener(event:EntityEvent):void {
-			runTriggeredScripts(onMoveScripts, event.entity, anyMoveScriptCaresAboutSpots);
+		private function moveListener(event:EntityQEvent):void {
+			runTriggeredScripts(onMoveScripts, event.simpleEntity, anyMoveScriptCaresAboutSpots);
 		}
 		
 		private function deathListener(event:EntityQEvent):void {

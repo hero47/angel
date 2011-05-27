@@ -3,6 +3,7 @@ package angel.game {
 	import angel.common.Catalog;
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Util;
+	import angel.game.event.QEvent;
 	import flash.events.Event;
 	/**
 	 * ...
@@ -14,19 +15,19 @@ package angel.game {
 		public function InitGameFromFiles(callbackWithInitRoomXml:Function):void {
 			this.callbackWithInitRoomXml = callbackWithInitRoomXml;
 			var catalog:Catalog = new Catalog();
-			catalog.addEventListener(Event.COMPLETE, catalogLoadedListener);
+			catalog.addEventListener(Event.INIT, catalogLoadedListener);
 			catalog.loadFromXmlFile("AngelCatalog.xml");
 		}
 		
 		private function catalogLoadedListener(event:Event):void {
 			Settings.catalog = Catalog(event.target);
-			Settings.catalog.removeEventListener(Event.COMPLETE, catalogLoadedListener);
-			Flags.loader.addEventListener(Event.COMPLETE, flagsLoadedListener);
+			Settings.catalog.removeEventListener(Event.INIT, catalogLoadedListener);
+			Settings.gameEventQueue.addListener(this, Flags.flagLoader, QEvent.INIT, flagsLoadedListener);
 			Flags.loadFlagListFromXmlFile();
 		}
 		
-		private function flagsLoadedListener(event:Event):void {
-			Flags.loader.removeEventListener(Event.COMPLETE, flagsLoadedListener);
+		private function flagsLoadedListener(event:QEvent):void {
+			Settings.gameEventQueue.removeListener(Flags.flagLoader, QEvent.INIT, flagsLoadedListener);
 			LoaderWithErrorCatching.LoadFile("AngelInit.xml", xmlLoadedForInit);
 		}
 

@@ -4,6 +4,8 @@ package angel.game.event {
 	 * @author Beth Moursund
 	 */
 	public class QEvent {
+		// Event id's for common events
+		public static const INIT:String = "init";
 		
 		public var eventId:String;
 		public var source:Object;

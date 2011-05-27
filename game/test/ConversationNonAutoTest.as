@@ -1,7 +1,7 @@
 package angel.game.test {
+	import angel.game.event.QEvent;
 	import angel.game.script.ConversationData;
 	import angel.game.Settings;
-	import flash.events.Event;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -12,15 +12,15 @@ package angel.game.test {
 		public function ConversationNonAutoTest() {
 			if (conversationData == null) {
 				conversationData = new ConversationData();
-				conversationData.addEventListener(Event.INIT, dataLoaded);
+				Settings.gameEventQueue.addListener(this, conversationData, QEvent.INIT, dataLoaded);
 				conversationData.loadFromXmlFile("testActions.xml");
 			} else {
 				doTest();
 			}
 		}
 		
-		private function dataLoaded(event:Event):void {
-			conversationData.removeEventListener(Event.INIT, dataLoaded);
+		private function dataLoaded(event:QEvent):void {
+			Settings.gameEventQueue.removeListener(conversationData, QEvent.INIT, dataLoaded);
 			doTest();
 		}
 		

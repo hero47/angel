@@ -1,6 +1,7 @@
 package angel.game {
 	import angel.common.Prop;
 	import angel.common.Tileset;
+	import angel.game.event.EntityQEvent;
 	import angel.game.event.QEvent;
 	import flash.events.Event;
 	import flash.geom.Point;
@@ -268,8 +269,8 @@ package angel.game {
 		private function finishOneTileOfMove():void {
 			movingTo = null;
 			coordsForEachFrameOfMove = null;
-			me.adjustImageForMove(0,0); // make sure we end up in "standing" posture even if move was ultra-fast
-			me.dispatchEvent(new EntityEvent(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, true, false, me));
+			me.adjustImageForMove(0, 0); // make sure we end up in "standing" posture even if move was ultra-fast
+			Settings.gameEventQueue.dispatch(new EntityQEvent(me, EntityQEvent.FINISHED_ONE_TILE_OF_MOVE));
 			if (interruptAfterThisTile) {
 				finishedMoving(true);
 			}
@@ -280,7 +281,7 @@ package angel.game {
 			var oldLocation:Point = me.location;
 			me.setLocationWithoutChangingDepth(movingTo);
 			me.room.changeEntityLocation(me, oldLocation, movingTo);
-			me.dispatchEvent(new EntityEvent(EntityEvent.MOVED, true, false, me));
+			Settings.gameEventQueue.dispatch(new EntityQEvent(me, EntityQEvent.LOCATION_CHANGED_IN_MOVE));
 		}		
 		
 		private function finishedMoving(wasInterrupted:Boolean = false):void {
@@ -292,8 +293,8 @@ package angel.game {
 			path = null;
 			coordsForEachFrameOfMove = null;
 			Settings.gameEventQueue.removeListener(me.room, Room.ROOM_ENTER_UNPAUSED_FRAME, moveOneFrameAlongPath);
-			me.dispatchEvent(new EntityEvent( wasInterrupted ? EntityEvent.MOVE_INTERRUPTED : EntityEvent.FINISHED_MOVING,
-							true, false, me));
+			Settings.gameEventQueue.dispatch(new EntityQEvent(me, 
+					(wasInterrupted ? EntityQEvent.MOVE_INTERRUPTED : EntityQEvent.FINISHED_MOVING)));
 		}
 		
 		public function endMoveImmediately():void {

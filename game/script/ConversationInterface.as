@@ -1,6 +1,8 @@
 package angel.game.script {
 	import angel.game.combat.RoomCombat;
+	import angel.game.event.QEvent;
 	import angel.game.Room;
+	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
@@ -77,13 +79,14 @@ package angel.game.script {
 			box.x = x;
 			box.y = y;
 			if (listener != null) {
-				box.addEventListener(ConversationEvent.ENTRY_FINISHED, listener);
+				Settings.gameEventQueue.addListener(this, box, ConversationBox.CONVERSATION_ENTRY_FINISHED, listener);
 			}
 			return box;
 		}
 		
-		private function entryFinishedListener(event:ConversationEvent):void {
-			event.target.removeEventListener(ConversationEvent.ENTRY_FINISHED, entryFinishedListener);
+		private function entryFinishedListener(event:QEvent):void {
+			Settings.gameEventQueue.removeListener(event.source, ConversationBox.CONVERSATION_ENTRY_FINISHED, entryFinishedListener);
+			
 			if (pcBox != null) {
 				removeChild(pcBox);
 				pcBox = null;

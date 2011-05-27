@@ -1,7 +1,6 @@
 package angel.game.combat {
 	import angel.common.Floor;
 	import angel.game.ComplexEntity;
-	import angel.game.EntityEvent;
 	import angel.game.event.EntityQEvent;
 	import angel.game.event.QEvent;
 	import angel.game.Room;
@@ -84,8 +83,8 @@ package angel.game.combat {
 			
 			this.combat = combat;
 			//addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
-			combat.room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, someoneMoved);
-			combat.room.addEventListener(EntityEvent.LOCATION_CHANGED_DIRECTLY, someoneMoved);
+			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.FINISHED_ONE_TILE_OF_MOVE, someoneMoved);
+			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.LOCATION_CHANGED_DIRECTLY, someoneMoved);
 			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.START_TURN, someoneStartedTurn);
 			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.REMOVED_FROM_ROOM, someoneLeftRoom);
 			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.DEATH, someoneDied);
@@ -145,8 +144,6 @@ package angel.game.combat {
 		public function cleanup():void {
 			//removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
 			//removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
-			combat.room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, someoneMoved);
-			combat.room.removeEventListener(EntityEvent.LOCATION_CHANGED_DIRECTLY, someoneMoved);
 			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
 			if (parent != null) {
 				parent.removeChild(this);
@@ -205,19 +202,20 @@ package angel.game.combat {
 			}
 		}
 		
-		public function someoneMoved(event:EntityEvent):void {
-			if (entityToMapIcon[event.entity] == null) {
+		public function someoneMoved(event:EntityQEvent):void {
+			var entity:ComplexEntity = event.complexEntity;
+			if (entityToMapIcon[entity] == null) {
 				// Whatever moved isn't one of our fighters
 				return;
 			}
-			if (ComplexEntity(event.entity).isPlayerControlled) {
-				setIconPositionFromEntityLocation(entityToMapIcon[event.entity], event.entity);
+			if (entity.isPlayerControlled) {
+				setIconPositionFromEntityLocation(entityToMapIcon[entity], entity);
 				adjustAllEnemyIconsForVisibility();
 			} else {
-				adjustEnemyIcon(ComplexEntity(event.entity));
+				adjustEnemyIcon(entity);
 			}
 			
-			if (event.entity == activeEntity) {
+			if (entity == activeEntity) {
 				adjustActiveEntityMarker();
 			}
 		}
