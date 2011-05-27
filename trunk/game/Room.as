@@ -6,6 +6,7 @@ package angel.game {
 	import angel.common.FloorTile;
 	import angel.common.Prop;
 	import angel.common.Util;
+	import angel.game.event.QEvent;
 	import angel.game.script.ConversationData;
 	import angel.game.script.ConversationInterface;
 	import angel.game.script.RoomScripts;
@@ -21,6 +22,7 @@ package angel.game {
 	import flash.utils.getTimer;
 
 	public class Room extends Sprite {
+		static public const GAME_ENTER_FRAME:String = "gameEnterFrame";
 		static public const UNPAUSED_ENTER_FRAME:String = "unpausedEnterFrame"; // only triggers when not paused
 		
 		static private const SCROLL_SPEED:Number = 3;
@@ -74,18 +76,16 @@ package angel.game {
 				}
 			}
 			
-			addEventListener(Event.ENTER_FRAME, enterFrameListener);
-			//addEventListener(Event.ADDED_TO_STAGE, finishInit);
+			addEventListener(Event.ADDED_TO_STAGE, finishInit);
 		}
 		
-		/*
 		private function finishInit(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, finishInit);
+			Settings.gameEventQueue.addListener(this, parent, GAME_ENTER_FRAME, enterFrameListener);
 		}
-		*/
 		
 		public function cleanup():void {
-			removeEventListener(Event.ENTER_FRAME, enterFrameListener);
+			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
 			if (mode != null) {
 				mode.cleanup();
 				mode = null;
@@ -176,7 +176,7 @@ package angel.game {
 				
 			}
 			if (!gameTimeIsPaused) {
-				dispatchEvent(new Event(UNPAUSED_ENTER_FRAME));
+				Settings.gameEventQueue.dispatch(new QEvent(this, UNPAUSED_ENTER_FRAME));
 			}			
 		}
 		
@@ -497,7 +497,7 @@ package angel.game {
 			delete spots[spotId];
 		}
 		
-		private function enterFrameListener(event:Event):void {
+		private function enterFrameListener(event:QEvent):void {
 			stage.focus = stage;
 			handlePauseAndAdvanceGameTimeIfNotPaused();
 			handleScrolling();

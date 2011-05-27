@@ -85,6 +85,7 @@ package angel.game.event {
 		private var queue:Vector.<QEvent> = new Vector.<QEvent>();
 		private var callbacks:Vector.<ListenerReference> = new Vector.<ListenerReference>(); // Callbacks for the event currently being handled
 		private var lookup:Dictionary = new Dictionary(); // map event source to (associative array mapping eventId to Vector.<ListenerReference>)
+		private var handlingEvents:Boolean;
 		
 		public function EventQueue() {
 		}
@@ -103,6 +104,19 @@ package angel.game.event {
 			var forThisEvent:Vector.<ListenerReference> = listenersOnThisSource[eventId];
 			if (forThisEvent == null) {
 				listenersOnThisSource[eventId] = forThisEvent = new Vector.<ListenerReference>();
+			}
+			
+			// CONSIDER: If this listener duplicates one that's already in the queue, should it be an error?
+			// Initial decision: if the param is identical, just ignore it. If param is different, replace
+			// the existing listener and assert.
+			for (var i:int = 0; i < forThisEvent.length; ++i) {
+				if (forThisEvent[i].callback == callback) {
+					if (forThisEvent[i].optionalCallbackParam !== optionalCallbackParam) {
+						Assert.fail("Overwriting an event listener");
+						forThisEvent[i] = listener;
+					}
+					return;
+				}
 			}
 			forThisEvent.push(listener);
 		}
@@ -194,7 +208,7 @@ package angel.game.event {
 		}
 		
 		// Make a list of all callback info for listeners *as they currently exist*, before any of the events are processed.
-		// Then process them.
+		// Then process them.  Repeat until the queue stays empty.
 		// The following current choices are subject to change after talking with Mickey; they
 		// are based on my current intuitions and usage guesses.
 		// Once this processing has started
@@ -211,14 +225,24 @@ package angel.game.event {
 		// but those that listened to its parent will still trigger for the bubbled event.  I'm not sure if this is "good"
 		// or "bad"; repeat note above about waffling.)
 		public function handleEvents():void {
-			Assert.assertTrue(callbacks.length == 0, "Callbacks not empty at handleOneEvent!");
 			while (queue.length > 0) {
-				generateCallbacksForOneEvent(queue.shift());
-			}
-			
-			while (callbacks.length > 0) {
-				var oneCallback:ListenerReferenceForOneEvent = callbacks.shift();
-				oneCallback.callback(oneCallback.event);
+				while (queue.length > 0) {
+					generateCallbacksForOneEvent(queue.shift());
+				}
+				
+				if (handlingEvents) {
+					// Not sure if reentrant call should be an error or not.  We can cope with it fine; just add the
+					// new callbacks to end of list and return, they'll be processed by the initial call's loop.
+					Assert.fail("handleEvents reentrant call");
+					return;
+				}
+				
+				handlingEvents = true;
+				while (callbacks.length > 0) {
+					var oneCallback:ListenerReferenceForOneEvent = callbacks.shift();
+					oneCallback.callback(oneCallback.event);
+				}
+				handlingEvents = false;
 			}
 		}
 		
@@ -228,7 +252,7 @@ package angel.game.event {
 				var listeners:Vector.<ListenerReference> = findListenersFor(currentSource, event.eventId);
 				if (listeners != null) {
 					for each (var oneListener:ListenerReference in listeners) {
-						callbacks.push(new ListenerReferenceForOneEvent(oneListener, event.source, event.param));
+						callbacks.push(new ListenerReferenceForOneEvent(oneListener, event));
 					}
 				}
 				//CONSIDER: implement my own separate containment for QEvent bubbling rather than display list

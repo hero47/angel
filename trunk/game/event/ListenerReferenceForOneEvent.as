@@ -4,26 +4,23 @@ package angel.game.event {
 	 * @author Beth Moursund
 	 */
 	public class ListenerReferenceForOneEvent extends ListenerReference {
-		public var originalEventSource:Object;
-		public var eventParam:Object;
+		private var myEvent:QEvent;
 		
-		public function ListenerReferenceForOneEvent(reference:ListenerReference, originalEventSource:Object, eventParam:Object) {
+		public function ListenerReferenceForOneEvent(reference:ListenerReference, event:QEvent) {
 			super(reference.owner, reference.eventSource, reference.eventId, reference.callback, reference.optionalCallbackParam);
-			this.originalEventSource = originalEventSource;
-			this.eventParam = eventParam;
+			myEvent = event;
 		}
 		
 		public function get event():QEvent {
-			var event:QEvent = new QEvent(originalEventSource, eventId, eventParam);
-			event.currentSource = eventSource;
-			event.listenerParam = optionalCallbackParam;
-			return event;
+			myEvent.currentSource = eventSource;
+			myEvent.listenerParam = optionalCallbackParam;
+			return myEvent;
 		}
 		
 		override public function toString():String {
 			return "[ListenerReferenceForOneEvent eventId=" + eventId + ", owner=" + owner + ", eventSource=" + eventSource + 
 				(optionalCallbackParam == null ? "" : ", param=" + optionalCallbackParam) +
-				", originalEventSource=" + originalEventSource + ", eventParam=" + eventParam + "]";
+				", event=" + myEvent + "]";
 		}
 		
 	}

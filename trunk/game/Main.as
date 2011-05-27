@@ -1,6 +1,8 @@
 package angel.game {
 	import angel.common.*;
 	import angel.game.brain.BrainFollow;
+	import angel.game.event.EventQueue;
+	import angel.game.event.QEvent;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
@@ -15,12 +17,15 @@ package angel.game {
 		private var floor:Floor;
 		private var room:Room;
 		private var startSpot:String;
+		private var gameEventQueue:EventQueue = new EventQueue();
 		
 		public function Main() {
 			stage.scaleMode = "noScale";
 			Settings.FRAMES_PER_SECOND = stage.frameRate;
 			Settings.STAGE_HEIGHT = stage.stageHeight;
 			Settings.STAGE_WIDTH = stage.stageWidth;
+			Settings.gameEventQueue = gameEventQueue;
+			addEventListener(Event.ENTER_FRAME, mainEnterFrame);
 			Alert.init(stage);
 			
 			new InitGameFromFiles(gameInitialized);
@@ -29,10 +34,6 @@ package angel.game {
 		private function gameInitialized(initRoomXml:XML):void {
 			startSpot = initRoomXml.@start;
 			var roomFile:String = initRoomXml.@file;
-			if (roomFile == "") {
-				roomFile = initRoomXml;
-				Alert.show("Warning: Init file 'room' format changing.\nPlease move room filename into file attribute.");
-			}
 			if (roomFile == "") {
 				Alert.show("Error! Missing filename for initial room.");
 				return;
@@ -47,11 +48,16 @@ package angel.game {
 			}
 			var room:Room = Room.createFromXml(xml, filename);
 			if (room != null) {
-				room.addPlayerCharactersFromSettings(startSpot);
 				addChild(room);
+				room.addPlayerCharactersFromSettings(startSpot);
 				Settings.currentRoom = room;
 				room.changeModeTo(RoomExplore, true);
 			}
+		}
+		
+		private function mainEnterFrame(event:Event):void {
+			Settings.gameEventQueue.dispatch(new QEvent(this, Room.GAME_ENTER_FRAME));
+			Settings.gameEventQueue.handleEvents();
 		}
 		
 	}	// end class Main

@@ -1,5 +1,6 @@
 package angel.game.test {
 	import angel.common.Alert;
+	import angel.game.event.EventQueue;
 	import angel.game.InitGameFromFiles;
 	import angel.game.Settings;
 	import flash.display.Sprite;
@@ -18,20 +19,21 @@ package angel.game.test {
 			Autotest.runningFromRoot = this;
 			Alert.testMode = true;
 			runAllStandaloneTests();
-			//initializeGameAndRunAllGameTests();
+			initializeGameAndRunAllGameTests();
 		}
 		
 		private function standaloneTests():void {
-			Autotest.runTest(EventTest);
-		return;
 			alertTest();
 			Autotest.runTest(InventoryTest);
+			Autotest.runTest(EventTest);
 		}
 		
 		private function testsRequiringGameInit():void {
 			Autotest.runTest(FlagTest);
 			Autotest.runTest(ActionTest);
 			Autotest.runTest(ConditionTest);
+			Autotest.runTest(ExploreTest);
+			return; //******************************************************** Stick this at top while working on new test
 		}
 		
 		private function runAllStandaloneTests():void {
@@ -41,6 +43,11 @@ package angel.game.test {
 		}
 		
 		private function initializeGameAndRunAllGameTests():void {
+			Settings.FRAMES_PER_SECOND = stage.frameRate;
+			Settings.STAGE_HEIGHT = stage.stageHeight;
+			Settings.STAGE_WIDTH = stage.stageWidth;
+			Settings.gameEventQueue = new EventQueue();
+			
 			initTimer = new Timer(3000, 1);
 			initTimer.addEventListener(TimerEvent.TIMER_COMPLETE, timeout);
 			initTimer.start();
