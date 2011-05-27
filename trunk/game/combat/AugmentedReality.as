@@ -2,7 +2,6 @@ package angel.game.combat {
 	import angel.common.Assert;
 	import angel.common.Floor;
 	import angel.game.ComplexEntity;
-	import angel.game.EntityEvent;
 	import angel.game.event.EntityQEvent;
 	import angel.game.Room;
 	import angel.game.Settings;
@@ -47,13 +46,13 @@ package angel.game.combat {
 			initialiseAllFighterDisplayElements();
 			createMinimap(); //CAUTION: create after enemy visibilities are adjusted, or it will show everyone as visible
 			
-			room.addEventListener(EntityEvent.MOVED, someoneMovedToNewSquare, false, 100);
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.LOCATION_CHANGED_IN_MOVE, someoneWalkedToNewSquare);
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.LOCATION_CHANGED_DIRECTLY, someoneMovedToNewSquare);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.HEALTH_CHANGE, someonesHealthChanged);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.START_TURN, someoneStartedTurn);
 		}
 		
 		public function cleanup():void {
-			room.removeEventListener(EntityEvent.MOVED, someoneMovedToNewSquare);
 			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
 			
 			room.decorationsLayer.graphics.clear(); // remove grid outlines
@@ -108,11 +107,25 @@ package angel.game.combat {
 		
 		// Called by event listener each time an entity begins moving to a new square during combat.
 		// (entity's location will have already changed)
-		private function someoneMovedToNewSquare(event:EntityEvent):void {
-			Assert.assertTrue(event.entity == combat.currentFighter(), "Wrong entity moving");
+		private function someoneWalkedToNewSquare(event:EntityQEvent):void {
+			Assert.assertTrue(event.complexEntity == combat.currentFighter(), "Wrong entity moving");
 			
-			var entity:ComplexEntity = (event.entity as ComplexEntity);
+			var entity:ComplexEntity = event.complexEntity;
 			combat.mover.adjustDisplayAsEntityLeavesATile(); //CONSIDER: should mover listen and do this for itself?
+			adjustVisibilityAfterFighterMoved(entity);
+		}
+		
+		// Called by event listener each time an entity is moved directly (i.e. by a script action) rather than walking
+		// (entity's location will have already changed)
+		private function someoneMovedToNewSquare(event:EntityQEvent):void {
+			var entity:ComplexEntity = event.complexEntity;
+			if (entity == null || combat.fighters.indexOf(entity) < 0) {
+				return;
+			}
+			adjustVisibilityAfterFighterMoved(entity);
+		}
+		
+		private function adjustVisibilityAfterFighterMoved(entity:ComplexEntity):void {
 			if (entity.isPlayerControlled) {
 				adjustAllEnemyVisibility();
 			} else {

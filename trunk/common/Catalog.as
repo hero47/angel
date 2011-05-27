@@ -67,7 +67,7 @@ package angel.common {
 				message("WARNING: Duplicate name(s) in catalog:\n" + duplicateNames);
 			}
 			loaded = true;
-			dispatchEvent(new Event(Event.COMPLETE));
+			dispatchEvent(new Event(Event.INIT));
 		}
 		
 		protected function message(text:String):void {

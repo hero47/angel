@@ -1,5 +1,7 @@
 package angel.game.script {
 	import angel.common.Alert;
+	import angel.game.event.QEvent;
+	import angel.game.Settings;
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -21,6 +23,7 @@ package angel.game.script {
 	// The portrait overlaps left edge for NPC, right edge for PC, and may extend above and below box.
 	// I'm going to try to avoid any assumptions about the portrait art size.
 	public class ConversationBox extends Sprite {
+		public static const CONVERSATION_ENTRY_FINISHED:String = "conversationEntryFinished";
 		
 		private static const BOX_COLOR:uint = 0x7923BE;
 		private static const BOX_WIDTH:uint = 512;
@@ -66,7 +69,7 @@ package angel.game.script {
 		private function finished(selected:ConversationSegment):void {
 			removeEventListener(MouseEvent.CLICK, clickListener);
 			stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
-			dispatchEvent(new ConversationEvent(ConversationEvent.ENTRY_FINISHED, selected, true));
+			Settings.gameEventQueue.dispatch(new QEvent(this, ConversationBox.CONVERSATION_ENTRY_FINISHED, selected));
 		}
 		
 		public function set segments(rawSegments:Vector.<ConversationSegment>):void {

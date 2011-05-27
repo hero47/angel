@@ -19,12 +19,12 @@ package angel.roomedit {
 			Alert.init(stage);
 			KludgeDialogBox.init(stage);
 			catalog = new CatalogEdit();
-			catalog.addEventListener(Event.COMPLETE, catalogLoadedListener);
+			catalog.addEventListener(Event.INIT, catalogLoadedListener);
 			catalog.loadFromXmlFile("AngelCatalog.xml");
 		}
 		
 		private function catalogLoadedListener(event:Event):void {
-			catalog.removeEventListener(Event.COMPLETE, catalogLoadedListener);
+			catalog.removeEventListener(Event.INIT, catalogLoadedListener);
 			roomUI = new RoomEditUI(catalog);
 			addChild(roomUI);
 			catalogUI = new CatalogEditUI(catalog);

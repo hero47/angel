@@ -1,20 +1,8 @@
 package angel.common {
-	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Shape;
-	import flash.display.Loader;
-	import flash.events.IOErrorEvent;
-	import flash.events.Event;
-	import flash.events.IEventDispatcher;
-	import flash.events.MouseEvent;
-	import flash.events.SecurityErrorEvent;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
-	import flash.net.FileReference;	
-	import flash.net.URLLoader;
-	import flash.net.URLRequest;
-	import flash.utils.ByteArray;
-	import angel.roomedit.FileChooser;
 
 	public class Tileset implements ICatalogedResource {
 		protected static const TILESET_X_TILES:int = 4;

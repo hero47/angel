@@ -4,7 +4,6 @@ package angel.game.combat {
 	import angel.common.Util;
 	import angel.game.brain.ICombatBrain;
 	import angel.game.ComplexEntity;
-	import angel.game.EntityEvent;
 	import angel.game.EntityMovement;
 	import angel.game.event.EntityQEvent;
 	import angel.game.Icon;
@@ -54,16 +53,16 @@ package angel.game.combat {
 			
 			createFighterList();
 			
-			augmentedReality = new AugmentedReality(this);
-
 			// These listeners can only trigger in specific phases, and finishedMoving advances the phase.
 			// I'm keeping them around throughout combat rather than adding and removing them as we flip
 			// between phases because it seemed a little cleaner that way, but I'm not certain.
-			room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire, false, 100);
-			room.addEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener, false, 100);
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire);
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.FINISHED_MOVING, finishedMovingListener);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.BECAME_VISIBLE, enemyBecameVisible);
-			room.addEventListener(EntityEvent.MOVE_INTERRUPTED, moveInterruptedListener);
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.MOVE_INTERRUPTED, moveInterruptedListener);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.DEATH, deathListener);
+			
+			augmentedReality = new AugmentedReality(this);
 			
 			enemyTurnOverlay = new Shape();
 			enemyTurnOverlay.graphics.beginFill(0x4E7DB1, 0.3); // color to match alert, no clue where that number came from, heh
@@ -92,9 +91,6 @@ package angel.game.combat {
 			
 			room.disableUi();
 			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
-			room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire);
-			room.removeEventListener(EntityEvent.FINISHED_MOVING, finishedMovingListener);
-			room.removeEventListener(EntityEvent.MOVE_INTERRUPTED, moveInterruptedListener);
 			
 			augmentedReality.cleanup();
 			
@@ -245,8 +241,8 @@ package angel.game.combat {
 			return (fighterA.isReallyPlayer != fighterB.isReallyPlayer);
 		}
 		
-		private function checkForOpportunityFire(event:EntityEvent):void {
-			var entityMoving:ComplexEntity = ComplexEntity(event.entity);
+		private function checkForOpportunityFire(event:EntityQEvent):void {
+			var entityMoving:ComplexEntity = event.complexEntity;
 			Assert.assertTrue(currentFighter() == entityMoving, "Wrong entity moving");
 			var someoneDidOpportunityFire:Boolean = false;
 			
@@ -344,8 +340,8 @@ package angel.game.combat {
 		// Called each time an entity (player or NPC) finishes its combat move
 		// (specifically, during ENTER_FRAME for last frame of movement)
 		// Advance to that entity's fire phase.
-		private function finishedMovingListener(event:EntityEvent):void {
-			trace(event.entity.aaId, "finished moving, iFighter", iFighterTurnInProgress);
+		private function finishedMovingListener(event:EntityQEvent):void {
+			trace(event.simpleEntity.aaId, "finished moving, iFighter", iFighterTurnInProgress);
 			mover.clearPath();	// If movement finished unexpectedly (via ChangeAction or ??) dots may still be hanging around
 			currentFighterHasOpportunityFireCoverFrom.length = 0;
 			if (checkForCombatOver()) {
@@ -356,9 +352,9 @@ package angel.game.combat {
 			
 			var fighter:ComplexEntity = currentFighter();
 			
-			//event.entity won't match currentFighter() if moving entity was killed by opportunity fire
-			if (event.entity != fighter) {
-				trace(event.entity.aaId, "was killed, jump to end of (previous fighter's) turn");
+			//event.complexEntity won't match currentFighter() if moving entity was killed by opportunity fire
+			if (event.complexEntity != fighter) {
+				trace(event.complexEntity.aaId, "was killed, jump to end of (previous fighter's) turn");
 				finishedFire();
 				return;
 			}
@@ -407,18 +403,18 @@ package angel.game.combat {
 			beginTurnForCurrentFighter();
 		}
 		
-		private function moveInterruptedListener(event:EntityEvent):void {
+		private function moveInterruptedListener(event:EntityQEvent):void {
 			mover.clearPath();
-			trace(event.entity.aaId, "move interrupted, iFighter", iFighterTurnInProgress);
+			trace(event.simpleEntity.aaId, "move interrupted, iFighter", iFighterTurnInProgress);
 			if (combatOver) {
 				// don't allow next enemy to move, don't enable player UI, just wait for them to OK the message,
 				// which will end combat mode.
 				return;
 			}
 			
-			//event.entity won't match currentFighter() if moving entity was killed by opportunity fire
-			if (event.entity != currentFighter()) {
-				trace(event.entity.aaId, "was killed, jump to end of (previous fighter's) turn");
+			//event.complexEntity won't match currentFighter() if moving entity was killed by opportunity fire
+			if (event.complexEntity != currentFighter()) {
+				trace(event.complexEntity.aaId, "was killed, jump to end of (previous fighter's) turn");
 				finishedFire();
 				return;
 			}

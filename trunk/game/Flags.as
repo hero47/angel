@@ -2,8 +2,8 @@ package angel.game {
 	import angel.common.Alert;
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Util;
+	import angel.game.event.QEvent;
 	import flash.events.Event;
-	import flash.events.EventDispatcher;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -14,7 +14,7 @@ package angel.game {
 		//NOTE: Currently flags are boolean, but we may decide later to make them integers
 		private static var flags:Object; // mapping from flag to boolean
 		
-		public static var loader:EventDispatcher = new EventDispatcher;
+		public static var flagLoader:Object;
 		
 		public function Flags() {
 			
@@ -44,7 +44,7 @@ package angel.game {
 				Alert.show("Warning: Duplicate id(s) in " + FLAG_FILENAME + ":\n" + duplicateNames);
 			}
 			
-			loader.dispatchEvent(new Event(Event.COMPLETE));
+			Settings.gameEventQueue.dispatch(new QEvent(flagLoader, QEvent.INIT));
 		}
 		
 		public static function initFlagsFromXml(setFlags:XMLList):void {
