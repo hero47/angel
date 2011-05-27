@@ -34,6 +34,7 @@ package angel.game.test {
 			Autotest.testFunction(testIfElse);
 			
 			Autotest.setupTestRoom();
+			Autotest.assertEqual(Settings.gameEventQueue.numberOfEventsInQueue(), 0, "Setup test room should leave queue clear");
 			
 			trace("Testing actions for no room mode");
 			runTestsForMode(null);
@@ -53,6 +54,7 @@ package angel.game.test {
 			} else {
 				Autotest.assertTrue(Settings.currentRoom.mode is modeClass, modeChangeFail);
 			}
+			Settings.gameEventQueue.handleEvents();
 			
 			Autotest.testFunction(testAddRemoveCharacterActions);
 			Autotest.testFunction(testChangeToFromPc);
@@ -66,15 +68,15 @@ package angel.game.test {
 		private const addTestFlag:XML = <add flag="xxTest" />;
 		private const removeTestFlag:XML = <remove flag="xxTest" />;
 		private function testFlagActions():void {
-			testActionFromXml(addTestFlag);
+			Autotest.testActionFromXml(addTestFlag);
 			Autotest.assertTrue(Flags.getValue("xxTest"));
-			testActionFromXml(removeTestFlag);
+			Autotest.testActionFromXml(removeTestFlag);
 			Autotest.assertFalse(Flags.getValue("xxTest"));
 		}
 		
 		private function testMessageAction():void {
 			var messageActionXml:XML = <message text="Hello, world!" />;
-			testActionFromXml(messageActionXml);
+			Autotest.testActionFromXml(messageActionXml);
 			Autotest.assertAlertText("Hello, world!");
 		}
 		
@@ -126,31 +128,31 @@ package angel.game.test {
 			Autotest.assertFalse(Flags.getValue("yyTest"));
 			Autotest.clearAlert();
 			
-			testActionFromXml(ifTestShortcutXml);
+			Autotest.testActionFromXml(ifTestShortcutXml);
 			Autotest.assertNoAlert();
-			testActionFromXml(ifNotTestShortcutXml);
+			Autotest.testActionFromXml(ifNotTestShortcutXml);
 			Autotest.assertAlertText("no");
 			
 			Flags.setValue("xxTest", true);
 			
-			testActionFromXml(ifTestShortcutXml);
+			Autotest.testActionFromXml(ifTestShortcutXml);
 			Autotest.assertAlertText("yes");
-			testActionFromXml(ifNotTestShortcutXml);
+			Autotest.testActionFromXml(ifNotTestShortcutXml);
 			Autotest.assertNoAlert();
 			
 			
 			Flags.setValue("xxTest", false);
 			
-			testActionFromXml(ifTestXml);
+			Autotest.testActionFromXml(ifTestXml);
 			Autotest.assertNoAlert();
-			testActionFromXml(ifNotTestXml);
+			Autotest.testActionFromXml(ifNotTestXml);
 			Autotest.assertAlertText("no");
 			
 			Flags.setValue("xxTest", true);
 			
-			testActionFromXml(ifTestXml);
+			Autotest.testActionFromXml(ifTestXml);
 			Autotest.assertAlertText("yes");
-			testActionFromXml(ifNotTestXml);
+			Autotest.testActionFromXml(ifNotTestXml);
 			Autotest.assertNoAlert();
 			
 			
@@ -163,44 +165,44 @@ package angel.game.test {
 		private function testXxAndYy(xml:XML, what:String):void {
 			Flags.setValue("xxTest", false);
 			Flags.setValue("yyTest", false);
-			testActionFromXml(xml);
+			Autotest.testActionFromXml(xml);
 			Autotest.assertNoAlert(what);
 			
 			Flags.setValue("xxTest", true);
 			Flags.setValue("yyTest", false);
-			testActionFromXml(xml);
+			Autotest.testActionFromXml(xml);
 			Autotest.assertNoAlert(what);
 			
 			Flags.setValue("xxTest", false);
 			Flags.setValue("yyTest", true);
-			testActionFromXml(xml);
+			Autotest.testActionFromXml(xml);
 			Autotest.assertNoAlert(what);
 			
 			Flags.setValue("xxTest", true);
 			Flags.setValue("yyTest", true);
-			testActionFromXml(xml);
+			Autotest.testActionFromXml(xml);
 			Autotest.assertAlertText("yes", what);
 		}
 		
 		private function testXxOrYy(xml:XML, what:String):void {
 			Flags.setValue("xxTest", false);
 			Flags.setValue("yyTest", false);
-			testActionFromXml(xml);
+			Autotest.testActionFromXml(xml);
 			Autotest.assertNoAlert(what);
 			
 			Flags.setValue("xxTest", true);
 			Flags.setValue("yyTest", false);
-			testActionFromXml(xml);
+			Autotest.testActionFromXml(xml);
 			Autotest.assertAlertText("yes", what);
 			
 			Flags.setValue("xxTest", false);
 			Flags.setValue("yyTest", true);
-			testActionFromXml(xml);
+			Autotest.testActionFromXml(xml);
 			Autotest.assertAlertText("yes", what);
 			
 			Flags.setValue("xxTest", true);
 			Flags.setValue("yyTest", true);
-			testActionFromXml(xml);
+			Autotest.testActionFromXml(xml);
 			Autotest.assertAlertText("yes", what);
 		}
 		
@@ -256,10 +258,10 @@ package angel.game.test {
 			var room:Room = Settings.currentRoom;
 			
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null);
-			testActionFromXml(removenei); // Removing entity that's not in room does nothing
+			Autotest.testActionFromXml(removenei); // Removing entity that's not in room does nothing
 			
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null);
-			testActionFromXml(addnei);
+			Autotest.testActionFromXml(addnei);
 			var nei:SimpleEntity = room.entityInRoomWithId("nei");
 			Autotest.assertNotEqual(nei, null, "nei should have been added to room");
 			Autotest.assertTrue(nei is ComplexEntity);
@@ -267,28 +269,28 @@ package angel.game.test {
 			Autotest.assertTrue(nei.location.equals(new Point(0, 0)), "Unspecified location should default to 0,0");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei));
 			
-			testActionFromXml(removenei);
+			Autotest.testActionFromXml(removenei);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null, "nei should have been removed");
 			
-			testActionFromXml(addneiAt12);
+			Autotest.testActionFromXml(addneiAt12);
 			var nei2:SimpleEntity = room.entityInRoomWithId("nei");
 			Autotest.assertTrue(nei2.location.equals(new Point(1, 2)), "Should use x & y if provided");
-			room.removeEntityWithId("nei");
+			Autotest.testActionFromXml(removenei);
 			
-			testActionFromXml(addneiAtTestSpot);
+			Autotest.testActionFromXml(addneiAtTestSpot);
 			var nei3:SimpleEntity = room.entityInRoomWithId("nei");
 			Autotest.assertAlerted("Undefined spot");
 			Autotest.assertTrue(nei3.location.equals(new Point(0, 0)), "Should create at 0,0 if spot undefined");
-			room.removeEntityWithId("nei");
+			Autotest.testActionFromXml(removenei);
 			
 			room.addOrMoveSpot("test", new Point(3, 4));
-			testActionFromXml(addneiAtTestSpot);
+			Autotest.testActionFromXml(addneiAtTestSpot);
 			var nei4:SimpleEntity = room.entityInRoomWithId("nei");
 			Autotest.assertTrue(nei4.location.equals(new Point(3, 4)), "Should create at 0,0 if spot undefined");
-			room.removeEntityWithId("nei");
+			Autotest.testActionFromXml(removenei);
 			room.removeSpot("test");
 			
-			testActionFromXml(addNeiWithBrains);
+			Autotest.testActionFromXml(addNeiWithBrains);
 			var nei5:ComplexEntity = ComplexEntity(room.entityInRoomWithId("nei"));
 			Autotest.assertEqual(nei5.exploreBrainClass, BrainFidget);
 			Autotest.assertEqual(nei5.combatBrainClass, CombatBrainWander);
@@ -299,7 +301,7 @@ package angel.game.test {
 			} else {
 				Autotest.assertEqual(nei5.brain, null);
 			}
-			room.removeEntityWithId("nei");
+			Autotest.testActionFromXml(removenei);
 		}
 		
 		private const changeNeiToPc:XML = <changeToPc id="nei" />;
@@ -309,21 +311,21 @@ package angel.game.test {
 		private function testChangeToFromPc():void {
 			var room:Room = Settings.currentRoom;
 			
-			testActionFromXml(changeNeiToPc);
+			Autotest.testActionFromXml(changeNeiToPc);
 			Autotest.assertAlertText("Script error: no character nei in room for changeToPc");			
 			
-			testActionFromXml(changeNeiToNpc);
+			Autotest.testActionFromXml(changeNeiToNpc);
 			Autotest.assertAlertText("Script error: no character nei in room for changeToNpc");
 			
-			testActionFromXml(addNeiWithBrains);
+			Autotest.testActionFromXml(addNeiWithBrains);
 			var nei:ComplexEntity = ComplexEntity(room.entityInRoomWithId("nei"));
 			Autotest.assertFalse(nei.isReallyPlayer, "Should be npc");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Npc shouldn't be on player list");
 			
-			testActionFromXml(changeNeiToNpc);
+			Autotest.testActionFromXml(changeNeiToNpc);
 			Autotest.assertNoAlert("Change to Npc does nothing if entity is already npc");
 			
-			testActionFromXml(changeNeiToPc);
+			Autotest.testActionFromXml(changeNeiToPc);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), nei, "Change pc-ness shouldn't change room or identity");
 			Autotest.assertTrue(nei.isReallyPlayer, "Should have changed to player");
 			Autotest.assertTrue(Settings.isOnPlayerList(nei), "Should have added to player list");
@@ -335,7 +337,7 @@ package angel.game.test {
 				Autotest.assertEqual(nei.brain, null);
 			}
 			
-			testActionFromXml(changeNeiToNpc);
+			Autotest.testActionFromXml(changeNeiToNpc);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), nei, "Change pc-ness shouldn't change room or identity");
 			Autotest.assertFalse(nei.isReallyPlayer, "Should have changed back to npc");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Should have removed from player list");
@@ -344,8 +346,8 @@ package angel.game.test {
 			Autotest.assertEqual(nei.brain, null);
 			
 			Settings.currentRoom.addOrMoveSpot("testSpot", new Point(0, 0));
-			testActionFromXml(changeNeiToPc);
-			testActionFromXml(changeNeiToNpcWithBrains);
+			Autotest.testActionFromXml(changeNeiToPc);
+			Autotest.testActionFromXml(changeNeiToNpcWithBrains);
 			Autotest.assertEqual(nei.exploreBrainClass, BrainWander);
 			Autotest.assertEqual(nei.combatBrainClass, CombatBrainPatrol);
 			Autotest.assertEqual(nei.combatBrainParam, "3:testSpot");
@@ -358,8 +360,8 @@ package angel.game.test {
 			}
 			Settings.currentRoom.removeSpot("testSpot");
 			
-			testActionFromXml(changeNeiToPc);
-			testActionFromXml(removenei);
+			Autotest.testActionFromXml(changeNeiToPc);
+			Autotest.testActionFromXml(removenei);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null, "nei should have been removed");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Remove pc from room should also remove from player list");
 		}
@@ -394,17 +396,17 @@ package angel.game.test {
 			var room:Room = Settings.currentRoom;
 			Settings.currentRoom.addOrMoveSpot("testSpot", new Point(3, 5));
 			
-			testActionFromXml(addneiAt12);
+			Autotest.testActionFromXml(addneiAt12);
 			var nei:SimpleEntity = room.entityInRoomWithId("nei");
 			Autotest.assertTrue(nei.location.equals(new Point(1, 2)), "Initial location wrong");
-			testActionFromXml(changeNeiSpot);
+			Autotest.testActionFromXml(changeNeiSpot);
 			Autotest.assertTrue(nei.location.equals(new Point(3, 5)), "Didn't move correctly with spot");
-			testActionFromXml(changeNeiWithXY);
+			Autotest.testActionFromXml(changeNeiWithXY);
 			Autotest.assertTrue(nei.location.equals(new Point(4, 7)), "Didn't move correctly with X & Y parameters");
-			testActionFromXml(changeNeiSpotAndXY);
+			Autotest.testActionFromXml(changeNeiSpotAndXY);
 			Autotest.assertAlertText("Error: change action with both spot and x,y");
 			
-			testActionFromXml(changeNeiBrain);
+			Autotest.testActionFromXml(changeNeiBrain);
 			var neiComplex:ComplexEntity = ComplexEntity(nei);
 			Autotest.assertEqual(neiComplex.exploreBrainClass, BrainWander);
 			Autotest.assertEqual(neiComplex.combatBrainClass, CombatBrainPatrol);
@@ -416,7 +418,7 @@ package angel.game.test {
 			} else {
 				Autotest.assertEqual(neiComplex.brain, null);
 			}
-			testActionFromXml(clearNeiBrain);
+			Autotest.testActionFromXml(clearNeiBrain);
 			Autotest.assertEqual(neiComplex.exploreBrainClass, null);
 			Autotest.assertEqual(neiComplex.combatBrainClass, null);
 			Autotest.assertEqual(neiComplex.combatBrainParam, null, "Removing behavior should auto-remove corresponding param");
@@ -426,33 +428,19 @@ package angel.game.test {
 			Autotest.clearAlert();
 			Autotest.assertNotEqual(foo, null, "couldn't create prop foo");
 			Settings.currentRoom.addEntityUsingItsLocation(foo);
+			Settings.gameEventQueue.handleEvents();
 			var foo1:SimpleEntity = Settings.currentRoom.entityInRoomWithId("foo");
 			Autotest.assertEqual(foo, foo1, "foo not added to room");
 			Autotest.assertTrue(foo.location.equals(new Point(6, 5)), "foo location wrong");
-			testActionFromXml(changeFoo);
+			
+			Autotest.testActionFromXml(changeFoo);
 			Autotest.assertNoAlert("Changing brains on simple entity should be ignored, not cause error");
 			Autotest.assertTrue(foo.location.equals(new Point(3, 5)), "foo didn't move to spot");
-			testActionFromXml(removeFoo);
+			Autotest.testActionFromXml(removeFoo);
 			
-			testActionFromXml(removenei);
+			Autotest.testActionFromXml(removenei);
 			Settings.currentRoom.removeSpot("testSpot");
 		}
-		
-		private function testActionFromXml(xml:XML, shouldDelayUntilEnd:Boolean = false):void {
-			var doAtEnd:Vector.<Function> = new Vector.<Function>();
-			var action:IAction = Action.createFromXml(xml);
-			Autotest.assertNoAlert();
-			Autotest.assertNotEqual(action, null, "Action creation failed");
-			if (action != null) {
-				action.doAction(doAtEnd);
-				Autotest.assertEqual(shouldDelayUntilEnd, doAtEnd.length > 0, "Wrong delay status");
-				while (doAtEnd.length > 0) {
-					var doThis:Function = doAtEnd.shift();
-					doThis();
-				}
-			}
-		}
-		
 		
 		
 	} // end class ActionTest

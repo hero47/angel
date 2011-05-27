@@ -71,7 +71,7 @@ package angel.game {
 		}
 		
 		public function detachFromRoom():void {
-			Settings.gameEventQueue.removeListener(me.room, Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
+			Settings.gameEventQueue.removeListener(me.room, Room.ROOM_ENTER_UNPAUSED_FRAME, moveOneFrameAlongPath);
 		}
 		
 		public function moving():Boolean {
@@ -162,7 +162,7 @@ package angel.game {
 			moveGoal = (path.length > 0 ? path[path.length - 1] : me.location);
 			mostRecentGait = (path.length == 0 ? GAIT_NO_MOVE : Math.min(gait, maxGait));
 			moveSpeed = gaitSpeeds[mostRecentGait];
-			Settings.gameEventQueue.addListener(this, me.room, Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
+			Settings.gameEventQueue.addListener(this, me.room, Room.ROOM_ENTER_UNPAUSED_FRAME, moveOneFrameAlongPath);
 		}
 		
 		public function minGaitForDistance(distance:int):int {
@@ -291,7 +291,7 @@ package angel.game {
 			movingTo = null;
 			path = null;
 			coordsForEachFrameOfMove = null;
-			Settings.gameEventQueue.removeListener(me.room, Room.UNPAUSED_ENTER_FRAME, moveOneFrameAlongPath);
+			Settings.gameEventQueue.removeListener(me.room, Room.ROOM_ENTER_UNPAUSED_FRAME, moveOneFrameAlongPath);
 			me.dispatchEvent(new EntityEvent( wasInterrupted ? EntityEvent.MOVE_INTERRUPTED : EntityEvent.FINISHED_MOVING,
 							true, false, me));
 		}

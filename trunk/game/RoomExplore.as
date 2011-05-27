@@ -20,7 +20,7 @@ package angel.game {
 		
 		public function RoomExplore(room:Room) {
 			this.room = room;
-			Settings.gameEventQueue.addListener(this, room, Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
+			Settings.gameEventQueue.addListener(this, room, Room.ROOM_ENTER_UNPAUSED_FRAME, processTimedEvents);
 			room.forEachComplexEntity(initEntityForExplore);
 			
 			exploreUi = new ExploreUi(room, this);
@@ -31,7 +31,7 @@ package angel.game {
 
 		public function cleanup():void {
 			room.disableUi();
-			Settings.gameEventQueue.removeListener(room, Room.UNPAUSED_ENTER_FRAME, processTimedEvents);
+			Settings.gameEventQueue.removeListener(room, Room.ROOM_ENTER_UNPAUSED_FRAME, processTimedEvents);
 			room.forEachComplexEntity(cleanupEntityFromExplore);
 			timeQueue = null;
 		}

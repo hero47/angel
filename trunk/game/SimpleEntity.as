@@ -6,6 +6,7 @@ package angel.game {
 	import angel.common.RoomContentResource;
 	import angel.common.Util;
 	import angel.game.action.ConversationAction;
+	import angel.game.event.EntityQEvent;
 	import angel.game.script.ConversationData;
 	import angel.game.script.Script;
 	import flash.display.Bitmap;
@@ -131,7 +132,7 @@ package angel.game {
 			if (newLocation != null) {
 				this.location = newLocation;
 			}
-			dispatchEvent(new EntityEvent(EntityEvent.ADDED_TO_ROOM, true, false, this));
+			Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.ADDED_TO_ROOM));
 		}
 		
 		public function centerOfImage():Point {

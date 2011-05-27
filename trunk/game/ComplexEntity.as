@@ -11,6 +11,7 @@ package angel.game {
 	import angel.game.combat.Gun;
 	import angel.game.combat.IWeapon;
 	import angel.game.combat.RoomCombat;
+	import angel.game.event.EntityQEvent;
 	import flash.display.Bitmap;
 	import flash.display.DisplayObject;
 	import flash.geom.Point;
@@ -176,7 +177,7 @@ package angel.game {
 			if (room.mode != null) {
 				room.mode.playerControlChanged(this, playerControlled);
 			}
-			dispatchEvent(new EntityEvent(EntityEvent.CHANGED_FACTION, true, false, this));
+			Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.CHANGED_FACTION));
 		}
 		
 		public function get isPlayerControlled():Boolean {
@@ -190,6 +191,10 @@ package angel.game {
 		public function isEnemy():Boolean {
 			//CONSIDER: is this true, or will we want to have civilians with combat behavior that are untargetable?
 			return (combatBrainClass != null && currentHealth > 0);
+		}
+		
+		public function isAlive():Boolean {
+			return (currentHealth > 0);
 		}
 		
 		public function canBeActiveInCombat():Boolean {
@@ -244,12 +249,12 @@ package angel.game {
 			currentHealth -= baseDamage;
 			trace(aaId, "damaged for", baseDamage, ", health now", currentHealth);
 			setTextOverHead(String(currentHealth));
-
-			dispatchEvent(new EntityEvent(EntityEvent.HEALTH_CHANGE, true, false, this));
-			if (currentHealth <= 0) {
+			if (currentHealth > 0) {
+				Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.HEALTH_CHANGE));
+			} else {
 				solidness ^= Prop.TALL; // Dead entities are short, by fiat.
 				startDeathAnimation();
-				dispatchEvent(new EntityEvent(EntityEvent.DEATH, true, false, this));
+				Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.DEATH));
 			}
 		}
 		

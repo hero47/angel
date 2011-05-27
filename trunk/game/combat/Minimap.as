@@ -2,6 +2,9 @@ package angel.game.combat {
 	import angel.common.Floor;
 	import angel.game.ComplexEntity;
 	import angel.game.EntityEvent;
+	import angel.game.event.EntityQEvent;
+	import angel.game.event.QEvent;
+	import angel.game.Room;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import flash.display.Bitmap;
@@ -81,14 +84,14 @@ package angel.game.combat {
 			
 			this.combat = combat;
 			//addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
-			addEventListener(Event.ENTER_FRAME, scrollRoomSpriteToMatchRealRoom);
 			combat.room.addEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, someoneMoved);
 			combat.room.addEventListener(EntityEvent.LOCATION_CHANGED_DIRECTLY, someoneMoved);
-			combat.room.addEventListener(EntityEvent.START_TURN, someoneStartedTurn);
-			combat.room.addEventListener(EntityEvent.DEATH, someoneDied);
-			combat.room.addEventListener(EntityEvent.JOINED_COMBAT, someoneJoinedCombat);
-			combat.room.addEventListener(EntityEvent.REMOVED_FROM_ROOM, someoneLeftRoom);
-			combat.room.addEventListener(EntityEvent.CHANGED_FACTION, someoneChangedFaction);
+			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.START_TURN, someoneStartedTurn);
+			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.REMOVED_FROM_ROOM, someoneLeftRoom);
+			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.DEATH, someoneDied);
+			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.CHANGED_FACTION, someoneChangedFaction);
+			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.JOINED_COMBAT, someoneJoinedCombat);
+			Settings.gameEventQueue.addListener(this, combat.room, Room.ROOM_ENTER_FRAME, scrollRoomSpriteToMatchRealRoom);
 			
 			roomSprite = new Sprite();
 			addChild(roomSprite);
@@ -139,6 +142,17 @@ package angel.game.combat {
 			setIconPositionFromEntityLocation(activeEntityMarker, activeEntity);
 		}
 		
+		public function cleanup():void {
+			//removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
+			//removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
+			combat.room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, someoneMoved);
+			combat.room.removeEventListener(EntityEvent.LOCATION_CHANGED_DIRECTLY, someoneMoved);
+			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
+			if (parent != null) {
+				parent.removeChild(this);
+			}
+		}
+		
 		private function addFighter(fighter:ComplexEntity, isMainPlayer:Boolean):void {
 			var bits:BitmapData;
 			if (fighter.isPlayerControlled) {
@@ -150,22 +164,6 @@ package angel.game.combat {
 			setIconPositionFromEntityLocation(icon, fighter);
 			roomSprite.addChild(icon);
 			entityToMapIcon[fighter] = icon;
-		}
-		
-		public function cleanup():void {
-			//removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
-			//removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
-			removeEventListener(Event.ENTER_FRAME, scrollRoomSpriteToMatchRealRoom);
-			combat.room.removeEventListener(EntityEvent.FINISHED_ONE_TILE_OF_MOVE, someoneMoved);
-			combat.room.removeEventListener(EntityEvent.LOCATION_CHANGED_DIRECTLY, someoneMoved);
-			combat.room.removeEventListener(EntityEvent.START_TURN, someoneStartedTurn);
-			combat.room.removeEventListener(EntityEvent.DEATH, someoneDied);
-			combat.room.removeEventListener(EntityEvent.JOINED_COMBAT, someoneJoinedCombat);
-			combat.room.removeEventListener(EntityEvent.REMOVED_FROM_ROOM, someoneLeftRoom);
-			combat.room.removeEventListener(EntityEvent.CHANGED_FACTION, someoneChangedFaction);
-			if (parent != null) {
-				parent.removeChild(this);
-			}
 		}
 		
 		private function setIconPositionFromLocation(icon:Bitmap, location:Point):void {
@@ -189,13 +187,10 @@ package angel.game.combat {
 			activeEntityMarker.y = activeEntityIcon.y;
 		}
 		
-		private function adjustEnemyIcon(enemy:SimpleEntity):void {
+		private function adjustEnemyIcon(enemy:ComplexEntity):void {
 			var icon:Bitmap = entityToMapIcon[enemy];
 			if (enemy.visible) {
-				if (icon.bitmapData == enemyLastSeenBitmapData) {
-					//NOTE: don't change icon if it's enemyDead!
-					icon.bitmapData = enemyBitmapData;
-				}
+				icon.bitmapData = (enemy.isAlive() ? enemyBitmapData : deadEnemyBitmapData);
 				setIconPositionFromEntityLocation(icon, enemy);
 			} else {
 				icon.bitmapData = enemyLastSeenBitmapData;
@@ -219,7 +214,7 @@ package angel.game.combat {
 				setIconPositionFromEntityLocation(entityToMapIcon[event.entity], event.entity);
 				adjustAllEnemyIconsForVisibility();
 			} else {
-				adjustEnemyIcon(event.entity);
+				adjustEnemyIcon(ComplexEntity(event.entity));
 			}
 			
 			if (event.entity == activeEntity) {
@@ -227,42 +222,43 @@ package angel.game.combat {
 			}
 		}
 		
-		public function someoneStartedTurn(event:EntityEvent):void {
-			activeEntity = event.entity;
+		public function someoneStartedTurn(event:EntityQEvent):void {
+			activeEntity = event.complexEntity;
 			adjustActiveEntityMarker();
 		}
 		
-		public function someoneDied(event:EntityEvent):void {
-			var icon:Bitmap = entityToMapIcon[event.entity];
+		public function someoneDied(event:EntityQEvent):void {
+			var icon:Bitmap = entityToMapIcon[event.complexEntity];
 			if (icon != null) { // we don't currently (5/7/11) show map icons for non-combattants, so need to check
-				icon.bitmapData = (ComplexEntity(event.entity).isPlayerControlled ? deadPlayerBitmapData : deadEnemyBitmapData);
+				icon.bitmapData = (event.complexEntity.isPlayerControlled ? deadPlayerBitmapData : deadEnemyBitmapData);
 				adjustAllEnemyIconsForVisibility();
 			}
 		}
 		
-		public function someoneJoinedCombat(event:EntityEvent):void {
-			addFighter(ComplexEntity(event.entity), false);
-			if (!event.entity.visible) {
-				setIconPositionOffMap(entityToMapIcon[event.entity]);
+		public function someoneJoinedCombat(event:EntityQEvent):void {
+			var entity:ComplexEntity = event.complexEntity;
+			addFighter(entity, false);
+			if (!entity.visible) {
+				setIconPositionOffMap(entityToMapIcon[entity]);
 			}
 			adjustAllEnemyIconsForVisibility();
 		}
 		
 		//CONSIDER: If the person who left was a currently-out-of-sight enemy, this lets the player know that they're
 		//no longer in room rather than just hiding somewhere.  Is that good or bad?
-		public function someoneLeftRoom(event:EntityEvent):void {
-			var icon:Bitmap = entityToMapIcon[event.entity];
+		public function someoneLeftRoom(event:EntityQEvent):void {
+			var icon:Bitmap = entityToMapIcon[event.complexEntity];
 			if (icon != null) {
 				roomSprite.removeChild(icon);
-				delete entityToMapIcon[event.entity];
+				delete entityToMapIcon[event.complexEntity];
 				adjustAllEnemyIconsForVisibility();
 			}
 		}
 		
-		public function someoneChangedFaction(event:EntityEvent):void {
-			var icon:Bitmap = entityToMapIcon[event.entity];
+		public function someoneChangedFaction(event:EntityQEvent):void {
+			var entity:ComplexEntity = event.complexEntity;
+			var icon:Bitmap = entityToMapIcon[entity];
 			if (icon != null) {
-				var entity:ComplexEntity = ComplexEntity(event.entity);
 				if (entity.isEnemy()) {
 					adjustEnemyIcon(entity);
 				} else {
@@ -273,7 +269,7 @@ package angel.game.combat {
 			}
 		}
 		
-		public function scrollRoomSpriteToMatchRealRoom(event:Event):void {
+		public function scrollRoomSpriteToMatchRealRoom(event:QEvent):void {
 			roomSprite.x = Math.floor(combat.room.x / SCALE);
 			roomSprite.y = Math.floor(combat.room.y / SCALE);
 		}
