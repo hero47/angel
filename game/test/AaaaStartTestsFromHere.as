@@ -14,6 +14,7 @@ package angel.game.test {
 	public class AaaaStartTestsFromHere extends Sprite {
 		
 		private var initTimer:Timer;
+		private var gameInitialized:Boolean = false;
 		
 		public function AaaaStartTestsFromHere() {
 			Autotest.runningFromRoot = this;
@@ -55,22 +56,26 @@ package angel.game.test {
 			new InitGameFromFiles(gameInitializedCallback);
 		}
 		
-		private function waitingForInit(event:Event):void {
-			Settings.gameEventQueue.handleEvents();
+		private function gameInitializedCallback(initRoomXml:XML):void {
+			//ignore the initRoomXml; any tests that want a room will make their own
+			gameInitialized = true;
 		}
 		
-		private function gameInitializedCallback(xml:XML):void {
-			initTimer.stop();
-			removeEventListener(Event.ENTER_FRAME, waitingForInit);
-			Autotest.failCount = 0;
-			testsRequiringGameInit();
-			trace("Game tests finished, failCount", Autotest.failCount);
-			Autotest.assertEqual(Settings.currentRoom, null, "Initialization shouldn't create room");
+		private function waitingForInit(event:Event):void {
+			Settings.gameEventQueue.handleEvents();
+			if (gameInitialized) {
+				initTimer.stop();
+				removeEventListener(Event.ENTER_FRAME, waitingForInit);
+				Autotest.failCount = 0;
+				Autotest.assertEqual(Settings.currentRoom, null, "Initialization shouldn't create room");
+				testsRequiringGameInit();
+				trace("Game tests finished, failCount", Autotest.failCount);
+			}
 		}
 		
 		private function timeout(event:TimerEvent):void {
 			removeEventListener(Event.ENTER_FRAME, waitingForInit);
-			trace("Initialization timeout reached. Alert:", Alert.messageForTestMode);
+			trace("Initialization timeout. Alert:", Alert.messageForTestMode);
 		}
 		
 		private function alertTest():void {

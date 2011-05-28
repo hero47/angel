@@ -11,41 +11,54 @@ package angel.game {
 	 */
 	public class InitGameFromFiles {
 		private var callbackWithInitRoomXml:Function;
+		private var flagsLoaded:Boolean = false;
+		private var xmlInitData:XML = null;
 		
 		public function InitGameFromFiles(callbackWithInitRoomXml:Function):void {
 			this.callbackWithInitRoomXml = callbackWithInitRoomXml;
+			
 			var catalog:Catalog = new Catalog();
 			catalog.addEventListener(Event.INIT, catalogLoadedListener);
 			catalog.loadFromXmlFile("AngelCatalog.xml");
+			
+			Settings.gameEventQueue.addListener(this, Flags.flagLoader, QEvent.INIT, flagsLoadedListener);
+			Flags.loadFlagListFromXmlFile();
+			
+			LoaderWithErrorCatching.LoadFile("AngelInit.xml", xmlLoadedForInit);
 		}
 		
 		private function catalogLoadedListener(event:Event):void {
+			event.target.removeEventListener(Event.INIT, catalogLoadedListener);
 			Settings.catalog = Catalog(event.target);
-			Settings.catalog.removeEventListener(Event.INIT, catalogLoadedListener);
-			Settings.gameEventQueue.addListener(this, Flags.flagLoader, QEvent.INIT, flagsLoadedListener);
-			Flags.loadFlagListFromXmlFile();
+			finishInitIfAllDataLoaded();
 		}
 		
 		private function flagsLoadedListener(event:QEvent):void {
 			Settings.gameEventQueue.removeListener(Flags.flagLoader, QEvent.INIT, flagsLoadedListener);
-			LoaderWithErrorCatching.LoadFile("AngelInit.xml", xmlLoadedForInit);
+			flagsLoaded = true;
+			finishInitIfAllDataLoaded();
 		}
 
 		private function xmlLoadedForInit(event:Event, filename:String):void {
-			var xmlData:XML = Util.parseXml(event.target.data, filename);
-			if (xmlData == null) {
+			xmlInitData = Util.parseXml(event.target.data, filename);
+			if (xmlInitData == null) {
 				return;
 			}
-			if (xmlData.room.length == 0) {
+			if (xmlInitData.room.length == 0) {
 				Alert.show("ERROR: Bad init file! " + filename);
 				return;
 			}
+			finishInitIfAllDataLoaded();
+		}
 			
-			Settings.initFromXml(xmlData.settings);
-			Settings.initPlayersFromXml(xmlData.player, Settings.catalog);
-			Flags.initFlagsFromXml(xmlData.setFlag);
-			
-			callbackWithInitRoomXml(xmlData.room[0]);
+		private function finishInitIfAllDataLoaded():void {
+			if ((Settings.catalog != null) && flagsLoaded && (xmlInitData != null)) {
+				Settings.initFromXml(xmlInitData.settings);
+				Settings.initPlayersFromXml(xmlInitData.player, Settings.catalog);
+				Flags.initFlagsFromXml(xmlInitData.setFlag);
+				
+				callbackWithInitRoomXml(xmlInitData.room[0]);
+			}
 		}
 		
 	}
