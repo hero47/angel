@@ -81,7 +81,12 @@ package angel.game {
 				id = walkerXml.@id
 			}
 			
-			var entity:ComplexEntity = new ComplexEntity(catalog.retrieveCharacterResource(id), id);
+			var resource:RoomContentResource = catalog.retrieveCharacterResource(id);
+			if (resource == null) { // Catalog had something with this id that's not a character resource
+				return null;
+			}
+			
+			var entity:ComplexEntity = new ComplexEntity(resource, id);
 			entity.setBrain(true, UtilBrain.exploreBrainClassFromString(walkerXml.@explore), walkerXml.@exploreParam);
 			entity.setBrain(false, UtilBrain.combatBrainClassFromString(walkerXml.@combat), walkerXml.@combatParam);
 			entity.setCommonPropertiesFromXml(walkerXml);
@@ -218,7 +223,7 @@ package angel.game {
 			}
 		}
 		
-		public function adjustBrainForRoomMode(mode:RoomMode):void {
+		public function adjustBrainForRoomMode(mode:IRoomMode):void {
 			if (brain != null) {
 				brain.cleanup();
 			}

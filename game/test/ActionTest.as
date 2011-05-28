@@ -26,8 +26,6 @@ package angel.game.test {
 		
 		
 		
-		//CONSIDER: Parts of this are really flag tests and catalog tests, could be separated out
-		//CONSIDER: Room initialization will probably want to be pulled out so other tests can use it as well
 		public function ActionTest() {
 			Autotest.testFunction(testFlagActions);
 			Autotest.testFunction(testMessageAction);
@@ -35,6 +33,7 @@ package angel.game.test {
 			Autotest.testFunction(testIfElse);
 			
 			Autotest.setupTestRoom();
+			Autotest.assertTrue(Settings.isOnPlayerList(Settings.currentRoom.mainPlayerCharacter), "Main player not on player list, something earlier screwed up");
 			Autotest.assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Setup test room should leave queue clear");
 			
 			trace("Testing actions for no room mode");
@@ -61,6 +60,7 @@ package angel.game.test {
 			Autotest.testFunction(testChangeToFromPc);
 			//Autotest.testFunction(testChangeRoom); This doesn't work because it loads from file, which is a delayed callback
 			Autotest.testFunction(testChangeAction);
+			Autotest.testFunction(testChangeMainPcAction);
 			
 			Settings.currentRoom.changeModeTo(null);
 			Autotest.assertEqual(Settings.currentRoom.mode, null, modeChangeFail);
@@ -303,6 +303,12 @@ package angel.game.test {
 				Autotest.assertEqual(nei5.brain, null);
 			}
 			Autotest.testActionFromXml(removenei);
+			
+			var mainPcId:String = Settings.currentRoom.mainPlayerCharacter.id;
+			var removeMainPc:XML = removenei.copy();
+			removeMainPc.@id = mainPcId;
+			Autotest.testActionFromXml(removeMainPc);
+			Autotest.assertAlerted("Attempt to remove main pc should give error");
 		}
 		
 		private const changeNeiToPc:XML = <changeToPc id="nei" />;
@@ -367,6 +373,12 @@ package angel.game.test {
 			Autotest.testActionFromXml(removenei);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null, "nei should have been removed");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Remove pc from room should also remove from player list");
+			
+			var mainPcId:String = Settings.currentRoom.mainPlayerCharacter.id;
+			var changeMainPc:XML = changeNeiToNpc.copy();
+			changeMainPc.@id = mainPcId;
+			Autotest.testActionFromXml(changeMainPc);
+			Autotest.assertAlerted("Attempt to change main pc to npc should give error");
 		}
 		
 		/*
@@ -445,6 +457,31 @@ package angel.game.test {
 			Settings.currentRoom.removeSpot("testSpot");
 		}
 		
+		private function testChangeMainPcAction():void {
+			Autotest.assertTrue(Settings.isOnPlayerList(Settings.currentRoom.mainPlayerCharacter), "Main player not on player list, something earlier screwed up");
+			
+			Autotest.testActionFromXml(<addNpc id="xxNewMainPc" />);
+			Autotest.clearAlert(); // should alert the first time through because it's not in catalog
+			Autotest.testActionFromXml(<changeToPc id="xxNewMainPc" />);
+			//Autotest.clearAlert();
+			var newPc:ComplexEntity = ComplexEntity(Settings.currentRoom.entityInRoomWithId("xxNewMainPc"));
+			Autotest.assertNotEqual(newPc, null, "xxNewMainPc should be in room now");
+			
+			var originalMainPcId:String = Settings.currentRoom.mainPlayerCharacter.id;
+			var changeMainPc:XML = <changeMainPc />;
+			changeMainPc.@id = "xxNewMainPc";
+			Autotest.testActionFromXml(changeMainPc);
+			Autotest.assertEqual(Settings.currentRoom.mainPlayerCharacter.id, "xxNewMainPc", "Main pc should have changed");
+			Autotest.testActionFromXml(<removeFromRoom id="xxNewMainPc" />);
+			Autotest.assertAlerted("Attempt to remove new main pc should fail");
+			changeMainPc.@id = originalMainPcId;
+			Autotest.testActionFromXml(changeMainPc);
+			Autotest.assertEqual(Settings.currentRoom.mainPlayerCharacter.id, originalMainPcId, "Main pc should have changed back");
+			
+			Autotest.testActionFromXml(<removeFromRoom id="xxNewMainPc" />);
+			newPc = ComplexEntity(Settings.currentRoom.entityInRoomWithId("xxNewMainPc"));
+			Autotest.assertEqual(newPc, null, "remove should have succeeded now that it's not main pc any more");
+		}
 		
 	} // end class ActionTest
 

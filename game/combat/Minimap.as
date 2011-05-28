@@ -91,6 +91,7 @@ package angel.game.combat {
 			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.CHANGED_FACTION, someoneChangedFaction);
 			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.JOINED_COMBAT, someoneJoinedCombat);
 			Settings.gameEventQueue.addListener(this, combat.room, Room.ROOM_ENTER_FRAME, scrollRoomSpriteToMatchRealRoom);
+			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.BECAME_MAIN_PC, mainPlayerCharacterChanged);
 			
 			roomSprite = new Sprite();
 			addChild(roomSprite);
@@ -270,6 +271,17 @@ package angel.game.combat {
 		public function scrollRoomSpriteToMatchRealRoom(event:QEvent):void {
 			roomSprite.x = Math.floor(combat.room.x / SCALE);
 			roomSprite.y = Math.floor(combat.room.y / SCALE);
+		}
+		
+		private function mainPlayerCharacterChanged(event:EntityQEvent):void {
+			var newMainPc:ComplexEntity = event.complexEntity;
+			var oldMainPc:ComplexEntity = ComplexEntity(event.param);
+			if (oldMainPc.isAlive()) {
+				entityToMapIcon[oldMainPc].bitmapData = otherPlayerBitmapData;
+			}
+			if (newMainPc.isAlive()) {
+				entityToMapIcon[newMainPc].bitmapData = mainPlayerBitmapData;
+			}
 		}
 		
 		/*

@@ -4,6 +4,7 @@ package angel.game {
 	import angel.common.Catalog;
 	import angel.common.CatalogEntry;
 	import angel.common.Defaults;
+	import angel.common.RoomContentResource;
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.combat.Grenade;
@@ -128,7 +129,11 @@ package angel.game {
 					id = "PLAYER-" + i;
 				}
 				++i;
-				entity = new ComplexEntity(catalog.retrieveCharacterResource(id), id);
+				var resource:RoomContentResource = catalog.retrieveCharacterResource(id);
+				if (resource == null) {
+					continue;
+				}
+				entity = new ComplexEntity(resource, id);
 				entity.exploreBrainClass = null;
 				entity.combatBrainClass = CombatBrainUiMeldPlayer;
 				if (pc.@health.length() > 0) {
@@ -150,8 +155,11 @@ package angel.game {
 		}
 		
 		public static function addToPlayerList(entity:ComplexEntity):void {
-			Assert.assertTrue(pcs.indexOf(entity) == -1, "addPc already in list");
-			pcs.push(entity);
+			if (pcs.indexOf(entity) < 0) {
+				pcs.push(entity);
+			} else {
+				Assert.fail("addToPlayerList: entity already in list");
+			}
 		}
 		
 		public static function removeFromPlayerList(entity:SimpleEntity):void {
@@ -162,6 +170,17 @@ package angel.game {
 		
 		public static function isOnPlayerList(entity:SimpleEntity):Boolean {
 			return (pcs.indexOf(entity) >= 0);
+		}
+		
+		// return true if succeeded, false if it wasn't on the list to begin with
+		public static function moveToFrontOfPlayerList(entity:SimpleEntity):Boolean {
+			var index:int = pcs.indexOf(entity);
+			if (index < 0) {
+				return false;
+			}
+			pcs.splice(index, 1);
+			pcs.splice(0, 0, entity);
+			return true;
 		}
 		
 	} // end class Settings
