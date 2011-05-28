@@ -10,7 +10,7 @@ package angel.game.combat {
 	import angel.game.Icon;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
-	import angel.game.RoomMode;
+	import angel.game.IRoomMode;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import angel.game.TimedSprite;
@@ -22,7 +22,7 @@ package angel.game.combat {
 	import flash.text.TextFormatAlign;
 
 	
-	public class RoomCombat implements RoomMode {
+	public class RoomCombat implements IRoomMode {
 		
 		public var room:Room;
 		public var augmentedReality:AugmentedReality;

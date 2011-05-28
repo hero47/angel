@@ -39,7 +39,7 @@ package angel.game {
 		public var cells:Vector.<Vector.<Cell>>;
 		public var mainPlayerCharacter:ComplexEntity;
 		public var size:Point;
-		public var mode:RoomMode;
+		public var mode:IRoomMode;
 		private var spots:Object = new Object(); // associative array mapping from spotId to location
 
 		public var activeUi:IRoomUi;
@@ -393,6 +393,12 @@ package angel.game {
 				Settings.gameEventQueue.dispatch(new EntityQEvent(entity, EntityQEvent.REMOVED_FROM_ROOM));
 				entity.detachFromRoom();
 			}
+		}
+		
+		public function changeMainPlayerCharacterTo(entity:ComplexEntity):void {
+			var oldMainPc:ComplexEntity = mainPlayerCharacter;
+			mainPlayerCharacter = entity;
+			Settings.gameEventQueue.dispatch(new EntityQEvent(entity, EntityQEvent.BECAME_MAIN_PC, oldMainPc));
 		}
 		
 		public function entityInRoomWithId(entityId:String):SimpleEntity {

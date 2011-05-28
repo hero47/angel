@@ -30,6 +30,10 @@ package angel.game.action {
 		
 		public function doAction(doAtEnd:Vector.<Function>):Object {
 			var walker:ComplexEntity = ComplexEntity.createFromRoomContentsXml(walkerXml, CONTENTS_VERSION, Settings.catalog);
+			if (walker == null) {
+				// don't show another error, catalog will already have displayed error
+				return null;
+			}
 			var spotId:String = walkerXml.@spot;
 			var location:Point;
 			if (spotId != "") {

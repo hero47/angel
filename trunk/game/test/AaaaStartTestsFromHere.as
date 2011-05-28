@@ -1,5 +1,6 @@
 package angel.game.test {
 	import angel.common.Alert;
+	import angel.game.ComplexEntity;
 	import angel.game.event.EventQueue;
 	import angel.game.InitGameFromFiles;
 	import angel.game.Settings;
@@ -58,6 +59,10 @@ package angel.game.test {
 		
 		private function gameInitializedCallback(initRoomXml:XML):void {
 			//ignore the initRoomXml; any tests that want a room will make their own
+			//wipe out player list from init
+			Settings.pcs.length = 0;
+			Settings.addToPlayerList(new ComplexEntity(Settings.catalog.retrieveCharacterResource(Autotest.TEST_ROOM_MAIN_PC_ID), Autotest.TEST_ROOM_MAIN_PC_ID));
+			Autotest.clearAlert();
 			gameInitialized = true;
 		}
 		

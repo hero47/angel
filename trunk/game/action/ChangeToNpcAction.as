@@ -46,6 +46,10 @@ package angel.game.action {
 			if (entityWithId is ComplexEntity) {
 				var entity:ComplexEntity = ComplexEntity(entityWithId);
 				if (entity.isReallyPlayer) {
+					if (entity == Settings.currentRoom.mainPlayerCharacter) {
+						Alert.show("Error! Cannot change main player character to NPC, must make someone else main first.");
+						return null;
+					}
 					entity.setBrain(false, combatBrainClass, combatParam);
 					entity.setBrain(true, exploreBrainClass, exploreParam);
 					entity.setCommonPropertiesFromXml(commonXml);

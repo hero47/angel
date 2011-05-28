@@ -21,6 +21,7 @@ package angel.game.event {
 		public static const JOINED_COMBAT:String = "entityJoinedCombat";
 		public static const CHANGED_FACTION:String = "entityChangedFaction";
 		public static const BECAME_VISIBLE:String = "entityBecameVisible";
+		public static const BECAME_MAIN_PC:String = "entityBecameMainPc"; // param = old main pc
 		
 		public function EntityQEvent(source:SimpleEntity, eventId:String, param:Object = null) {
 			super(source, eventId, param);

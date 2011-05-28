@@ -137,7 +137,8 @@ package angel.game.test {
 		
 		private static const floorXml:XML = <floor x="10" y="10"/>;
 		public static function setupTestRoom():void {
-			var mainPc:ComplexEntity = new ComplexEntity(Settings.catalog.retrieveCharacterResource(TEST_ROOM_MAIN_PC_ID), TEST_ROOM_MAIN_PC_ID);
+			var mainPc:ComplexEntity = Settings.pcs[0];
+			Autotest.assertEqual(Settings.pcs.length, 1, "Extra pc(s) on character list aren't being added to room, this is inconsistant");
 			var enemy:ComplexEntity = new ComplexEntity(Settings.catalog.retrieveCharacterResource(TEST_ROOM_ENEMY_ID), TEST_ROOM_ENEMY_ID);
 			Autotest.clearAlert(); // should alert the first time we're called, since these aren't in catalog
 			enemy.combatBrainClass = CombatBrainWander;

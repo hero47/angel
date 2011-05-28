@@ -1,7 +1,7 @@
 package angel.game {
 	import flash.geom.Point;
 	
-	public interface RoomMode {
+	public interface IRoomMode {
 	
 		function cleanup():void;
 		

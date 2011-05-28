@@ -121,7 +121,10 @@ package angel.common {
 				lookup[id] = entry;
 			}
 			
-			Assert.assertTrue(entry.type == type, "Catalog entry " + id + " is wrong type.");
+			if (entry.type != type) {
+				Alert.show("Error! Catalog entry " + id + " is wrong type.");
+				return null;
+			}
 			
 			if (entry.data != null) {
 				return entry.data;

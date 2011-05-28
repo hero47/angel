@@ -3,6 +3,7 @@ package angel.game {
 	import angel.common.Assert;
 	import angel.common.Floor;
 	import angel.common.FloorTile;
+	import angel.game.event.EntityQEvent;
 	import angel.game.event.QEvent;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
@@ -13,7 +14,7 @@ package angel.game {
 	import flash.ui.Keyboard;
 
 	
-	public class RoomExplore implements RoomMode {
+	public class RoomExplore implements IRoomMode {
 		
 		private var room:Room;
 		private var exploreUi:ExploreUi;
@@ -21,6 +22,7 @@ package angel.game {
 		public function RoomExplore(room:Room) {
 			this.room = room;
 			Settings.gameEventQueue.addListener(this, room, Room.ROOM_ENTER_UNPAUSED_FRAME, processTimedEvents);
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.BECAME_MAIN_PC, mainPlayerCharacterChanged);
 			room.forEachComplexEntity(initEntityForExplore);
 			
 			exploreUi = new ExploreUi(room, this);
@@ -31,7 +33,7 @@ package angel.game {
 
 		public function cleanup():void {
 			room.disableUi();
-			Settings.gameEventQueue.removeListener(room, Room.ROOM_ENTER_UNPAUSED_FRAME, processTimedEvents);
+			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
 			room.forEachComplexEntity(cleanupEntityFromExplore);
 			timeQueue = null;
 		}
@@ -50,6 +52,11 @@ package angel.game {
 		
 		public function playerControlChanged(entity:ComplexEntity, pc:Boolean):void {
 			// do nothing special
+		}
+		
+		public function mainPlayerCharacterChanged(event:EntityQEvent):void {
+			room.disableUi();
+			room.enableUi(exploreUi, event.complexEntity);
 		}
 		
 		private function initEntityForExplore(entity:ComplexEntity):void {

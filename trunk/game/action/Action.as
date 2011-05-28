@@ -12,6 +12,7 @@ package angel.game.action {
 			"addNpc":AddNpcAction,
 			"add":AddFlagAction,
 			"change":ChangeAction,
+			"changeMainPc":ChangeMainPcAction,
 			"changeRoom":ChangeRoomAction,
 			"changeToNpc":ChangeToNpcAction,
 			"changeToPc":ChangeToPcAction,
