@@ -7,6 +7,7 @@ package angel.game.test {
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.BrainWander;
 	import angel.game.brain.CombatBrainPatrol;
+	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.brain.CombatBrainWander;
 	import angel.game.combat.RoomCombat;
 	import angel.game.ComplexEntity;
@@ -34,7 +35,7 @@ package angel.game.test {
 			Autotest.testFunction(testIfElse);
 			
 			Autotest.setupTestRoom();
-			Autotest.assertEqual(Settings.gameEventQueue.numberOfEventsInQueue(), 0, "Setup test room should leave queue clear");
+			Autotest.assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Setup test room should leave queue clear");
 			
 			trace("Testing actions for no room mode");
 			runTestsForMode(null);
@@ -330,9 +331,11 @@ package angel.game.test {
 			Autotest.assertTrue(nei.isReallyPlayer, "Should have changed to player");
 			Autotest.assertTrue(Settings.isOnPlayerList(nei), "Should have added to player list");
 			Autotest.assertEqual(nei.exploreBrainClass, BrainFollow, "PC gets follow brain");
-			Autotest.assertEqual(nei.combatBrainClass, null, "PC gets no combat brain");
+			Autotest.assertEqual(nei.combatBrainClass, CombatBrainUiMeldPlayer, "PC gets special combat brain");
 			if (Settings.currentRoom.mode is RoomExplore) {
 				Autotest.assertTrue(nei.brain is BrainFollow);
+			} else if (Settings.currentRoom.mode is RoomCombat) {
+				Autotest.assertTrue(nei.brain is CombatBrainUiMeldPlayer);
 			} else {
 				Autotest.assertEqual(nei.brain, null);
 			}

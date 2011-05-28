@@ -27,12 +27,8 @@ package angel.game {
 		private function enterFrameListener(event:Event):void {
 			if (framesRemaining-- == 0) {
 				parent.removeChild(this);
+				removeEventListener(Event.ENTER_FRAME, enterFrameListener);
 			}
-		}
-		
-		// don't know if I'll use this.  Allows re-using one of these instead of creating a new one each time.
-		public function reset():void {
-			addEventListener(Event.ADDED_TO_STAGE, addedToStageListener);		
 		}
 		
 	}

@@ -1,6 +1,7 @@
 package angel.game.action {
 	import angel.common.Alert;
 	import angel.game.brain.BrainFollow;
+	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.ComplexEntity;
 	import angel.game.script.Script;
 	import angel.game.Settings;
@@ -26,7 +27,7 @@ package angel.game.action {
 			var entityWithId:SimpleEntity = Script.entityWithScriptId(id);
 			if (entityWithId is ComplexEntity) {
 				var entity:ComplexEntity = ComplexEntity(entityWithId);
-				entity.setBrain(false, null, null);
+				entity.setBrain(false, CombatBrainUiMeldPlayer, null);
 				entity.setBrain(true, BrainFollow, Settings.currentRoom.mainPlayerCharacter.id);
 				entity.changePlayerControl(true);
 				Settings.addToPlayerList(entity);

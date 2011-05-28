@@ -11,16 +11,12 @@ package angel.game.brain {
 	
 	 // NOTE: this is NOT directly a combat brain. It doesn't have the right constructor signature.
 	 // Rather, it is the guts for the different movement speed versions of combat patrol.
-	public class CombatBrainPatrol implements ICombatBrain {
-		private var me:ComplexEntity;
-		private var combat:RoomCombat;
-		private var gait:int;
+	public class CombatBrainPatrol extends CombatBrainUiMeld {
 		private var goals:Vector.<Point>;
 		private var currentGoalIndex:int = 0;
 		
 		public function CombatBrainPatrol(entity:ComplexEntity, combat:RoomCombat, param:String) {
-			me = entity;
-			this.combat = combat;
+			super(entity, combat);
 			gait = 1;
 			if ((param != null) && (param != "")) {
 				var splitParam:Array = param.split(":");
@@ -41,7 +37,7 @@ package angel.game.brain {
 		
 		/* INTERFACE angel.game.brain.ICombatBrain */
 		
-		public function chooseMoveAndDrawDots():void {
+		override public function chooseMoveAndDrawDots():void {
 			trace(me.aaId, "Patrol: Choose move and draw dots");
 			if (!me.canMove() || shouldStop()) {
 				//If we can't move, or have a gun and a target in sight, just stand still and shoot for max damage.
@@ -64,19 +60,9 @@ package angel.game.brain {
 			
 		}
 		
-		public function doMove():void {
-			trace(me.aaId, "do move");
-			//CONSIDER: can we skip this if !me.canMove(), or is it needed for turn phase flow? I think it's needed.
-			combat.mover.startEntityFollowingPath(me, gait);		
-		}
-		
-		public function doFire():void {
+		override public function doFire():void {
 			trace(me.aaId, "do fire (CombatBrainPatrol)");
 			UtilBrain.fireAtFirstAvailableTarget(me, combat);
-		}
-		
-		public function cleanup():void {
-			me = null;
 		}
 		
 		protected function shouldStop():Boolean {

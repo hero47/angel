@@ -6,7 +6,6 @@ package angel.game.brain {
 	 */
 	public interface ICombatBrain extends IBrain {
 		function chooseMoveAndDrawDots():void;
-		function doMove():void;
 		function doFire():void;
 	}
 	

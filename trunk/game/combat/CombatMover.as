@@ -188,6 +188,10 @@ package angel.game.combat {
 			clearDots();
 			path.length = 0;
 			endIndexes.length = 0;
+		}
+		
+		public function clearPathAndReturnMarker():void {
+			clearPath();
 			removeReturnMarker();
 		}
 		
