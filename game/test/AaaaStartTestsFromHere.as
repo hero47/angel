@@ -51,11 +51,17 @@ package angel.game.test {
 			initTimer = new Timer(3000, 1);
 			initTimer.addEventListener(TimerEvent.TIMER_COMPLETE, timeout);
 			initTimer.start();
+			addEventListener(Event.ENTER_FRAME, waitingForInit);
 			new InitGameFromFiles(gameInitializedCallback);
+		}
+		
+		private function waitingForInit(event:Event):void {
+			Settings.gameEventQueue.handleEvents();
 		}
 		
 		private function gameInitializedCallback(xml:XML):void {
 			initTimer.stop();
+			removeEventListener(Event.ENTER_FRAME, waitingForInit);
 			Autotest.failCount = 0;
 			testsRequiringGameInit();
 			trace("Game tests finished, failCount", Autotest.failCount);
@@ -63,6 +69,7 @@ package angel.game.test {
 		}
 		
 		private function timeout(event:TimerEvent):void {
+			removeEventListener(Event.ENTER_FRAME, waitingForInit);
 			trace("Initialization timeout reached. Alert:", Alert.messageForTestMode);
 		}
 		

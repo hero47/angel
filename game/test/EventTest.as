@@ -30,11 +30,12 @@ package angel.game.test {
 			Autotest.testFunction(removeNonListener);
 			Autotest.testFunction(addSameListenerTwice);
 			Autotest.testFunction(handleAgainDuringHandle);
+			Autotest.testFunction(changeParentAfterDispatch);
 		}
 		
 		private function basicFunctionality():void {
 			var queue:EventQueue = new EventQueue();
-			Autotest.assertEqual(queue.numberOfEventsInQueue(), 0, "Queue starts out empty");
+			Autotest.assertEqual(queue.numberOfCallbacksWaitingProcessing(), 0, "Queue starts out empty");
 			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
 			Autotest.assertEqual(queue.numberOfListenersOn(source1), 0, "No listeners on the sprite");
 			Autotest.assertEqual(queue.numberOfListeners(this), 0, "I own none");
@@ -42,7 +43,7 @@ package angel.game.test {
 			Autotest.assertEqual(queue.numberOfListeners(source1), 0, "Sprite owns none");
 			
 			queue.addListener(this, source1, "test", sayYes);
-			Autotest.assertEqual(queue.numberOfEventsInQueue(), 0, "Adding listeners doesn't affect queue");
+			Autotest.assertEqual(queue.numberOfCallbacksWaitingProcessing(), 0, "Adding listeners doesn't affect queue");
 			Autotest.assertEqual(queue.numberOfListeners(), 1, "One registered");
 			Autotest.assertEqual(queue.numberOfListenersOn(source1), 1, "Listener was added to sprite");
 			Autotest.assertEqual(queue.numberOfListeners(this), 1, "I own the listener I added");
@@ -50,12 +51,12 @@ package angel.game.test {
 			Autotest.assertEqual(queue.numberOfListeners(source1), 0, "Sprite owns none");
 			
 			queue.dispatch(new QEvent(source1, "test"));
-			Autotest.assertEqual(queue.numberOfEventsInQueue(), 1, "Event was added to queue");
+			Autotest.assertEqual(queue.numberOfCallbacksWaitingProcessing(), 1, "Event was added to queue");
 			Autotest.assertNoAlert("Dispatch shouldn't trigger the listener");
 			
 			queue.handleEvents();
 			Autotest.assertAlertText("yes", "Listener ran");
-			Autotest.assertEqual(queue.numberOfEventsInQueue(), 0, "Handling events leaves queue empty");
+			Autotest.assertEqual(queue.numberOfCallbacksWaitingProcessing(), 0, "Handling events leaves queue empty");
 			Autotest.assertEqual(queue.numberOfListeners(), 1, "Still one registered registered");
 			Autotest.assertEqual(queue.numberOfListenersOn(source1), 1, "Sprite still has listener");
 			Autotest.assertEqual(queue.numberOfListeners(this), 1, "I still own it");
@@ -66,7 +67,7 @@ package angel.game.test {
 			Autotest.assertEqual(queue.numberOfListeners(), 0, "No listeners registered");
 			
 			queue.dispatch(new QEvent(source1, "test"));
-			Autotest.assertEqual(queue.numberOfEventsInQueue(), 1, "Event was added to queue");
+			Autotest.assertEqual(queue.numberOfCallbacksWaitingProcessing(), 0, "Event with no listeners generates no callbacks");
 			Autotest.assertNoAlert("Dispatch shouldn't trigger the listener");
 			queue.handleEvents();
 			Autotest.assertNoAlert("Nothing should happen");
@@ -169,19 +170,15 @@ package angel.game.test {
 			Autotest.assertEqual(queue.numberOfListeners(), 1);
 		}
 		
-		//NOTE: I am not sure whether this is the most useful behavior or not!
-		//May change after discussing with Mickey; in the meantime, keep it in mind and see if any of the code I'm writing
-		//is simplified or complicated by either of the possible behaviors.
 		private function addAfterDispatchButBeforeProcessing():void {
 		var queue:EventQueue = new EventQueue();
 		
 			queue.dispatch(new QEvent(source1, "event1"));
 			queue.addListener(this, source1, "event1", sayYes);
 			queue.handleEvents();
-			Autotest.assertAlertText("yes", "Listener added after dispatch but before processing starts SHOULD trigger");
+			Autotest.assertNoAlert("Listener added after dispatch but before processing starts should NOT trigger");
 		}
 		
-		//NOTE: same note as previous!
 		private function removeAfterDispatchButBeforeProcessing():void {
 		var queue:EventQueue = new EventQueue();
 		
@@ -288,6 +285,18 @@ package angel.game.test {
 			queue.handleEvents();
 			Autotest.assertAlerted("Reentrant call to handleEvents should give stack dump");
 			Autotest.assertEqual(foo, 3, "Reentrant call should ensure that events dispatched after first call are handled");
+		}
+		
+		private function changeParentAfterDispatch():void {
+			var queue:EventQueue = new EventQueue();
+			var foo:Sprite = new Sprite();
+			source1.addChild(foo);
+			
+			queue.addListener(this, source1, "event1", sayYes);
+			queue.dispatch(new QEvent(foo, "event1"));
+			source1.removeChild(foo);
+			queue.handleEvents();
+			Autotest.assertAlertText("yes", "Parent should receive event based on parentage at dispatch time");
 		}
 		
 		private function sayYes(event:QEvent):void {

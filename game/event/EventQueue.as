@@ -82,7 +82,6 @@ package angel.game.event {
 	
 	public class EventQueue {
 		
-		private var queue:Vector.<QEvent> = new Vector.<QEvent>();
 		private var callbacks:Vector.<ListenerReference> = new Vector.<ListenerReference>(); // Callbacks for the event currently being handled
 		private var lookup:Dictionary = new Dictionary(); // map event source to (associative array mapping eventId to Vector.<ListenerReference>)
 		private var handlingEvents:Boolean;
@@ -91,7 +90,7 @@ package angel.game.event {
 		}
 		
 		public function dispatch(event:QEvent):void {
-			queue.push(event);
+			generateCallbacksForOneEvent(event);
 		}
 		
 		public function addListener(owner:Object, eventSource:Object, eventId:String, callback:Function, optionalCallbackParam:Object = null):void {
@@ -123,22 +122,19 @@ package angel.game.event {
 		
 		public function removeListener(source:Object, eventId:String, callback:Function):void {
 			var listenersOnThisSource:Object = lookup[source];
-			if (listenersOnThisSource == null) {
-				return;
-			}
-			var list:Vector.<ListenerReference> = listenersOnThisSource[eventId];
-			if (list == null) {
-				return;
-			}
-			
-			for (var i:int = 0; i < list.length; ++i) {
-				if (list[i].callback == callback) {
-					list.splice(i, 1);
-					break;
+			if (listenersOnThisSource != null) {
+				var list:Vector.<ListenerReference> = listenersOnThisSource[eventId];
+				if (list != null) {
+					for (var i:int = 0; i < list.length; ++i) {
+						if (list[i].callback == callback) {
+							list.splice(i, 1);
+							break;
+						}
+					}
+					if (list.length == 0) {
+						listenersOnThisSource[eventId] = null;
+					}
 				}
-			}
-			if (list.length == 0) {
-				listenersOnThisSource[eventId] = null;
 			}
 			
 			//NOTE: unclear whether I should do this, but I think benefits outweigh drawbacks
@@ -207,43 +203,38 @@ package angel.game.event {
 			}
 		}
 		
-		// Make a list of all callback info for listeners *as they currently exist*, before any of the events are processed.
-		// Then process them.  Repeat until the queue stays empty.
+		// As each event is dispatched, it is translated into callback info for listeners *as they currently exist*,
+		// before any of the events are processed.
+		// When handleEvents is called, we process these callbacks in the order they were created, including any new
+		// ones that are created by dispatches that happen during a callback.
 		// The following current choices are subject to change after talking with Mickey; they
 		// are based on my current intuitions and usage guesses.
-		// Once this processing has started
-		// * Listeners newly added will not trigger
+		// After an event has been dispatched,
+		// * Listeners newly added will not trigger from it
 		// * Listeners individually removed (before they're reached) will not trigger
 		// * Listeners removed by removeAllListenersOwnedBy (before they're reached) will not trigger
 		// * Listeners removed by removeAllListenersOn (before they're reached) will not trigger
 		// (I'm still waffling over this, and unless Mickey provides some insight, I may continue
 		// to waffle until I come to a case in my non-test code where it makes a difference.)
 		// * Listeners on a container will still trigger for bubbled events from its original children even if the child
-		// changes parentage during this processing.
+		// changes parentage after the event was dispatched.
 		// (This means that if, in an event handler, we try to delete a child: we set its parent to null and do
 		// removeAllListenersOn(it): listeners with pending events that listened to the child directly will not trigger,
-		// but those that listened to its parent will still trigger for the bubbled event.  I'm not sure if this is "good"
-		// or "bad"; repeat note above about waffling.)
+		// but those that listened to its parent will still trigger for the bubbled event.
 		public function handleEvents():void {
-			while (queue.length > 0) {
-				while (queue.length > 0) {
-					generateCallbacksForOneEvent(queue.shift());
-				}
-				
-				if (handlingEvents) {
-					// Not sure if reentrant call should be an error or not.  We can cope with it fine; just add the
-					// new callbacks to end of list and return, they'll be processed by the initial call's loop.
-					Assert.fail("handleEvents reentrant call");
-					return;
-				}
-				
-				handlingEvents = true;
-				while (callbacks.length > 0) {
-					var oneCallback:ListenerReferenceForOneEvent = callbacks.shift();
-					oneCallback.callback(oneCallback.event);
-				}
-				handlingEvents = false;
+			if (handlingEvents) {
+				// Not sure if reentrant call should be an error or not.  We can cope with it fine; just add the
+				// new callbacks to end of list and return, they'll be processed by the initial call's loop.
+				Assert.fail("handleEvents reentrant call");
+				return;
 			}
+			
+			handlingEvents = true;
+			while (callbacks.length > 0) {
+				var oneCallback:ListenerReferenceForOneEvent = callbacks.shift();
+				oneCallback.callback(oneCallback.event);
+			}
+			handlingEvents = false;
 		}
 		
 		private function generateCallbacksForOneEvent(event:QEvent):void {
@@ -317,8 +308,8 @@ package angel.game.event {
 			return count;
 		}
 		
-		public function numberOfEventsInQueue():int {
-			return queue.length;
+		public function numberOfCallbacksWaitingProcessing():int {
+			return callbacks.length;
 		}
 		
 		public function debugTraceListenersOn(source:Object):void {
@@ -371,14 +362,6 @@ package angel.game.event {
 				}
 			}
 			trace("Total:", count);
-		}
-		
-		public function debugTraceQueue():void {
-			trace("Events in queue:");
-			for (var i:int = 0; i < queue.length; ++i) {
-				trace(i+":", queue[i]);
-			}
-			trace("Total:", queue.length);
 		}
 		
 		public function debugTraceCallbacks():void {

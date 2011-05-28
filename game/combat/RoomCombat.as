@@ -2,6 +2,7 @@ package angel.game.combat {
 	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.Util;
+	import angel.game.brain.CombatBrainUiMeld;
 	import angel.game.brain.ICombatBrain;
 	import angel.game.ComplexEntity;
 	import angel.game.EntityMovement;
@@ -27,22 +28,20 @@ package angel.game.combat {
 		public var augmentedReality:AugmentedReality;
 		private var iFighterTurnInProgress:int;
 		private var combatOver:Boolean = false;
-		private var moveUi:CombatMoveUi;
 		private var fireUi:CombatFireUi;
 		public var mover:CombatMover;
-		private var currentFighterHasOpportunityFireCoverFrom:Vector.<ComplexEntity> = new Vector.<ComplexEntity>();
-		private var returnHereAfterFire:Point;
 		
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
 		public var fighters:Vector.<ComplexEntity>;
 		
-		private static const PLAYER_MOVE:String = "Move";
-		private static const ENEMY_MOVE:String = "Enemy Action";
-		private static const PLAYER_FIRE:String = "Attack";
-		private static const ENEMY_FIRE:String = "Enemy Action";
+		// screen labels for turn phases
+		public static const PLAYER_MOVE:String = "Move";
+		public static const ENEMY_MOVE:String = "Enemy Action";
+		public static const PLAYER_FIRE:String = "Attack";
+		public static const ENEMY_FIRE:String = "Enemy Action";
 		
-		private static const PAUSE_TO_VIEW_MOVE_SECONDS:Number = 1;
-		private static const PAUSE_TO_VIEW_FIRE_SECONDS:Number = 1;
+		public static const PAUSE_TO_VIEW_MOVE_SECONDS:Number = 1;
+		public static const PAUSE_TO_VIEW_FIRE_SECONDS:Number = 1;
 		
 		private var modeLabel:TextField;
 		private var enemyTurnOverlay:Shape;
@@ -53,13 +52,9 @@ package angel.game.combat {
 			
 			createFighterList();
 			
-			// These listeners can only trigger in specific phases, and finishedMoving advances the phase.
-			// I'm keeping them around throughout combat rather than adding and removing them as we flip
-			// between phases because it seemed a little cleaner that way, but I'm not certain.
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.END_TURN, endTurnListener);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire);
-			Settings.gameEventQueue.addListener(this, room, EntityQEvent.FINISHED_MOVING, finishedMovingListener);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.BECAME_VISIBLE, enemyBecameVisible);
-			Settings.gameEventQueue.addListener(this, room, EntityQEvent.MOVE_INTERRUPTED, moveInterruptedListener);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.DEATH, deathListener);
 			
 			augmentedReality = new AugmentedReality(this);
@@ -76,7 +71,6 @@ package angel.game.combat {
 			modeLabel.y = 5;
 			room.stage.addChild(modeLabel);
 			
-			moveUi = new CombatMoveUi(room, this);
 			fireUi = new CombatFireUi(room, this);
 			mover = new CombatMover(this);
 			
@@ -94,7 +88,7 @@ package angel.game.combat {
 			
 			augmentedReality.cleanup();
 			
-			mover.clearPath();
+			mover.clearPathAndReturnMarker();
 			room.stage.removeChild(modeLabel);
 			if (enemyTurnOverlay.parent != null) {
 				enemyTurnOverlay.parent.removeChild(enemyTurnOverlay);
@@ -161,9 +155,7 @@ package angel.game.combat {
 			entity.initHealth();
 			entity.actionsRemaining = 0;
 			
-			if (entity.isPlayerControlled) {
-				fighters.push(entity);
-			} else if (entity.isEnemy()) {
+			if (entity.isPlayerControlled || entity.isEnemy()) {
 				fighters.push(entity);
 				entity.adjustBrainForRoomMode(this);
 			} // else non-combattant, if there is such a thing; currently (5/5/11) means they're just a prop
@@ -175,8 +167,7 @@ package angel.game.combat {
 			var indexOfDeadFighter:int = fighters.indexOf(deadFighter);
 			Assert.assertTrue(indexOfDeadFighter >= 0, "Removing fighter that's already removed: " + deadFighter.aaId);
 			if (indexOfDeadFighter == iFighterTurnInProgress) {
-				mover.clearPath();
-				returnHereAfterFire = null;
+				mover.clearPathAndReturnMarker();
 			}
 			if ((room.activeUi != null) && (room.activeUi.currentPlayer == deadFighter)) {
 				Assert.fail("Removing active player from combat. This WILL break things.");
@@ -194,7 +185,16 @@ package angel.game.combat {
 		
 		/****************** public “api” for combat brains/ui *******************/
 		
-		public function fireAndAdvanceToNextPhase(shooter:ComplexEntity, target:ComplexEntity):void {
+		public function showPhase(text:String, isNpcTurn:Boolean):void {
+			modeLabel.text = text;
+			if (isNpcTurn) {
+				room.stage.addChild(enemyTurnOverlay);
+			} else if (enemyTurnOverlay.parent != null) {
+				room.stage.removeChild(enemyTurnOverlay);
+			}
+		}
+		
+		public function beginFireGunOrReserve(shooter:ComplexEntity, target:ComplexEntity):void {
 			if (target == null) {
 				trace(shooter.aaId, "reserve fire");
 				if (shooter.isPlayerControlled) {
@@ -214,7 +214,7 @@ package angel.game.combat {
 			room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, finishedFire);
 		}
 			
-		public function throwGrenadeAndAdvanceToNextPhase(shooter:ComplexEntity, targetLocation:Point):void {
+		public function beginThrowGrenade(shooter:ComplexEntity, targetLocation:Point):void {
 			trace(shooter.aaId, "throws grenade at", targetLocation);
 			var grenade:Grenade = Grenade.getCopy();
 			grenade.throwAt(shooter, targetLocation);
@@ -223,26 +223,18 @@ package angel.game.combat {
 			room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, finishedFire);
 		}
 		
-		public function setupFireFromCoverMove(mover:ComplexEntity):void {
-			Assert.assertTrue(mover == currentFighter(), "wrong fighter");
-			Assert.assertTrue(currentFighterHasOpportunityFireCoverFrom.length == 0, "cover list not cleared");
-			var moverLocation:Point = mover.location;
-			for each (var possibleShooter:ComplexEntity in fighters) {
-				if (opposingFactions(possibleShooter, mover) && !Util.entityHasLineOfSight(possibleShooter, moverLocation)) {
-					currentFighterHasOpportunityFireCoverFrom.push(possibleShooter);
-				}
-			}
-			returnHereAfterFire = moverLocation;
-		}
-		
 		/**************** opportunity fire ***********************/
 		
-		private function opposingFactions(fighterA:ComplexEntity, fighterB:ComplexEntity):Boolean {
+		public function opposingFactions(fighterA:ComplexEntity, fighterB:ComplexEntity):Boolean {
 			return (fighterA.isReallyPlayer != fighterB.isReallyPlayer);
 		}
 		
 		private function checkForOpportunityFire(event:EntityQEvent):void {
 			var entityMoving:ComplexEntity = event.complexEntity;
+			if (fighters.indexOf(entityMoving) < 0) {
+				// Entity was already removed from combat (probably a result of triggered script)
+				return;
+			}
 			Assert.assertTrue(currentFighter() == entityMoving, "Wrong entity moving");
 			var someoneDidOpportunityFire:Boolean = false;
 			
@@ -275,7 +267,7 @@ package angel.game.combat {
 				if ((gun != null) && (gun.expectedDamage(shooter, target) >= Settings.minForOpportunity) &&
 						Util.entityHasLineOfSight(shooter, target.location)) {
 					var extraDefense:int = 0;
-					if (currentFighterHasOpportunityFireCoverFrom.indexOf(shooter) >= 0) {
+					if (target.hasCoverFrom.indexOf(shooter) >= 0) {
 						extraDefense = Settings.fireFromCoverDamageReduction;
 					}
 					trace(shooter.aaId, "opportunity fire at", target.aaId, "extraDefense=", extraDefense);
@@ -340,95 +332,7 @@ package angel.game.combat {
 		// Called each time an entity (player or NPC) finishes its combat move
 		// (specifically, during ENTER_FRAME for last frame of movement)
 		// Advance to that entity's fire phase.
-		private function finishedMovingListener(event:EntityQEvent):void {
-			trace(event.simpleEntity.aaId, "finished moving, iFighter", iFighterTurnInProgress);
-			mover.clearPath();	// If movement finished unexpectedly (via ChangeAction or ??) dots may still be hanging around
-			currentFighterHasOpportunityFireCoverFrom.length = 0;
-			if (checkForCombatOver()) {
-				// don't allow next enemy to fire, don't enable player UI, just wait for them to OK the message,
-				// which will end combat mode.
-				return;
-			}
-			
-			var fighter:ComplexEntity = currentFighter();
-			
-			//event.complexEntity won't match currentFighter() if moving entity was killed by opportunity fire
-			if (event.complexEntity != fighter) {
-				trace(event.complexEntity.aaId, "was killed, jump to end of (previous fighter's) turn");
-				finishedFire();
-				return;
-			}
-			fighter.actionsRemaining = 1; // everyone gets one action per turn, at least for now
-			if (fighter.isPlayerControlled) {
-				modeLabel.text = PLAYER_FIRE;
-				if (fighter.hasAWeapon()) {
-					room.enableUi(fireUi, currentFighter());
-				} else {
-					fireAndAdvanceToNextPhase(fighter, null);
-				}
-			} else if (fighter.brain != null) {
-				ICombatBrain(fighter.brain).doFire();
-				modeLabel.text = ENEMY_FIRE;
-			} else {
-				finishedFire();
-			}
-		}
 		
-		// Called each time the timer for gazing at the fire graphic expires, or when an entity was killed by
-		// opportunity fire while moving and thus needs to skip their fire phase.
-		private function finishedFire():void {
-			trace("fighter", iFighterTurnInProgress, "(", currentFighter().aaId, ") finished fire");
-			
-			if (combatOver) {
-				// don't allow next enemy to move, don't enable player UI, just wait for them to OK the message,
-				// which will end combat mode.
-				return;
-			}
-			
-			if (returnHereAfterFire != null) {
-				room.changeEntityLocation(currentFighter(), currentFighter().location, returnHereAfterFire);
-				augmentedReality.adjustAllEnemyVisibility();
-				returnHereAfterFire = null;
-				mover.removeReturnMarker();
-			}
-				
-			goToNextFighter();
-			
-			if (Settings.showEnemyMoves || currentFighter().isPlayerControlled) {
-				currentFighter().centerRoomOnMe();
-			} else {
-				room.mainPlayerCharacter.centerRoomOnMe();
-			}
-			
-			beginTurnForCurrentFighter();
-		}
-		
-		private function moveInterruptedListener(event:EntityQEvent):void {
-			mover.clearPath();
-			trace(event.simpleEntity.aaId, "move interrupted, iFighter", iFighterTurnInProgress);
-			if (combatOver) {
-				// don't allow next enemy to move, don't enable player UI, just wait for them to OK the message,
-				// which will end combat mode.
-				return;
-			}
-			
-			//event.complexEntity won't match currentFighter() if moving entity was killed by opportunity fire
-			if (event.complexEntity != currentFighter()) {
-				trace(event.complexEntity.aaId, "was killed, jump to end of (previous fighter's) turn");
-				finishedFire();
-				return;
-			}
-			
-			Assert.assertTrue(currentFighter().isPlayerControlled, "AI move can't be interrupted");
-			currentFighter().movement.restrictGaitUntilMoveFinished(currentFighter().movement.mostRecentGait);
-			room.enableUi(moveUi, currentFighter());
-		}
-		
-		// Called each time the timer for gazing at the enemy's move dots expires
-		private function doPlottedEnemyMove():void {
-			trace("enemyMoveTimerListener for fighter #", iFighterTurnInProgress, currentFighter().aaId);
-			ICombatBrain(currentFighter().brain).doMove();
-		}
 		
 		private function beginTurnForCurrentFighter():void {
 			var fighter:ComplexEntity = currentFighter();
@@ -437,32 +341,29 @@ package angel.game.combat {
 				// which will end combat mode.
 				return;
 			}
-			Settings.gameEventQueue.dispatch(new EntityQEvent(fighter, EntityQEvent.START_TURN));
-			fighter.movement.initForCombatMove();
-			if (fighter.isPlayerControlled) {
-				trace("Begin turn for PC", fighter.aaId);
-				if (enemyTurnOverlay.parent != null) {
-					enemyTurnOverlay.parent.removeChild(enemyTurnOverlay);
-				}
-				room.enableUi(moveUi, fighter);
-				modeLabel.text = PLAYER_MOVE;
-			} else if (fighter.brain != null) {
-				room.stage.addChild(enemyTurnOverlay);
-				modeLabel.text = ENEMY_MOVE;
-				trace("Begin turn for npc (pause timer will start before move calc)", fighter.aaId);
-				
-				// Give the player some time to gaze at the enemy's move dots before continuing with turn.
-				// (The timer will be running while enemy calculates move, so if that takes a while once we
-				// start complicating the AI, then there may be a delay before the move dots are drawn, but
-				// the total time between enemy's turn starting and enemy beginning to follow dots should
-				// stay at that time unless we're really slow.)
-				room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_MOVE_SECONDS, doPlottedEnemyMove);
-				
-				ICombatBrain(fighter.brain).chooseMoveAndDrawDots();
+			
+			if (Settings.showEnemyMoves || currentFighter().isPlayerControlled) {
+				currentFighter().centerRoomOnMe();
+			} else {
+				room.mainPlayerCharacter.centerRoomOnMe();
+			}
+			
+			if (fighter.brain != null) {
+				CombatBrainUiMeld(fighter.brain).startTurn();
 			} else {
 				// Fighter must have had its brain removed by script sometime after combat started; skip that turn.
 				finishedFire();
 			}
+		}
+		
+		// Called each time the timer for gazing at the fire graphic expires
+		private function finishedFire():void {
+			Settings.gameEventQueue.dispatch(new EntityQEvent(currentFighter(), EntityQEvent.FINISHED_FIRE));
+		}
+		
+		private function endTurnListener(event:EntityQEvent):void {
+			goToNextFighter();
+			beginTurnForCurrentFighter();
 		}
 		
 		public function currentFighter():ComplexEntity {

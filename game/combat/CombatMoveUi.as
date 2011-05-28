@@ -2,6 +2,8 @@ package angel.game.combat {
 	import angel.common.Assert;
 	import angel.common.FloorTile;
 	import angel.common.Util;
+	import angel.game.brain.CombatBrainUiMeld;
+	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.ComplexEntity;
 	import angel.game.EntityMovement;
 	import angel.game.Icon;
@@ -35,7 +37,7 @@ package angel.game.combat {
 		/* INTERFACE angel.game.IRoomUi */
 		
 		public function enable(player:ComplexEntity):void {
-			trace("entering player move phase for", player.aaId);
+			trace("enable player ui for", player.aaId);
 			this.player = player;
 			oldMarkerColorTransform = player.marker.transform.colorTransform;
 			player.marker.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
@@ -43,7 +45,7 @@ package angel.game.combat {
 		}
 		
 		public function disable():void {
-			trace("ending player move phase for", player.aaId);
+			trace("disable player ui for", player.aaId);
 			player.marker.transform.colorTransform = oldMarkerColorTransform;
 			this.player = null;
 			adjustMovePointsDisplay(false);
@@ -134,14 +136,15 @@ package angel.game.combat {
 		/************ Private ****************/
 		
 		private function doPlayerMove(gaitChoice:int = EntityMovement.GAIT_UNSPECIFIED):void {
-			var playerMoving:ComplexEntity = player;
+			var playerMoving:ComplexEntity = player; // cache, because disableUi will set player to null
 			room.disableUi();
 			
 			if (gaitChoice == EntityMovement.GAIT_UNSPECIFIED) {
 				gaitChoice = combat.mover.minimumGaitForPath(playerMoving);
 			}
 			playerMoving.centerRoomOnMe();
-			combat.mover.startEntityFollowingPath(playerMoving, gaitChoice);
+			CombatBrainUiMeldPlayer(playerMoving.brain).setGait(gaitChoice);
+			CombatBrainUiMeldPlayer(playerMoving.brain).carryOutPlottedMove();
 		}
 		
 		private function doPlayerMoveStay():void {
@@ -162,13 +165,12 @@ package angel.game.combat {
 		}
 		
 		private function doPlayerFireFromCover():void {
-			combat.mover.displayReturnMarker(player.location);
-			combat.setupFireFromCoverMove(player);
+			CombatBrainUiMeldPlayer(player.brain).setupFireFromCoverMove();
 			doPlayerMove(EntityMovement.GAIT_RUN);
 		}
 		
 		private function removePath():void {
-			combat.mover.clearPath();
+			combat.mover.clearPathAndReturnMarker();
 			adjustMovePointsDisplay();
 		}
 		

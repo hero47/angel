@@ -35,6 +35,7 @@ package angel.game {
 		public var maxHealth:int = 1;
 		public var currentHealth:int;
 		public var actionsRemaining:int;
+		public var hasCoverFrom:Vector.<ComplexEntity> = new Vector.<ComplexEntity>();
 		
 		public var exploreBrainClass:Class;
 		public var exploreBrainParam:String;
@@ -190,7 +191,7 @@ package angel.game {
 						
 		public function isEnemy():Boolean {
 			//CONSIDER: is this true, or will we want to have civilians with combat behavior that are untargetable?
-			return (combatBrainClass != null && currentHealth > 0);
+			return (!playerControlled && (combatBrainClass != null) && (currentHealth > 0));
 		}
 		
 		public function isAlive():Boolean {

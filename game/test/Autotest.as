@@ -89,7 +89,7 @@ package angel.game.test {
 			new testClass();
 			assertNoAlert("Something in " + testClass + " caused an alert.");
 			if (Settings.gameEventQueue != null) {
-				assertEqual(Settings.gameEventQueue.numberOfEventsInQueue(), 0, "Queue has leftover events after "+ testClass);
+				assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Queue has leftover events after "+ testClass);
 			}
 		}
 		
@@ -98,7 +98,7 @@ package angel.game.test {
 			testFunction();
 			assertNoAlert("Something in a tested function caused an alert.");
 			if (Settings.gameEventQueue != null) {
-				assertEqual(Settings.gameEventQueue.numberOfEventsInQueue(), 0, "Queue has leftover events after tested function");
+				assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Queue has leftover events after tested function");
 			}
 		}
 		
@@ -155,7 +155,7 @@ package angel.game.test {
 		}
 		
 		public static function testActionFromXml(xml:XML, shouldDelayUntilEnd:Boolean = false):void {
-			Autotest.assertEqual(Settings.gameEventQueue.numberOfEventsInQueue(), 0, "Queue not empty before testing action");
+			Autotest.assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Queue not empty before testing action");
 			var doAtEnd:Vector.<Function> = new Vector.<Function>();
 			var action:IAction = Action.createFromXml(xml);
 			Autotest.assertNoAlert();

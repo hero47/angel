@@ -5,6 +5,7 @@ package angel.game {
 	import angel.common.CatalogEntry;
 	import angel.common.Defaults;
 	import angel.game.brain.BrainFollow;
+	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.combat.Grenade;
 	import angel.game.event.EventQueue;
 
@@ -128,7 +129,8 @@ package angel.game {
 				}
 				++i;
 				entity = new ComplexEntity(catalog.retrieveCharacterResource(id), id);
-				entity.exploreBrainClass = entity.combatBrainClass = null;
+				entity.exploreBrainClass = null;
+				entity.combatBrainClass = CombatBrainUiMeldPlayer;
 				if (pc.@health.length() > 0) {
 					entity.maxHealth = entity.currentHealth = pc.@health;
 				}

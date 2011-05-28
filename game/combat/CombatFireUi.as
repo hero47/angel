@@ -171,19 +171,19 @@ package angel.game.combat {
 		private function doPlayerFireGunAt(target:ComplexEntity):void {
 			var playerFiring:ComplexEntity = player;
 			room.disableUi();
-			combat.fireAndAdvanceToNextPhase(playerFiring, target);
+			combat.beginFireGunOrReserve(playerFiring, target);
 		}
 		
 		private function doPlayerThrowGrenadeAt(loc:Point):void {
 			var playerFiring:ComplexEntity = player;
 			room.disableUi();
-			combat.throwGrenadeAndAdvanceToNextPhase(playerFiring, loc);
+			combat.beginThrowGrenade(playerFiring, loc);
 		}
 		
 		private function doReserveFire():void {
 			var playerFiring:ComplexEntity = player;
 			room.disableUi();
-			combat.fireAndAdvanceToNextPhase(playerFiring, null);
+			combat.beginFireGunOrReserve(playerFiring, null);
 		}
 		
 		private function filterIsEnemy(entity:ComplexEntity):Boolean {

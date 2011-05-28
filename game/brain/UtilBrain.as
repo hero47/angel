@@ -50,7 +50,7 @@ package angel.game.brain {
 		}
 		
 		public static function fireAtFirstAvailableTarget(me:ComplexEntity, combat:RoomCombat):void {
-			combat.fireAndAdvanceToNextPhase(me, getFirstAvailableTarget(me, combat));
+			combat.beginFireGunOrReserve(me, getFirstAvailableTarget(me, combat));
 		}
 		
 		public static function getFirstAvailableTarget(me:ComplexEntity, combat:RoomCombat):ComplexEntity {
