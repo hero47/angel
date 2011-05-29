@@ -1,6 +1,7 @@
 package angel.game.action {
 	import angel.common.Alert;
 	import angel.game.ComplexEntity;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import flash.geom.Point;
 	/**
@@ -22,8 +23,8 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.ICondition */
 		
-		public function isMet():Boolean {
-			var char:ComplexEntity = Settings.currentRoom.entityInRoomWithId(charId) as ComplexEntity;
+		public function isMet(context:ScriptContext):Boolean {
+			var char:ComplexEntity = context.entityWithScriptId(charId) as ComplexEntity;
 			if (char == null) {
 				Alert.show("Error in condition: no character '" + charId + "' in current room.");
 				return false;

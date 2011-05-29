@@ -8,6 +8,7 @@ package angel.game.script {
 	import angel.game.action.IActionToBeMergedWithPreviousIf;
 	import angel.game.action.IfAction;
 	import angel.game.combat.RoomCombat;
+	import angel.game.Room;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import flash.events.Event;
@@ -21,7 +22,6 @@ package angel.game.script {
 		
 		public static const TRIGGERING_ENTITY_ID:String = "*this";
 		
-		public static var triggeringEntity:SimpleEntity;
 		
 		public function Script(xml:XML = null, errorPrefix:String = "") {
 			if (xml != null) {
@@ -60,21 +60,11 @@ package angel.game.script {
 			}
 		}
 		
-		public function run(triggeredBy:SimpleEntity = null):void {
-			var doAtEnd:Vector.<Function> = new Vector.<Function>();
+		public function run(room:Room, triggeredBy:SimpleEntity = null):void {
+			var context:ScriptContext = new ScriptContext(room, triggeredBy);
 			
-			//CONSIDER: is this something we need to handle?
-			var previousTrigger:SimpleEntity = Script.triggeringEntity;
-			if ((Script.triggeringEntity != null) && (triggeredBy != null)) {
-				Alert.show("Error -- nested triggered scripts");
-			}
-			Script.triggeringEntity = triggeredBy;
-			doActions(doAtEnd);
-			while (doAtEnd.length > 0) {
-				var f:Function = doAtEnd.shift();
-				f();
-			}
-			Script.triggeringEntity = previousTrigger;
+			doActions(context);
+			context.endOfScriptActions();
 		}
 		
 		public function addAction(newAction:IAction):void {
@@ -95,25 +85,25 @@ package angel.game.script {
 			}
 		}
 		
-		public function doActions(doAtEnd:Vector.<Function>):void {
+		public function doActions(context:ScriptContext):void {
 			if (actions == null) {
 				return;
 			}
 			for (var i:int = 0; i < actions.length; ++i) {
-				var gotoReference:Object = actions[i].doAction(doAtEnd);
+				var gotoReference:Object = actions[i].doAction(context);
 				if (gotoReference != null) {
 					Alert.show("Error! 'goto' only valid in Conversation");
 				}
 			}
 		}
 		
-		public function doActionsForConversationSegment(doAtEnd:Vector.<Function>):Object {
+		public function doActionsForConversationSegment(context:ScriptContext):Object {
 			if (actions == null) {
 				return null;
 			}
 			var nextEntryReference:Object;
 			for (var i:int = 0; i < actions.length; ++i) {
-				var gotoReference:Object = actions[i].doAction(doAtEnd);
+				var gotoReference:Object = actions[i].doAction(context);
 				if ((gotoReference != null) && (nextEntryReference != null)) {
 					Alert.show("Script has extra goto, id=" + gotoReference.id);
 				}
@@ -122,14 +112,6 @@ package angel.game.script {
 				}
 			}
 			return nextEntryReference;
-		}
-		
-		public static function entityWithScriptId(entityId:String):SimpleEntity {
-			if (entityId == TRIGGERING_ENTITY_ID) {
-				return triggeringEntity;
-			} else {
-				return Settings.currentRoom.entityInRoomWithId(entityId);
-			}
 		}
 		
 		

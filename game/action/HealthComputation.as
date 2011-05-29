@@ -1,6 +1,7 @@
 package angel.game.action {
 	import angel.common.Alert;
 	import angel.game.ComplexEntity;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	/**
 	 * ...
@@ -15,8 +16,8 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IComputation */
 		
-		public function value():int {
-			var entity:ComplexEntity = ComplexEntity(Settings.currentRoom.entityInRoomWithId(id));
+		public function value(context:ScriptContext):int {
+			var entity:ComplexEntity = ComplexEntity(context.entityWithScriptId(id));
 			if (entity == null) {
 				Alert.show("Error! No character " + id + " in current room.");
 				return 0;

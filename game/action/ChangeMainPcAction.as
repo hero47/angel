@@ -3,6 +3,7 @@ package angel.game.action {
 	import angel.game.brain.BrainFollow;
 	import angel.game.ComplexEntity;
 	import angel.game.script.Script;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	/**
@@ -23,14 +24,14 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IAction */
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
-			var newMainPc:ComplexEntity = ComplexEntity(Script.entityWithScriptId(id));
-			var oldMainPc:ComplexEntity = Settings.currentRoom.mainPlayerCharacter;
+		public function doAction(context:ScriptContext):Object {
+			var newMainPc:ComplexEntity = ComplexEntity(context.entityWithScriptId(id));
+			var oldMainPc:ComplexEntity = context.room.mainPlayerCharacter;
 			if (oldMainPc == newMainPc) {
 				return null; // already is main pc, no need to do anything
 			}
 			if (Settings.moveToFrontOfPlayerList(newMainPc)) {
-				Settings.currentRoom.changeMainPlayerCharacterTo(newMainPc);
+				context.room.changeMainPlayerCharacterTo(newMainPc);
 				oldMainPc.setBrain(true, BrainFollow, id);
 				newMainPc.setBrain(true, null, null);
 			} else {

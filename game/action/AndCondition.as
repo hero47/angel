@@ -1,4 +1,5 @@
 package angel.game.action {
+	import angel.game.script.ScriptContext;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -25,9 +26,9 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.ICondition */
 		
-		public function isMet():Boolean {
+		public function isMet(context:ScriptContext):Boolean {
 			for each (var condition:ICondition in conditions) {
-				if (!condition.isMet()) {
+				if (!condition.isMet(context)) {
 					return !desiredValue;
 				}
 			}

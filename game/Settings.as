@@ -17,14 +17,20 @@ package angel.game {
 		public static var STAGE_HEIGHT:int;
 		public static var STAGE_WIDTH:int;
 		
-		// These are set by the game engine so scripting can access them.
-		// Is there a better way to do this sort of thing?
+		// These are potentially needed everywhere in the code, so I'm effectively making them global.
+		// Discuss this with Mickey.
 		// UNDONE: if this is legit, root out all the places I'm passing around catalog and use Settings.catalog instead
 		// CONSIDER: should Catalog itself enforce being a singleton, and provide public static var catalog?
 		public static var catalog:Catalog;
-		public static var currentRoom:Room;
 		public static var gameEventQueue:EventQueue;
 		
+		// "Constants" initialized from the game settings file.
+		// These are treated as if they were static constants.  Some of them may become static constants
+		// later; they're variables to allow Wm to experiment with different settings, but we may decide
+		// that they shouldn't vary.  Some of them will be removed and the corresponding code stripped out
+		// once Wm makes a decision (because we don't want the clutter and expense of maintaining code for
+		// options that we've decided not to make use of).  Some of them will probably remain variables
+		// even after the game is released.
 		public static var testExploreScroll:int;
 		public static var showEnemyMoves:Boolean;
 		public static var walkPercent:int;
@@ -50,6 +56,9 @@ package angel.game {
 		public static var fireFromCoverDamageReduction:int;
 		public static var grenadeDamage:int;
 		
+		// This is currently initialized from game settings file, but will eventually be part of the "game state",
+		// initialized from game settings the first time the game is started and from a saved game any time the
+		// game is reloaded.  Player inventory, current room, flag settings, etc. belong to the same category.
 		public static var pcs:Vector.<ComplexEntity> = new Vector.<ComplexEntity>();
 		
 		public function Settings() {
@@ -181,6 +190,10 @@ package angel.game {
 			pcs.splice(index, 1);
 			pcs.splice(0, 0, entity);
 			return true;
+		}
+		
+		public static function lastEntityOnPlayerList():ComplexEntity {
+			return pcs[pcs.length - 1];
 		}
 		
 	} // end class Settings

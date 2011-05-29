@@ -23,7 +23,7 @@ package angel.game.test {
 	 * @author Beth Moursund
 	 */
 	public class ActionTest {
-		
+		private var testRoom:Room;
 		
 		
 		public function ActionTest() {
@@ -32,8 +32,8 @@ package angel.game.test {
 			Autotest.testFunction(testIfAction);
 			Autotest.testFunction(testIfElse);
 			
-			Autotest.setupTestRoom();
-			Autotest.assertTrue(Settings.isOnPlayerList(Settings.currentRoom.mainPlayerCharacter), "Main player not on player list, something earlier screwed up");
+			testRoom = Autotest.setupTestRoom();
+			Autotest.assertTrue(Settings.isOnPlayerList(testRoom.mainPlayerCharacter), "Main player not on player list, something earlier screwed up");
 			Autotest.assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Setup test room should leave queue clear");
 			
 			trace("Testing actions for no room mode");
@@ -43,16 +43,16 @@ package angel.game.test {
 			trace("Testing actions for Combat mode");
 			runTestsForMode(RoomCombat);
 			
-			Settings.currentRoom.cleanup();
+			Autotest.cleanupTestRoom();
 		}
 		
 		private function runTestsForMode(modeClass:Class):void {
 			const modeChangeFail:String = "Mode change failed or delayed";
-			Settings.currentRoom.changeModeTo(modeClass);
+			testRoom.changeModeTo(modeClass);
 			if (modeClass == null) {
-				Autotest.assertEqual(Settings.currentRoom.mode, null, modeChangeFail);
+				Autotest.assertEqual(testRoom.mode, null, modeChangeFail);
 			} else {
-				Autotest.assertTrue(Settings.currentRoom.mode is modeClass, modeChangeFail);
+				Autotest.assertTrue(testRoom.mode is modeClass, modeChangeFail);
 			}
 			Settings.gameEventQueue.handleEvents();
 			
@@ -62,8 +62,8 @@ package angel.game.test {
 			Autotest.testFunction(testChangeAction);
 			Autotest.testFunction(testChangeMainPcAction);
 			
-			Settings.currentRoom.changeModeTo(null);
-			Autotest.assertEqual(Settings.currentRoom.mode, null, modeChangeFail);
+			testRoom.changeModeTo(null);
+			Autotest.assertEqual(testRoom.mode, null, modeChangeFail);
 		}
 		
 		private const addTestFlag:XML = <add flag="xxTest" />;
@@ -226,17 +226,17 @@ package angel.game.test {
 			Flags.setValue("xxTest", true);
 			Flags.setValue("yyTest", false);
 			Autotest.clearAlert();
-			script.run();
+			script.run(testRoom);
 			Autotest.assertAlertText("xx");
 			
 			Flags.setValue("xxTest", false);
 			Flags.setValue("yyTest", false);
-			script.run();
+			script.run(testRoom);
 			Autotest.assertAlertText("neither");
 			
 			Flags.setValue("xxTest", false);
 			Flags.setValue("yyTest", true);
-			script.run();
+			script.run(testRoom);
 			Autotest.assertAlertText("yy and not xx");
 		}
 		
@@ -256,7 +256,7 @@ package angel.game.test {
 				return;
 			}
 			
-			var room:Room = Settings.currentRoom;
+			var room:Room = testRoom;
 			
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null);
 			Autotest.testActionFromXml(removenei); // Removing entity that's not in room does nothing
@@ -295,16 +295,16 @@ package angel.game.test {
 			var nei5:ComplexEntity = ComplexEntity(room.entityInRoomWithId("nei"));
 			Autotest.assertEqual(nei5.exploreBrainClass, BrainFidget);
 			Autotest.assertEqual(nei5.combatBrainClass, CombatBrainWander);
-			if (Settings.currentRoom.mode is RoomExplore) {
+			if (testRoom.mode is RoomExplore) {
 				Autotest.assertTrue(nei5.brain is BrainFidget);
-			} else if (Settings.currentRoom.mode is RoomCombat) {
+			} else if (testRoom.mode is RoomCombat) {
 				Autotest.assertTrue(nei5.brain is CombatBrainWander, "Note: This will fail if controlEnemies==true");
 			} else {
 				Autotest.assertEqual(nei5.brain, null);
 			}
 			Autotest.testActionFromXml(removenei);
 			
-			var mainPcId:String = Settings.currentRoom.mainPlayerCharacter.id;
+			var mainPcId:String = testRoom.mainPlayerCharacter.id;
 			var removeMainPc:XML = removenei.copy();
 			removeMainPc.@id = mainPcId;
 			Autotest.testActionFromXml(removeMainPc);
@@ -316,7 +316,7 @@ package angel.game.test {
 		private const changeNeiToNpcWithBrains:XML = <changeToNpc id="nei" explore="wander" combat="patrol" combatParam="3:testSpot" />
 		
 		private function testChangeToFromPc():void {
-			var room:Room = Settings.currentRoom;
+			var room:Room = testRoom;
 			
 			Autotest.testActionFromXml(changeNeiToPc);
 			Autotest.assertAlertText("Script error: no character nei in room for changeToPc");			
@@ -338,9 +338,9 @@ package angel.game.test {
 			Autotest.assertTrue(Settings.isOnPlayerList(nei), "Should have added to player list");
 			Autotest.assertEqual(nei.exploreBrainClass, BrainFollow, "PC gets follow brain");
 			Autotest.assertEqual(nei.combatBrainClass, CombatBrainUiMeldPlayer, "PC gets special combat brain");
-			if (Settings.currentRoom.mode is RoomExplore) {
+			if (testRoom.mode is RoomExplore) {
 				Autotest.assertTrue(nei.brain is BrainFollow);
-			} else if (Settings.currentRoom.mode is RoomCombat) {
+			} else if (testRoom.mode is RoomCombat) {
 				Autotest.assertTrue(nei.brain is CombatBrainUiMeldPlayer);
 			} else {
 				Autotest.assertEqual(nei.brain, null);
@@ -354,27 +354,27 @@ package angel.game.test {
 			Autotest.assertEqual(nei.combatBrainClass, null, "No combat brain specified should default to null");
 			Autotest.assertEqual(nei.brain, null);
 			
-			Settings.currentRoom.addOrMoveSpot("testSpot", new Point(0, 0));
+			testRoom.addOrMoveSpot("testSpot", new Point(0, 0));
 			Autotest.testActionFromXml(changeNeiToPc);
 			Autotest.testActionFromXml(changeNeiToNpcWithBrains);
 			Autotest.assertEqual(nei.exploreBrainClass, BrainWander);
 			Autotest.assertEqual(nei.combatBrainClass, CombatBrainPatrol);
 			Autotest.assertEqual(nei.combatBrainParam, "3:testSpot");
-			if (Settings.currentRoom.mode is RoomExplore) {
+			if (testRoom.mode is RoomExplore) {
 				Autotest.assertTrue(nei.brain is BrainWander);
-			} else if (Settings.currentRoom.mode is RoomCombat) {
+			} else if (testRoom.mode is RoomCombat) {
 				Autotest.assertTrue(nei.brain is CombatBrainPatrol, "Note: This will fail if controlEnemies==true");
 			} else {
 				Autotest.assertEqual(nei.brain, null);
 			}
-			Settings.currentRoom.removeSpot("testSpot");
+			testRoom.removeSpot("testSpot");
 			
 			Autotest.testActionFromXml(changeNeiToPc);
 			Autotest.testActionFromXml(removenei);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null, "nei should have been removed");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Remove pc from room should also remove from player list");
 			
-			var mainPcId:String = Settings.currentRoom.mainPlayerCharacter.id;
+			var mainPcId:String = testRoom.mainPlayerCharacter.id;
 			var changeMainPc:XML = changeNeiToNpc.copy();
 			changeMainPc.@id = mainPcId;
 			Autotest.testActionFromXml(changeMainPc);
@@ -385,17 +385,17 @@ package angel.game.test {
 		 * Can't actually run this because it loads from file, which is a delayed callback.
 		private static const changeRoom:XML = <changeRoom file="empty15x15.xml" />;
 		private function testChangeRoom():void {
-			var oldCurrentRoom:Room = Settings.currentRoom;
-			var mainPc:ComplexEntity = Settings.currentRoom.mainPlayerCharacter;
+			var oldCurrentRoom:Room = testRoom;
+			var mainPc:ComplexEntity = testRoom.mainPlayerCharacter;
 			//UNDONE: this isn't at all a rigorous test; we don't have anything but the pc's in either room
 			//also not testing mode, start spot
 			testActionFromXml(changeRoom, true);
 			Autotest.assertNoAlert();
 			
-			Autotest.assertNotEqual(oldCurrentRoom, Settings.currentRoom, "Room didn't change");
+			Autotest.assertNotEqual(oldCurrentRoom, testRoom, "Room didn't change");
 			oldCurrentRoom = null;
-			Autotest.assertEqual(mainPc.room, Settings.currentRoom, "PC didn't move");
-			Autotest.assertEqual(Settings.currentRoom.mainPlayerCharacter, mainPc, "Same character should be main pc");
+			Autotest.assertEqual(mainPc.room, testRoom, "PC didn't move");
+			Autotest.assertEqual(testRoom.mainPlayerCharacter, mainPc, "Same character should be main pc");
 		}
 		*/
 		
@@ -408,8 +408,8 @@ package angel.game.test {
 		private const changeFoo:XML = <change id="foo" explore="wander" combat="patrol" combatParam="testSpot" spot="testSpot"/>;
 		private const removeFoo:XML = <removeFromRoom id="foo" />;
 		private function testChangeAction():void {
-			var room:Room = Settings.currentRoom;
-			Settings.currentRoom.addOrMoveSpot("testSpot", new Point(3, 5));
+			var room:Room = testRoom;
+			testRoom.addOrMoveSpot("testSpot", new Point(3, 5));
 			
 			Autotest.testActionFromXml(addneiAt12);
 			var nei:SimpleEntity = room.entityInRoomWithId("nei");
@@ -426,9 +426,9 @@ package angel.game.test {
 			Autotest.assertEqual(neiComplex.exploreBrainClass, BrainWander);
 			Autotest.assertEqual(neiComplex.combatBrainClass, CombatBrainPatrol);
 			Autotest.assertEqual(neiComplex.combatBrainParam, "testSpot");
-			if (Settings.currentRoom.mode is RoomExplore) {
+			if (testRoom.mode is RoomExplore) {
 				Autotest.assertTrue(neiComplex.brain is BrainWander);
-			} else if (Settings.currentRoom.mode is RoomCombat) {
+			} else if (testRoom.mode is RoomCombat) {
 				Autotest.assertTrue(neiComplex.brain is CombatBrainPatrol, "Note: This will fail if controlEnemies==true");
 			} else {
 				Autotest.assertEqual(neiComplex.brain, null);
@@ -442,9 +442,9 @@ package angel.game.test {
 			var foo:SimpleEntity = SimpleEntity.createFromRoomContentsXml(fooXml, 1, Settings.catalog);
 			Autotest.clearAlert();
 			Autotest.assertNotEqual(foo, null, "couldn't create prop foo");
-			Settings.currentRoom.addEntityUsingItsLocation(foo);
+			testRoom.addEntityUsingItsLocation(foo);
 			Settings.gameEventQueue.handleEvents();
-			var foo1:SimpleEntity = Settings.currentRoom.entityInRoomWithId("foo");
+			var foo1:SimpleEntity = testRoom.entityInRoomWithId("foo");
 			Autotest.assertEqual(foo, foo1, "foo not added to room");
 			Autotest.assertTrue(foo.location.equals(new Point(6, 5)), "foo location wrong");
 			
@@ -454,32 +454,32 @@ package angel.game.test {
 			Autotest.testActionFromXml(removeFoo);
 			
 			Autotest.testActionFromXml(removenei);
-			Settings.currentRoom.removeSpot("testSpot");
+			testRoom.removeSpot("testSpot");
 		}
 		
 		private function testChangeMainPcAction():void {
-			Autotest.assertTrue(Settings.isOnPlayerList(Settings.currentRoom.mainPlayerCharacter), "Main player not on player list, something earlier screwed up");
+			Autotest.assertTrue(Settings.isOnPlayerList(testRoom.mainPlayerCharacter), "Main player not on player list, something earlier screwed up");
 			
 			Autotest.testActionFromXml(<addNpc id="xxNewMainPc" />);
 			Autotest.clearAlert(); // should alert the first time through because it's not in catalog
 			Autotest.testActionFromXml(<changeToPc id="xxNewMainPc" />);
 			//Autotest.clearAlert();
-			var newPc:ComplexEntity = ComplexEntity(Settings.currentRoom.entityInRoomWithId("xxNewMainPc"));
+			var newPc:ComplexEntity = ComplexEntity(testRoom.entityInRoomWithId("xxNewMainPc"));
 			Autotest.assertNotEqual(newPc, null, "xxNewMainPc should be in room now");
 			
-			var originalMainPcId:String = Settings.currentRoom.mainPlayerCharacter.id;
+			var originalMainPcId:String = testRoom.mainPlayerCharacter.id;
 			var changeMainPc:XML = <changeMainPc />;
 			changeMainPc.@id = "xxNewMainPc";
 			Autotest.testActionFromXml(changeMainPc);
-			Autotest.assertEqual(Settings.currentRoom.mainPlayerCharacter.id, "xxNewMainPc", "Main pc should have changed");
+			Autotest.assertEqual(testRoom.mainPlayerCharacter.id, "xxNewMainPc", "Main pc should have changed");
 			Autotest.testActionFromXml(<removeFromRoom id="xxNewMainPc" />);
 			Autotest.assertAlerted("Attempt to remove new main pc should fail");
 			changeMainPc.@id = originalMainPcId;
 			Autotest.testActionFromXml(changeMainPc);
-			Autotest.assertEqual(Settings.currentRoom.mainPlayerCharacter.id, originalMainPcId, "Main pc should have changed back");
+			Autotest.assertEqual(testRoom.mainPlayerCharacter.id, originalMainPcId, "Main pc should have changed back");
 			
 			Autotest.testActionFromXml(<removeFromRoom id="xxNewMainPc" />);
-			newPc = ComplexEntity(Settings.currentRoom.entityInRoomWithId("xxNewMainPc"));
+			newPc = ComplexEntity(testRoom.entityInRoomWithId("xxNewMainPc"));
 			Autotest.assertEqual(newPc, null, "remove should have succeeded now that it's not main pc any more");
 		}
 		

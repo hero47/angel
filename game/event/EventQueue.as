@@ -312,8 +312,12 @@ package angel.game.event {
 			return callbacks.length;
 		}
 		
-		public function debugTraceListenersOn(source:Object):void {
-			trace("Listeners on", source, ":");
+		public function debugTraceListenersOn(source:Object, label:String = null):void {
+			if (label == null) {
+				trace("Listeners on", source, ":");
+			} else {
+				trace(label);
+			}
 			var listenersOnThisSource:Object = lookup[source];
 			if (listenersOnThisSource == null) {
 				trace("  none");
@@ -334,12 +338,16 @@ package angel.game.event {
 			
 		}
 		
-		public function debugTraceListeners(owner:Object = null):void {
+		public function debugTraceListeners(owner:Object = null, label:String = null):void {
 			var count:int = 0;
-			if (owner == null) {
-				trace("Registered listeners:");
+			if (label == null) {
+				if (owner == null) {
+					trace("Registered listeners:");
+				} else {
+					trace("Listeners owned by", owner, ":");
+				}
 			} else {
-				trace("Listeners owned by", owner, ":");
+				trace(label);
 			}
 			for (var source:Object in lookup) {
 				var listenersOnThisSource:Object = lookup[source];
@@ -364,8 +372,8 @@ package angel.game.event {
 			trace("Total:", count);
 		}
 		
-		public function debugTraceCallbacks():void {
-			trace("Callbacks:");
+		public function debugTraceCallbacks(label:String = null):void {
+			trace(label == null ? "Callbacks:" : label);
 			for (var i:int = 0; i < callbacks.length; ++i) {
 				trace(i+":", callbacks[i]);
 			}

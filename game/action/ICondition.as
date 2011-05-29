@@ -1,11 +1,12 @@
 package angel.game.action {
+	import angel.game.script.ScriptContext;
 	
 	/**
 	 * ...
 	 * @author Beth Moursund
 	 */
 	public interface ICondition {
-		function isMet():Boolean;
+		function isMet(context:ScriptContext):Boolean;
 		function reverseMeaning():void;
 		
 		// also static function isSimpleCondition():Boolean

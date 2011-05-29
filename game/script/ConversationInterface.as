@@ -40,7 +40,7 @@ package angel.game.script {
 		private var room:Room;
 		
 		//UNDONE: investigate: merge this with script's?
-		public var doAtEnd:Vector.<Function> = new Vector.<Function>();
+		public var context:ScriptContext;
 		
 		public function ConversationInterface(target:SimpleEntity, conversationData:ConversationData) {
 			this.target = target;
@@ -56,6 +56,7 @@ package angel.game.script {
 			removeEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
 			room.pauseGameTimeIndefinitely();
 			room.disableUi();
+			context = new ScriptContext(room, target);
 			conversationData.runConversation(this);
 		}
 		
@@ -105,10 +106,8 @@ package angel.game.script {
 			room.unpauseGameTimeAndDeleteCallback();
 			room.restoreUiAfterConversation();
 			
-			while (doAtEnd.length > 0) {
-				var f:Function = doAtEnd.shift();
-				f();
-			}
+			context.endOfScriptActions();
+			
 			if (room.mode is RoomCombat) {
 				RoomCombat(room.mode).checkForCombatOver();
 			}

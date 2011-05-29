@@ -6,6 +6,7 @@ package angel.game.test {
 	import angel.game.brain.CombatBrainWander;
 	import angel.game.ComplexEntity;
 	import angel.game.Room;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import flash.display.Sprite;
 	import flash.geom.Point;
@@ -17,6 +18,7 @@ package angel.game.test {
 		
 		public static var failCount:int = 0;
 		public static var runningFromRoot:Sprite;
+		public static var testRoom:Room = null;
 		public static const TEST_ROOM_MAIN_PC_ID:String = "xxMainPc";
 		public static const TEST_ROOM_ENEMY_ID:String = "xxEnemy";
 		
@@ -136,7 +138,8 @@ package angel.game.test {
 		}
 		
 		private static const floorXml:XML = <floor x="10" y="10"/>;
-		public static function setupTestRoom():void {
+		public static function setupTestRoom():Room {
+			Autotest.assertEqual(testRoom, null, "Test room didn't get cleaned up by previous test");
 			var mainPc:ComplexEntity = Settings.pcs[0];
 			Autotest.assertEqual(Settings.pcs.length, 1, "Extra pc(s) on character list aren't being added to room, this is inconsistant");
 			var enemy:ComplexEntity = new ComplexEntity(Settings.catalog.retrieveCharacterResource(TEST_ROOM_ENEMY_ID), TEST_ROOM_ENEMY_ID);
@@ -144,30 +147,35 @@ package angel.game.test {
 			enemy.combatBrainClass = CombatBrainWander;
 			
 			var floor:Floor = new Floor();
-			floor.loadFromXml(Settings.catalog, floorXml);			
-			Settings.currentRoom = new Room(floor);
-			Settings.currentRoom.addPlayerCharacter(mainPc, new Point(9, 8));
-			Settings.currentRoom.addEntity(enemy, new Point(8, 9));
+			floor.loadFromXml(Settings.catalog, floorXml);
 			
-			Autotest.runningFromRoot.addChild(Settings.currentRoom);
+			testRoom = new Room(floor);
+			testRoom.addPlayerCharacter(mainPc, new Point(9, 8));
+			testRoom.addEntity(enemy, new Point(8, 9));
+			
+			Autotest.runningFromRoot.addChild(testRoom);
 			Autotest.assertNoAlert();
 			Settings.gameEventQueue.handleEvents();
 			Autotest.assertNoAlert();
+			
+			return testRoom;
+		}
+		
+		public static function cleanupTestRoom():void {
+			testRoom.cleanup();
+			testRoom = null;
 		}
 		
 		public static function testActionFromXml(xml:XML, shouldDelayUntilEnd:Boolean = false):void {
 			Autotest.assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Queue not empty before testing action");
-			var doAtEnd:Vector.<Function> = new Vector.<Function>();
+			var context:ScriptContext = new ScriptContext(testRoom);
 			var action:IAction = Action.createFromXml(xml);
 			Autotest.assertNoAlert();
 			Autotest.assertNotEqual(action, null, "Action creation failed");
 			if (action != null) {
-				action.doAction(doAtEnd);
-				Autotest.assertEqual(shouldDelayUntilEnd, doAtEnd.length > 0, "Wrong delay status");
-				while (doAtEnd.length > 0) {
-					var doThis:Function = doAtEnd.shift();
-					doThis();
-				}
+				action.doAction(context);
+				Autotest.assertEqual(context.hasEndOfScriptActions(), shouldDelayUntilEnd, "Wrong delay status");
+				context.endOfScriptActions();
 			}
 			Settings.gameEventQueue.handleEvents();
 		}

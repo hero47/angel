@@ -4,6 +4,7 @@ package angel.game.action {
 	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.ComplexEntity;
 	import angel.game.script.Script;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	/**
@@ -23,14 +24,17 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IAction */
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
-			var entityWithId:SimpleEntity = Script.entityWithScriptId(id);
+		public function doAction(context:ScriptContext):Object {
+			var entityWithId:SimpleEntity = context.entityWithScriptId(id);
 			if (entityWithId is ComplexEntity) {
 				var entity:ComplexEntity = ComplexEntity(entityWithId);
-				entity.setBrain(false, CombatBrainUiMeldPlayer, null);
-				entity.setBrain(true, BrainFollow, Settings.currentRoom.mainPlayerCharacter.id);
-				entity.changePlayerControl(true);
-				Settings.addToPlayerList(entity);
+				//CONSIDER: should we give error if it's already a player?
+				if (!entity.isReallyPlayer) {
+					entity.setBrain(false, CombatBrainUiMeldPlayer, null);
+					entity.setBrain(true, BrainFollow, Settings.lastEntityOnPlayerList().id);
+					entity.changePlayerControl(true);
+					Settings.addToPlayerList(entity);
+				}
 			} else {
 				Alert.show("Script error: no character " + id + " in room for changeToPc");
 			}

@@ -1,6 +1,7 @@
 package angel.game.action {
 	import angel.common.Alert;
 	import angel.game.combat.RoomCombat;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	/**
 	 * ...
@@ -18,16 +19,16 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IAction */
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
-			doAtEnd.push(changeModeToCombat);
+		public function doAction(context:ScriptContext):Object {
+			context.doThisAtEnd(changeModeToCombat);
 			return null;
 		}
 		
-		private function changeModeToCombat():void {
-			if (Settings.currentRoom.mode is RoomCombat) {
+		private function changeModeToCombat(context:ScriptContext):void {
+			if (context.room.mode is RoomCombat) {
 				Alert.show("Error! changeModeToCombat when already in combat");
 			} else {
-				Settings.currentRoom.changeModeTo(RoomCombat);
+				context.room.changeModeTo(RoomCombat);
 			}
 		}
 		

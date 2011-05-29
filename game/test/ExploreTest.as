@@ -16,8 +16,8 @@ package angel.game.test {
 		
 		public function ExploreTest() {
 			Autotest.setupTestRoom();
-			Settings.currentRoom.changeModeTo(RoomExplore);
-			Autotest.assertTrue(Settings.currentRoom.mode is RoomExplore, "Change to Explore failed or delayed");
+			Autotest.testRoom.changeModeTo(RoomExplore);
+			Autotest.assertTrue(Autotest.testRoom.mode is RoomExplore, "Change to Explore failed or delayed");
 			Autotest.assertNoAlert();
 			testChar = new ComplexEntity(Settings.catalog.retrieveCharacterResource(CHAR_ID), CHAR_ID);
 			Autotest.clearAlert();
@@ -25,11 +25,11 @@ package angel.game.test {
 			//Tests go here
 			Autotest.testFunction(moveOneSquare);
 			
-			Settings.currentRoom.cleanup();
+			Autotest.cleanupTestRoom();
 		}
 		
 		private function moveOneSquare():void {
-			var room:Room = Settings.currentRoom;
+			var room:Room = Autotest.testRoom;
 			
 			room.addOrMoveSpot("dest", new Point(6, 6));
 			testChar.exploreBrainClass = UtilBrain.exploreBrainClassFromString("patrol");

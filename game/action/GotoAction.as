@@ -1,5 +1,6 @@
 package angel.game.action {
 	import angel.common.Alert;
+	import angel.game.script.ScriptContext;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -26,7 +27,7 @@ package angel.game.action {
 			return new GotoAction(id, topic);
 		}
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
+		public function doAction(context:ScriptContext):Object {
 			return { "topic":topic, "id":id };
 		}
 		

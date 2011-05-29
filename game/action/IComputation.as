@@ -1,4 +1,5 @@
 package angel.game.action {
+	import angel.game.script.ScriptContext;
 	
 	/**
 	 * ...
@@ -6,7 +7,7 @@ package angel.game.action {
 	 */
 	public interface IComputation {
 		
-		function value():int;
+		function value(context:ScriptContext):int;
 	}
 	
 }

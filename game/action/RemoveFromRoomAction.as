@@ -2,6 +2,7 @@ package angel.game.action {
 	import angel.common.Alert;
 	import angel.game.ComplexEntity;
 	import angel.game.script.Script;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	/**
@@ -21,16 +22,16 @@ package angel.game.action {
 			return new RemoveFromRoomAction(actionXml.@id);
 		}
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
-			var entity:SimpleEntity = Script.entityWithScriptId(id);
-			if (entity == Settings.currentRoom.mainPlayerCharacter) {
+		public function doAction(context:ScriptContext):Object {
+			var entity:SimpleEntity = context.entityWithScriptId(id);
+			if (entity == context.room.mainPlayerCharacter) {
 				Alert.show("Error! Cannot remove main player character, must make someone else main first.");
 				return null;
 			}
 			if (Settings.isOnPlayerList(entity)) {
 				Settings.removeFromPlayerList(entity);
 			}
-			Settings.currentRoom.removeEntity(entity);
+			context.room.removeEntity(entity);
 			return null;
 		}
 		
