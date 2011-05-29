@@ -7,8 +7,8 @@ package angel.game.action {
 	 * @author Beth Moursund
 	 */
 	public class SpotEmptyCondition implements ICondition {
-		public var spotId:String;
-		public var desiredValue:Boolean;
+		private var spotId:String;
+		private var desiredValue:Boolean;
 		
 		public function SpotEmptyCondition(spotId:String, desiredValue:Boolean) {
 			this.spotId = spotId;
@@ -28,6 +28,10 @@ package angel.game.action {
 				return false;
 			}
 			return(Settings.currentRoom.firstEntityIn(location) == null ? desiredValue : !desiredValue);
+		}
+		
+		public function reverseMeaning():void {
+			desiredValue = false;
 		}
 		
 	}

@@ -16,7 +16,10 @@ package angel.game.action {
 		
 		public static function createFromXml(actionXml:XML):IAction {
 			var conditionAndScript:ConditionAndScript = conditionAndScriptFromXml(actionXml);
-			return (conditionAndScript.script == null ? null : new IfAction(conditionAndScript.condition, conditionAndScript.script));
+			if ((conditionAndScript == null) || (conditionAndScript.script == null)) {
+				return null;
+			}
+			return new IfAction(conditionAndScript.condition, conditionAndScript.script);
 		}
 		
 		public static function conditionAndScriptFromXml(actionXml:XML):ConditionAndScript {

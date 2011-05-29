@@ -34,6 +34,7 @@ package angel.game.test {
 			Autotest.runTest(FlagTest);
 			Autotest.runTest(ActionTest);
 			Autotest.runTest(ConditionTest);
+			Autotest.runTest(ComputationTest);
 			Autotest.runTest(ExploreTest);
 			return; //******************************************************** Stick this at top while working on new test
 		}

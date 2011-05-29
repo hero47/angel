@@ -7,8 +7,8 @@ package angel.game.action {
 	 */
 	
 	public class FlagCondition implements ICondition {
-		public var flagId:String;
-		public var desiredFlagValue:Boolean;
+		private var flagId:String;
+		private var desiredFlagValue:Boolean;
 		
 		public function FlagCondition(flagId:String, desiredValue:Boolean) {
 			this.flagId = flagId;
@@ -23,6 +23,10 @@ package angel.game.action {
 		
 		public function isMet():Boolean {
 			return (Flags.getValue(flagId) == desiredFlagValue);
+		}
+		
+		public function reverseMeaning():void {
+			desiredFlagValue = false;
 		}
 		
 	}
