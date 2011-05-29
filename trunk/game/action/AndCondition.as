@@ -34,6 +34,10 @@ package angel.game.action {
 			return desiredValue;
 		}
 		
+		public function reverseMeaning():void {
+			desiredValue = false;
+		}
+		
 	}
 
 }

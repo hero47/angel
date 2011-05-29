@@ -8,8 +8,8 @@ package angel.game.action {
 	 * @author Beth Moursund
 	 */
 	public class CharAliveCondition implements ICondition {
-		public var charId:String;
-		public var desiredValue:Boolean;
+		private var charId:String;
+		private var desiredValue:Boolean;
 		
 		public function CharAliveCondition(charId:String, desiredValue:Boolean) {
 			this.charId = charId;
@@ -29,6 +29,10 @@ package angel.game.action {
 				return false;
 			}
 			return(char.currentHealth > 0 ? desiredValue : !desiredValue);
+		}
+		
+		public function reverseMeaning():void {
+			desiredValue = false;
 		}
 		
 	}

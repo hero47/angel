@@ -12,6 +12,7 @@ package angel.game.action {
 			"allOf":AndCondition,
 			"anyOf":OrCondition,
 			"alive":CharAliveCondition,
+			"compare":CompareCondition,
 			"empty":SpotEmptyCondition,
 			"flag":FlagCondition
 		}
@@ -55,6 +56,9 @@ package angel.game.action {
 						oneCondition = new classAndDesiredValue.conditionClass(checkXml.@param, classAndDesiredValue.desiredValue);
 					} else {
 						oneCondition = classAndDesiredValue.conditionClass.createFromXml(checkXml);
+						if (!classAndDesiredValue.desiredValue) {
+							oneCondition.reverseMeaning();
+						}
 					}
 					if (oneCondition != null) {
 						conditions.push(oneCondition);
