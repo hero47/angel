@@ -50,7 +50,6 @@ package angel.game {
 			if (room != null) {
 				addChild(room);
 				room.addPlayerCharactersFromSettings(startSpot);
-				Settings.currentRoom = room;
 				room.changeModeTo(RoomExplore, true);
 			}
 		}

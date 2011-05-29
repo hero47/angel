@@ -1,5 +1,6 @@
 package angel.game.action {
 	import angel.game.Flags;
+	import angel.game.script.ScriptContext;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -16,7 +17,7 @@ package angel.game.action {
 			return new RemoveFlagAction(flag);
 		}
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
+		public function doAction(context:ScriptContext):Object {
 			Flags.setValue(flag, false);
 			return null;
 		}

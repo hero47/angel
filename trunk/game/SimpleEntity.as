@@ -115,7 +115,7 @@ package angel.game {
 				return;
 			}
 			if (frobScript != null) {
-				frobScript.run(this);
+				frobScript.run(this.room, this);
 			} else {
 				var nameOrIt:String = displayName;
 				if ((nameOrIt == null) || (nameOrIt == "")) {

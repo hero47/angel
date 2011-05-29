@@ -2,6 +2,7 @@ package angel.game.action {
 	import angel.common.Alert;
 	import angel.common.Util;
 	import angel.game.ComplexEntity;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	/**
 	 * ...
@@ -22,13 +23,13 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IComputation */
 		
-		public function value():int {
-			var entity1:ComplexEntity = ComplexEntity(Settings.currentRoom.entityInRoomWithId(id1));
+		public function value(context:ScriptContext):int {
+			var entity1:ComplexEntity = ComplexEntity(context.entityWithScriptId(id1));
 			if (entity1 == null) {
 				Alert.show("Error! No character " + id1 + " in current room.");
 				return 0;
 			}
-			var entity2:ComplexEntity = ComplexEntity(Settings.currentRoom.entityInRoomWithId(id2));
+			var entity2:ComplexEntity = ComplexEntity(context.entityWithScriptId(id2));
 			if (entity2 == null) {
 				Alert.show("Error! No character " + id2 + " in current room.");
 				return 0;

@@ -1,6 +1,7 @@
 package angel.game.action {
 	import angel.common.Alert;
 	import angel.game.ComplexEntity;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import flash.geom.Point;
 	/**
@@ -28,7 +29,7 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IAction */
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
+		public function doAction(context:ScriptContext):Object {
 			var walker:ComplexEntity = ComplexEntity.createFromRoomContentsXml(walkerXml, CONTENTS_VERSION, Settings.catalog);
 			if (walker == null) {
 				// don't show another error, catalog will already have displayed error
@@ -37,15 +38,15 @@ package angel.game.action {
 			var spotId:String = walkerXml.@spot;
 			var location:Point;
 			if (spotId != "") {
-				location = Settings.currentRoom.spotLocation(spotId);
+				location = context.room.spotLocation(spotId);
 				if (location == null) {
 					Alert.show("Error in addNpc: spot '" + spotId + "' undefined in current room.");
 				}
 			}
 			if (location == null) {
-				Settings.currentRoom.addEntityUsingItsLocation(walker);
+				context.room.addEntityUsingItsLocation(walker);
 			} else {
-				Settings.currentRoom.addEntity(walker, location);
+				context.room.addEntity(walker, location);
 			}
 			return null;
 		}

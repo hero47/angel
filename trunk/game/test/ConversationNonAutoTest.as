@@ -1,5 +1,6 @@
 package angel.game.test {
 	import angel.game.event.QEvent;
+	import angel.game.Room;
 	import angel.game.script.ConversationData;
 	import angel.game.Settings;
 	/**
@@ -8,8 +9,10 @@ package angel.game.test {
 	 */
 	public class ConversationNonAutoTest {
 		private static var conversationData:ConversationData;
+		private var room:Room;
 		
-		public function ConversationNonAutoTest() {
+		public function ConversationNonAutoTest(room:Room) {
+			this.room = room;
 			if (conversationData == null) {
 				conversationData = new ConversationData();
 				Settings.gameEventQueue.addListener(this, conversationData, QEvent.INIT, dataLoaded);
@@ -25,7 +28,7 @@ package angel.game.test {
 		}
 		
 		private function doTest():void {
-			Settings.currentRoom.startConversation(Settings.currentRoom.mainPlayerCharacter, conversationData);
+			room.startConversation(room.mainPlayerCharacter, conversationData);
 		}
 		
 	}

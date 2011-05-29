@@ -1,6 +1,7 @@
 package angel.game.action {
 	import angel.common.Alert;
 	import angel.common.Assert;
+	import angel.game.script.ScriptContext;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -47,36 +48,36 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.ICondition */
 		
-		public function isMet():Boolean {
-			return op(left, right) ? desiredValue : !desiredValue;
+		public function isMet(context:ScriptContext):Boolean {
+			return op(left, right, context) ? desiredValue : !desiredValue;
 		}
 		
 		public function reverseMeaning():void {
 			desiredValue = false;
 		}
 		
-		private static function less(a:IComputation, b:IComputation):Boolean {
-			return a.value() < b.value();
+		private static function less(a:IComputation, b:IComputation, context:ScriptContext):Boolean {
+			return a.value(context) < b.value(context);
 		}
 		
-		private static function greater(a:IComputation, b:IComputation):Boolean {
-			return a.value() > b.value();
+		private static function greater(a:IComputation, b:IComputation, context:ScriptContext):Boolean {
+			return a.value(context) > b.value(context);
 		}
 		
-		private static function equal(a:IComputation, b:IComputation):Boolean {
-			return a.value() == b.value();
+		private static function equal(a:IComputation, b:IComputation, context:ScriptContext):Boolean {
+			return a.value(context) == b.value(context);
 		}
 		
-		private static function lessOrEqual(a:IComputation, b:IComputation):Boolean {
-			return a.value() <= b.value();
+		private static function lessOrEqual(a:IComputation, b:IComputation, context:ScriptContext):Boolean {
+			return a.value(context) <= b.value(context);
 		}
 		
-		private static function greaterOrEqual(a:IComputation, b:IComputation):Boolean {
-			return a.value() >= b.value();
+		private static function greaterOrEqual(a:IComputation, b:IComputation, context:ScriptContext):Boolean {
+			return a.value(context) >= b.value(context);
 		}
 		
-		private static function notEqual(a:IComputation, b:IComputation):Boolean {
-			return a.value() != b.value();
+		private static function notEqual(a:IComputation, b:IComputation, context:ScriptContext):Boolean {
+			return a.value(context) != b.value(context);
 		}
 		
 	}

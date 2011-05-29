@@ -4,6 +4,7 @@ package angel.game.action {
 	import angel.game.brain.UtilBrain;
 	import angel.game.ComplexEntity;
 	import angel.game.script.Script;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import flash.geom.Point;
@@ -43,9 +44,9 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IAction */
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
+		public function doAction(context:ScriptContext):Object {
 			var id:String = xml.@id;
-			var entity:SimpleEntity = Script.entityWithScriptId(id);
+			var entity:SimpleEntity = context.entityWithScriptId(id);
 			var complexEntity:ComplexEntity = entity as ComplexEntity;
 			if (entity == null) {
 				Alert.show("Script error: no id " + id + " in room for changeAttributes");
@@ -55,7 +56,7 @@ package angel.game.action {
 			var spotId:String = xml.@spot;
 			var newLocation:Point;
 			if (spotId != "") {
-				newLocation = Settings.currentRoom.spotLocation(spotId);
+				newLocation = context.room.spotLocation(spotId);
 				if (newLocation == null) {
 					Alert.show("Error in change: spot '" + spotId + "' undefined in current room.");
 				}
@@ -64,7 +65,7 @@ package angel.game.action {
 				if (newLocation != null) {
 					Alert.show("Error: change action with both spot and x,y");
 				}
-				if ((xyFromXml.x > Settings.currentRoom.size.x) || (xyFromXml.y > Settings.currentRoom.size.y)) {
+				if ((xyFromXml.x > context.room.size.x) || (xyFromXml.y > context.room.size.y)) {
 					Alert.show("Error in change: position out of room boundaries");
 				} else {
 					newLocation = new Point(int(xml.@x), int(xml.@y));
@@ -73,7 +74,7 @@ package angel.game.action {
 			
 			if (newLocation != null) {
 				var wasMoving:Boolean = (complexEntity != null) && (complexEntity.moving());
-				Settings.currentRoom.changeEntityLocation(entity, entity.location, newLocation);
+				context.room.changeEntityLocation(entity, entity.location, newLocation);
 				if (wasMoving) { // Whatever path they were following is no longer valid
 					complexEntity.movement.endMoveImmediately();
 				}

@@ -1,5 +1,7 @@
 package angel.game.action {
 	import angel.common.Alert;
+	import angel.game.script.ScriptContext;
+	import angel.game.Settings;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -17,9 +19,15 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IAction */
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
-			Alert.show(message);
+		public function doAction(context:ScriptContext):Object {
+			// UNDONE: This won't work, if another message happens while game is paused from first one
+			//Settings.currentRoom.pauseGameTimeIndefinitely();
+			Alert.show(message, { callBack:unpauseGameAfterMessageOk });
 			return null;
+		}
+		
+		private function unpauseGameAfterMessageOk():void {
+			//Settings.currentRoom.unpauseGameTimeAndDeleteCallback();
 		}
 		
 	}

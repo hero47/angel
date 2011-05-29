@@ -2,6 +2,7 @@ package angel.game.action {
 	import angel.common.Alert;
 	import angel.game.Flags;
 	import angel.game.script.Script;
+	import angel.game.script.ScriptContext;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -46,11 +47,11 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IAction */
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
+		public function doAction(context:ScriptContext):Object {
 			for (var i:int = 0; i < cases.length; ++i) {
 				var condition:ICondition = cases[i].condition;
-				if ((condition == null) || condition.isMet()) {
-					cases[i].script.doActions(doAtEnd);
+				if ((condition == null) || condition.isMet(context)) {
+					cases[i].script.doActions(context);
 					return null;
 				}
 			}

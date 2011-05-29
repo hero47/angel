@@ -1,6 +1,7 @@
 package angel.game.action {
 	import angel.common.Assert;
 	import angel.game.script.Script;
+	import angel.game.script.ScriptContext;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -30,7 +31,7 @@ package angel.game.action {
 			return myScript;
 		}
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
+		public function doAction(context:ScriptContext):Object {
 			Assert.fail("ElseIf action should never be executed, it should have been merged with if.");
 			return null;
 		}

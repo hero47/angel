@@ -1,6 +1,7 @@
 package angel.game.action {
 	import angel.common.Alert;
 	import angel.game.Flags;
+	import angel.game.script.ScriptContext;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -21,7 +22,7 @@ package angel.game.action {
 			return true;
 		}
 		
-		public function isMet():Boolean {
+		public function isMet(context:ScriptContext):Boolean {
 			return (Flags.getValue(flagId) == desiredFlagValue);
 		}
 		

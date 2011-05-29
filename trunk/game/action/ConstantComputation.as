@@ -1,4 +1,5 @@
 package angel.game.action {
+	import angel.game.script.ScriptContext;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -12,7 +13,7 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IComputation */
 		
-		public function value():int {
+		public function value(context:ScriptContext):int {
 			return val;
 		}
 		

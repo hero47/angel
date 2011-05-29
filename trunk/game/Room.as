@@ -22,6 +22,8 @@ package angel.game {
 	import flash.ui.Keyboard;
 	import flash.utils.getTimer;
 
+	//NOTE: Room automatically starts itself running when it goes on stage.
+	
 	public class Room extends Sprite {
 		static public const GAME_ENTER_FRAME:String = "gameEnterFrame";
 		static public const ROOM_ENTER_FRAME:String = "roomEnterFrame";
@@ -109,8 +111,9 @@ package angel.game {
 			if (roomScripts != null) {
 				roomScripts.cleanup();
 			}
-			if (Settings.currentRoom == this) {
-				Settings.currentRoom = null;
+			Assert.assertTrue(Settings.gameEventQueue.numberOfListenersOn(this) == 0, "Room still has listeners after cleanup");
+			if (Settings.gameEventQueue.numberOfListenersOn(this) > 0) {
+				Settings.gameEventQueue.debugTraceListenersOn(this, "After room cleanup, listeners on room:");
 			}
 		}
 		
@@ -255,7 +258,7 @@ package angel.game {
 				break;
 				
 				case Keyboard.HOME:
-					new ConversationNonAutoTest();
+					new ConversationNonAutoTest(this);
 				break;
 				
 				default:

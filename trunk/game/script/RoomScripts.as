@@ -103,7 +103,7 @@ package angel.game.script {
 			for each (var thisScript:TriggeredScript in scripts) {
 				if (passesIdFilter(thisScript, entityWhoTriggered)) {
 					if (!anyoneCaresAboutSpots || passesSpotFilter(thisScript, spotsThisEntityIsOn)) {
-						thisScript.script.run(entityWhoTriggered);
+						thisScript.script.run(room, entityWhoTriggered);
 					}
 				}
 			}

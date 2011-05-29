@@ -5,6 +5,7 @@ package angel.game.action {
 	import angel.game.combat.RoomCombat;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import flash.display.DisplayObjectContainer;
 	import flash.events.Event;
@@ -16,6 +17,8 @@ package angel.game.action {
 		private var filename:String;
 		private var startSpot:String;
 		private var startMode:Class;
+		
+		private var oldRoom:Room;
 		
 		public function ChangeRoomAction(filename:String, startSpot:String=null, startMode:Class=null) {
 			this.filename = filename;
@@ -38,16 +41,17 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IAction */
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
-			doAtEnd.push(changeRoom);
+		public function doAction(context:ScriptContext):Object {
+			context.doThisAtEnd(changeRoom);
 			return null;
 		}
 		
-		private function changeRoom():void {
+		private function changeRoom(context:ScriptContext):void {
 			if ((filename == null) || (filename == "")) {
 				Alert.show("Error! Missing filename in change room action");
 				return;
 			}
+			oldRoom = context.room;
 			LoaderWithErrorCatching.LoadFile(filename, roomXmlLoaded);
 		}
 		
@@ -58,14 +62,11 @@ package angel.game.action {
 			}
 			var newRoom:Room = Room.createFromXml(xml, filename);
 			if (newRoom != null) {
-				var newMode:Class = startMode;
-				if ((newMode == null) && (Settings.currentRoom.mode != null)) {
-					newMode = Object(Settings.currentRoom.mode).constructor;
-				}
-				var roomParent:DisplayObjectContainer = Settings.currentRoom.parent;
-				Settings.currentRoom.cleanup();
-				roomParent.addChild(newRoom);
-				Settings.currentRoom = newRoom;
+				var modeFromOldRoom:Class = (oldRoom.mode == null ? null : Object(oldRoom.mode).constructor);
+				var parentFromOldRoom:DisplayObjectContainer = oldRoom.parent;
+				var newMode:Class = (startMode == null ? modeFromOldRoom : startMode);
+				oldRoom.cleanup();
+				parentFromOldRoom.addChild(newRoom); // Room will start itself running when it goes on stage
 				
 				newRoom.addPlayerCharactersFromSettings(startSpot);
 				if (newMode != null) {

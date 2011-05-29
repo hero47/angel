@@ -55,11 +55,11 @@ package angel.game.script {
 			return Flags.haveAllFlagsIn(need);
 		}
 		
-		public function doActionsAndGetNextEntryId(doAtEnd:Vector.<Function>):Object {
+		public function doActionsAndGetNextEntryId(context:ScriptContext):Object {
 			if (script == null) {
 				return null;
 			}
-			return script.doActionsForConversationSegment(doAtEnd);
+			return script.doActionsForConversationSegment(context);
 		}
 		
 	}

@@ -73,7 +73,7 @@ package angel.game.test {
 				initTimer.stop();
 				removeEventListener(Event.ENTER_FRAME, waitingForInit);
 				Autotest.failCount = 0;
-				Autotest.assertEqual(Settings.currentRoom, null, "Initialization shouldn't create room");
+				Autotest.assertEqual(numChildren, 0, "Initialization shouldn't create room or put anything on screen");
 				testsRequiringGameInit();
 				trace("Game tests finished, failCount", Autotest.failCount);
 			}

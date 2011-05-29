@@ -1,6 +1,7 @@
 package angel.game.action {
 	import angel.game.script.ConversationData;
 	import angel.game.script.Script;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	/**
@@ -24,20 +25,20 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IAction */
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
-			doAtEnd.push(startConversation);
+		public function doAction(context:ScriptContext):Object {
+			context.doThisAtEnd(startConversation);
 			return null;
 		}
 		
-		private function startConversation():void {
+		private function startConversation(context:ScriptContext):void {
 			var targetEntity:SimpleEntity;
 			if ((targetId != null) && (targetId != "")) {
-				targetEntity = Script.entityWithScriptId(targetId);
+				targetEntity = context.entityWithScriptId(targetId);
 			}
 			if (targetEntity == null) {
-				targetEntity = Settings.currentRoom.mainPlayerCharacter;
+				targetEntity = context.room.mainPlayerCharacter;
 			}
-			Settings.currentRoom.startConversation(targetEntity, conversationData);
+			context.room.startConversation(targetEntity, conversationData);
 		}
 		
 	}

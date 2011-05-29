@@ -5,6 +5,7 @@ package angel.game.action {
 	import angel.game.brain.UtilBrain;
 	import angel.game.ComplexEntity;
 	import angel.game.script.Script;
+	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	/**
@@ -41,12 +42,12 @@ package angel.game.action {
 		
 		/* INTERFACE angel.game.action.IAction */
 		
-		public function doAction(doAtEnd:Vector.<Function>):Object {
-			var entityWithId:SimpleEntity = Script.entityWithScriptId(id);
+		public function doAction(context:ScriptContext):Object {
+			var entityWithId:SimpleEntity = context.entityWithScriptId(id);
 			if (entityWithId is ComplexEntity) {
 				var entity:ComplexEntity = ComplexEntity(entityWithId);
 				if (entity.isReallyPlayer) {
-					if (entity == Settings.currentRoom.mainPlayerCharacter) {
+					if (entity == context.room.mainPlayerCharacter) {
 						Alert.show("Error! Cannot change main player character to NPC, must make someone else main first.");
 						return null;
 					}
