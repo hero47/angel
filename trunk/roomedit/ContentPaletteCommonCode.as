@@ -2,6 +2,7 @@ package angel.roomedit {
 	import angel.common.CatalogEntry;
 	import angel.common.Prop;
 	import angel.common.SimplerButton;
+	import angel.common.Tileset;
 	import angel.common.Util;
 	import angel.roomedit.FloorTileEdit;
 	import fl.controls.ComboBox;
@@ -43,7 +44,7 @@ package angel.roomedit {
 			itemImage.x = (EditorSettings.PALETTE_XSIZE - itemImage.width) / 2;
 			
 			itemChooser = catalog.createChooser(catalogEntryType, EditorSettings.PALETTE_XSIZE - 10);
-			Util.addBelow(itemChooser, itemImage);
+			Util.addBelow(itemChooser, itemImage, -(Tileset.TILE_HEIGHT/2));
 			itemChooser.x = (EditorSettings.PALETTE_XSIZE - itemChooser.width) / 2;
 			itemCombo = itemChooser.comboBox;
 			itemCombo.addEventListener(Event.CHANGE, itemComboBoxChanged);

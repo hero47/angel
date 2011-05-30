@@ -94,6 +94,11 @@ package angel.game.test {
 			inventory.add(grenade1, -1);
 			Autotest.assertAlerted("Adding less than one item is an error");
 			Autotest.clearAlert();
+			
+			inventory.add(gun1);
+			inventory.add(gun2);
+			inventory.removeAllMatching(Gun);
+			Autotest.assertEqual(inventory.count(Gun), 0);
 		}
 		
 	}

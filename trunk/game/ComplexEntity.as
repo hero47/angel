@@ -1,6 +1,7 @@
 package angel.game {
 	import angel.common.Catalog;
 	import angel.common.CharacterStats;
+	import angel.common.Defaults;
 	import angel.common.IEntityAnimation;
 	import angel.common.Prop;
 	import angel.common.RoomContentResource;
@@ -8,6 +9,7 @@ package angel.game {
 	import angel.common.Util;
 	import angel.game.brain.IBrain;
 	import angel.game.brain.UtilBrain;
+	import angel.game.combat.Grenade;
 	import angel.game.combat.Gun;
 	import angel.game.combat.IWeapon;
 	import angel.game.combat.RoomCombat;
@@ -64,6 +66,9 @@ package angel.game {
 			initMovement(characterStats.movePoints, characterStats.maxGait);
 			if (characterStats.damage > 0) {
 				inventory.add(new Gun(characterStats.damage));
+			}
+			if (characterStats.grenades > 0) {
+				inventory.add(Grenade.getCopy(), characterStats.grenades);
 			}
 			solidness = solidnessWhenAlive = resource.solidness;
 			

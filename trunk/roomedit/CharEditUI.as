@@ -41,6 +41,7 @@ package angel.roomedit {
 		private var nameTextField:TextField;
 		private var changeImageControl:FilenameControl;
 		private var noSprintHackCheckbox:CheckBox;
+		private var grenadesTextField:TextField;
 		private var deleteFromCatalogButton:SimplerButton;
 		
 		private static const WIDTH:int = 220;
@@ -90,7 +91,9 @@ package angel.roomedit {
 					function(event:Event):void { changeCharacterProperty(int(event.target.text), "movePoints", Defaults.MOVE_POINTS) }, 0 );
 			changeImageControl = FilenameControl.createBelow(movePointsTextField, false, "Image", 0, 220, changeFilename, 0);
 			noSprintHackCheckbox = Util.createCheckboxEditControlBelow(changeImageControl, "No Sprint Hack", 120,
-					function(event:Event):void { changeCharacterProperty( (event.target.selected ? 2 : 3), "maxGait", Defaults.MAX_GAIT) }, 0 );
+					function(event:Event):void { changeCharacterProperty( (event.target.selected ? 2 : 3), "maxGait", Defaults.MAX_GAIT) }, 0 );	
+			grenadesTextField = Util.createTextEditControlBelow(noSprintHackCheckbox, "Grenades", 100, 40,
+				function(event:Event):void { changeCharacterProperty(int(event.target.text), "grenades", Defaults.GRENADES) }, 0 );
 			
 			deleteFromCatalogButton = new SimplerButton("Delete from catalog", clickedDelete, 0xff0000);
 			deleteFromCatalogButton.width = WIDTH;
@@ -124,6 +127,7 @@ package angel.roomedit {
 			movePointsTextField.text = String(characterStats.movePoints);
 			changeImageControl.text = catalog.getFilenameFromId(charId);
 			noSprintHackCheckbox.selected = (characterStats.maxGait < 3);
+			grenadesTextField.text = String(characterStats.grenades);
 		}
 		
 		private function changeCharacterProperty(newValue:*, propertyName:String, defaultValue:* = null):void {
