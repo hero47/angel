@@ -75,10 +75,19 @@ package angel.game.test {
 			Autotest.assertFalse(Flags.getValue("xxTest"));
 		}
 		
+		private static const doubleMessage:XML =  <if notFlag="xxTest">
+			<message text="first" />
+			<message text="second" />
+		</if>;
 		private function testMessageAction():void {
 			var messageActionXml:XML = <message text="Hello, world!" />;
 			Autotest.testActionFromXml(messageActionXml);
 			Autotest.assertAlertText("Hello, world!");
+			
+			Autotest.assertFalse(Flags.getValue("xxTest"));
+			Autotest.clearAlert(); // in case flag wasn't initialized yet
+			Autotest.testActionFromXml(doubleMessage);
+			Autotest.assertAlertText("first\nsecond", "Should have combined both messages into one alert with linefeed between them");
 		}
 		
 		private static const ifTestShortcutXml:XML = <if flag="xxTest">
@@ -127,7 +136,7 @@ package angel.game.test {
 		private function testIfAction():void {
 			Autotest.assertFalse(Flags.getValue("xxTest"));
 			Autotest.assertFalse(Flags.getValue("yyTest"));
-			Autotest.clearAlert();
+			Autotest.clearAlert(); // in case flag wasn't initialized yet
 			
 			Autotest.testActionFromXml(ifTestShortcutXml);
 			Autotest.assertNoAlert();

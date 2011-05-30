@@ -40,7 +40,7 @@ package angel.common {
 									"simple" style is used if background is not specified
 		
 		buttons:Array			-	An array (maximum of 3) containing the Strings of the buttons to be shown in the Alert prompt
-		callBack:Function		-	The function to be called when a button on the Alert prompt has been clicked - returns the name of the button that was clicked
+		callback:Function		-	The function to be called when a button on the Alert prompt has been clicked - returns the name of the button that was clicked
 		colour:int				-	Main colour for the Alert
 		promptAlpha:int			-	Alpha of the Alert prompt
 		textColour:int			-	Colour of the text shown in the Alert dialog
@@ -51,11 +51,15 @@ package angel.common {
 			stage = stageReference;
 		}
 		public static function show(Text:* = "Made by dVyper", ALERTOPTIONS:Object = null):void {
+			var alertOptions:AlertOptions = new AlertOptions(ALERTOPTIONS, Text);
 			if (testMode) {
 				if (messageForTestMode == null) {
 					messageForTestMode = Text;
 				} else {
 					messageForTestMode += "@@@" + Text;
+				}
+				if (alertOptions.callback != null) {
+					alertOptions.callback(alertOptions.buttons[0]);
 				}
 				return;
 			}
@@ -63,7 +67,6 @@ package angel.common {
 				trace("Alert class has not been initialised!");
 				return;
 			}
-			var alertOptions:AlertOptions = new AlertOptions(ALERTOPTIONS, Text);
 			var myAlert:Sprite = new Sprite();
 			myAlert.addChild(createBackground(alertOptions));
 			myAlert.addChild(getPrompt(alertOptions));

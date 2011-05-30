@@ -81,10 +81,10 @@ package angel.game.combat {
 		
 		public function cleanup():void {
 			trace("***ENDING COMBAT***");
-			room.unpauseGameTimeAndDeleteCallback();
 			
 			room.disableUi();
 			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
+			room.unpauseAndDeleteAllOwnedBy(this);
 			
 			augmentedReality.cleanup();
 			
@@ -211,7 +211,7 @@ package angel.game.combat {
 			}
 			
 			// Give the player some time to gaze at the fire graphic before continuing with turn.
-			room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, finishedFire);
+			room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, this, finishedFire);
 		}
 			
 		public function beginThrowGrenade(shooter:ComplexEntity, targetLocation:Point):void {
@@ -220,7 +220,7 @@ package angel.game.combat {
 			grenade.throwAt(shooter, targetLocation);
 			
 			// Give the player some time to gaze at the fire graphic before continuing with turn.
-			room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, finishedFire);
+			room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, this, finishedFire);
 		}
 		
 		/**************** opportunity fire ***********************/
@@ -254,7 +254,7 @@ package angel.game.combat {
 			
 			if (someoneDidOpportunityFire) {
 				//No callback here because we're in the middle of movement and next phase will start from end-move listener
-				room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, null);
+				room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, this, null);
 			}
 				
 		}

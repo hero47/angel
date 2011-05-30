@@ -52,8 +52,7 @@ package angel.game {
 		private var conversationInProgress:ConversationInterface;
 		private var roomScripts:RoomScripts;
 		
-		private var pauseGameTimeUntil:int = 0;
-		private var gameTimePauseCallback:Function;		
+		private var gamePauseStack:Vector.<PauseInfo> = new Vector.<PauseInfo>(); // LIFO stack
 		
 		private var tileWithHilight:FloorTile;
 		private var scrollingTo:Point = null;
@@ -132,56 +131,66 @@ package angel.game {
 			}
 		}
 		
-		public function pauseGameTimeIndefinitely():void {
-			trace("Pausing game time indefinitely");
-			Assert.assertTrue(!gameTimeIsPaused, "Pause indefinitely when already paused");
-			pauseGameTimeUntil = int.MAX_VALUE;
+		public function pauseGameTimeIndefinitely(pauseOwner:Object):void {
+			trace("Pausing game time indefinitely", pauseOwner);
+			gamePauseStack.push(new PauseInfo(int.MAX_VALUE, pauseOwner));
 		}
 		
-		public function pauseGameTimeForFixedDelay(seconds:Number, callback:Function = null):void {
-			trace("Pausing game time for", seconds, "seconds", (callback == null) ? "no callback" : "with callback");
-			if (gameTimeIsPaused) { // Something is screwed up, but try to continue gracefully
-				pauseGameTimeUntil = 0;
-				if (gameTimePauseCallback != null) {
-					Assert.fail("Pause when already paused! Calling original callback.");
-					var temp:Function = gameTimePauseCallback;
-					gameTimePauseCallback = null;
-					temp();
+		public function pauseGameTimeForFixedDelay(seconds:Number, pauseOwner:Object, callback:Function = null):void {
+			trace("Pausing game time for", seconds, "seconds, owner =", pauseOwner, (callback == null) ? ", no callback" : ", with callback");
+			gamePauseStack.push(new PauseInfo(getTimer() + seconds * 1000, pauseOwner, callback));
+		}
+		
+		public function gameTimeIsPaused():Boolean {
+			return (gamePauseStack.length > 0);
+		}
+		
+		// For use when mode change makes callbacks obsolete
+		public function unpauseAndDeleteAllOwnedBy(owner:Object):void {
+			trace("unpause and delete all owned by", owner);
+			var i:int = 0;
+			while (i < gamePauseStack.length) {
+				if (gamePauseStack[i].pauseOwner == owner) {
+					gamePauseStack.slice(i, 1);
 				} else {
-					Assert.fail("Pause when already paused! No callback on first pause.");
+					++i;
 				}
 			}
-			pauseGameTimeUntil = getTimer() + seconds * 1000;
-			Assert.assertTrue(gameTimePauseCallback == null, "Overwriting game time pause callback");
-			gameTimePauseCallback = callback;
 		}
 		
-		public function get gameTimeIsPaused():Boolean {
-			return (pauseGameTimeUntil > 0);
-		}
-		
-		// For use when mode change makes pause & callback obsolete
-		public function unpauseGameTimeAndDeleteCallback():void {
-			trace("Deleting game time pause & callback");
-			pauseGameTimeUntil = 0;
-			gameTimePauseCallback = null;
+		public function unpauseFromLastIndefinitePause(owner:Object):void {
+			if (gamePauseStack.length < 1) {
+				Assert.fail("unpause indefinite when not paused");
+				return;
+			}
+			for (var i:int = gamePauseStack.length - 1; i >= 0; --i) {
+				var lastPauseInfo:PauseInfo = gamePauseStack[i];
+				if ((lastPauseInfo.pauseUntil == int.MAX_VALUE) && (lastPauseInfo.pauseOwner == owner)) {
+					trace("unpaused from last indefinite", owner);
+					gamePauseStack.splice(i, 1);
+					return;
+				}
+			}
+			Assert.fail("unpause: pause not found!");
 		}
 		
 		private function handlePauseAndAdvanceGameTimeIfNotPaused():void {
 			var currentTime:int = getTimer();
-			if ((pauseGameTimeUntil > 0) && (pauseGameTimeUntil <= currentTime)) {
-				pauseGameTimeUntil = 0;
-				trace("Game time pause expired;", gameTimePauseCallback == null ? "no callback" : "calling callback");
-				if (gameTimePauseCallback != null) {
-					// Inside callback we may pause again, so we need to set the callback to null BEFORE calling it
-					var temp:Function = gameTimePauseCallback;
-					gameTimePauseCallback = null;
-					temp();
+			var stayPaused:Boolean = false;
+			while (gameTimeIsPaused() && !stayPaused) {
+				var lastPauseInfo:PauseInfo = gamePauseStack[gamePauseStack.length - 1];
+				if (lastPauseInfo.pauseUntil > currentTime) {
+					stayPaused = true;
+				} else {
+					gamePauseStack.pop();
+					if (lastPauseInfo.callback != null) {
+						lastPauseInfo.callback();
+					}
 				}
-				
 			}
+			
 			Settings.gameEventQueue.dispatch(new QEvent(this, ROOM_ENTER_FRAME));
-			if (!gameTimeIsPaused) {
+			if (!gameTimeIsPaused()) {
 				Settings.gameEventQueue.dispatch(new QEvent(this, ROOM_ENTER_UNPAUSED_FRAME));
 			}			
 		}
@@ -619,4 +628,15 @@ package angel.game {
 		
 	} // end class Room
 
+}
+
+class PauseInfo {
+	public var pauseUntil:int;
+	public var pauseOwner:Object;
+	public var callback:Function;
+	public function PauseInfo(pauseUntil:int, pauseOwner:Object, callback:Function = null) {
+		this.pauseUntil = pauseUntil;
+		this.pauseOwner = pauseOwner;
+		this.callback = callback;
+	}
 }

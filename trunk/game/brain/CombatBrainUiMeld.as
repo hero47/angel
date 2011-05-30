@@ -59,7 +59,7 @@ package angel.game.brain {
 			// start complicating the AI, then there may be a delay before the move dots are drawn, but
 			// the total time between enemy's turn starting and enemy beginning to follow dots should
 			// stay at that time unless we're really slow.)
-			combat.room.pauseGameTimeForFixedDelay(RoomCombat.PAUSE_TO_VIEW_MOVE_SECONDS, carryOutPlottedMove);
+			combat.room.pauseGameTimeForFixedDelay(RoomCombat.PAUSE_TO_VIEW_MOVE_SECONDS, this, carryOutPlottedMove);
 			chooseMoveAndDrawDots();
 		}
 		
