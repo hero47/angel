@@ -178,6 +178,7 @@ package angel.game.test {
 				context.endOfScriptActions();
 			}
 			Settings.gameEventQueue.handleEvents();
+			Autotest.assertTrue((testRoom == null) || !testRoom.gameTimeIsPaused(), "Action left room paused");
 		}
 		
 		

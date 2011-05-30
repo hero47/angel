@@ -1,5 +1,6 @@
 package angel.game.action {
 	import angel.common.Alert;
+	import angel.game.Room;
 	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	/**
@@ -20,15 +21,10 @@ package angel.game.action {
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(context:ScriptContext):Object {
-			// UNDONE: This won't work, if another message happens while game is paused from first one
-			//Settings.currentRoom.pauseGameTimeIndefinitely();
-			Alert.show(message, { callBack:unpauseGameAfterMessageOk });
+			context.pauseAndAddMessage(message);
 			return null;
 		}
 		
-		private function unpauseGameAfterMessageOk():void {
-			//Settings.currentRoom.unpauseGameTimeAndDeleteCallback();
-		}
 		
 	}
 
