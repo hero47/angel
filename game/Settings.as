@@ -148,9 +148,13 @@ package angel.game {
 				if (pc.@health.length() > 0) {
 					entity.maxHealth = entity.currentHealth = pc.@health;
 				}
-				var grenades:int = pc.@grenades;
-				if (grenades > 0) {
-					entity.inventory.add(Grenade.getCopy(), grenades);
+				
+				if (pc.@grenades.length() > 0) {
+					entity.inventory.removeAllMatching(Grenade);
+					var grenades:int = pc.@grenades;
+					if (grenades > 0) {
+						entity.inventory.add(Grenade.getCopy(), grenades);
+					}
 				}
 				
 				if (previousPcId != null) {

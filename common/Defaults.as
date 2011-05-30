@@ -22,6 +22,7 @@ package angel.common {
 		public static const FIRE_FROM_COVER_DAMAGE_REDUCTION:int = 25;
 		public static const GRENADE_DAMAGE:int = 10;
 		public static const MAX_GAIT:int = 3;
+		public static const GRENADES:int = 0;
 		
 		public static const CONVERSATION:String = null;
 			

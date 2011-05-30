@@ -9,6 +9,7 @@ package angel.common {
 		public var movePoints:int = Defaults.MOVE_POINTS;
 		public var displayName:String = Defaults.DISPLAY_NAME;
 		public var maxGait:int = Defaults.MAX_GAIT;
+		public var grenades:int = Defaults.GRENADES;
 		
 		public function CharacterStats() {
 			
@@ -20,6 +21,7 @@ package angel.common {
 			Util.setIntFromXml(this, "movePoints", xml, "movePoints");
 			Util.setTextFromXml(this, "displayName", xml, "displayName");
 			Util.setIntFromXml(this, "maxGait", xml, "maxGait");
+			Util.setIntFromXml(this, "grenades", xml, "grenades");
 		}
 		
 	}

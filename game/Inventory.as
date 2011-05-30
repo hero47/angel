@@ -48,6 +48,14 @@ package angel.game {
 			delete items[specificItem];
 		}
 		
+		public function removeAllMatching(classToFind:Class):void {
+			for (var item:Object in items) {
+				if (item is classToFind) {
+					delete items[item];
+				}
+			}
+		}
+		
 		public function findA(classToFind:Class):* {
 			for (var item:Object in items) {
 				if (item is classToFind) {

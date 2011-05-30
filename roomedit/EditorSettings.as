@@ -16,7 +16,7 @@ package angel.roomedit {
 		public static const TILE_ITEM_HEIGHT:int = (Tileset.TILE_HEIGHT + PALETTE_LABEL_HEIGHT + Y_GUTTER);
 		public static const TILE_ITEM_WIDTH:int = Tileset.TILE_WIDTH + X_GUTTER;
 		public static const PALETTE_XSIZE:int = Tileset.TILE_WIDTH * 3;
-		public static const PALETTE_YSIZE:int = 7 * TILE_ITEM_HEIGHT;
+		public static const PALETTE_YSIZE:int = 8 * TILE_ITEM_HEIGHT;
 		
 		public function EditorSettings() {
 			
