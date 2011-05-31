@@ -203,6 +203,14 @@ package angel.common {
 			return (foo < 0 ? -1 : (foo > 0 ? 1 : 0));
 		}
 		
+		public static function negSafeMod(val:int, mod:int):int {
+			return (val < 0) ? (val % mod) + mod : val % mod;
+		}
+		
+		public static function notEmpty(val:String):Boolean {
+			return (val != null) && (val != "");
+		}
+		
 		public static function chessDistance(a:Point, b:Point):int {
 			return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 		}
