@@ -23,7 +23,8 @@ import flash.display.BitmapData;
 		public static const PROP:int = 1;
 		public static const CHARACTER:int = 2;
 		public static const TILESET:int = 3;
-		public static const xmlTag:Vector.<String> = Vector.<String>(["unknown", "prop", "char", "tileset"]);
+		public static const WEAPON:int = 4;
+		public static const xmlTag:Vector.<String> = Vector.<String>(["unknown", "prop", "char", "tileset", "weapon"]);
 		
 		public var filename:String;
 		public var type:int;

@@ -7,6 +7,7 @@ package angel.game {
 	import angel.common.RoomContentResource;
 	import angel.common.Tileset;
 	import angel.common.Util;
+	import angel.common.WeaponResource;
 	import angel.game.brain.IBrain;
 	import angel.game.brain.UtilBrain;
 	import angel.game.combat.Grenade;
@@ -64,8 +65,9 @@ package angel.game {
 			maxHealth = currentHealth = characterStats.health;
 			myDisplayName = characterStats.displayName;
 			initMovement(characterStats.movePoints, characterStats.maxGait);
-			if (characterStats.damage > 0) {
-				inventory.add(new Gun(characterStats.damage));
+			if (characterStats.mainGun != "") {
+				var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(characterStats.mainGun);
+				inventory.add(new Gun(gunResource, characterStats.mainGun));
 			}
 			if (characterStats.grenades > 0) {
 				inventory.add(Grenade.getCopy(), characterStats.grenades);

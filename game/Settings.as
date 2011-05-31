@@ -5,9 +5,11 @@ package angel.game {
 	import angel.common.CatalogEntry;
 	import angel.common.Defaults;
 	import angel.common.RoomContentResource;
+	import angel.common.WeaponResource;
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.combat.Grenade;
+	import angel.game.combat.Gun;
 	import angel.game.event.EventQueue;
 
 	
@@ -147,6 +149,12 @@ package angel.game {
 				entity.combatBrainClass = CombatBrainUiMeldPlayer;
 				if (pc.@health.length() > 0) {
 					entity.maxHealth = entity.currentHealth = pc.@health;
+				}
+				
+				if (pc.@mainGun.length() > 0) {
+					entity.inventory.removeAllMatching(Gun);
+					var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(pc.@mainGun);
+					entity.inventory.add(new Gun(gunResource, pc.@mainGun));
 				}
 				
 				if (pc.@grenades.length() > 0) {

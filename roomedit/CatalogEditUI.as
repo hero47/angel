@@ -4,6 +4,7 @@ package angel.roomedit {
 	import angel.common.KludgeDialogBox;
 	import angel.common.SimplerButton;
 	import angel.common.Tileset;
+	import angel.common.Util;
 	import fl.controls.ComboBox;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -27,64 +28,67 @@ package angel.roomedit {
 		public function CatalogEditUI(catalog:CatalogEdit) {
 			this.catalog = catalog;
 			
-			var button:SimplerButton;
+			var topButton:SimplerButton;
+			var bottomButton:SimplerButton;
 			var left:int = 10;
 			
-			button = new SimplerButton("Add tileset", clickedLoadTileset);
-			button.x = left;
-			button.y = 5;
-			button.width = 100;
-			addChild(button);
-			left += button.width + 5;
+			topButton = new SimplerButton("Add tileset", clickedLoadTileset);
+			topButton.x = left;
+			topButton.y = 5;
+			topButton.width = 100;
+			addChild(topButton);
+			left += topButton.width + 20;
 			
-			button = new SimplerButton("Edit tileset", clickedEditTileNames);
-			button.x = left;
-			button.y = 5;
-			button.width = 100;
-			addChild(button);
-			left += button.width + 20;
+			bottomButton = new SimplerButton("Edit tileset", clickedEditTileNames);
+			bottomButton.width = topButton.width;
+			Util.addBelow(bottomButton, topButton, 5);
 			
-			button = new SimplerButton("Add Prop", clickedAddProp);
-			button.x = left;
-			button.y = 5;
-			button.width = 100;
-			addChild(button);
-			left += button.width + 5;
+			topButton = new SimplerButton("Add Prop", clickedAddProp);
+			topButton.x = left;
+			topButton.y = 5;
+			topButton.width = 100;
+			addChild(topButton);
+			left += topButton.width + 20;
 			
-			button = new SimplerButton("Edit props", clickedEditProp);
-			button.x = left;
-			button.y = 5;
-			button.width = 100;
-			addChild(button);
-			left += button.width + 20;
+			bottomButton = new SimplerButton("Edit props", clickedEditProp);
+			bottomButton.width = topButton.width;
+			Util.addBelow(bottomButton, topButton, 5);
 			
-			button = new SimplerButton("Add Character", clickedAddChar);
-			button.x = left;
-			button.y = 5;
-			button.width = 100;
-			addChild(button);
-			left += button.width + 5;
+			topButton = new SimplerButton("Add Character", clickedAddChar);
+			topButton.x = left;
+			topButton.y = 5;
+			topButton.width = 110;
+			addChild(topButton);
+			left += topButton.width + 20;
 			
-			button = new SimplerButton("Edit Characters", clickedEditChar);
-			button.x = left;
-			button.y = 5;
-			button.width = 105;
-			addChild(button);
-			left += button.width + 20;
+			bottomButton = new SimplerButton("Edit Characters", clickedEditChar);
+			bottomButton.width = topButton.width;
+			Util.addBelow(bottomButton, topButton, 5);
 			
-			button = new SimplerButton("Save Catalog", clickedSaveCatalog);
-			button.x = left;
-			button.y = 5;
-			button.width = 100;
-			addChild(button);
-			left += button.width + 5;
+			topButton = new SimplerButton("Add Weapon", clickedAddWeapon);
+			topButton.x = left;
+			topButton.y = 5;
+			topButton.width = 100;
+			addChild(topButton);
+			left += topButton.width + 20;
 			
-			button = new SimplerButton("Edit Room", clickedEditRoom);
-			button.x = left;
-			button.y = 5;
-			button.width = 100;
-			addChild(button);
-			left += button.width + 5;
+			bottomButton = new SimplerButton("Edit Weapons", clickedEditWeapon);
+			bottomButton.width = topButton.width;
+			Util.addBelow(bottomButton, topButton, 5);
+			
+			topButton = new SimplerButton("Save Catalog", clickedSaveCatalog);
+			topButton.x = left;
+			topButton.y = 5;
+			topButton.width = 100;
+			addChild(topButton);
+			left += topButton.width + 10;
+			
+			topButton = new SimplerButton("Edit Room", clickedEditRoom);
+			topButton.x = left;
+			topButton.y = 5;
+			topButton.width = 100;
+			addChild(topButton);
+			left += topButton.width + 5;
 			
 			
 			finishedEditNamesButton = new SimplerButton("Keep these names", clickedEditNamesDone, 0x00ffff);
@@ -125,6 +129,11 @@ package angel.roomedit {
 			launchIdDialog("prop", userEnteredNameForNewProp);
 		}
 		
+		private function clickedAddWeapon(event:Event):void {
+			newFilename = "";
+			launchIdDialog("weapon", userEnteredNameForNewWeapon);
+		}
+		
 		public function launchIdDialog(idForWhat:String, callback:Function, previousError:String = null):void {
 			//var filename:String = newlyLoadedTileset.catalogEntry.filename;
 			//var defaultIdBase:String = filename.slice(0, filename.lastIndexOf("."));
@@ -150,7 +159,7 @@ package angel.roomedit {
 			if (buttonClicked != "OK") {
 				return;
 			}
-			if (!catalog.addCatalogEntry(values[0], newFilename, CatalogEntry.TILESET)) {
+			if (!catalog.addCatalogEntry(values[0], newFilename, null, CatalogEntry.TILESET)) {
 				launchIdDialog("tileset", userEnteredNameForNewTileset, "Error -- id '" + values[0] + "' already in use.");
 				return;
 			}
@@ -170,7 +179,7 @@ package angel.roomedit {
 			}
 			
 			var id:String = values[0];
-			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, CatalogEntry.CHARACTER);
+			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.CHARACTER);
 			
 			if (entry == null) {
 				launchIdDialog("character", userEnteredNameForNewChar, "Error -- id '" + id + "' already in use.");
@@ -193,7 +202,7 @@ package angel.roomedit {
 			}
 			
 			var id:String = values[0];
-			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, CatalogEntry.PROP);
+			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.PROP);
 			
 			if (entry == null) {
 				launchIdDialog("prop", userEnteredNameForNewProp, "Error -- id '" + id + "' already in use.");
@@ -207,6 +216,27 @@ package angel.roomedit {
 			entry.xml = xml;
 			
 			showEditPropDialog(id);
+		}
+		
+		private function userEnteredNameForNewWeapon(buttonClicked:String, values:Array):void {
+			if (buttonClicked != "OK") {
+				return;
+			}
+			
+			var id:String = values[0];
+			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.WEAPON);
+			
+			if (entry == null) {
+				launchIdDialog("weapon", userEnteredNameForNewWeapon, "Error -- id '" + id + "' already in use.");
+				return;
+			}
+			
+			var xml:XML = <weapon/>;
+			xml.@id = id;
+			catalog.appendXml(xml);
+			entry.xml = xml;
+			
+			showEditWeaponDialog(id);
 		}
 		
 		private var tilesetCombo:ComboBox;
@@ -236,7 +266,7 @@ package angel.roomedit {
 			tilesPalette = new FloorTilePalette(catalog);
 			tilesPalette.setEditMode(true, tilesetId);
 			tilesPalette.x = 5;
-			tilesPalette.y = 30;
+			tilesPalette.y = 60;
 			addChild(tilesPalette);
 			finishedEditNamesButton.x = tilesPalette.x + tilesPalette.width + 10;
 			finishedEditNamesButton.y = tilesPalette.y;
@@ -266,6 +296,16 @@ package angel.roomedit {
 			KludgeDialogBox.show(text, options);
 		}
 		
+		private function clickedEditWeapon(event:Event):void {
+			showEditWeaponDialog();
+		}
+		
+		private function showEditWeaponDialog(id:String = null):void {
+			var options:Object = { buttons:["Done"], inputs:[], customControl:new WeaponEditUI(catalog, id) };
+			var text:String = "Edit Weapon";
+			KludgeDialogBox.show(text, options);
+		}
+		
 		private function clickedSaveCatalog(event:Event):void {
 			catalog.save();
 		}
@@ -273,6 +313,7 @@ package angel.roomedit {
 		private function clickedEditNamesDone(event:Event):void {
 			tilesPalette.setTileNamesFromPalette();
 			catalog.changeXml(tilesetId, catalog.retrieveTileset(tilesetId).renderAsXml(tilesetId));
+			closeTilesPalette();
 		}
 		
 		private function closeTilesPalette():void {
