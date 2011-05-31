@@ -1,4 +1,5 @@
 package angel.game.combat {
+	import angel.common.WeaponResource;
 	import angel.game.CanBeInInventory;
 	import angel.game.ComplexEntity;
 	import angel.game.Settings;
@@ -10,18 +11,22 @@ package angel.game.combat {
 	
 	 // This may become an interface once we have more types of guns, or the others may extend it
 	public class Gun implements IWeapon {
+		private var id:String;
+		public var name:String;
 		public var baseDamage:int;
 		
-		public function Gun(baseDamage:int) {
-			this.baseDamage = baseDamage;
+		public function Gun(resource:WeaponResource, id:String) {
+			this.id = id;
+			this.baseDamage = resource.damage;
+			this.name = resource.displayName;
 		}
 		
 		public function toString():String {
-			return "[Gun baseDamage=" + baseDamage + "]";
+			return "[Gun displayName=" + name + ", baseDamage=" + baseDamage + "]";
 		}
 		
 		public function get displayName():String {
-			return "Gun, base damage " + baseDamage;
+			return name;
 		}
 		
 		public function fire(shooter:ComplexEntity, target:ComplexEntity, extraDamageReductionPercent:int = 0):void {

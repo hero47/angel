@@ -37,6 +37,7 @@ package angel.roomedit {
 		private var propCombo:ComboBox;
 		private var healthTextField:TextField;
 		private var damageTextField:TextField;
+		private var mainGunCombo:ComboBox;
 		private var movePointsTextField:TextField;
 		private var nameTextField:TextField;
 		private var changeImageControl:FilenameControl;
@@ -82,12 +83,21 @@ package angel.roomedit {
 			addChild(propChooser);
 			
 			nameTextField = Util.createTextEditControlBelow(propChooser, "Display Name", 100, 100,
-					function(event:Event):void { changeCharacterProperty(event.target.text, "displayName", Defaults.DISPLAY_NAME) }, 0);
+					function(event:Event):void { changeCharacterProperty(event.target.text, "displayName", Defaults.CHARACTER_DISPLAY_NAME) }, 0);
 			healthTextField = Util.createTextEditControlBelow(nameTextField, "Hits", 100, 40,
-					function(event:Event):void { changeCharacterProperty(int(event.target.text), "health", Defaults.HEALTH) }, 0);
-			damageTextField = Util.createTextEditControlBelow(healthTextField, "Damage", 100, 40,
-					function(event:Event):void { changeCharacterProperty(int(event.target.text), "damage", Defaults.DAMAGE) }, 0);
-			movePointsTextField = Util.createTextEditControlBelow(damageTextField, "Move Points", 100, 40,
+					function(event:Event):void { changeCharacterProperty(int(event.target.text), "health", Defaults.CHARACTER_HEALTH) }, 0);
+			
+			var mainGunLabel:TextField = Util.textBox("Main Gun:", 65);
+			Util.addBelow(mainGunLabel, healthTextField, 5);
+			mainGunLabel.x = 0;
+			var weaponChooser:ComboHolder = catalog.createChooser(CatalogEntry.WEAPON, WIDTH - mainGunLabel.width);
+			weaponChooser.comboBox.addEventListener(Event.CHANGE, 
+				function(event:Event):void { changeCharacterProperty(mainGunCombo.selectedLabel, "mainGun", "") } );
+			Util.addBeside(weaponChooser, mainGunLabel);
+			mainGunCombo = weaponChooser.comboBox;
+			mainGunCombo.addItemAt( { label:"" }, 0 );
+			
+			movePointsTextField = Util.createTextEditControlBelow(weaponChooser, "Move Points", 100, 40,
 					function(event:Event):void { changeCharacterProperty(int(event.target.text), "movePoints", Defaults.MOVE_POINTS) }, 0 );
 			changeImageControl = FilenameControl.createBelow(movePointsTextField, false, "Image", 0, 220, changeFilename, 0);
 			noSprintHackCheckbox = Util.createCheckboxEditControlBelow(changeImageControl, "No Sprint Hack", 120,
@@ -123,7 +133,7 @@ package angel.roomedit {
 			var characterStats:CharacterStats = resource.characterStats;
 			nameTextField.text = characterStats.displayName;
 			healthTextField.text = String(characterStats.health);
-			damageTextField.text = String(characterStats.damage);
+			mainGunCombo.selectedItem = Util.itemWithLabelInComboBox(mainGunCombo, characterStats.mainGun);
 			movePointsTextField.text = String(characterStats.movePoints);
 			changeImageControl.text = catalog.getFilenameFromId(charId);
 			noSprintHackCheckbox.selected = (characterStats.maxGait < 3);
@@ -139,6 +149,11 @@ package angel.roomedit {
 				catalog.deleteXmlAttribute(charId, propertyName);
 			} else {
 				catalog.changeXmlAttribute(charId, propertyName, String(newValue));
+			}
+			
+			//UNDONE: temporary code to phase over catalog entries from before weapons existed
+			if (propertyName == "mainGun") {
+				catalog.deleteXmlAttribute(charId, "damage");
 			}
 		}
 

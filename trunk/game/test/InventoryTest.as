@@ -1,5 +1,6 @@
 package angel.game.test {
 	import angel.common.Alert;
+	import angel.common.WeaponResource;
 	import angel.game.CanBeInInventory;
 	import angel.game.combat.Grenade;
 	import angel.game.combat.Gun;
@@ -12,8 +13,9 @@ package angel.game.test {
 		
 		public function InventoryTest() {
 			var inventory:Inventory = new Inventory();
-			var gun1:Gun = new Gun(10);
-			var gun2:Gun = new Gun(20);
+			var dummyWeaponResource:WeaponResource = new WeaponResource();
+			var gun1:Gun = new Gun(dummyWeaponResource, "xxGun1");
+			var gun2:Gun = new Gun(dummyWeaponResource, "xxGun2");
 			var someGun:Gun;
 			var grenade1:Grenade = Grenade.getCopy();
 			var grenade2:Grenade = Grenade.getCopy();

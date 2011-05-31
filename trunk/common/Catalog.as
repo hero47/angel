@@ -36,33 +36,25 @@ package angel.common {
 			}
 			var entry:CatalogEntry;
 			for each (var propXml:XML in xml.prop) {
-				entry = addCatalogEntry(propXml.@id, propXml.@file, CatalogEntry.PROP, duplicateNames);
-				if (entry != null) {
-					entry.xml = propXml;
-				}
+				entry = addCatalogEntry(propXml.@id, propXml.@file, propXml, CatalogEntry.PROP, duplicateNames);
 			}
 			for each (var charXml:XML in xml.char) {
-				entry = addCatalogEntry(charXml.@id, charXml.@file, CatalogEntry.CHARACTER, duplicateNames);
-				if (entry != null) {
-					entry.xml = charXml;
-				}
+				entry = addCatalogEntry(charXml.@id, charXml.@file, charXml, CatalogEntry.CHARACTER, duplicateNames);
+			}
+			for each (var weaponXml:XML in xml.weapon) {
+				//NOTE: weapons have no image yet; pass null for filename so we won't look for a file.
+				entry = addCatalogEntry(weaponXml.@id, null, weaponXml, CatalogEntry.WEAPON, duplicateNames);
 			}
 			
 			//UNDONE For backwards compatibility; remove this once old catalogs have been rewritten
 			for each (var walkerXml:XML in xml.walker) {
-				entry = addCatalogEntry(walkerXml.@id, walkerXml.@file, CatalogEntry.CHARACTER, duplicateNames);
-				if (entry != null) {
-					entry.xml = walkerXml;
-				}
+				entry = addCatalogEntry(walkerXml.@id, walkerXml.@file, walkerXml, CatalogEntry.CHARACTER, duplicateNames);
 			}
-			
 			
 			for each (var tilesetXml:XML in xml.tileset) {
-				entry = addCatalogEntry(tilesetXml.@id, tilesetXml.@file, CatalogEntry.TILESET, duplicateNames);
-				if (entry != null) {
-					entry.xml = tilesetXml;
-				}
+				entry = addCatalogEntry(tilesetXml.@id, tilesetXml.@file, tilesetXml, CatalogEntry.TILESET, duplicateNames);
 			}
+			
 			if (duplicateNames.length > 0) {
 				message("WARNING: Duplicate name(s) in catalog:\n" + duplicateNames);
 			}
@@ -79,14 +71,15 @@ package angel.common {
 		}
 		
 		// add the specified entry. If it's a duplicate, add to duplicateNames for reporting & return null
-		public function addCatalogEntry(id:String, filename:String, type:int, duplicateNames:String = null):CatalogEntry {
+		public function addCatalogEntry(id:String, filename:String, xml:XML, type:int, duplicateNames:String = null):CatalogEntry {
 			if (lookup[id] != undefined) {
 				if (duplicateNames != null) {
 					duplicateNames += id + "\n";
 				}
 				return null;
 			}
-			var entry:CatalogEntry  = new CatalogEntry(filename, type);
+			var entry:CatalogEntry = new CatalogEntry(filename, type);
+			entry.xml = xml;
 			lookup[id] = entry;
 			return entry;
 		}
@@ -101,6 +94,10 @@ package angel.common {
 		
 		public function retrieveRoomContentResource(id:String, type:int):RoomContentResource {
 			return loadOrRetrieveCatalogEntry(id, type, RoomContentResource) as RoomContentResource;
+		}
+		
+		public function retrieveWeaponResource(id:String):WeaponResource {
+			return loadOrRetrieveCatalogEntry(id, CatalogEntry.WEAPON, WeaponResource) as WeaponResource;
 		}
 
 		// call the function, passing tileset as parameter
@@ -117,7 +114,7 @@ package angel.common {
 			if (entry == null) {
 				inCatalog = false;
 				message("Error: " + id + " not in catalog.");
-				entry = new CatalogEntry(id, type);
+				entry = new CatalogEntry(null, type);
 				lookup[id] = entry;
 			}
 			
@@ -130,10 +127,13 @@ package angel.common {
 				return entry.data;
 			}
 
+			//UNDONE: remove this when catalog entries have stabilized
+			temporaryMungeXmlForOldData(type, entry.xml);
+			
 			entry.data = new resourceClass();
 			entry.data.prepareTemporaryVersionForUse(id, entry);
 
-			if (inCatalog) {
+			if (inCatalog && (entry.filename != null) && (entry.filename != "")) {
 				LoaderWithErrorCatching.LoadBytesFromFile(entry.filename,
 					function(event:Event, filename:String):void {
 						var bitmap:Bitmap = event.target.content;
@@ -176,6 +176,28 @@ package angel.common {
 			return new Tileset();
 		}
 		
+		
+		//UNDONE: remove this when catalog entries have stabilized
+		private function temporaryMungeXmlForOldData(type:int, xml:XML):void {
+			if (xml == null) {
+				return;
+			}
+			
+			//UNDONE: temporary code to allow using catalog entries from before weapons existed
+			if ((type == CatalogEntry.CHARACTER) && (xml.@mainGun.length() == 0) && (xml.@damage.length() > 0)) {
+				var damage:int = int(xml.@damage);
+				var weaponId:String = "__temp_gun_" + damage;
+				if (entry(weaponId) == null) {
+					var weaponXml:XML = <weapon />;
+					weaponXml.@displayName = weaponId;
+					weaponXml.@damage = damage;
+					addCatalogEntry(weaponId, null, weaponXml, CatalogEntry.WEAPON);
+				}
+				
+				xml.@mainGun = weaponId;
+			}
+		}
+			
 	} // end class Catalog
 
 }
