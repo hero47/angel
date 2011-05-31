@@ -1,4 +1,5 @@
 package angel.game.script {
+	import angel.common.Alert;
 	import angel.game.combat.RoomCombat;
 	import angel.game.event.QEvent;
 	import angel.game.Room;
@@ -61,15 +62,29 @@ package angel.game.script {
 		}
 		
 		public function startEntry(npcSegment:ConversationSegment, pcSegments:Vector.<ConversationSegment>):void {
+			var executeAtStart:Vector.<ConversationSegment> = new Vector.<ConversationSegment>();
 			var havePcSegments:Boolean = pcSegments.length > 0;
 			
 			if (npcSegment != null) {
 				npcBox = displayConversationSegment(new NpcPortrait(), false, Vector.<ConversationSegment>([npcSegment]),
-						500, 100, (havePcSegments ? null : entryFinishedListener));	
+						500, 100, (havePcSegments ? null : entryFinishedListener));
+				if (havePcSegments) {
+					executeAtStart.push(npcSegment);
+				}
 			}
 			
 			if (havePcSegments) {
-				pcBox = displayConversationSegment(new PcPortrait(), true, pcSegments, 500, 300, entryFinishedListener);				
+				pcBox = displayConversationSegment(new PcPortrait(), true, pcSegments, 500, 300, entryFinishedListener);
+				pcBox.addDisplayedHeadersToList(executeAtStart);
+			}
+			
+			if (executeAtStart.length > 0) {
+				for (var i:int = 0; i < executeAtStart.length; ++i) {
+					var illegalGoto:Object = executeAtStart[i].doActionsAndGetNextEntryId(context);
+					if (illegalGoto != null) {
+						Alert.show("Error! Illegal goto (id='" + illegalGoto.id + "').");
+					}
+				}
 			}
 			
 		}

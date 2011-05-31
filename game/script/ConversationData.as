@@ -103,7 +103,10 @@ package angel.game.script {
 		private function entryFinished(event:QEvent):void {
 			var ui:ConversationInterface = ConversationInterface(event.currentSource);
 			var choice:ConversationSegment = ConversationSegment(event.param);
-			var nextEntryReference:Object = choice.doActionsAndGetNextEntryId(ui.context);
+			var nextEntryReference:Object;
+			if (choice != null) {
+				nextEntryReference = choice.doActionsAndGetNextEntryId(ui.context);
+			}
 			currentEntry = null;
 			if (nextEntryReference != null) {
 				if (nextEntryReference.topic != null) {

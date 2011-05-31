@@ -12,6 +12,7 @@ package angel.game.script {
 		
 		public var need:Vector.<String>; // must have these flags
 		public var text:String;
+		public var header:Boolean;
 		private var script:Script;
 		
 		public function ConversationSegment(text:String) {
@@ -25,7 +26,7 @@ package angel.game.script {
 			script.addAction(newAction);
 		}
 		
-		public static function createFromXml(xml:XML, errorPrefix:String=""):ConversationSegment {
+		public static function createFromXml(xml:XML, errorPrefix:String = ""):ConversationSegment {
 			var text:String = xml.@text;
 			
 			// A \n for newline in XML attribute doesn't translate, and a CRLF looks like two newlines, so fix them

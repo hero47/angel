@@ -37,6 +37,9 @@ package angel.game.script {
 		private var mySegments:Vector.<ConversationSegment>;
 		private var isPrimary:Boolean;
 		
+		private var numberOfHeaders:int = 0;
+		private var anyKeySelectsSegment:ConversationSegment;
+		
 		// Currently taking bitmap, but this is likely to change to use a cataloged resource at some point
 		// If a conversation entry has only one conversation box, then that box is primary.  Otherwise, the PC box is
 		// primary.  The primary box sends ENTRY_FINISHED event when user makes a selection.
@@ -76,8 +79,15 @@ package angel.game.script {
 			mySegments = new Vector.<ConversationSegment>();
 			for (var i:int = 0; i < rawSegments.length; i++) {
 				if (rawSegments[i].haveAllNeededFlags()) {
+					if (rawSegments[i].header) {
+						++numberOfHeaders;
+					}
 					mySegments.push(rawSegments[i]);
 				}
+			}
+			
+			if (numberOfHeaders == mySegments.length - 1) {
+				anyKeySelectsSegment = mySegments[numberOfHeaders];
 			}
 			
 			for (i = 0; i < mySegments.length; i++) {
@@ -86,7 +96,10 @@ package angel.game.script {
 				textField.width = BOX_WIDTH - TEXT_PORTRAIT_MARGIN - TEXT_OTHER_MARGIN;
 				textField.wordWrap = true;
 				textField.autoSize = TextFieldAutoSize.LEFT;
-				textField.text = (mySegments.length > 1 ? String(i + 1) + ") " + segment.text : segment.text);
+				textField.text = segment.text;
+				if ((!segment.header) && (anyKeySelectsSegment == null)) {
+					textField.text = String(i - numberOfHeaders + 1) + ") " + textField.text;
+				}
 				textField.x = textX;
 				if (i > 0) {
 					textField.y = textFields[i - 1].y + textFields[i - 1].height;
@@ -94,23 +107,29 @@ package angel.game.script {
 				addChild(textField);
 				textFields.push(textField);
 			}
-			if (mySegments.length == 0) {
+			if (numberOfHeaders >= mySegments.length) {
 				Alert.show("Error! No valid choice for conversation box.");
 			} else if (mySegments.length > 9) {
 				Alert.show("Error! Too many valid choices in conversation box.");
 			}
 		}
 		
+		public function addDisplayedHeadersToList(list:Vector.<ConversationSegment>):void {
+			for (var i:int = 0; i < numberOfHeaders; i++) {
+				list.push(mySegments[i]);
+			}
+		}
+		
 		// If there's only one choice, they can click anywhere in the box.
 		// If there are multiple choices, they must click on the text for their choice; other clicks are ignored.
 		private function clickListener(event:MouseEvent):void {
-			if (mySegments.length == 0) {
+			if (numberOfHeaders >= mySegments.length) {
 				finished(null);
-			} else if (mySegments.length < 2) {
-				finished(mySegments[0]);
+			} else if (anyKeySelectsSegment != null) {
+				finished(anyKeySelectsSegment);
 			} else {
 				var i:int = textFields.indexOf(event.target);
-				if (i >= 0) {
+				if ((i >= 0) && (!mySegments[i].header)) {
 					finished(mySegments[i]);
 				}
 			}
@@ -120,23 +139,28 @@ package angel.game.script {
 		// If there are multiple choices, "1" or space or enter picks the first one, other numbers pick that number,
 		// and other keys are ignored.
 		private function keyDownListener(event:KeyboardEvent):void {
+			if (numberOfHeaders >= mySegments.length) {
+				finished(null);
+				return;
+			}
+			if (anyKeySelectsSegment != null) {
+				finished(anyKeySelectsSegment);
+				return;
+			}
+			
 			var choice:ConversationSegment;
-			if (mySegments.length == 1) {
-				choice = mySegments[0];
-			} else if (mySegments.length > 1) {
-				var i:int = event.charCode - "1".charCodeAt(0);
-				if (i >= 0 && i < mySegments.length) {
-					choice = mySegments[i];
-				} else {
-					switch (event.keyCode) {
-						case Keyboard.SPACE:
-						case Keyboard.ENTER:
-							choice = mySegments[0];
-						break;
-						default:
-							return;
-						break;
-					}
+			var numberPressed:int = event.charCode - "1".charCodeAt(0);
+			if (numberPressed <= mySegments.length - numberOfHeaders) {
+				choice = mySegments[numberPressed - numberOfHeaders];
+			} else {
+				switch (event.keyCode) {
+					case Keyboard.SPACE:
+					case Keyboard.ENTER:
+						choice = mySegments[numberOfHeaders];
+					break;
+					default:
+						return;
+					break;
 				}
 			}
 			finished(choice);
