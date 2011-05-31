@@ -302,15 +302,25 @@ package angel.game {
 			animation.adjustImageForMove(facing, frameOfMove, totalFramesInMove);
 		}
 		
+		public function currentFacing():int {
+			return facing;
+		}
+		
 		public function turnToFacing(newFacing:int):void {
-			facing = newFacing;
+			facing = Util.negSafeMod(newFacing, 8);
 			animation.turnToFacing(facing);
 		}
 		
-		// Turn to the facing that closest approximates that direction
-		public function turnToFaceTile(loc:Point):void {
+		// Return the facing that closest approximates the tile's direction
+		public function findFacingToTile(loc:Point):int {
+			// The +360 ensures that angle / 45 will round the direction we want even if original angle was negative
 			var angle:int = Util.findRotFacingVector(loc.subtract(myLocation)) + 360 + 22;
-			turnToFacing((angle / 45) % 8);
+			return ((angle / 45) % 8);
+		}
+		
+		// Turn to the facing that closest approximates the tile's direction
+		public function turnToFaceTile(loc:Point):void {
+			turnToFacing(findFacingToTile(loc));
 		}
 		
 		public function centerRoomOnMe():void {
