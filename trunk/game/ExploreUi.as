@@ -7,6 +7,7 @@ package angel.game {
 	import angel.game.PieSlice;
 	import angel.common.FloorTile;
 	import flash.events.Event;
+	import flash.filters.GlowFilter;
 	import flash.geom.Point;
 	import flash.ui.Keyboard;
 	/**
@@ -19,7 +20,10 @@ package angel.game {
 		private var player:ComplexEntity;
 		private var playerIsMoving:Boolean = false;
 		
+		private var hilightedFrobTarget:SimpleEntity;
+		
 		private static const MOVE_COLOR:uint = 0xffffff;
+		private static const NO_MOVE_COLOR:uint = 0x888888;
 		private static const FROB_COLOR:uint = 0x0000ff;
 		
 		public function ExploreUi(room:Room, explore:RoomExplore) {
@@ -35,6 +39,7 @@ package angel.game {
 		
 		public function disable():void {
 			room.moveHilight(null, 0);
+			moveFrobHilight(null);
 			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
 			this.player = null;
 		}
@@ -74,8 +79,10 @@ package angel.game {
 				var target:SimpleEntity = room.firstEntityIn(location);
 				if (target != null && target.frobOk(player)) {
 					room.moveHilight(tile, FROB_COLOR);
+					moveFrobHilight(target);
 				} else {
-					room.moveHilight(null, 0);
+					room.moveHilight(tile, NO_MOVE_COLOR);
+					moveFrobHilight(null);
 				}
 			} else {
 				var pathToMouse:Vector.<Point> = player.movement.findPathTo(location);
@@ -84,6 +91,7 @@ package angel.game {
 				} else {
 					room.moveHilight(tile, MOVE_COLOR);
 				}
+				moveFrobHilight(null);
 			}
 			
 			room.updateToolTip(location);
@@ -123,6 +131,17 @@ package angel.game {
 			Assert.assertTrue((event.complexEntity == player), "Got a playerFinishedMoving event, but with an entity other than our player");
 			playerIsMoving = false;
 			Settings.gameEventQueue.removeListener(player, EntityQEvent.FINISHED_MOVING, playerFinishedMoving);
+		}
+		
+		private function moveFrobHilight(target:SimpleEntity):void {
+			if (hilightedFrobTarget != null) {
+				hilightedFrobTarget.filters = [];
+			}
+			hilightedFrobTarget = target;
+			if (hilightedFrobTarget != null) {
+				var glow:GlowFilter = new GlowFilter(FROB_COLOR, 1, 20, 20, 2, 1, false, false);
+				hilightedFrobTarget.filters = [ glow ];
+			}
 		}
 		
 	} // end class ExploreUi
