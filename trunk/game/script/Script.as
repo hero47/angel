@@ -33,6 +33,10 @@ package angel.game.script {
 			if ((xml == null) || (xml.length() == 0)) {
 				return;
 			}
+			//UNDONE - placeholder until entity script files have more than one trigger.
+			if (xml.onFrob.length() > 0) {
+				xml = xml.onFrob[0];
+			}
 			if (xml.name() == "conversations") {
 				// As a shorthand/convenience, if a script file has the enclosing topic "conversations" we turn its contents
 				// into a conversation action with the frobbed entity
@@ -49,13 +53,20 @@ package angel.game.script {
 		
 		// Loads data from specified file.
 		// NOTE: File must be in the same directory that we're running from!
-		public function loadFromXmlFile(filename:String):void {
-			LoaderWithErrorCatching.LoadFile(filename, scriptXmlLoaded);
+		// UNDONE: Currently (May 2011) this is a single script, to be executed when entity is frobbed.
+		// I'm anticipating that eventually it will contain multiple triggered scripts, like the script section of
+		// a room file.
+		public function loadEntityScriptFromXmlFile(filename:String):void {
+			LoaderWithErrorCatching.LoadFile(filename, entityScriptXmlLoaded);
 		}
 		
-		private function scriptXmlLoaded(event:Event, filename:String):void {
+		private function entityScriptXmlLoaded(event:Event, filename:String):void {
 			var xml:XML = Util.parseXml(event.target.data, filename);
 			if (xml != null) {
+				//UNDONE - temporary - remove this once old files have been upgraded
+				if ((xml.name() != "conversations") && (xml.onFrob.length() == 0)) {
+					Alert.show("Please change script file " + filename + "\nto use onFrob element inside outer script.\nThis will allow adding more triggers later.");
+				}
 				initializeFromXml(xml, "Error in script file " + filename + ":\n");
 			}
 		}

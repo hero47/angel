@@ -86,7 +86,7 @@ package angel.game {
 					frobScript = null;
 				} else {
 					frobScript = new Script();
-					frobScript.loadFromXmlFile(scriptFile);
+					frobScript.loadEntityScriptFromXmlFile(scriptFile);
 				}
 			}
 		}
