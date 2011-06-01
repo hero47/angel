@@ -5,8 +5,8 @@ package angel.game {
 	import angel.common.Prop;
 	import angel.common.RoomContentResource;
 	import angel.common.Util;
-	import angel.game.action.ConversationAction;
 	import angel.game.event.EntityQEvent;
+	import angel.game.script.action.ConversationAction;
 	import angel.game.script.ConversationData;
 	import angel.game.script.Script;
 	import flash.display.Bitmap;
