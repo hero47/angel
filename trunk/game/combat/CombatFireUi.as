@@ -67,9 +67,11 @@ package angel.game.combat {
 		}
 		
 		public function disable():void {
-			trace("ending player fire phase for", player.aaId);
-			player.marker.transform.colorTransform = oldMarkerColorTransform;
-			this.player = null;
+			if (player != null) {
+				trace("ending player fire phase for", player.aaId);
+				player.marker.transform.colorTransform = oldMarkerColorTransform;
+				player = null;
+			}
 			room.moveHilight(null, 0);
 			moveTargetHilight(null);
 			if (aimCursor.parent != null) {

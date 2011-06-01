@@ -45,9 +45,11 @@ package angel.game.combat {
 		}
 		
 		public function disable():void {
-			trace("disable player ui for", player.aaId);
-			player.marker.transform.colorTransform = oldMarkerColorTransform;
-			this.player = null;
+			if (player != null) {
+				trace("disable player ui for", player.aaId);
+				player.marker.transform.colorTransform = oldMarkerColorTransform;
+				player = null;
+			}
 			adjustMovePointsDisplay(false);
 			room.moveHilight(null, 0);
 		}

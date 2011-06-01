@@ -180,6 +180,7 @@ package angel.game.brain {
 		}
 		
 		protected function endTurn():void {
+			combat.mover.clearPathAndReturnMarker(); // in case entity is being killed or removed in middle of move
 			Settings.gameEventQueue.dispatch(new EntityQEvent(me, EntityQEvent.END_TURN));
 			myTurn = false;
 		}

@@ -162,26 +162,20 @@ package angel.game.combat {
 			} // else non-combattant, if there is such a thing; currently (5/5/11) means they're just a prop
 		}
 		
-		//UNDONE - WARNING - Weird undesired things will probably happen if this is called for a player-controlled
-		//character while the ui is enabled for that character!
 		private function removeFighterFromCombat(deadFighter:ComplexEntity):void {
+			deadFighter.adjustBrainForRoomMode(null); // NOTE: If it's this fighter's turn, brain will tidy up and end turn
+			augmentedReality.removeFighter(deadFighter);
+			
 			var indexOfDeadFighter:int = fighters.indexOf(deadFighter);
 			Assert.assertTrue(indexOfDeadFighter >= 0, "Removing fighter that's already removed: " + deadFighter.aaId);
-			if (indexOfDeadFighter == iFighterTurnInProgress) {
-				mover.clearPathAndReturnMarker();
-			}
-			if ((room.activeUi != null) && (room.activeUi.currentPlayer == deadFighter)) {
-				Assert.fail("Removing active player from combat. This WILL break things.");
-			}
+			fighters.splice(indexOfDeadFighter, 1);
+			
 			if (indexOfDeadFighter <= iFighterTurnInProgress) {
 				--iFighterTurnInProgress;
 				if (iFighterTurnInProgress < 0) {
 					iFighterTurnInProgress = fighters.length - 1;
 				}
 			}
-			fighters.splice(indexOfDeadFighter, 1);
-			deadFighter.adjustBrainForRoomMode(null);
-			augmentedReality.removeFighter(deadFighter);
 		}
 		
 		/****************** public “api” for combat brains/ui *******************/
