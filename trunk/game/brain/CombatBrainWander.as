@@ -49,7 +49,7 @@ package angel.game.brain {
 		
 		override public function doFire():void {
 			trace(me.aaId, "do fire (CombatBrainWander)");
-			UtilBrain.fireAtFirstAvailableTarget(me, combat);
+			beginFireGunOrReserve(me, UtilBrain.getFirstAvailableTarget(me, combat));
 		}
 		
 		// return total number of reachable tiles

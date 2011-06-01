@@ -1,6 +1,7 @@
 package angel.game.combat {
 	import angel.common.FloorTile;
 	import angel.common.Util;
+	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.ComplexEntity;
 	import angel.game.Icon;
 	import angel.game.IRoomUi;
@@ -171,19 +172,19 @@ package angel.game.combat {
 		private function doPlayerFireGunAt(target:ComplexEntity):void {
 			var playerFiring:ComplexEntity = player;
 			room.disableUi();
-			combat.beginFireGunOrReserve(playerFiring, target);
+			CombatBrainUiMeldPlayer(playerFiring.brain).beginFireGunOrReserve(playerFiring, target);
 		}
 		
 		private function doPlayerThrowGrenadeAt(loc:Point):void {
 			var playerFiring:ComplexEntity = player;
 			room.disableUi();
-			combat.beginThrowGrenade(playerFiring, loc);
+			CombatBrainUiMeldPlayer(playerFiring.brain).beginThrowGrenade(playerFiring, loc);
 		}
 		
 		private function doReserveFire():void {
 			var playerFiring:ComplexEntity = player;
 			room.disableUi();
-			combat.beginFireGunOrReserve(playerFiring, null);
+			CombatBrainUiMeldPlayer(playerFiring.brain).beginFireGunOrReserve(playerFiring, null);
 		}
 		
 		private function filterIsEnemy(entity:ComplexEntity):Boolean {

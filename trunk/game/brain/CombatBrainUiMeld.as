@@ -1,15 +1,31 @@
 package angel.game.brain {
 	import angel.common.Assert;
 	import angel.common.Util;
+	import angel.game.combat.Grenade;
 	import angel.game.combat.RoomCombat;
 	import angel.game.ComplexEntity;
 	import angel.game.event.EntityQEvent;
+	import angel.game.Icon;
 	import angel.game.Settings;
 	import flash.geom.Point;
 	/**
 	 * ...
 	 * @author Beth Moursund
-	 */
+	 */		
+	
+		// This awkwardly-named class serves as a parent to all the combat brains, and also to an even-more-awkwardly-named
+		// player ui-driven brain-substitute.  Between them, they handle all the details of an entity's combat turn.
+		
+		// Turn structure: Each combatant (beginning with player) gets a turn, in a continuous cycle.  Each entity's
+		// turn consists of two phases: move, then fire.  (Actions other than fire may be added later; they will
+		// go in the fire phase.)  Move phase has two sub-phases: select path (shown as colored dots), then follow
+		// path.  For NPCs we pause after the "select path" portion; for PC, they can select/unselect/change as much
+		// as they want via UI, and the "follow path" portion begins when they finally commit to the move.
+		// Fire phase for PC is similar to move, with a "select target" that they can do/undo/change as much as they
+		// want via UI, and the actual "fire" beginning when they finally commit.  For NPC, there is no visual indication
+		// of target and thus no pause to view it.  In both cases, once the "fire" takes place, we pause again to
+		// view the results.
+		
 	public class CombatBrainUiMeld implements ICombatBrain {
 		protected var me:ComplexEntity;
 		protected var combat:RoomCombat;
@@ -53,6 +69,11 @@ package angel.game.brain {
 		
 		protected function doMoveBody():void {
 			trace("Begin turn for npc (pause timer will start before move calc)", me.aaId);
+			if (Settings.showEnemyMoves) {
+				me.centerRoomOnMe();
+			} else {
+				combat.room.mainPlayerCharacter.centerRoomOnMe();
+			}
 			combat.showPhase(RoomCombat.ENEMY_MOVE, true);
 			
 			// Give the player some time to gaze at the enemy's move dots before continuing with turn.
@@ -98,7 +119,6 @@ package angel.game.brain {
 				return;
 			}
 			me.actionsRemaining = 1; // everyone gets one action per turn, at least for now
-			Settings.gameEventQueue.addListener(this, me, EntityQEvent.FINISHED_FIRE, finishedFireListener);
 			doFireBody();
 		}
 		
@@ -107,9 +127,38 @@ package angel.game.brain {
 			doFire();
 		}
 		
-		private function finishedFireListener(event:EntityQEvent):void {
+		public function beginFireGunOrReserve(shooter:ComplexEntity, target:ComplexEntity):void {
+			if (target == null) {
+				trace(shooter.aaId, "reserve fire");
+				if (shooter.isPlayerControlled) {
+					combat.displayActionFloater(shooter, (shooter.currentGun() == null ? Icon.NoGunFloater : Icon.ReserveFireFloater));
+				} else if (combat.anyPlayerCanSeeLocation(shooter.location)) {
+					combat.displayActionFloater(shooter, Icon.ReserveFireFloater);
+				}
+			} else {
+				trace(shooter.aaId, "firing at", target.aaId, target.location);
+				shooter.fireCurrentGunAt(target);
+				if (shooter.isPlayerControlled || Settings.showEnemyMoves) {
+					shooter.centerRoomOnMe();
+				}
+			}
+			
+			// Give the player some time to gaze at the fire graphic before continuing with turn.
+			combat.room.pauseGameTimeForFixedDelay(RoomCombat.PAUSE_TO_VIEW_FIRE_SECONDS, this, finishedFire);
+		}
+			
+		public function beginThrowGrenade(shooter:ComplexEntity, targetLocation:Point):void {
+			trace(shooter.aaId, "throws grenade at", targetLocation);
+			var grenade:Grenade = Grenade.getCopy();
+			grenade.throwAt(shooter, targetLocation);
+			
+			// Give the player some time to gaze at the fire graphic before continuing with turn.
+			combat.room.pauseGameTimeForFixedDelay(RoomCombat.PAUSE_TO_VIEW_FIRE_SECONDS, this, finishedFire);
+		}
+		
+		// Called each time the timer for gazing at the fire graphic expires
+		private function finishedFire():void {
 			trace(me.aaId, "finished fire");
-			Settings.gameEventQueue.removeListener(me, EntityQEvent.FINISHED_FIRE, finishedFireListener);
 			if (endTurnIfDeadOrCombatOver()) {
 				return;
 			}

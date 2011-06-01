@@ -13,7 +13,6 @@ package angel.game.event {
 		public static const FINISHED_ONE_TILE_OF_MOVE:String = "entityFinishedTile";
 		public static const FINISHED_MOVING:String = "entityFinishedMoving";
 		public static const MOVE_INTERRUPTED:String = "entityMoveInterrupted"; // sent instead of FINISHED_MOVING if interrupted
-		public static const FINISHED_FIRE:String = "entityFinishedFire";
 		public static const DEATH:String = "entityDied";
 		public static const HEALTH_CHANGE:String = "entityHealthChange";
 		public static const ADDED_TO_ROOM:String = "entityAddedToRoom";

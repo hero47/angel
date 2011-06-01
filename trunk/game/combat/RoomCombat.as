@@ -73,7 +73,9 @@ package angel.game.combat {
 			fireUi = new CombatFireUi(room, this);
 			mover = new CombatMover(this);
 			
-			beginTurnForCurrentFighter();
+			if (!checkForCombatOver()) {
+				beginTurnForCurrentFighter();
+			}
 		}
 		
 		/****************** INTERFACE angel.game.RoomMode ****************/
@@ -193,35 +195,6 @@ package angel.game.combat {
 			}
 		}
 		
-		public function beginFireGunOrReserve(shooter:ComplexEntity, target:ComplexEntity):void {
-			if (target == null) {
-				trace(shooter.aaId, "reserve fire");
-				if (shooter.isPlayerControlled) {
-					displayTemporaryBitmapAboveHead(shooter, (shooter.currentGun() == null ? Icon.NoGunFloater : Icon.ReserveFireFloater));
-				} else if (anyPlayerCanSeeLocation(shooter.location)) {
-					displayTemporaryBitmapAboveHead(shooter, Icon.ReserveFireFloater);
-				}
-			} else {
-				trace(shooter.aaId, "firing at", target.aaId, target.location);
-				shooter.fireCurrentGunAt(target);
-				if (shooter.isPlayerControlled || Settings.showEnemyMoves) {
-					shooter.centerRoomOnMe();
-				}
-			}
-			
-			// Give the player some time to gaze at the fire graphic before continuing with turn.
-			room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, this, finishedFire);
-		}
-			
-		public function beginThrowGrenade(shooter:ComplexEntity, targetLocation:Point):void {
-			trace(shooter.aaId, "throws grenade at", targetLocation);
-			var grenade:Grenade = Grenade.getCopy();
-			grenade.throwAt(shooter, targetLocation);
-			
-			// Give the player some time to gaze at the fire graphic before continuing with turn.
-			room.pauseGameTimeForFixedDelay(PAUSE_TO_VIEW_FIRE_SECONDS, this, finishedFire);
-		}
-		
 		/**************** opportunity fire ***********************/
 		
 		public function opposingFactions(fighterA:ComplexEntity, fighterB:ComplexEntity):Boolean {
@@ -307,26 +280,17 @@ package angel.game.combat {
 			}
 		}
 		
-		private function displayTemporaryBitmapAboveHead(shooter:ComplexEntity, graphicClass:Class):void {
+		public function displayActionFloater(actor:ComplexEntity, graphicClass:Class):void {
 			var tempGraphic:DisplayObject = new graphicClass();
 			var tempSprite:TimedSprite = new TimedSprite(room.stage.frameRate);
 			tempSprite.addChild(tempGraphic);
-			tempSprite.x = shooter.x;
-			tempSprite.y = shooter.y - tempSprite.height;
+			tempSprite.x = actor.x;
+			tempSprite.y = actor.y - tempSprite.height;
 			room.addChild(tempSprite);
 		}
 
 		/*********** Turn-structure related **************/
-		
-		// Turn structure: Each combatant (beginning with player) gets a turn, in a continuous cycle.  Each entity's
-		// turn consists of two phases: move, then fire.  (Actions other than fire may be added later; they will
-		// go in the fire phase.)  Move phase has two sub-phases: select path (shown as colored dots), then follow
-		// path.  For NPCs we pause after the "select path" portion; for PC, they can select/unselect/change as much
-		// as they want via UI, and the "follow path" portion begins when they finally commit to the move.
-		// Fire phase for PC is similar to move, with a "select target" that they can do/undo/change as much as they
-		// want via UI, and the actual "fire" beginning when they finally commit.  For NPC, there is no visual indication
-		// of target and thus no pause to view it.  In both cases, once the "fire" takes place, we pause again to
-		// view the results.
+
 
 		// Called each time an entity (player or NPC) finishes its combat move
 		// (specifically, during ENTER_FRAME for last frame of movement)
@@ -334,34 +298,19 @@ package angel.game.combat {
 		
 		
 		private function beginTurnForCurrentFighter():void {
-			var fighter:ComplexEntity = currentFighter();
-			if (checkForCombatOver()) {
-				// don't allow next enemy to move, don't enable player UI, just wait for them to OK the message,
-				// which will end combat mode.
-				return;
-			}
-			
-			if (Settings.showEnemyMoves || currentFighter().isPlayerControlled) {
-				currentFighter().centerRoomOnMe();
-			} else {
-				room.mainPlayerCharacter.centerRoomOnMe();
-			}
-			
-			if (fighter.brain != null) {
-				CombatBrainUiMeld(fighter.brain).startTurn();
-			} else {
-				// Fighter must have had its brain removed by script sometime after combat started; skip that turn.
-				finishedFire();
-			}
-		}
-		
-		// Called each time the timer for gazing at the fire graphic expires
-		private function finishedFire():void {
-			Settings.gameEventQueue.dispatch(new EntityQEvent(currentFighter(), EntityQEvent.FINISHED_FIRE));
+			CombatBrainUiMeld(currentFighter().brain).startTurn();
 		}
 		
 		private function endTurnListener(event:EntityQEvent):void {
-			goToNextFighter();
+			if (checkForCombatOver()) {
+				// don't do anything, just wait for them to OK the message, which will end combat mode.
+				return;
+			}
+			
+			do { // in case a fighter's brain is removed by script after combat starts
+				goToNextFighter();
+			} while (currentFighter().brain == null);
+			
 			beginTurnForCurrentFighter();
 		}
 		
