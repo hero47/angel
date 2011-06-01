@@ -163,10 +163,10 @@ package angel.game.combat {
 		}
 		
 		private function adjustVisibilityOfEnemy(enemy:ComplexEntity):void {
-			var wasVisible:Boolean = enemy.visible;
+			var enemyWasVisible:Boolean = enemy.visible;
 			enemy.visible = enemy.marker.visible = combat.anyPlayerCanSeeLocation(enemy.location);
 			updateLastSeenLocation(enemy);
-			if (!wasVisible && enemy.visible) {
+			if (!enemyWasVisible && enemy.visible) {
 				Settings.gameEventQueue.dispatch(new EntityQEvent(enemy, EntityQEvent.BECAME_VISIBLE));
 			}
 		}

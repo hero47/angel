@@ -54,7 +54,6 @@ package angel.game.combat {
 			
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.END_TURN, endTurnListener);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire);
-			Settings.gameEventQueue.addListener(this, room, EntityQEvent.BECAME_VISIBLE, enemyBecameVisible);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.DEATH, deathListener);
 			
 			augmentedReality = new AugmentedReality(this);
@@ -378,17 +377,6 @@ package angel.game.combat {
 			if (iFighterTurnInProgress >= fighters.length) {
 				trace("All turns have been processed, go back to first player");
 				iFighterTurnInProgress = 0;
-			}
-		}
-		
-		//NOTE: currently (May 2011) AI brains have full access to map data, regardless of line-of-sight.
-		//Thus, the BECAME_VISIBLE event is only relevant for the player.
-		private function enemyBecameVisible(event:EntityQEvent):void {
-			if (currentFighter().isPlayerControlled) {
-				var movement:EntityMovement = currentFighter().movement;
-				if ((movement != null) && movement.moving()) {
-					movement.interruptMovementAfterTileFinished();
-				}
 			}
 		}
 		

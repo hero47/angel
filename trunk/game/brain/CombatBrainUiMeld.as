@@ -45,6 +45,7 @@ package angel.game.brain {
 			Settings.gameEventQueue.dispatch(new EntityQEvent(me, EntityQEvent.START_TURN));
 			Settings.gameEventQueue.addListener(this, me, EntityQEvent.FINISHED_MOVING, finishedMovingListener);
 			Settings.gameEventQueue.addListener(this, me, EntityQEvent.MOVE_INTERRUPTED, moveInterruptedListener);
+			Settings.gameEventQueue.addListener(this, me.room, EntityQEvent.BECAME_VISIBLE, enemyBecameVisible);
 			//CONSIDER: figure out how to skip move entirely if entity can't move, and go straight to fire phase.
 			me.movement.initForCombatMove();
 			doMoveBody();
@@ -69,10 +70,28 @@ package angel.game.brain {
 			combat.mover.startEntityFollowingPath(me, gait);		
 		}
 		
-		private function finishedMovingListener(event:EntityQEvent):void {
+		//NOTE: currently (May 2011) AI brains have full access to map data, regardless of line-of-sight.
+		//Player-controlled characters are always visible.
+		//The BECAME_VISIBLE event specifically means that an enemy became visible to the player, not vice versa
+		//(but the event can occur due to either player or enemy movement)
+		private function enemyBecameVisible(event:EntityQEvent):void {
+			if (me.isReallyPlayer) {
+				trace(event.complexEntity.id, "became visible");
+				//CONSIDER: center room or hilight the enemy who just became visible?
+				me.movement.interruptMovementAfterTileFinished();
+			}
+		}
+		
+		protected function moveInterruptedListener(event:EntityQEvent):void {
+			Assert.fail("AI move can't be interrupted");
+			finishedMovingListener(event);
+		}
+		
+		protected function finishedMovingListener(event:EntityQEvent):void {
 			trace(me.aaId, "finished move");
 			Settings.gameEventQueue.removeListener(me, EntityQEvent.FINISHED_MOVING, finishedMovingListener);
 			Settings.gameEventQueue.removeListener(me, EntityQEvent.MOVE_INTERRUPTED, moveInterruptedListener);
+			Settings.gameEventQueue.removeListener(me.room, EntityQEvent.BECAME_VISIBLE, enemyBecameVisible);
 			combat.mover.clearPath();	// If movement finished unexpectedly (via ChangeAction or ??) dots may still be hanging around
 			me.hasCoverFrom.length = 0;
 			if (endTurnIfDeadOrCombatOver()) {
@@ -101,11 +120,6 @@ package angel.game.brain {
 				combat.mover.removeReturnMarker();
 			}
 			endTurn();
-		}
-		
-		protected function moveInterruptedListener(event:EntityQEvent):void {
-			Assert.fail("AI move can't be interrupted");
-			finishedMovingListener(event);
 		}
 		
 		protected function endTurnIfDeadOrCombatOver():Boolean {
