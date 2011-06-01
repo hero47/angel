@@ -588,7 +588,8 @@ package angel.game {
 			snapToCenter(startLoc);
 			
 			for each (var entity:ComplexEntity in Settings.pcs) {
-				// UNDONE: start followers near main PC instead of stacked on the same square
+				// CONSIDER: start followers near main PC instead of stacked on the same square?
+				// Though, as Wm pointed out, this actually makes sense when they're conceptually entering room through a door.
 				addPlayerCharacter(entity, startLoc);
 			}
 		}

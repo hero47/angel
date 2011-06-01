@@ -19,6 +19,13 @@ package angel.game.brain {
 			super(entity, combat);
 		}
 		
+		override public function cleanup():void {
+			if (ui != null) {
+				ui.disable();
+			}
+			super.cleanup();
+		}
+		
 		override protected function doMoveBody():void {
 			trace("Begin turn for PC", me.aaId);
 			me.centerRoomOnMe();
