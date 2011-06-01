@@ -2,13 +2,13 @@ package angel.game.script {
 	import angel.common.Alert;
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Util;
-	import angel.game.action.Action;
-	import angel.game.action.ConversationAction;
-	import angel.game.action.IAction;
-	import angel.game.action.IActionToBeMergedWithPreviousIf;
-	import angel.game.action.IfAction;
 	import angel.game.combat.RoomCombat;
 	import angel.game.Room;
+	import angel.game.script.action.ActionFactory;
+	import angel.game.script.action.ConversationAction;
+	import angel.game.script.action.IAction;
+	import angel.game.script.action.IActionToBeMergedWithPreviousIf;
+	import angel.game.script.action.IfAction;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import flash.events.Event;
@@ -46,7 +46,7 @@ package angel.game.script {
 			} else {
 				var children:XMLList = xml.children();
 				for each (var child:XML in xml.children()) {
-					addAction(Action.createFromXml(child, errorPrefix));
+					addAction(ActionFactory.createFromXml(child, errorPrefix));
 				}
 			}
 		}

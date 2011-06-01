@@ -1,11 +1,11 @@
 package angel.game.test {
 	import angel.common.Alert;
 	import angel.common.Floor;
-	import angel.game.action.Action;
-	import angel.game.action.IAction;
 	import angel.game.brain.CombatBrainWander;
 	import angel.game.ComplexEntity;
 	import angel.game.Room;
+	import angel.game.script.action.ActionFactory;
+	import angel.game.script.action.IAction;
 	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import flash.display.Sprite;
@@ -169,7 +169,7 @@ package angel.game.test {
 		public static function testActionFromXml(xml:XML, shouldDelayUntilEnd:Boolean = false):void {
 			Autotest.assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Queue not empty before testing action");
 			var context:ScriptContext = new ScriptContext(testRoom);
-			var action:IAction = Action.createFromXml(xml);
+			var action:IAction = ActionFactory.createFromXml(xml);
 			Autotest.assertNoAlert();
 			Autotest.assertNotEqual(action, null, "Action creation failed");
 			if (action != null) {

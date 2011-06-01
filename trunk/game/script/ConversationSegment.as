@@ -1,9 +1,9 @@
 package angel.game.script {
 	import angel.common.Alert;
 	import angel.common.Assert;
-	import angel.game.action.Action;
-	import angel.game.action.IAction;
 	import angel.game.Flags;
+	import angel.game.script.action.ActionFactory;
+	import angel.game.script.action.IAction;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -46,7 +46,7 @@ package angel.game.script {
 					}
 					segment.need.push(child.@flag);
 				} else {
-					segment.addAction(Action.createFromXml(child, errorPrefix));
+					segment.addAction(ActionFactory.createFromXml(child, errorPrefix));
 				}
 			}
 			return segment;

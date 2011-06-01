@@ -1,8 +1,6 @@
 package angel.game.test {
 	import angel.common.CatalogEntry;
 	import angel.common.Floor;
-	import angel.game.action.Action;
-	import angel.game.action.IAction;
 	import angel.game.brain.BrainFidget;
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.BrainWander;
