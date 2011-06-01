@@ -104,7 +104,7 @@ package angel.game.brain {
 		}
 		
 		protected function moveInterruptedListener(event:EntityQEvent):void {
-			Assert.fail("AI move can't be interrupted");
+			// AI brains currently (6/1/11) have no special processing for an interrupted move.
 			finishedMovingListener(event);
 		}
 		
