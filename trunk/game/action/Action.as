@@ -25,7 +25,8 @@ package angel.game.action {
 			"message":MessageAction,
 			"remove":RemoveFlagAction,
 			"removeFromRoom":RemoveFromRoomAction,
-			"startCombat":StartCombatAction
+			"startCombat":StartCombatAction,
+			"stop":StopAction
 		};
 		
 		public function Action() {

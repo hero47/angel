@@ -57,7 +57,7 @@ package angel.game {
 		private var coordsForEachFrameOfMove:Vector.<Point>;
 		private var depthChangePerFrame:Number;
 		private var frameOfMove:int;
-		private var interruptAfterThisTile:Boolean = false;;
+		private var interruptAfterThisTile:Boolean = false;
 		
 		public function EntityMovement(entity:ComplexEntity, movePoints:int, maxGait:int = GAIT_SPRINT) {
 			me = entity;
@@ -304,7 +304,7 @@ package angel.game {
 					interruptAfterThisTile = false; // we want this to end up as a move finished, not a move interrupted
 					finishOneTileOfMove();
 				}
-				finishedMoving();
+				finishedMoving(false);
 			}
 		}
 		
@@ -312,7 +312,11 @@ package angel.game {
 		//the path, stop there and send MOVE_INTERRUPTED instead of FINISHED_MOVING.
 		public function interruptMovementAfterTileFinished():void {
 			if (path.length > 0) {
-				interruptAfterThisTile = true;
+				if (movingTo == null) {
+					finishedMoving(true);
+				} else {
+					interruptAfterThisTile = true;
+				}
 			}
 		}
 		

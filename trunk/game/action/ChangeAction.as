@@ -76,7 +76,7 @@ package angel.game.action {
 				var wasMoving:Boolean = (complexEntity != null) && (complexEntity.moving());
 				context.room.changeEntityLocation(entity, entity.location, newLocation);
 				if (wasMoving) { // Whatever path they were following is no longer valid
-					complexEntity.movement.endMoveImmediately();
+					complexEntity.movement.interruptMovementAfterTileFinished();
 				}
 			}
 			
