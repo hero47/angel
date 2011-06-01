@@ -49,10 +49,6 @@ package angel.game.brain {
 			return points;
 		}
 		
-		public static function fireAtFirstAvailableTarget(me:ComplexEntity, combat:RoomCombat):void {
-			combat.beginFireGunOrReserve(me, getFirstAvailableTarget(me, combat));
-		}
-		
 		public static function getFirstAvailableTarget(me:ComplexEntity, combat:RoomCombat):ComplexEntity {
 			for (var i:int = 0; i < combat.fighters.length; i++) {
 				var fighter:ComplexEntity = combat.fighters[i];
