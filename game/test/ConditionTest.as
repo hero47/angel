@@ -2,6 +2,7 @@ package angel.game.test {
 	import angel.common.Util;
 	import angel.game.action.AndCondition;
 	import angel.game.action.CharAliveCondition;
+	import angel.game.action.CharPcCondition;
 	import angel.game.action.CompareCondition;
 	import angel.game.action.Condition;
 	import angel.game.action.ICondition;
@@ -31,6 +32,7 @@ package angel.game.test {
 			context = new ScriptContext(Autotest.testRoom);
 			Autotest.testFunction(testSpotConditions);
 			Autotest.testFunction(testAliveConditions);
+			Autotest.testFunction(testPcConditions);
 			Autotest.cleanupTestRoom();
 		}
 		
@@ -192,9 +194,9 @@ package angel.game.test {
 			Autotest.assertFalse(orCondition.isMet(context), what);
 		}
 			
-		private static const spotEmptyCondition:XML = <foo><empty param="test" /></foo>;
-		private static const notSpotEmptyCondition:XML = <foo><notEmpty param="test" /></foo>;
 		private function testSpotConditions():void {
+			var spotEmptyCondition:XML = <foo><empty param="test" /></foo>;
+			var notSpotEmptyCondition:XML = <foo><notEmpty param="test" /></foo>;
 			var location:Point = Autotest.testRoom.spotLocation("test");
 			Autotest.assertEqual(location, null, "Spot shouldn't exist until we create it.");
 			
@@ -219,10 +221,10 @@ package angel.game.test {
 			
 			Autotest.testRoom.removeSpot("test");
 		}
-			
-		private static const aliveCondition:XML = <foo><alive param="badId" /></foo>;
-		private static const notAliveCondition:XML = <foo><notAlive param="badId" /></foo>;
+		
 		private function testAliveConditions():void {
+			var aliveCondition:XML = <foo><alive param="badId" /></foo>;
+			var notAliveCondition:XML = <foo><notAlive param="badId" /></foo>;
 			var badAlive:ICondition = Condition.createFromEnclosingXml(aliveCondition);
 			var badNotAlive:ICondition = Condition.createFromEnclosingXml(notAliveCondition);
 			Autotest.assertNoAlert("shouldn't check id on creation");
@@ -283,6 +285,36 @@ package angel.game.test {
 			comp = Condition.createFromEnclosingXml(compareCondition);
 			Autotest.assertFalse(comp.isMet(context), "1 eq 2");
 			
+		}
+			
+		
+		private function testPcConditions():void {
+			var pcCondition:XML = <foo><pc param="badId" /></foo>; 
+			var notPcCondition:XML = <foo><notPc param="badId" /></foo>;
+			var badPc:ICondition = Condition.createFromEnclosingXml(pcCondition);
+			var badNotPc:ICondition = Condition.createFromEnclosingXml(notPcCondition);
+			Autotest.assertNoAlert("shouldn't check id on creation");
+			pcCondition.pc.@param = Autotest.TEST_ROOM_MAIN_PC_ID;
+			notPcCondition.notPc.@param = Autotest.TEST_ROOM_MAIN_PC_ID;
+			var isPc:ICondition = Condition.createFromEnclosingXml(pcCondition);
+			var notPc:ICondition = Condition.createFromEnclosingXml(notPcCondition);
+			
+			Autotest.assertClass(badPc, CharPcCondition, "wrong condition type");
+			
+			Autotest.assertFalse(badPc.isMet(context), "unknown character is not pc");
+			Autotest.assertAlertText("Error in condition: no character 'badId' in current room.");
+			Autotest.assertFalse(badNotPc.isMet(context), "undefined character is not not-pc, either");
+			Autotest.assertAlertText("Error in condition: no character 'badId' in current room.");
+			
+			Autotest.assertTrue(isPc.isMet(context), "main character is pc");
+			Autotest.assertFalse(notPc.isMet(context), "main character is not not-pc");
+			
+			pcCondition.pc.@param = Autotest.TEST_ROOM_ENEMY_ID;
+			notPcCondition.notPc.@param = Autotest.TEST_ROOM_ENEMY_ID;
+			isPc = Condition.createFromEnclosingXml(pcCondition);
+			notPc= Condition.createFromEnclosingXml(notPcCondition);
+			Autotest.assertFalse(isPc.isMet(context), "enemy is not pc");
+			Autotest.assertTrue(notPc.isMet(context), "enemy is not-pc");
 		}
 		
 	}

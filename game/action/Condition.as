@@ -14,7 +14,8 @@ package angel.game.action {
 			"alive":CharAliveCondition,
 			"compare":CompareCondition,
 			"empty":SpotEmptyCondition,
-			"flag":FlagCondition
+			"flag":FlagCondition,
+			"pc":CharPcCondition
 		}
 		
 		public function Condition() {

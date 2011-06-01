@@ -4,8 +4,10 @@ package angel.game.brain {
 	import angel.game.combat.CombatMoveUi;
 	import angel.game.combat.RoomCombat;
 	import angel.game.ComplexEntity;
+	import angel.game.EntityMovement;
 	import angel.game.event.EntityQEvent;
 	import angel.game.IRoomUi;
+	import angel.game.Settings;
 	/**
 	 * ...
 	 * @author Beth Moursund
