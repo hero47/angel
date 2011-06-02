@@ -34,7 +34,7 @@ package angel.game.script.action {
 				}
 			}
 			var otherXml:XML = actionXml.copy();
-			for each (var attributeName:String in ["id", "x", "y"]) {
+			for each (var attributeName:String in ["id", "x", "y"]) { // delete these from list
 				if (otherXml.@[attributeName].length() > 0) {
 					delete otherXml.@[attributeName];
 				}
@@ -92,6 +92,13 @@ package angel.game.script.action {
 							UtilBrain.combatBrainClassFromString(xml.@combat);
 					var combatParam:String = (xml.@combatParam.length() == 0) ? complexEntity.combatBrainParam : xml.@combatParam;
 					complexEntity.setBrain(false, combatBrainClass, combatParam);
+				}
+				if (xml.@faction.length() > 0) {
+					if (complexEntity.isReallyPlayer) {
+						Alert.show("Error in change: cannot change faction of a player character");
+					} else {
+						complexEntity.changeFaction(xml.@faction);
+					}
 				}
 			}
 			

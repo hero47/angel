@@ -186,14 +186,17 @@ package angel.game {
 			}
 		}
 		
+		public function changeFaction(newFaction:int):void {
+			faction = newFaction;
+			Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.CHANGED_FACTION));
+		}
+		
 		//NOTE: set brain classes and anything they will need for instantiation before calling.
-		//UNDONE: this doesn't account for the third (non-aligned) faction
-		public function changePlayerControl(willBePc:Boolean):void {
+		public function changePlayerControl(willBePc:Boolean, newFaction:int):void {
 			if (playerControlled == willBePc) {
 				return;
 			}
 			playerControlled = willBePc;
-			faction = (willBePc ? FACTION_FRIEND : FACTION_ENEMY);
 			if (movement != null) {
 				movement.setSpeeds(playerControlled);
 			}
@@ -201,7 +204,7 @@ package angel.game {
 			if (room.mode != null) {
 				room.mode.playerControlChanged(this, playerControlled);
 			}
-			Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.CHANGED_FACTION));
+			changeFaction(newFaction);
 		}
 		
 		public function get isPlayerControlled():Boolean {

@@ -32,7 +32,7 @@ package angel.game.script.action {
 		public static function createFromXml(actionXml:XML):IAction {
 			var otherXml:XML = actionXml.copy();
 			for each (var attributeName:String in ["explore", "exploreParam", "combat", "combatParam", "id", "x", "y", "spot"]) {
-				if (otherXml.@[attributeName].length() > 0) {
+				if (otherXml.@[attributeName].length() > 0) { // delete these
 					delete otherXml.@[attributeName];
 				}
 			}
@@ -54,7 +54,7 @@ package angel.game.script.action {
 					entity.setBrain(false, combatBrainClass, combatParam);
 					entity.setBrain(true, exploreBrainClass, exploreParam);
 					entity.setCommonPropertiesFromXml(commonXml);
-					entity.changePlayerControl(false);
+					entity.changePlayerControl(false, commonXml.@faction);
 					Settings.removeFromPlayerList(entity);
 				}
 			} else {

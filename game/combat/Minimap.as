@@ -241,7 +241,7 @@ package angel.game.combat {
 			}
 		}
 		
-		public function someoneMoved(event:EntityQEvent):void {
+		private function someoneMoved(event:EntityQEvent):void {
 			var entity:ComplexEntity = event.complexEntity;
 			if (entityToMapIcon[entity] != null && (entity.isPlayerControlled)) {
 				setIconPositionFromEntityLocation(entityToMapIcon[entity], entity);
@@ -255,12 +255,12 @@ package angel.game.combat {
 			}
 		}
 		
-		public function someoneStartedTurn(event:EntityQEvent):void {
+		private function someoneStartedTurn(event:EntityQEvent):void {
 			activeEntity = event.complexEntity;
 			adjustActiveEntityMarker();
 		}
 		
-		public function someoneDied(event:EntityQEvent):void {
+		private function someoneDied(event:EntityQEvent):void {
 			var icon:Bitmap = entityToMapIcon[event.complexEntity];
 			if (icon != null) {
 				adjustIconImageAndPosition(event.complexEntity);
@@ -268,7 +268,7 @@ package angel.game.combat {
 			}
 		}
 		
-		public function someoneJoinedCombat(event:EntityQEvent):void {
+		private function someoneJoinedCombat(event:EntityQEvent):void {
 			var entity:ComplexEntity = event.complexEntity;
 			addFighter(entity);
 			if (!entity.visible) {
@@ -279,7 +279,7 @@ package angel.game.combat {
 		
 		//CONSIDER: If the person who left was a currently-out-of-sight enemy, this lets the player know that they're
 		//no longer in room rather than just hiding somewhere.  Is that good or bad?
-		public function someoneLeftRoom(event:EntityQEvent):void {
+		private function someoneLeftRoom(event:EntityQEvent):void {
 			var icon:Bitmap = entityToMapIcon[event.complexEntity];
 			if (icon != null) {
 				roomSprite.removeChild(icon);
@@ -288,7 +288,7 @@ package angel.game.combat {
 			adjustAllNonPlayerIcons();
 		}
 		
-		public function someoneChangedFaction(event:EntityQEvent):void {
+		private function someoneChangedFaction(event:EntityQEvent):void {
 			var entity:ComplexEntity = event.complexEntity;
 			var icon:Bitmap = entityToMapIcon[entity];
 			if (icon != null) {
@@ -300,7 +300,7 @@ package angel.game.combat {
 			}
 		}
 		
-		public function scrollRoomSpriteToMatchRealRoom(event:QEvent):void {
+		private function scrollRoomSpriteToMatchRealRoom(event:QEvent):void {
 			roomSprite.x = Math.floor(combat.room.x / SCALE);
 			roomSprite.y = Math.floor(combat.room.y / SCALE);
 		}

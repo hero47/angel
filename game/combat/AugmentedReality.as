@@ -52,6 +52,7 @@ package angel.game.combat {
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.LOCATION_CHANGED_DIRECTLY, someoneMovedToNewSquare);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.HEALTH_CHANGE, someonesHealthChanged);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.START_TURN, someoneStartedTurn);
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.CHANGED_FACTION, someoneChangedFaction);
 		}
 		
 		public function cleanup():void {
@@ -132,7 +133,7 @@ package angel.game.combat {
 			}
 		}
 		
-		public function someoneStartedTurn(event:EntityQEvent):void {
+		private function someoneStartedTurn(event:EntityQEvent):void {
 			var fighter:ComplexEntity = event.complexEntity;
 			if (fighter.isPlayerControlled) {
 				statDisplay.adjustCombatStatDisplay(fighter);
@@ -140,6 +141,17 @@ package angel.game.combat {
 				statDisplay.adjustCombatStatDisplay(null);
 				++lastSeenMarkers[fighter].age;
 				updateLastSeenLocation(fighter); // so last seen marker will fade even if entity doesn't move
+			}
+		}
+		
+		private function someoneChangedFaction(event:EntityQEvent):void {
+			var entity:ComplexEntity = event.complexEntity;
+			var lastSeenMarker:LastSeen = lastSeenMarkers[entity];
+			var lastSeenAge:int = (lastSeenMarker == null ? 0 : lastSeenMarker.age);
+			removeDisplayElementsForFighter(entity);
+			initializeDisplayElementsForFighter(entity);
+			if (!entity.isPlayerControlled) {
+				lastSeenMarkers[entity].age = lastSeenAge;
 			}
 		}
 		
@@ -166,23 +178,26 @@ package angel.game.combat {
 			}			
 		}
 		
-		private function initializeDisplayElementsForFighter(entity:ComplexEntity):void {
-			entity.setTextOverHead(String(entity.currentHealth));
-			var footprintColor:uint;
+		private function factionColor(entity:ComplexEntity):uint {
 			switch (entity.faction) {
 				case ComplexEntity.FACTION_ENEMY:
-					footprintColor = ENEMY_FOOTPRINT_COLOR;
+					return ENEMY_FOOTPRINT_COLOR;
 				break;
 				case ComplexEntity.FACTION_FRIEND:
-					footprintColor = (entity.isReallyPlayer ? PLAYER_FOOTPRINT_COLOR : FRIEND_FOOTPRINT_COLOR);
+					return (entity.isReallyPlayer ? PLAYER_FOOTPRINT_COLOR : FRIEND_FOOTPRINT_COLOR);
 				break;
 				default:
-					footprintColor = CIVILIAN_FOOTPRINT_COLOR;
+					return CIVILIAN_FOOTPRINT_COLOR;
 				break;
 			}
-			createCombatFootprintForEntity(entity, footprintColor);
+		}
+		
+		private function initializeDisplayElementsForFighter(entity:ComplexEntity):void {
+			entity.setTextOverHead(String(entity.currentHealth));
+			var factionColor:uint = factionColor(entity);
+			createCombatFootprintForEntity(entity, factionColor);
 			if (!entity.isPlayerControlled) {
-				createLastSeenMarker(entity, footprintColor);
+				createLastSeenMarker(entity, factionColor);
 				adjustVisibilityOfNonPlayer(entity);
 			}			
 		}

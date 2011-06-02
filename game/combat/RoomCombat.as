@@ -327,7 +327,7 @@ package angel.game.combat {
 			for (var i:int = 0; i < fighters.length; i++) {
 				if (fighters[i].isPlayerControlled) {
 					playerAlive = true;
-				} else {
+				} else if (fighters[i].faction == ComplexEntity.FACTION_ENEMY) {
 					enemyAlive = true;
 				}
 				if (playerAlive && enemyAlive) {

@@ -10,6 +10,8 @@ package angel.game.test {
 	import angel.game.brain.CombatBrainWander;
 	import angel.game.combat.RoomCombat;
 	import angel.game.ComplexEntity;
+	import angel.game.event.EntityQEvent;
+	import angel.game.event.QEvent;
 	import angel.game.Flags;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
@@ -336,6 +338,7 @@ package angel.game.test {
 			var nei:ComplexEntity = ComplexEntity(room.entityInRoomWithId("nei"));
 			Autotest.assertFalse(nei.isReallyPlayer, "Should be npc");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Npc shouldn't be on player list");
+			Autotest.assertEqual(nei.faction, ComplexEntity.FACTION_ENEMY, "No faction specified npc should be enemy");
 			
 			Autotest.testActionFromXml(changeNeiToNpc);
 			Autotest.assertNoAlert("Change to Npc does nothing if entity is already npc");
@@ -344,6 +347,7 @@ package angel.game.test {
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), nei, "Change pc-ness shouldn't change room or identity");
 			Autotest.assertTrue(nei.isReallyPlayer, "Should have changed to player");
 			Autotest.assertTrue(Settings.isOnPlayerList(nei), "Should have added to player list");
+			Autotest.assertEqual(nei.faction, ComplexEntity.FACTION_FRIEND, "PC should always be friend faction");
 			Autotest.assertEqual(nei.exploreBrainClass, BrainFollow, "PC gets follow brain");
 			Autotest.assertEqual(nei.combatBrainClass, CombatBrainUiMeldPlayer, "PC gets special combat brain");
 			if (testRoom.mode is RoomExplore) {
@@ -358,6 +362,7 @@ package angel.game.test {
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), nei, "Change pc-ness shouldn't change room or identity");
 			Autotest.assertFalse(nei.isReallyPlayer, "Should have changed back to npc");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Should have removed from player list");
+			Autotest.assertEqual(nei.faction, ComplexEntity.FACTION_ENEMY, "No faction specified npc should be enemy");
 			Autotest.assertEqual(nei.exploreBrainClass, null, "No explore brain specified should default to null");
 			Autotest.assertEqual(nei.combatBrainClass, CombatBrainNone, "No combat brain specified should default to CombatBrainNone");
 			if (testRoom.mode is RoomCombat) {
@@ -416,6 +421,7 @@ package angel.game.test {
 		private const changeNeiSpotAndXY:XML = <change id="nei" spot="testSpot" x="1" y="1" />;
 		private const changeNeiBrain:XML = <change id="nei" explore="wander" combat="patrol" combatParam="testSpot" />;
 		private const clearNeiBrain:XML = <change id="nei" explore="" combat="" />;
+		private const changeNeiToFriend:XML = <change id="nei" faction="1" />
 		
 		private const changeFoo:XML = <change id="foo" explore="wander" combat="patrol" combatParam="testSpot" spot="testSpot"/>;
 		private const removeFoo:XML = <removeFromRoom id="foo" />;
@@ -449,6 +455,16 @@ package angel.game.test {
 			Autotest.assertEqual(neiComplex.exploreBrainClass, null);
 			Autotest.assertEqual(neiComplex.combatBrainClass, CombatBrainNone);
 			Autotest.assertEqual(neiComplex.combatBrainParam, null, "Removing behavior should auto-remove corresponding param");
+			
+			Autotest.assertEqual(neiComplex.faction, ComplexEntity.FACTION_ENEMY);
+			var gotEvent:Boolean = false;
+			Settings.gameEventQueue.addListener(this, neiComplex, EntityQEvent.CHANGED_FACTION, function(event:QEvent):void {
+				gotEvent = true;
+			});
+			Autotest.testActionFromXml(changeNeiToFriend);
+			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
+			Autotest.assertEqual(neiComplex.faction, ComplexEntity.FACTION_FRIEND);
+			Autotest.assertTrue(gotEvent, "should have processed faction change listener");
 			
 			var fooXml:XML = <prop id="foo" x="6" y="5"/>
 			var foo:SimpleEntity = SimpleEntity.createFromRoomContentsXml(fooXml, 1, Settings.catalog);
