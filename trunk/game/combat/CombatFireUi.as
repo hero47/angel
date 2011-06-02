@@ -27,7 +27,7 @@ package angel.game.combat {
 		private var combat:RoomCombat;
 		private var player:ComplexEntity;
 		private var haveGun:Boolean;
-		private var oldMarkerColorTransform:ColorTransform;
+		private var oldFootprintColorTransform:ColorTransform;
 		private var aimCursor:Sprite;
 		private var aimCursorBitmap:Bitmap;
 		
@@ -57,8 +57,8 @@ package angel.game.combat {
 			trace("entering player fire phase for", player.aaId);
 			this.player = player;
 			haveGun = (player.currentGun() != null);
-			oldMarkerColorTransform = player.marker.transform.colorTransform;
-			player.marker.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
+			oldFootprintColorTransform = player.footprint.transform.colorTransform;
+			player.footprint.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
 			clickThisEnemyAgainForQuickFire = null;
 			Mouse.hide();
 			room.addChild(aimCursor);
@@ -69,7 +69,7 @@ package angel.game.combat {
 		public function disable():void {
 			if (player != null) {
 				trace("ending player fire phase for", player.aaId);
-				player.marker.transform.colorTransform = oldMarkerColorTransform;
+				player.footprint.transform.colorTransform = oldFootprintColorTransform;
 				player = null;
 			}
 			room.moveHilight(null, 0);
@@ -190,7 +190,7 @@ package angel.game.combat {
 		}
 		
 		private function filterIsEnemy(entity:ComplexEntity):Boolean {
-			return (entity.isEnemy() || Settings.controlEnemies);
+			return entity.isEnemyOf(player);
 		}
 		
 		private function moveTargetHilight(target:ComplexEntity):void {

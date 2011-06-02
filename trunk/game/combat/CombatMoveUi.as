@@ -27,7 +27,7 @@ package angel.game.combat {
 		private var combat:RoomCombat;
 		private var room:Room;
 		private var player:ComplexEntity;
-		private var oldMarkerColorTransform:ColorTransform;
+		private var oldFootprintColorTransform:ColorTransform;
 		
 		public function CombatMoveUi(room:Room, combat:RoomCombat) {
 			this.combat = combat;
@@ -39,15 +39,15 @@ package angel.game.combat {
 		public function enable(player:ComplexEntity):void {
 			trace("enable player ui for", player.aaId);
 			this.player = player;
-			oldMarkerColorTransform = player.marker.transform.colorTransform;
-			player.marker.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
+			oldFootprintColorTransform = player.footprint.transform.colorTransform;
+			player.footprint.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
 			adjustMovePointsDisplay();
 		}
 		
 		public function disable():void {
 			if (player != null) {
 				trace("disable player ui for", player.aaId);
-				player.marker.transform.colorTransform = oldMarkerColorTransform;
+				player.footprint.transform.colorTransform = oldFootprintColorTransform;
 				player = null;
 			}
 			adjustMovePointsDisplay(false);

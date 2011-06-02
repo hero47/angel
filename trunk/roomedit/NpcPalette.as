@@ -22,9 +22,12 @@ package angel.roomedit {
 		private var exploreParameters:TextField;
 		private var combatParameters:TextField;
 		private var scriptFile:FilenameControl;
+		private var factionCombo:ComboBox;
 		
 		private static const exploreChoices:Vector.<String> = Vector.<String>(["", "fidget", "follow", "patrol", "wander"]);
 		private static const combatChoices:Vector.<String> = Vector.<String>(["", "patrol", "patrolNoStops", "wander"]);
+		//NOTE: faction is index in factionChoices, not the string itself
+		private static const factionChoices:Vector.<String> = Vector.<String>(["enemy", "friend", "non-aligned"]);
 		
 		public function NpcPalette(catalog:CatalogEdit, room:RoomLight) {
 			super(catalog, room);
@@ -101,7 +104,7 @@ package angel.roomedit {
 			
 			var exploreLabel:TextField = Util.textBox("Explore mode behavior:", EditorSettings.PALETTE_XSIZE-20);
 			holder.addChild(exploreLabel);
-			exploreCombo = createBrainChooser(exploreChoices);
+			exploreCombo = createChooserFromStringList(exploreChoices);
 			Util.addBelow(exploreCombo, exploreLabel);
 			exploreCombo.addEventListener(Event.CHANGE, function(event:Event):void {
 				changeAttribute("explore", exploreCombo.selectedLabel);
@@ -112,7 +115,7 @@ package angel.roomedit {
 			
 			var combatLabel:TextField = Util.textBox("Combat mode behavior:", EditorSettings.PALETTE_XSIZE-20);
 			Util.addBelow(combatLabel, exploreParameters, 5);
-			combatCombo = createBrainChooser(combatChoices);
+			combatCombo = createChooserFromStringList(combatChoices);
 			Util.addBelow(combatCombo, combatLabel);
 			combatCombo.addEventListener(Event.CHANGE, function(event:Event):void {
 				changeAttribute("combat", combatCombo.selectedLabel);
@@ -125,6 +128,12 @@ package angel.roomedit {
 			Util.addBelow(talkLabel, combatParameters, 10);
 			scriptFile = FilenameControl.createBelow(talkLabel, true, null, 0, EditorSettings.PALETTE_XSIZE-10, function(event:Event):void {
 				changeAttribute("script", scriptFile.text);
+			});
+			
+			factionCombo = createChooserFromStringList(factionChoices);
+			Util.addBelow(factionCombo, scriptFile);
+			factionCombo.addEventListener(Event.CHANGE, function(event:Event):void {
+				changeAttribute("faction", String(factionCombo.selectedIndex));
 			});
 			
 			return holder;
@@ -149,6 +158,7 @@ package angel.roomedit {
 					scriptFile.text = attributes["script"];
 					Util.nullSafeSetText(exploreParameters, attributes["exploreParam"]);
 					Util.nullSafeSetText(combatParameters, attributes["combatParam"]);
+					factionCombo.selectedIndex = int(attributes["faction"]);
 				}
 				adjustParamVisibilities();
 			}
@@ -159,7 +169,7 @@ package angel.roomedit {
 			combatParameters.visible = (combatCombo.selectedIndex != 0);
 		}
 		
-		private function createBrainChooser(choices:Vector.<String>):ComboBox {
+		private function createChooserFromStringList(choices:Vector.<String>):ComboBox {
 			var combo:ComboBox = new ComboBox();
 			combo.width = EditorSettings.PALETTE_XSIZE - 10;
 			for (var i:int = 0; i < choices.length; i++) {

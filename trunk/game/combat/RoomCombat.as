@@ -34,12 +34,6 @@ package angel.game.combat {
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
 		public var fighters:Vector.<ComplexEntity>;
 		
-		// screen labels for turn phases
-		public static const PLAYER_MOVE:String = "Move";
-		public static const ENEMY_MOVE:String = "Enemy Action";
-		public static const PLAYER_FIRE:String = "Attack";
-		public static const ENEMY_FIRE:String = "Enemy Action";
-		
 		public static const PAUSE_TO_VIEW_MOVE_SECONDS:Number = 1;
 		public static const PAUSE_TO_VIEW_FIRE_SECONDS:Number = 1;
 		
@@ -63,7 +57,7 @@ package angel.game.combat {
 			enemyTurnOverlay.graphics.drawRect(0, 0, room.stage.stageWidth, room.stage.stageHeight);
 			enemyTurnOverlay.graphics.endFill();
 			
-			modeLabel = Util.textBox("", 350, 60, TextFormatAlign.CENTER, false, 0xffffff);
+			modeLabel = Util.textBox("", 400, 60, TextFormatAlign.CENTER, false, 0xffffff);
 			modeLabel.mouseEnabled = false;
 			//modeLabel.background = true;
 			modeLabel.x = (room.stage.stageWidth - modeLabel.width) / 2;
@@ -156,15 +150,14 @@ package angel.game.combat {
 			entity.initHealth();
 			entity.actionsRemaining = 0;
 			
-			if (entity.isPlayerControlled || entity.isEnemy()) {
+			if (entity.canBeActiveInCombat()) {
 				fighters.push(entity);
 				entity.adjustBrainForRoomMode(this);
-			} // else non-combattant, if there is such a thing; currently (5/5/11) means they're just a prop
+			}
 		}
 		
 		private function removeFighterFromCombat(deadFighter:ComplexEntity):void {
 			deadFighter.adjustBrainForRoomMode(null); // NOTE: If it's this fighter's turn, brain will tidy up and end turn
-			augmentedReality.removeFighter(deadFighter);
 			
 			var indexOfDeadFighter:int = fighters.indexOf(deadFighter);
 			Assert.assertTrue(indexOfDeadFighter >= 0, "Removing fighter that's already removed: " + deadFighter.aaId);
@@ -176,6 +169,8 @@ package angel.game.combat {
 					iFighterTurnInProgress = fighters.length - 1;
 				}
 			}
+			
+			augmentedReality.removeFighter(deadFighter); // do this after it's out of list so the dead one won't "see" stuff
 		}
 		
 		/****************** public “api” for combat brains/ui *******************/
@@ -191,10 +186,6 @@ package angel.game.combat {
 		
 		/**************** opportunity fire ***********************/
 		
-		public function opposingFactions(fighterA:ComplexEntity, fighterB:ComplexEntity):Boolean {
-			return (fighterA.isReallyPlayer != fighterB.isReallyPlayer);
-		}
-		
 		private function checkForOpportunityFire(event:EntityQEvent):void {
 			var entityMoving:ComplexEntity = event.complexEntity;
 			if (fighters.indexOf(entityMoving) < 0) {
@@ -207,7 +198,7 @@ package angel.game.combat {
 			//NOTE: This assumes only two factions. If we add civilians and want the enemy NPCs
 			//to be able to shoot them (or the PCs to avoid shooting them) it will need revision.
 			for (var i:int = 0; i < fighters.length; ++i) {
-				if (opposingFactions(fighters[i], entityMoving)) {
+				if (entityMoving.isEnemyOf(fighters[i])) {
 					// WARNING: using ||= prevents it from executing the function if it's already true!
 					someoneDidOpportunityFire = (doOpportunityFireIfLegal(fighters[i], entityMoving) || someoneDidOpportunityFire);
 					if (entityMoving.currentHealth <= 0) {
@@ -269,7 +260,7 @@ package angel.game.combat {
 				removeFighterFromCombat(entity);
 				checkForCombatOver();
 				if (combatOver) {
-					augmentedReality.adjustAllEnemyVisibility();
+					augmentedReality.adjustAllNonPlayerVisibility();
 				}
 			}
 		}
@@ -301,10 +292,7 @@ package angel.game.combat {
 				return;
 			}
 			
-			do { // in case a fighter's brain is removed by script after combat starts
-				goToNextFighter();
-			} while (currentFighter().brain == null);
-			
+			goToNextFighter();
 			beginTurnForCurrentFighter();
 		}
 		

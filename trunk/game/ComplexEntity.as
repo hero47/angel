@@ -1,4 +1,5 @@
 package angel.game {
+	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.CharacterStats;
 	import angel.common.Defaults;
@@ -8,6 +9,7 @@ package angel.game {
 	import angel.common.Tileset;
 	import angel.common.Util;
 	import angel.common.WeaponResource;
+	import angel.game.brain.CombatBrainNone;
 	import angel.game.brain.IBrain;
 	import angel.game.brain.UtilBrain;
 	import angel.game.combat.Grenade;
@@ -31,6 +33,11 @@ package angel.game {
 		
 		private static const TEXT_OVER_HEAD_HEIGHT:int = 20;
 		
+		//NOTE: faction values come from a dropdown in the Room Editor, and are initialized from room files.
+		public static const FACTION_ENEMY:int = 0;
+		public static const FACTION_FRIEND:int = 1;
+		public static const FACTION_NONE:int = 2;
+		
 		// Entity stats!
 		// CONSIDER: Initial values for some of these come from a CharacterStats. I could have a CharacterStats embedded
 		// here rather than individual variables for the ones that overlap, but currently (5/15/11) that's only two.
@@ -49,8 +56,9 @@ package angel.game {
 		public var inventory:Inventory = new Inventory();
 		
 		private var playerControlled:Boolean;
+		public var faction:int;
 		
-		public var marker:DisplayObject; // if non-null, drawn on decorations layer centered directly under me
+		public var footprint:DisplayObject; // if non-null, drawn on decorations layer centered directly under me
 		private var textOverHead:TextField;
 		protected var facing:int;
 		private var solidnessWhenAlive:uint;
@@ -78,14 +86,14 @@ package angel.game {
 			animation = new resource.animationData.animationClass(resource.animationData, this.imageBitmap);
 		}
 		
-		public static function createFromRoomContentsXml(walkerXml:XML, version:int, catalog:Catalog):ComplexEntity {
+		public static function createFromRoomContentsXml(charXml:XML, version:int, catalog:Catalog):ComplexEntity {
 			var id:String;
 			
 			//Delete older version support eventually
 			if (version < 1) {
-				id = walkerXml;
+				id = charXml;
 			} else {
-				id = walkerXml.@id
+				id = charXml.@id
 			}
 			
 			var resource:RoomContentResource = catalog.retrieveCharacterResource(id);
@@ -94,9 +102,10 @@ package angel.game {
 			}
 			
 			var entity:ComplexEntity = new ComplexEntity(resource, id);
-			entity.setBrain(true, UtilBrain.exploreBrainClassFromString(walkerXml.@explore), walkerXml.@exploreParam);
-			entity.setBrain(false, UtilBrain.combatBrainClassFromString(walkerXml.@combat), walkerXml.@combatParam);
-			entity.setCommonPropertiesFromXml(walkerXml);
+			entity.setBrain(true, UtilBrain.exploreBrainClassFromString(charXml.@explore), charXml.@exploreParam);
+			entity.setBrain(false, UtilBrain.combatBrainClassFromString(charXml.@combat), charXml.@combatParam);
+			entity.faction = int(charXml.@faction);
+			entity.setCommonPropertiesFromXml(charXml);
 			return entity;
 		}
 		
@@ -110,15 +119,15 @@ package angel.game {
 		
 		override public function set x(value:Number):void {
 			super.x = value;
-			if (marker != null) {
-				marker.x = this.x + this.width / 2;
+			if (footprint != null) {
+				footprint.x = this.x + this.width / 2;
 			}
 		}
 		
 		override public function set y(value:Number):void {
 			super.y = value;
-			if (marker != null) {
-				marker.y = this.y + Tileset.TILE_HEIGHT / 2;
+			if (footprint != null) {
+				footprint.y = this.y + Tileset.TILE_HEIGHT / 2;
 			}
 		}
 		
@@ -160,29 +169,31 @@ package angel.game {
 			*/
 		}
 		
-		public function attachMarker(newMarker:DisplayObject):void {
-			if (marker != null) {
-				removeMarker();
+		public function attachFootprint(newFootprint:DisplayObject):void {
+			if (footprint != null) {
+				removeFootprint();
 			}
-			marker = newMarker;
-			room.decorationsLayer.addChild(marker);
-			marker.x = this.x + this.width / 2;
-			marker.y = this.y + Tileset.TILE_HEIGHT/2;
+			footprint = newFootprint;
+			room.decorationsLayer.addChild(footprint);
+			footprint.x = this.x + this.width / 2;
+			footprint.y = this.y + Tileset.TILE_HEIGHT/2;
 		}
 		
-		public function removeMarker():void {
-			if (marker != null) {
-				room.decorationsLayer.removeChild(marker);
-				marker = null;
+		public function removeFootprint():void {
+			if (footprint != null) {
+				room.decorationsLayer.removeChild(footprint);
+				footprint = null;
 			}
 		}
 		
 		//NOTE: set brain classes and anything they will need for instantiation before calling.
+		//UNDONE: this doesn't account for the third (non-aligned) faction
 		public function changePlayerControl(willBePc:Boolean):void {
 			if (playerControlled == willBePc) {
 				return;
 			}
 			playerControlled = willBePc;
+			faction = (willBePc ? FACTION_FRIEND : FACTION_ENEMY);
 			if (movement != null) {
 				movement.setSpeeds(playerControlled);
 			}
@@ -200,6 +211,13 @@ package angel.game {
 		public function get isReallyPlayer():Boolean {
 			return playerControlled;
 		}
+		
+		public function isEnemyOf(entity:ComplexEntity):Boolean {
+			if ((faction == FACTION_NONE) || (entity.faction == FACTION_NONE)) {
+				return false;
+			}
+			return (faction != entity.faction);
+		}
 						
 		public function isEnemy():Boolean {
 			//CONSIDER: is this true, or will we want to have civilians with combat behavior that are untargetable?
@@ -211,7 +229,7 @@ package angel.game {
 		}
 		
 		public function canBeActiveInCombat():Boolean {
-			return isPlayerControlled || isEnemy();
+			return (playerControlled || (combatBrainClass != null) && (currentHealth > 0));
 		}
 		
 		public function setBrain(forExplore:Boolean, newBrainClass:Class, newParam:String):void {
@@ -222,7 +240,7 @@ package angel.game {
 					adjustBrainForRoomMode(room.mode);
 				}
 			} else {
-				combatBrainClass = newBrainClass;
+				combatBrainClass = (newBrainClass == null ? CombatBrainNone : newBrainClass);
 				combatBrainParam = (newBrainClass == null ? null : newParam);
 				if ((room != null) && (room.mode is RoomCombat)) {
 					adjustBrainForRoomMode(room.mode);
@@ -235,7 +253,7 @@ package angel.game {
 				brain.cleanup();
 			}
 			
-			if ((mode is RoomCombat) && (combatBrainClass != null)) {
+			if (mode is RoomCombat) {
 				brain = new combatBrainClass(this, mode, combatBrainParam);
 			} else if ((mode is RoomExplore) && (exploreBrainClass != null)) {
 				brain = new exploreBrainClass(this, mode, exploreBrainParam);

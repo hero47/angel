@@ -29,7 +29,7 @@ package angel.game.brain {
 		override protected function doMoveBody():void {
 			trace("Begin turn for PC", me.aaId);
 			me.centerRoomOnMe();
-			combat.showPhase(RoomCombat.PLAYER_MOVE, false);
+			combat.showPhase(CombatBrainUiMeld.PLAYER_MOVE, false);
 			ui = new CombatMoveUi(combat.room, combat);
 			combat.room.enableUi(ui, me);
 		}
@@ -52,7 +52,7 @@ package angel.game.brain {
 		}
 		
 		override protected function doFireBody():void {
-			combat.showPhase(RoomCombat.PLAYER_FIRE, false);
+			combat.showPhase(CombatBrainUiMeld.PLAYER_FIRE, false);
 			if (me.hasAWeapon()) {
 				ui = new CombatFireUi(combat.room, combat);
 				combat.room.enableUi(ui, me);

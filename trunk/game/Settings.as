@@ -128,6 +128,7 @@ package angel.game {
 			if (xml.length() == 0) {
 				entity = new ComplexEntity(catalog.retrieveCharacterResource("PLAYER"), "PLAYER");
 				entity.currentHealth = 100;
+				entity.faction = ComplexEntity.FACTION_FRIEND;
 				pcs.push(entity);
 				return;
 			}
@@ -145,6 +146,7 @@ package angel.game {
 					continue;
 				}
 				entity = new ComplexEntity(resource, id);
+				entity.faction = ComplexEntity.FACTION_FRIEND;
 				entity.exploreBrainClass = null;
 				entity.combatBrainClass = CombatBrainUiMeldPlayer;
 				if (pc.@health.length() > 0) {

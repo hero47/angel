@@ -141,7 +141,7 @@ package angel.roomedit {
 		}
 		
 		private static const contentItemXmlAttributes:Vector.<String> = Vector.<String>(
-				["explore", "combat", "script", "exploreParam", "combatParam"]);
+				["explore", "exploreParam", "combat", "combatParam", "script", "faction"]);
 		public function addContentItemByName(type:int, id:String, location:Point, xml:XML):void {
 			trace("adding", id);
 			var resource:RoomContentResource = catalog.retrieveRoomContentResource(id, type);
