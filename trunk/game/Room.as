@@ -456,7 +456,7 @@ package angel.game {
 			}
 			addEntity(entity, location);
 			if (!entity.isReallyPlayer) {
-				entity.changePlayerControl(true);
+				entity.changePlayerControl(true, ComplexEntity.FACTION_FRIEND);
 			}
 		}
 		

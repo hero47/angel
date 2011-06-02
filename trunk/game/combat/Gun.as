@@ -41,7 +41,7 @@ package angel.game.combat {
 			uglyFireLineThatViolates3D.graphics.lineTo(target.centerOfImage().x, target.centerOfImage().y);
 			shooter.room.addChild(uglyFireLineThatViolates3D);
 			
-			if (!shooter.isPlayerControlled) {
+			if (target.isPlayerControlled) {
 				target.centerRoomOnMe();
 			}
 		}

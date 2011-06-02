@@ -32,7 +32,7 @@ package angel.game.script.action {
 				if (!entity.isReallyPlayer) {
 					entity.setBrain(false, CombatBrainUiMeldPlayer, null);
 					entity.setBrain(true, BrainFollow, Settings.lastEntityOnPlayerList().id);
-					entity.changePlayerControl(true);
+					entity.changePlayerControl(true, ComplexEntity.FACTION_FRIEND);
 					Settings.addToPlayerList(entity);
 				}
 			} else {
