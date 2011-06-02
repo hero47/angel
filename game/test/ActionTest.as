@@ -4,6 +4,7 @@ package angel.game.test {
 	import angel.game.brain.BrainFidget;
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.BrainWander;
+	import angel.game.brain.CombatBrainNone;
 	import angel.game.brain.CombatBrainPatrol;
 	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.brain.CombatBrainWander;
@@ -358,8 +359,12 @@ package angel.game.test {
 			Autotest.assertFalse(nei.isReallyPlayer, "Should have changed back to npc");
 			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Should have removed from player list");
 			Autotest.assertEqual(nei.exploreBrainClass, null, "No explore brain specified should default to null");
-			Autotest.assertEqual(nei.combatBrainClass, null, "No combat brain specified should default to null");
-			Autotest.assertEqual(nei.brain, null);
+			Autotest.assertEqual(nei.combatBrainClass, CombatBrainNone, "No combat brain specified should default to CombatBrainNone");
+			if (testRoom.mode is RoomCombat) {
+				Autotest.assertTrue(nei.brain is CombatBrainNone);
+			} else {
+				Autotest.assertEqual(nei.brain, null);
+			}
 			
 			testRoom.addOrMoveSpot("testSpot", new Point(0, 0));
 			Autotest.testActionFromXml(changeNeiToPc);
@@ -442,7 +447,7 @@ package angel.game.test {
 			}
 			Autotest.testActionFromXml(clearNeiBrain);
 			Autotest.assertEqual(neiComplex.exploreBrainClass, null);
-			Autotest.assertEqual(neiComplex.combatBrainClass, null);
+			Autotest.assertEqual(neiComplex.combatBrainClass, CombatBrainNone);
 			Autotest.assertEqual(neiComplex.combatBrainParam, null, "Removing behavior should auto-remove corresponding param");
 			
 			var fooXml:XML = <prop id="foo" x="6" y="5"/>

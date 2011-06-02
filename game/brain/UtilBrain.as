@@ -52,7 +52,7 @@ package angel.game.brain {
 		public static function getFirstAvailableTarget(me:ComplexEntity, combat:RoomCombat):ComplexEntity {
 			for (var i:int = 0; i < combat.fighters.length; i++) {
 				var fighter:ComplexEntity = combat.fighters[i];
-				if (fighter.isPlayerControlled && Util.entityHasLineOfSight(me, fighter.location)) {
+				if (fighter.isEnemyOf(me) && Util.entityHasLineOfSight(me, fighter.location)) {
 					return fighter;
 				}
 			}

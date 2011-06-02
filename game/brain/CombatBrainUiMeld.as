@@ -33,6 +33,13 @@ package angel.game.brain {
 		protected var returnHereAfterFire:Point;
 		private var myTurn:Boolean;
 		
+		
+		public static const PLAYER_MOVE:String = "Move";
+		public static const PLAYER_FIRE:String = "Attack";
+		public static const ENEMY_ACTION:String = "Enemy Action";
+		public static const FRIEND_ACTION:String = "Friend Action";
+		public static const CIVILIAN_ACTION:String = "Non-com Action";
+		
 		public function CombatBrainUiMeld(entity:ComplexEntity, combat:RoomCombat) {
 			me = entity;
 			this.combat = combat;
@@ -61,7 +68,7 @@ package angel.game.brain {
 			Settings.gameEventQueue.dispatch(new EntityQEvent(me, EntityQEvent.START_TURN));
 			Settings.gameEventQueue.addListener(this, me, EntityQEvent.FINISHED_MOVING, finishedMovingListener);
 			Settings.gameEventQueue.addListener(this, me, EntityQEvent.MOVE_INTERRUPTED, moveInterruptedListener);
-			Settings.gameEventQueue.addListener(this, me.room, EntityQEvent.BECAME_VISIBLE, enemyBecameVisible);
+			Settings.gameEventQueue.addListener(this, me.room, EntityQEvent.BECAME_VISIBLE, invisibleEntityBecameVisible);
 			//CONSIDER: figure out how to skip move entirely if entity can't move, and go straight to fire phase.
 			me.movement.initForCombatMove();
 			doMoveBody();
@@ -74,7 +81,7 @@ package angel.game.brain {
 			} else {
 				combat.room.mainPlayerCharacter.centerRoomOnMe();
 			}
-			combat.showPhase(RoomCombat.ENEMY_MOVE, true);
+			combat.showPhase(phaseLabel(), true);
 			
 			// Give the player some time to gaze at the enemy's move dots before continuing with turn.
 			// (The timer will be running while enemy calculates move, so if that takes a while once we
@@ -93,10 +100,10 @@ package angel.game.brain {
 		
 		//NOTE: currently (May 2011) AI brains have full access to map data, regardless of line-of-sight.
 		//Player-controlled characters are always visible.
-		//The BECAME_VISIBLE event specifically means that an enemy became visible to the player, not vice versa
-		//(but the event can occur due to either player or enemy movement)
-		private function enemyBecameVisible(event:EntityQEvent):void {
-			if (me.isReallyPlayer) {
+		//The BECAME_VISIBLE event specifically means that someone became visible to the player, not vice versa
+		//(but the event can occur due to either player or non-player movement)
+		private function invisibleEntityBecameVisible(event:EntityQEvent):void {
+			if (me.isReallyPlayer && event.complexEntity.isEnemyOf(me)) {
 				trace(event.complexEntity.id, "became visible");
 				//CONSIDER: center room or hilight the enemy who just became visible?
 				me.movement.interruptMovementAfterTileFinished();
@@ -112,7 +119,7 @@ package angel.game.brain {
 			trace(me.aaId, "finished move");
 			Settings.gameEventQueue.removeListener(me, EntityQEvent.FINISHED_MOVING, finishedMovingListener);
 			Settings.gameEventQueue.removeListener(me, EntityQEvent.MOVE_INTERRUPTED, moveInterruptedListener);
-			Settings.gameEventQueue.removeListener(me.room, EntityQEvent.BECAME_VISIBLE, enemyBecameVisible);
+			Settings.gameEventQueue.removeListener(me.room, EntityQEvent.BECAME_VISIBLE, invisibleEntityBecameVisible);
 			combat.mover.clearPath();	// If movement finished unexpectedly (via ChangeAction or ??) dots may still be hanging around
 			me.hasCoverFrom.length = 0;
 			if (endTurnIfDeadOrCombatOver()) {
@@ -123,7 +130,7 @@ package angel.game.brain {
 		}
 		
 		protected function doFireBody():void {
-			combat.showPhase(RoomCombat.ENEMY_FIRE, true);
+			//combat.showPhase(phaseLabel(), true); // currently same as move, so no need to update
 			doFire();
 		}
 		
@@ -164,7 +171,7 @@ package angel.game.brain {
 			}
 			if (returnHereAfterFire != null) {
 				combat.room.changeEntityLocation(me, me.location, returnHereAfterFire);
-				combat.augmentedReality.adjustAllEnemyVisibility();
+				combat.augmentedReality.adjustAllNonPlayerVisibility();
 				returnHereAfterFire = null;
 				combat.mover.removeReturnMarker();
 			}
@@ -189,12 +196,23 @@ package angel.game.brain {
 			Assert.assertTrue(me.hasCoverFrom.length == 0, "cover list not cleared");
 			var meLocation:Point = me.location;
 			for each (var possibleShooter:ComplexEntity in combat.fighters) {
-				if (combat.opposingFactions(possibleShooter, me) && !Util.entityHasLineOfSight(possibleShooter, meLocation)) {
+				if (possibleShooter.isEnemyOf(me) && !Util.entityHasLineOfSight(possibleShooter, meLocation)) {
 					me.hasCoverFrom.push(possibleShooter);
 				}
 			}
 			returnHereAfterFire = meLocation;
 			combat.mover.displayReturnMarker(meLocation);
+		}
+		
+		private function phaseLabel():String {
+			switch (me.faction) {
+				case ComplexEntity.FACTION_ENEMY:
+					return ENEMY_ACTION;
+				case ComplexEntity.FACTION_FRIEND:
+					return FRIEND_ACTION;
+				default:
+					return CIVILIAN_ACTION;
+			}
 		}
 		
 	}

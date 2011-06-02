@@ -43,22 +43,41 @@ package angel.game.combat {
 		private static const mainPlayerBitmap:Class;
 		[Embed(source = '../../EmbeddedAssets/combat_minimap_secondaryPC.png')]
 		private static const otherPlayerBitmap:Class;
-		[Embed(source = '../../EmbeddedAssets/combat_minimap_active.png')]
-		private static const activeBitmap:Class;
+		[Embed(source = '../../EmbeddedAssets/combat_minimap_friend.png')]
+		private static const friendBitmap:Class;
+		[Embed(source = '../../EmbeddedAssets/combat_minimap_nonal.png')]
+		private static const civilianBitmap:Class;
 		[Embed(source = '../../EmbeddedAssets/combat_minimap_enemyDown.png')]
 		private static const enemyDownBitmap:Class;
 		[Embed(source = '../../EmbeddedAssets/combat_minimap_PCDown.png')]
 		private static const playerDownBitmap:Class;
+		[Embed(source = '../../EmbeddedAssets/combat_minimap_friendDown.png')]
+		private static const friendDownBitmap:Class;
+		[Embed(source = '../../EmbeddedAssets/combat_minimap_nonalDown.png')]
+		private static const civilianDownBitmap:Class;
 		[Embed(source = '../../EmbeddedAssets/combat_minimap_enemyLastSeen2.png')]
 		private static const enemyLastSeenBitmap:Class;
+		[Embed(source = '../../EmbeddedAssets/combat_minimap_friendLastSeen.png')]
+		private static const friendLastSeenBitmap:Class;
+		[Embed(source = '../../EmbeddedAssets/combat_minimap_nonalLastSeen.png')]
+		private static const civilianLastSeenBitmap:Class;
+		
+		[Embed(source = '../../EmbeddedAssets/combat_minimap_active.png')]
+		private static const activeBitmap:Class; // superimposed on the map icon for the character whose turn it is
 		
 		
 		private static const mainPlayerBitmapData:BitmapData = (new mainPlayerBitmap()).bitmapData;
 		private static const otherPlayerBitmapData:BitmapData = (new otherPlayerBitmap()).bitmapData;
 		private static const enemyBitmapData:BitmapData = (new enemyBitmap()).bitmapData;
+		private static const friendBitmapData:BitmapData = (new friendBitmap()).bitmapData;
+		private static const civilianBitmapData:BitmapData = (new civilianBitmap()).bitmapData;
 		private static const enemyLastSeenBitmapData:BitmapData = (new enemyLastSeenBitmap()).bitmapData;
+		private static const friendLastSeenBitmapData:BitmapData = (new friendLastSeenBitmap()).bitmapData;
+		private static const civilianLastSeenBitmapData:BitmapData = (new civilianLastSeenBitmap()).bitmapData;
 		private static const deadPlayerBitmapData:BitmapData = (new playerDownBitmap()).bitmapData;
 		private static const deadEnemyBitmapData:BitmapData = (new enemyDownBitmap()).bitmapData;
+		private static const deadFriendBitmapData:BitmapData = (new friendDownBitmap()).bitmapData;
+		private static const deadCivilianBitmapData:BitmapData = (new civilianDownBitmap()).bitmapData;
 		
 		private var combat:RoomCombat;
 		private var offsetX:int;
@@ -135,7 +154,7 @@ package angel.game.combat {
 			offsetY -= mainPlayerBitmapData.height / 2;
 			
 			for (var i:int = 0; i < combat.fighters.length; i++) {
-				addFighter(combat.fighters[i], i==0);
+				addFighter(combat.fighters[i]);
 			}
 			roomSprite.addChild(activeEntityMarker);
 			activeEntity = combat.fighters[0];
@@ -151,18 +170,39 @@ package angel.game.combat {
 			}
 		}
 		
-		private function addFighter(fighter:ComplexEntity, isMainPlayer:Boolean):void {
-			var bits:BitmapData;
-			if (fighter.isPlayerControlled) {
-				bits = (isMainPlayer ? mainPlayerBitmapData : otherPlayerBitmapData);
-			} else {
-				bits = (fighter.visible ? enemyBitmapData : enemyLastSeenBitmapData);
-			}
-			var icon:Bitmap = new Bitmap(bits);
+		private function addFighter(fighter:ComplexEntity):void {
+			var icon:Bitmap = new Bitmap(bitmapDataForEntity(fighter));
 			setIconPositionFromEntityLocation(icon, fighter);
 			roomSprite.addChild(icon);
 			entityToMapIcon[fighter] = icon;
 		}
+		
+		private function bitmapDataForEntity(entity:ComplexEntity):BitmapData {
+			switch (entity.faction) {
+				case ComplexEntity.FACTION_FRIEND:
+					if (entity.isReallyPlayer) {
+						return (entity.isAlive() ?
+								((entity == entity.room.mainPlayerCharacter) ? mainPlayerBitmapData : otherPlayerBitmapData) :
+								deadPlayerBitmapData);
+					} else {
+						return (entity.isAlive() ?
+								(entity.visible ? friendBitmapData : friendLastSeenBitmapData) :
+								deadFriendBitmapData);
+					}
+				break;
+				case ComplexEntity.FACTION_ENEMY:
+					return (entity.isAlive() ?
+						(entity.visible ? enemyBitmapData : enemyLastSeenBitmapData) :
+						deadEnemyBitmapData);
+				break;
+				default:
+					return (entity.isAlive() ?
+						(entity.visible ? civilianBitmapData : civilianLastSeenBitmapData) :
+						deadCivilianBitmapData);
+				break;
+			}
+		}
+		
 		
 		private function setIconPositionFromLocation(icon:Bitmap, location:Point):void {
 			var mapLoc:Point = Floor.centerOf(location);
@@ -185,36 +225,30 @@ package angel.game.combat {
 			activeEntityMarker.y = activeEntityIcon.y;
 		}
 		
-		private function adjustEnemyIcon(enemy:ComplexEntity):void {
-			var icon:Bitmap = entityToMapIcon[enemy];
-			if (enemy.visible) {
-				icon.bitmapData = (enemy.isAlive() ? enemyBitmapData : deadEnemyBitmapData);
-				setIconPositionFromEntityLocation(icon, enemy);
-			} else {
-				icon.bitmapData = enemyLastSeenBitmapData;
+		private function adjustIconImageAndPosition(entity:ComplexEntity):void {
+			var icon:Bitmap = entityToMapIcon[entity];
+			icon.bitmapData = bitmapDataForEntity(entity);
+			if (entity.visible) {
+				setIconPositionFromEntityLocation(icon, entity);
 			}
 		}
 		
-		private function adjustAllEnemyIconsForVisibility():void {
+		private function adjustAllNonPlayerIcons():void {
 			for each (var entity:ComplexEntity in combat.fighters) {
 				if (!entity.isPlayerControlled) {
-					adjustEnemyIcon(entity);
+					adjustIconImageAndPosition(entity);
 				}
 			}
 		}
 		
 		public function someoneMoved(event:EntityQEvent):void {
 			var entity:ComplexEntity = event.complexEntity;
-			if (entityToMapIcon[entity] == null) {
-				// Whatever moved isn't one of our fighters
-				return;
-			}
-			if (entity.isPlayerControlled) {
+			if (entityToMapIcon[entity] != null && (entity.isPlayerControlled)) {
 				setIconPositionFromEntityLocation(entityToMapIcon[entity], entity);
-				adjustAllEnemyIconsForVisibility();
-			} else {
-				adjustEnemyIcon(entity);
 			}
+			//NOTE: need to adjust all even when an enemy or prop moves, since it might have been
+			//blocking line of sight to another enemy!
+			adjustAllNonPlayerIcons();
 			
 			if (entity == activeEntity) {
 				adjustActiveEntityMarker();
@@ -228,19 +262,19 @@ package angel.game.combat {
 		
 		public function someoneDied(event:EntityQEvent):void {
 			var icon:Bitmap = entityToMapIcon[event.complexEntity];
-			if (icon != null) { // we don't currently (5/7/11) show map icons for non-combattants, so need to check
-				icon.bitmapData = (event.complexEntity.isPlayerControlled ? deadPlayerBitmapData : deadEnemyBitmapData);
-				adjustAllEnemyIconsForVisibility();
+			if (icon != null) {
+				adjustIconImageAndPosition(event.complexEntity);
+				adjustAllNonPlayerIcons();
 			}
 		}
 		
 		public function someoneJoinedCombat(event:EntityQEvent):void {
 			var entity:ComplexEntity = event.complexEntity;
-			addFighter(entity, false);
+			addFighter(entity);
 			if (!entity.visible) {
 				setIconPositionOffMap(entityToMapIcon[entity]);
 			}
-			adjustAllEnemyIconsForVisibility();
+			adjustAllNonPlayerIcons();
 		}
 		
 		//CONSIDER: If the person who left was a currently-out-of-sight enemy, this lets the player know that they're
@@ -250,21 +284,19 @@ package angel.game.combat {
 			if (icon != null) {
 				roomSprite.removeChild(icon);
 				delete entityToMapIcon[event.complexEntity];
-				adjustAllEnemyIconsForVisibility();
 			}
+			adjustAllNonPlayerIcons();
 		}
 		
 		public function someoneChangedFaction(event:EntityQEvent):void {
 			var entity:ComplexEntity = event.complexEntity;
 			var icon:Bitmap = entityToMapIcon[entity];
 			if (icon != null) {
-				if (entity.isEnemy()) {
-					adjustEnemyIcon(entity);
-				} else {
-					icon.bitmapData = otherPlayerBitmapData;
+				adjustIconImageAndPosition(entity);
+				if (entity.isPlayerControlled) {
 					setIconPositionFromEntityLocation(icon, entity);
 				}
-				adjustAllEnemyIconsForVisibility();
+				adjustAllNonPlayerIcons();
 			}
 		}
 		
@@ -276,12 +308,9 @@ package angel.game.combat {
 		private function mainPlayerCharacterChanged(event:EntityQEvent):void {
 			var newMainPc:ComplexEntity = event.complexEntity;
 			var oldMainPc:ComplexEntity = ComplexEntity(event.param);
-			if (oldMainPc.isAlive()) {
-				entityToMapIcon[oldMainPc].bitmapData = otherPlayerBitmapData;
-			}
-			if (newMainPc.isAlive()) {
-				entityToMapIcon[newMainPc].bitmapData = mainPlayerBitmapData;
-			}
+		
+			adjustIconImageAndPosition(newMainPc);
+			adjustIconImageAndPosition(oldMainPc);
 		}
 		
 		/*
