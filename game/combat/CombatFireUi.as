@@ -27,7 +27,6 @@ package angel.game.combat {
 		private var room:Room;
 		private var combat:RoomCombat;
 		private var player:ComplexEntity;
-		private var havePrimaryWeapon:Boolean;
 		private var primaryWeaponRange:int;
 		private var oldFootprintColorTransform:ColorTransform;
 		private var aimCursor:Sprite;

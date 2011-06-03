@@ -2,6 +2,7 @@ package angel.game.brain {
 	import angel.common.Alert;
 	import angel.common.Util;
 	import angel.game.combat.RoomCombat;
+	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.ComplexEntity;
 	import angel.game.Room;
 	import flash.geom.Point;
@@ -49,9 +50,13 @@ package angel.game.brain {
 		}
 		
 		public static function getFirstAvailableTarget(me:ComplexEntity, combat:RoomCombat):ComplexEntity {
+			var weapon:SingleTargetWeapon = me.primaryWeapon();
+			if (weapon == null) {
+				return null;
+			}
 			for (var i:int = 0; i < combat.fighters.length; i++) {
 				var fighter:ComplexEntity = combat.fighters[i];
-				if (fighter.isEnemyOf(me) && Util.entityHasLineOfSight(me, fighter.location)) {
+				if (fighter.isEnemyOf(me) && weapon.inRange(me, fighter.location) && Util.entityHasLineOfSight(me, fighter.location)) {
 					return fighter;
 				}
 			}
@@ -59,7 +64,7 @@ package angel.game.brain {
 		}
 		
 		public static function canAttackSomeone(me:ComplexEntity,  combat:RoomCombat):Boolean {
-			return (me.primaryWeapon() != null) && (UtilBrain.getFirstAvailableTarget(me, combat) != null);
+			return (UtilBrain.getFirstAvailableTarget(me, combat) != null);
 		}
 		
 	}
