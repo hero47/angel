@@ -5,6 +5,7 @@ package angel.game.combat {
 	import angel.game.ComplexEntity;
 	import angel.game.Settings;
 	import angel.game.TimedSprite;
+	import flash.geom.Point;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -32,13 +33,17 @@ package angel.game.combat {
 			return name;
 		}
 		
+		public function inRange(shooter:ComplexEntity, targetLocation:Point):Boolean {
+			return (Util.chessDistance(shooter.location, targetLocation) <= range);
+		}
+		
 		//NOTE: "fire" is currently the generic term for "attack target" even if the weapon happens to be melee
 		public function fire(shooter:ComplexEntity, target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
 			shooter.turnToFaceTile(target.location);
-			--shooter.actionsRemaining;
-			if (Util.chessDistance(shooter.location, target.location) > range) {
+			if (!inRange(shooter, target.location)) {
 				return;
 			}
+			--shooter.actionsRemaining;
 			
 			target.takeDamage(baseDamage * shooter.percentOfFullDamageDealt() / 100, true, extraDamageReductionPercent);
 			
