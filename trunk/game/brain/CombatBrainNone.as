@@ -18,7 +18,7 @@ package angel.game.brain {
 		}
 		
 		override public function doFire():void {
-			beginFireGunOrReserve(me, null);
+			carryOutAttack(null, null);
 		}
 		
 	}

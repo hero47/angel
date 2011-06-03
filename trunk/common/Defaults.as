@@ -7,12 +7,15 @@ package angel.common {
 		
 		public static const CHARACTER_HEALTH:int = 1;
 		public static const MAIN_WEAPON_ID:String = "";
+		public static const OFF_WEAPON_ID:String = "";
 		public static const MOVE_POINTS:int = 10;
+		public static const ACTIONS_PER_TURN:int = 2;
 		public static const MOVE_SPEED:Number = 2; // speeds in adjacent-tiles-per-second
 		public static const CHARACTER_DISPLAY_NAME:String = "Anonymous";
 		public static const GUN_DISPLAY_NAME:String = "Gun";
 		public static const GUN_DAMAGE:int = 10;
 		public static const WEAPON_RANGE:int = 100;
+		public static const WEAPON_COOLDOWN:int = 1;
 		public static const TOP:int = 0;
 		public static const MIN_FOR_OPPORTUNITY:int = 4;
 		public static const PENALTY_WALK:int = 20;

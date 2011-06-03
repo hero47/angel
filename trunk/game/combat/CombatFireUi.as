@@ -27,7 +27,8 @@ package angel.game.combat {
 		private var room:Room;
 		private var combat:RoomCombat;
 		private var player:ComplexEntity;
-		private var primaryWeaponRange:int;
+		private var quickFireWeapon:SingleTargetWeapon;
+		private var quickFireWeaponRange:int;
 		private var oldFootprintColorTransform:ColorTransform;
 		private var aimCursor:Sprite;
 		private var aimCursorBitmap:Bitmap;
@@ -58,7 +59,11 @@ package angel.game.combat {
 		public function enable(player:ComplexEntity):void {
 			trace("entering player fire phase for", player.aaId);
 			this.player = player;
-			primaryWeaponRange = (player.primaryWeapon() == null ? 0 : player.primaryWeapon().range);
+			quickFireWeapon = player.inventory.mainWeapon();
+			if ((quickFireWeapon == null) || !quickFireWeapon.readyToFire()) {
+				quickFireWeapon = player.inventory.offWeapon();
+			}
+			quickFireWeaponRange = (quickFireWeapon == null ? 0 : quickFireWeapon.range);
 			oldFootprintColorTransform = player.footprint.transform.colorTransform;
 			player.footprint.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
 			clickThisEnemyAgainForQuickFire = null;
@@ -66,6 +71,7 @@ package angel.game.combat {
 			room.addChild(aimCursor);
 			aimCursor.x = room.mouseX;
 			aimCursor.y = room.mouseY;
+			adjustActionsRemainingDisplay(true);
 		}
 		
 		public function disable():void {
@@ -80,6 +86,7 @@ package angel.game.combat {
 				room.removeChild(aimCursor);
 			}
 			Mouse.show();
+			adjustActionsRemainingDisplay(false);
 		}
 		
 		public function get currentPlayer():ComplexEntity {
@@ -98,7 +105,7 @@ package angel.game.combat {
 				
 				case Keyboard.ENTER:
 					if (clickThisEnemyAgainForQuickFire != null) {
-						doPlayerFireGunAt(clickThisEnemyAgainForQuickFire);
+						doPlayerFireGunAt(clickThisEnemyAgainForQuickFire, quickFireWeapon);
 					} else {
 						doReserveFire();
 					}
@@ -119,7 +126,7 @@ package angel.game.combat {
 					ToolTip.removeToolTip();
 				} else {
 					var enemy:ComplexEntity = room.firstComplexEntityIn(tile.location, filterIsEnemy);
-					var outOfRange:Boolean = Util.chessDistance(player.location, tile.location) > primaryWeaponRange;
+					var outOfRange:Boolean = Util.chessDistance(player.location, tile.location) > quickFireWeaponRange;
 					var hilightColor:uint = (outOfRange ? OUT_OF_RANGE_COLOR :
 						(enemy == null ? NO_TARGET_TILE_HILIGHT_COLOR : TARGET_TILE_HILIGHT_COLOR));
 					room.moveHilight(tile, hilightColor);
@@ -133,9 +140,9 @@ package angel.game.combat {
 		
 		public function mouseClick(tile:FloorTile):void {
 			if ((clickThisEnemyAgainForQuickFire != null) && (tile.location.equals(clickThisEnemyAgainForQuickFire.location))) {
-				doPlayerFireGunAt(clickThisEnemyAgainForQuickFire);
-			} else if ((primaryWeaponRange > 0) &&
-						(Util.chessDistance(player.location, tile.location) <= primaryWeaponRange) &&
+				doPlayerFireGunAt(clickThisEnemyAgainForQuickFire, quickFireWeapon);
+			} else if ((quickFireWeaponRange > 0) &&
+						(Util.chessDistance(player.location, tile.location) <= quickFireWeaponRange) &&
 						Util.entityHasLineOfSight(player, tile.location)) {
 				clickThisEnemyAgainForQuickFire = room.firstComplexEntityIn(tile.location, filterIsEnemy);
 			} else {
@@ -144,16 +151,16 @@ package angel.game.combat {
 		}
 		
 		public function pieMenuForTile(tile:FloorTile):Vector.<PieSlice> {
+			var location:Point = tile.location;
 			var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
-			var lineOfSight:Boolean = Util.entityHasLineOfSight(player, tile.location);
+			var lineOfSight:Boolean = Util.entityHasLineOfSight(player, location);
 			
 			slices.push(new PieSlice(Icon.bitmapData(Icon.CombatPass), "Pass/Reserve Fire", doReserveFire));
-			addGrenadePieSliceIfLegal(slices, tile.location);
+			addGrenadePieSliceIfLegal(slices, location);
 			if (hilightedEnemy != null) {
-				Assert.assertTrue(hilightedEnemy.location.equals(tile.location), "Hilighted enemy not on menu tile");
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFireFirstGun), "Fire", function():void {
-					doPlayerFireGunAt(hilightedEnemy);
-				} ));
+				Assert.assertTrue(hilightedEnemy.location.equals(location), "Hilighted enemy not on menu tile");
+				addFirePieSliceIfLegal(slices, location, player.inventory.mainWeapon());
+				addFirePieSliceIfLegal(slices, location, player.inventory.offWeapon());
 			}
 			
 			return slices;
@@ -162,9 +169,18 @@ package angel.game.combat {
 		
 		/************ Private ****************/
 		
+		private function addFirePieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point, weapon:SingleTargetWeapon):void {
+			if ((weapon != null) && (weapon.readyToFire()) && (weapon.inRange(player, targetLocation))) {
+				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFireFirstGun), "Fire " + weapon.displayName, function():void {
+					doPlayerFireGunAt(hilightedEnemy, weapon);
+				} ));
+			}
+		}
+		
 		private function addGrenadePieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point):void {
-			var grenades:int = player.inventory.count(Grenade);
+			var grenades:int = player.inventory.countInPileOfStuff(Grenade);
 			if ( (grenades > 0) &&
+						((player.actionsPerTurn == 1) || (player.actionsRemaining >= 2)) &&
 						!room.blocksGrenade(targetLocation.x, targetLocation.y) &&
 						Util.entityHasLineOfSight(player, targetLocation)) {
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade),
@@ -179,22 +195,22 @@ package angel.game.combat {
 			return slices;
 		}
 		
-		private function doPlayerFireGunAt(target:ComplexEntity):void {
+		private function doPlayerFireGunAt(target:ComplexEntity, weapon:SingleTargetWeapon):void {
 			var playerFiring:ComplexEntity = player;
 			room.disableUi();
-			CombatBrainUiMeldPlayer(playerFiring.brain).beginFireGunOrReserve(playerFiring, target);
+			CombatBrainUiMeldPlayer(playerFiring.brain).carryOutAttack(weapon, target);
 		}
 		
 		private function doPlayerThrowGrenadeAt(loc:Point):void {
 			var playerFiring:ComplexEntity = player;
 			room.disableUi();
-			CombatBrainUiMeldPlayer(playerFiring.brain).beginThrowGrenade(playerFiring, loc);
+			CombatBrainUiMeldPlayer(playerFiring.brain).carryOutAttack(Grenade.getCopy(), loc);
 		}
 		
 		private function doReserveFire():void {
 			var playerFiring:ComplexEntity = player;
 			room.disableUi();
-			CombatBrainUiMeldPlayer(playerFiring.brain).beginFireGunOrReserve(playerFiring, null);
+			CombatBrainUiMeldPlayer(playerFiring.brain).carryOutAttack(null, null);
 		}
 		
 		private function filterIsEnemy(entity:ComplexEntity):Boolean {
@@ -210,6 +226,11 @@ package angel.game.combat {
 				var glow:GlowFilter = new GlowFilter(TARGET_HILIGHT_COLOR, 1, 20, 20, 2, 1, false, false);
 				hilightedEnemy.filters = [ glow ];
 			}
+		}
+		
+		private function adjustActionsRemainingDisplay(show:Boolean = true):void {
+			//UNDONE: upgrade stat display to remove this abomination
+			combat.augmentedReality.statDisplay.adjustActionsRemainingDisplay(show ? player.actionsRemaining : -1);
 		}
 	
 	} // end class CombatFireUi

@@ -1,4 +1,5 @@
 package angel.game.combat {
+	import angel.common.Assert;
 	import angel.common.Util;
 	import angel.common.WeaponResource;
 	import angel.game.CanBeInInventory;
@@ -17,12 +18,16 @@ package angel.game.combat {
 		public var name:String;
 		public var baseDamage:int;
 		public var range:int;
+		public var cooldown:int;
+		public var turnsSinceLastFired:int;
 		
 		public function SingleTargetWeapon(resource:WeaponResource, id:String) {
 			this.id = id;
 			this.baseDamage = resource.damage;
 			this.name = resource.displayName;
 			this.range = resource.range;
+			this.cooldown = resource.cooldown;
+			resetCooldown();
 		}
 		
 		public function toString():String {
@@ -33,18 +38,37 @@ package angel.game.combat {
 			return name;
 		}
 		
+		public function attack(user:ComplexEntity, target:Object):void {
+			fire(user, ComplexEntity(target));
+		}
+		
 		public function inRange(shooter:ComplexEntity, targetLocation:Point):Boolean {
 			return (Util.chessDistance(shooter.location, targetLocation) <= range);
+		}
+		
+		public function readyToFire():Boolean {
+			return (turnsSinceLastFired >= cooldown);
+		}
+		
+		public function doCooldown():void {
+			++turnsSinceLastFired;
+		}
+		
+		public function resetCooldown():void {
+			turnsSinceLastFired = cooldown;
 		}
 		
 		//NOTE: "fire" is currently the generic term for "attack target" even if the weapon happens to be melee
 		public function fire(shooter:ComplexEntity, target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
 			shooter.turnToFaceTile(target.location);
-			if (!inRange(shooter, target.location)) {
-				return;
-			}
 			--shooter.actionsRemaining;
 			
+			if (!readyToFire() || !inRange(shooter, target.location)) {
+				Assert.fail("Trying to fire weapon illegally");
+				return;
+			}
+			
+			turnsSinceLastFired = 0;
 			target.takeDamage(baseDamage * shooter.percentOfFullDamageDealt() / 100, true, extraDamageReductionPercent);
 			
 			var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(Settings.FRAMES_PER_SECOND);

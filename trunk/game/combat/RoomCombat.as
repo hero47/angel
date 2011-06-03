@@ -96,7 +96,7 @@ package angel.game.combat {
 		
 		// CONSIDER: Adds to end of fighter list. Would it be better to add somewhere else, like right before/after current?
 		public function entityAddedToRoom(entity:SimpleEntity):void {
-			if ((entity is ComplexEntity) && ComplexEntity(entity).canBeActiveInCombat()) {
+			if (entity is ComplexEntity) {
 				initEntityForCombat(entity as ComplexEntity);
 				augmentedReality.addFighter(entity as ComplexEntity);
 				Settings.gameEventQueue.dispatch(new EntityQEvent(entity, EntityQEvent.JOINED_COMBAT));
@@ -112,23 +112,12 @@ package angel.game.combat {
 		}
 		
 		public function playerControlChanged(entity:ComplexEntity, pc:Boolean):void {
-			var wasAlreadyAFighter:Boolean = fighters.indexOf(entity) >= 0;
-			var shouldBeAFighter:Boolean = entity.canBeActiveInCombat();
-			
-			if (wasAlreadyAFighter) {
+			if (entity.isAlive()) {
 				augmentedReality.removeFighter(entity);
-				if (shouldBeAFighter) {
-					augmentedReality.addFighter(entity);
-				} else {
-					removeFighterFromCombat(entity as ComplexEntity);
-					// NOTE: I did have checkForCombatOver() here, but decided that room scripts should be free to
-					// manipulate entities without regard to whether an intermediate state leaves no enemies in the room.
-				}
-			} else if (shouldBeAFighter) {
-				initEntityForCombat(entity as ComplexEntity);
 				augmentedReality.addFighter(entity);
-				Settings.gameEventQueue.dispatch(new EntityQEvent(entity, EntityQEvent.JOINED_COMBAT));
 			}
+			// NOTE: I did have checkForCombatOver() here, but decided that room scripts should be free to
+			// manipulate entities without regard to whether an intermediate state leaves no enemies in the room.
 		}
 		
 		/***************** init/cleanup related **********************/
@@ -149,11 +138,15 @@ package angel.game.combat {
 		private function initEntityForCombat(entity:ComplexEntity):void {
 			entity.initHealth();
 			entity.actionsRemaining = 0;
-			
-			if (entity.canBeActiveInCombat()) {
-				fighters.push(entity);
-				entity.adjustBrainForRoomMode(this);
+			if (entity.inventory.mainWeapon() != null) {
+				entity.inventory.mainWeapon().resetCooldown();
 			}
+			if (entity.inventory.offWeapon() != null) {
+				entity.inventory.offWeapon().resetCooldown();
+			}
+			
+			fighters.push(entity);
+			entity.adjustBrainForRoomMode(this);
 		}
 		
 		private function removeFighterFromCombat(deadFighter:ComplexEntity):void {
@@ -220,17 +213,28 @@ package angel.game.combat {
 		private function doOpportunityFireIfLegal(shooter:ComplexEntity, target:ComplexEntity):Boolean {
 			trace("Checking", shooter.aaId, "for opportunity fire");
 			if ((shooter.actionsRemaining > 0)) {
-				var gun:SingleTargetWeapon = shooter.primaryWeapon();
-				if ((gun != null) && (gun.expectedDamage(shooter, target) >= Settings.minForOpportunity) &&
-						Util.entityHasLineOfSight(shooter, target.location)) {
-					var extraDefense:int = 0;
-					if (target.hasCoverFrom.indexOf(shooter) >= 0) {
-						extraDefense = Settings.fireFromCoverDamageReduction;
-					}
-					trace(shooter.aaId, "opportunity fire at", target.aaId, "extraDefense=", extraDefense);
-					shooter.fireCurrentGunAt(target, extraDefense);
+				if (fireIfLegal(shooter, target, shooter.inventory.mainWeapon())) {
 					return true;
 				}
+				if (fireIfLegal(shooter, target, shooter.inventory.offWeapon())) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		private function fireIfLegal(shooter:ComplexEntity, target:ComplexEntity, weapon:SingleTargetWeapon):Boolean {
+			if ((weapon != null) && (weapon.readyToFire()) &&
+						(weapon.expectedDamage(shooter, target) >= Settings.minForOpportunity) &&
+						weapon.inRange(shooter, target.location) &&
+						Util.entityHasLineOfSight(shooter, target.location)) {
+				var extraDefense:int = 0;
+				if (target.hasCoverFrom.indexOf(shooter) >= 0) {
+					extraDefense = Settings.fireFromCoverDamageReduction;
+				}
+				trace(shooter.aaId, "opportunity fire at", target.aaId, "extraDefense=", extraDefense);
+				weapon.fire(shooter, target, extraDefense);
+				return true;
 			}
 			return false;
 		}
@@ -263,15 +267,6 @@ package angel.game.combat {
 					augmentedReality.adjustAllNonPlayerVisibility();
 				}
 			}
-		}
-		
-		public function displayActionFloater(actor:ComplexEntity, graphicClass:Class):void {
-			var tempGraphic:DisplayObject = new graphicClass();
-			var tempSprite:TimedSprite = new TimedSprite(room.stage.frameRate);
-			tempSprite.addChild(tempGraphic);
-			tempSprite.x = actor.x;
-			tempSprite.y = actor.y - tempSprite.height;
-			room.addChild(tempSprite);
 		}
 
 		/*********** Turn-structure related **************/

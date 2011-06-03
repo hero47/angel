@@ -2,11 +2,15 @@ package angel.game.brain {
 	import angel.common.Assert;
 	import angel.common.Util;
 	import angel.game.combat.Grenade;
+	import angel.game.combat.IWeapon;
 	import angel.game.combat.RoomCombat;
+	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.ComplexEntity;
 	import angel.game.event.EntityQEvent;
 	import angel.game.Icon;
 	import angel.game.Settings;
+	import angel.game.TimedSprite;
+	import flash.display.DisplayObject;
 	import flash.geom.Point;
 	/**
 	 * ...
@@ -59,8 +63,15 @@ package angel.game.brain {
 		}
 		
 		public function doFire():void {
-			//override
-			Assert.fail("Should be overridden");
+			// Default: fire at first available target.
+			trace(me.aaId, "do fire", this);
+			var weapon:SingleTargetWeapon = me.inventory.mainWeapon();
+			var target:ComplexEntity = (weapon == null ? null : UtilBrain.getFirstAvailableTarget(me, weapon, combat));
+			if (target == null) {
+				weapon = me.inventory.offWeapon();
+				target = (weapon == null ? null : UtilBrain.getFirstAvailableTarget(me, weapon, combat));
+			}
+			carryOutAttack(weapon, target);
 		}
 		
 		public function startTurn():void {
@@ -71,6 +82,12 @@ package angel.game.brain {
 			Settings.gameEventQueue.addListener(this, me.room, EntityQEvent.BECAME_VISIBLE, invisibleEntityBecameVisible);
 			//CONSIDER: figure out how to skip move entirely if entity can't move, and go straight to fire phase.
 			me.movement.initForCombatMove();
+			if (me.inventory.mainWeapon() != null) {
+				me.inventory.mainWeapon().doCooldown();
+			}
+			if (me.inventory.offWeapon() != null) {
+				me.inventory.offWeapon().doCooldown();
+			}
 			doMoveBody();
 		}
 		
@@ -125,7 +142,14 @@ package angel.game.brain {
 			if (endTurnIfDeadOrCombatOver()) {
 				return;
 			}
-			me.actionsRemaining = 1; // everyone gets one action per turn, at least for now
+			me.actionsRemaining = me.actionsPerTurn;
+			doFireBody();
+		}
+		
+		private function finishedOneFirePhase():void {
+			if (endTurnIfDeadOrCombatOver()) {
+				return;
+			}
 			doFireBody();
 		}
 		
@@ -134,37 +158,34 @@ package angel.game.brain {
 			doFire();
 		}
 		
-		public function beginFireGunOrReserve(shooter:ComplexEntity, target:ComplexEntity):void {
-			if (target == null) {
-				trace(shooter.aaId, "reserve fire");
-				if (shooter.isPlayerControlled) {
-					combat.displayActionFloater(shooter, (shooter.primaryWeapon() == null ? Icon.NoGunFloater : Icon.ReserveFireFloater));
-				} else if (combat.anyPlayerCanSeeLocation(shooter.location)) {
-					combat.displayActionFloater(shooter, Icon.ReserveFireFloater);
-				}
+		public function carryOutAttack(weapon:IWeapon, target:Object):void {
+			var giveAnotherFirePhase:Boolean = false;
+			if ((weapon == null) || (target == null)) {
+				showNoGunOrReserveFire();
 			} else {
-				trace(shooter.aaId, "firing at", target.aaId, target.location);
-				shooter.fireCurrentGunAt(target);
-				if (shooter.isPlayerControlled || Settings.showEnemyMoves) {
-					shooter.centerRoomOnMe();
-				}
+				weapon.attack(me, target);
+				giveAnotherFirePhase = me.hasAUsableWeaponAndEnoughActions();
+			}
+			if (me.isPlayerControlled || Settings.showEnemyMoves) {
+				me.centerRoomOnMe();
 			}
 			
 			// Give the player some time to gaze at the fire graphic before continuing with turn.
-			combat.room.pauseGameTimeForFixedDelay(RoomCombat.PAUSE_TO_VIEW_FIRE_SECONDS, this, finishedFire);
-		}
-			
-		public function beginThrowGrenade(shooter:ComplexEntity, targetLocation:Point):void {
-			trace(shooter.aaId, "throws grenade at", targetLocation);
-			var grenade:Grenade = Grenade.getCopy();
-			grenade.throwAt(shooter, targetLocation);
-			
-			// Give the player some time to gaze at the fire graphic before continuing with turn.
-			combat.room.pauseGameTimeForFixedDelay(RoomCombat.PAUSE_TO_VIEW_FIRE_SECONDS, this, finishedFire);
+			combat.room.pauseGameTimeForFixedDelay(RoomCombat.PAUSE_TO_VIEW_FIRE_SECONDS, this, 
+				(giveAnotherFirePhase ? finishedOneFirePhase : finishedLastFirePhase));
 		}
 		
-		// Called each time the timer for gazing at the fire graphic expires
-		private function finishedFire():void {
+		public function showNoGunOrReserveFire():void {
+			if (me.isPlayerControlled) {
+				displayActionFloater(me, (me.hasAUsableWeapon() ? Icon.ReserveFireFloater : Icon.NoGunFloater));
+			} else if (me.visible) {
+				// Don't reveal whether NPC is armed or not -- always show reserve fire for them
+				displayActionFloater(me, Icon.ReserveFireFloater);
+			}
+		}
+		
+		// Called when the timer for gazing at the fire graphic expires
+		private function finishedLastFirePhase():void {
 			trace(me.aaId, "finished fire");
 			if (endTurnIfDeadOrCombatOver()) {
 				return;
@@ -213,6 +234,16 @@ package angel.game.brain {
 				default:
 					return CIVILIAN_ACTION;
 			}
+		}
+		
+		// This can become a static utility function if anyone else wants to do the same thing
+		private function displayActionFloater(actor:ComplexEntity, graphicClass:Class):void {
+			var tempGraphic:DisplayObject = new graphicClass();
+			var tempSprite:TimedSprite = new TimedSprite(actor.stage.frameRate);
+			tempSprite.addChild(tempGraphic);
+			tempSprite.x = actor.x;
+			tempSprite.y = actor.y - tempSprite.height;
+			actor.room.addChild(tempSprite);
 		}
 		
 	}

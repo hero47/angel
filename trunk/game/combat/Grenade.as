@@ -48,10 +48,17 @@ package angel.game.combat {
 			return "Grenade(s), standard issue";
 		}
 		
+		public function attack(user:ComplexEntity, target:Object):void {
+			throwAt(user, Point(target));
+		}
+		
+		// per Wm: uses two actions, but someone with only one action can still throw;
+		// the UI/brain will need to enforce this.
 		public function throwAt(shooter:ComplexEntity, targetLocation:Point):void {
 			shooter.turnToFaceTile(targetLocation);
-			--shooter.actionsRemaining;
-			shooter.inventory.remove(this, 1);
+			shooter.actionsRemaining -= 2;
+			
+			shooter.inventory.removeFromPileOfStuff(this, 1);
 			//UNDONE animate grenade moving through air?
 			
 			var temporaryGrenadeExplosionGraphic:TimedSprite = new TimedSprite(Settings.FRAMES_PER_SECOND);	

@@ -25,6 +25,7 @@ package angel.game {
 		}
 		
 		private function enterFrameListener(event:Event):void {
+			alpha = (framesRemaining / lifetime);
 			if (framesRemaining-- == 0) {
 				parent.removeChild(this);
 				removeEventListener(Event.ENTER_FRAME, enterFrameListener);

@@ -1,5 +1,6 @@
 package angel.game.combat {
 	import angel.game.CanBeInInventory;
+	import angel.game.ComplexEntity;
 	
 	/**
 	 * ...
@@ -7,7 +8,7 @@ package angel.game.combat {
 	 */
 	public interface IWeapon extends CanBeInInventory {
 		
-		// Currently no contents, but allows inventory calls to look for any weapon
+		function attack(user:ComplexEntity, target:Object):void; // target type differs -- either an entity or a location
 		
 	}
 	
