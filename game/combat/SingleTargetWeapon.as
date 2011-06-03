@@ -1,4 +1,5 @@
 package angel.game.combat {
+	import angel.common.Util;
 	import angel.common.WeaponResource;
 	import angel.game.CanBeInInventory;
 	import angel.game.ComplexEntity;
@@ -10,28 +11,34 @@ package angel.game.combat {
 	 */
 	
 	 // This may become an interface once we have more types of guns, or the others may extend it
-	public class Gun implements IWeapon {
+	public class SingleTargetWeapon implements IWeapon {
 		private var id:String;
 		public var name:String;
 		public var baseDamage:int;
+		public var range:int;
 		
-		public function Gun(resource:WeaponResource, id:String) {
+		public function SingleTargetWeapon(resource:WeaponResource, id:String) {
 			this.id = id;
 			this.baseDamage = resource.damage;
 			this.name = resource.displayName;
+			this.range = resource.range;
 		}
 		
 		public function toString():String {
-			return "[Gun displayName=" + name + ", baseDamage=" + baseDamage + "]";
+			return "[SingleTargetWeapon displayName=" + name + ", baseDamage=" + baseDamage + "]";
 		}
 		
 		public function get displayName():String {
 			return name;
 		}
 		
+		//NOTE: "fire" is currently the generic term for "attack target" even if the weapon happens to be melee
 		public function fire(shooter:ComplexEntity, target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
 			shooter.turnToFaceTile(target.location);
 			--shooter.actionsRemaining;
+			if (Util.chessDistance(shooter.location, target.location) > range) {
+				return;
+			}
 			
 			target.takeDamage(baseDamage * shooter.percentOfFullDamageDealt() / 100, true, extraDamageReductionPercent);
 			

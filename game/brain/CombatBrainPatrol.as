@@ -66,7 +66,7 @@ package angel.game.brain {
 		}
 		
 		protected function shouldStop():Boolean {
-			return UtilBrain.canShoot(me, combat);
+			return UtilBrain.canAttackSomeone(me, combat);
 		}
 		
 	}

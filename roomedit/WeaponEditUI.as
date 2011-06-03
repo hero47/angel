@@ -18,6 +18,7 @@ package angel.roomedit {
 		private var weaponCombo:ComboBox;
 		private var nameTextField:TextField;
 		private var damageTextField:TextField;
+		private var rangeTextField:TextField;
 		private var deleteFromCatalogButton:SimplerButton;
 		
 		private static const WIDTH:int = 220;
@@ -36,6 +37,8 @@ package angel.roomedit {
 					function(event:Event):void { changeWeaponProperty(event.target.text, "displayName", Defaults.GUN_DISPLAY_NAME) }, 0);
 			damageTextField = Util.createTextEditControlBelow(nameTextField, "Damage", 80, 40,
 					function(event:Event):void { changeWeaponProperty(int(event.target.text), "damage", Defaults.GUN_DAMAGE) }, 0);
+			rangeTextField = Util.createTextEditControlBelow(damageTextField, "Range", 80, 40,
+					function(event:Event):void { changeWeaponProperty(int(event.target.text), "range", Defaults.WEAPON_RANGE) }, 0);
 			
 			deleteFromCatalogButton = new SimplerButton("Delete from catalog", clickedDelete, 0xff0000);
 			deleteFromCatalogButton.width = WIDTH;
@@ -57,6 +60,7 @@ package angel.roomedit {
 			var resource:WeaponResource = catalog.retrieveWeaponResource(weaponId);
 			nameTextField.text = resource.displayName;
 			damageTextField.text = String(resource.damage);
+			rangeTextField.text = String(resource.range);
 		}
 		
 		private function changeWeaponProperty(newValue:*, propertyName:String, defaultValue:* = null):void {

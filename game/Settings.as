@@ -9,7 +9,7 @@ package angel.game {
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.combat.Grenade;
-	import angel.game.combat.Gun;
+	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.event.EventQueue;
 
 	
@@ -154,9 +154,9 @@ package angel.game {
 				}
 				
 				if (pc.@mainGun.length() > 0) {
-					entity.inventory.removeAllMatching(Gun);
+					entity.inventory.removeAllMatching(SingleTargetWeapon);
 					var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(pc.@mainGun);
-					entity.inventory.add(new Gun(gunResource, pc.@mainGun));
+					entity.inventory.add(new SingleTargetWeapon(gunResource, pc.@mainGun));
 				}
 				
 				if (pc.@grenades.length() > 0) {
