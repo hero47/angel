@@ -1,7 +1,6 @@
 package angel.game.brain {
 	import angel.common.Alert;
 	import angel.common.Util;
-	import angel.game.combat.Gun;
 	import angel.game.combat.RoomCombat;
 	import angel.game.ComplexEntity;
 	import angel.game.Room;
@@ -59,8 +58,8 @@ package angel.game.brain {
 			return null;
 		}
 		
-		public static function canShoot(me:ComplexEntity,  combat:RoomCombat):Boolean {
-			return (me.currentGun() != null) && (UtilBrain.getFirstAvailableTarget(me, combat) != null);
+		public static function canAttackSomeone(me:ComplexEntity,  combat:RoomCombat):Boolean {
+			return (me.primaryWeapon() != null) && (UtilBrain.getFirstAvailableTarget(me, combat) != null);
 		}
 		
 	}

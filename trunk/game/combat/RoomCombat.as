@@ -220,7 +220,7 @@ package angel.game.combat {
 		private function doOpportunityFireIfLegal(shooter:ComplexEntity, target:ComplexEntity):Boolean {
 			trace("Checking", shooter.aaId, "for opportunity fire");
 			if ((shooter.actionsRemaining > 0)) {
-				var gun:Gun = shooter.currentGun();
+				var gun:SingleTargetWeapon = shooter.primaryWeapon();
 				if ((gun != null) && (gun.expectedDamage(shooter, target) >= Settings.minForOpportunity) &&
 						Util.entityHasLineOfSight(shooter, target.location)) {
 					var extraDefense:int = 0;

@@ -12,6 +12,7 @@ package angel.common {
 		public static const CHARACTER_DISPLAY_NAME:String = "Anonymous";
 		public static const GUN_DISPLAY_NAME:String = "Gun";
 		public static const GUN_DAMAGE:int = 10;
+		public static const WEAPON_RANGE:int = 100;
 		public static const TOP:int = 0;
 		public static const MIN_FOR_OPPORTUNITY:int = 4;
 		public static const PENALTY_WALK:int = 20;

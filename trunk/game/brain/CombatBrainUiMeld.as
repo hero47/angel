@@ -138,7 +138,7 @@ package angel.game.brain {
 			if (target == null) {
 				trace(shooter.aaId, "reserve fire");
 				if (shooter.isPlayerControlled) {
-					combat.displayActionFloater(shooter, (shooter.currentGun() == null ? Icon.NoGunFloater : Icon.ReserveFireFloater));
+					combat.displayActionFloater(shooter, (shooter.primaryWeapon() == null ? Icon.NoGunFloater : Icon.ReserveFireFloater));
 				} else if (combat.anyPlayerCanSeeLocation(shooter.location)) {
 					combat.displayActionFloater(shooter, Icon.ReserveFireFloater);
 				}

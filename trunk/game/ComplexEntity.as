@@ -13,9 +13,9 @@ package angel.game {
 	import angel.game.brain.IBrain;
 	import angel.game.brain.UtilBrain;
 	import angel.game.combat.Grenade;
-	import angel.game.combat.Gun;
 	import angel.game.combat.IWeapon;
 	import angel.game.combat.RoomCombat;
+	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.event.EntityQEvent;
 	import flash.display.Bitmap;
 	import flash.display.DisplayObject;
@@ -75,7 +75,7 @@ package angel.game {
 			initMovement(characterStats.movePoints, characterStats.maxGait);
 			if (characterStats.mainGun != "") {
 				var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(characterStats.mainGun);
-				inventory.add(new Gun(gunResource, characterStats.mainGun));
+				inventory.add(new SingleTargetWeapon(gunResource, characterStats.mainGun));
 			}
 			if (characterStats.grenades > 0) {
 				inventory.add(Grenade.getCopy(), characterStats.grenades);
@@ -370,12 +370,12 @@ package angel.game {
 		}
 		
 		// Eventually entities will be able to switch between different weapons
-		public function currentGun():Gun {
-			return inventory.findA(Gun);
+		public function primaryWeapon():SingleTargetWeapon {
+			return inventory.findA(SingleTargetWeapon);
 		}
 		
 		public function fireCurrentGunAt(target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
-			var gun:Gun = currentGun();
+			var gun:SingleTargetWeapon = primaryWeapon();
 			if (gun != null) {
 				gun.fire(this, target, extraDamageReductionPercent);
 			}

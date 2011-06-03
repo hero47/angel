@@ -1,4 +1,5 @@
 package angel.game.combat {
+	import angel.common.Assert;
 	import angel.common.FloorTile;
 	import angel.common.Util;
 	import angel.game.brain.CombatBrainUiMeldPlayer;
@@ -26,7 +27,8 @@ package angel.game.combat {
 		private var room:Room;
 		private var combat:RoomCombat;
 		private var player:ComplexEntity;
-		private var haveGun:Boolean;
+		private var havePrimaryWeapon:Boolean;
+		private var primaryWeaponRange:int;
 		private var oldFootprintColorTransform:ColorTransform;
 		private var aimCursor:Sprite;
 		private var aimCursorBitmap:Bitmap;
@@ -39,6 +41,7 @@ package angel.game.combat {
 		private static const NO_TARGET_TILE_HILIGHT_COLOR:uint = 0xffffff;
 		private static const TARGET_TILE_HILIGHT_COLOR:uint = 0xff0000;
 		private static const TARGET_HILIGHT_COLOR:uint = 0xff0000;
+		private static const OUT_OF_RANGE_COLOR:uint = 0xc0c0c0;
 		
 		public function CombatFireUi(room:Room, combat:RoomCombat) {
 			this.combat = combat;
@@ -56,7 +59,7 @@ package angel.game.combat {
 		public function enable(player:ComplexEntity):void {
 			trace("entering player fire phase for", player.aaId);
 			this.player = player;
-			haveGun = (player.currentGun() != null);
+			primaryWeaponRange = (player.primaryWeapon() == null ? 0 : player.primaryWeapon().range);
 			oldFootprintColorTransform = player.footprint.transform.colorTransform;
 			player.footprint.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
 			clickThisEnemyAgainForQuickFire = null;
@@ -117,8 +120,11 @@ package angel.game.combat {
 					ToolTip.removeToolTip();
 				} else {
 					var enemy:ComplexEntity = room.firstComplexEntityIn(tile.location, filterIsEnemy);
-					room.moveHilight(tile, (enemy == null ? NO_TARGET_TILE_HILIGHT_COLOR : TARGET_TILE_HILIGHT_COLOR));
-					moveTargetHilight(enemy);
+					var outOfRange:Boolean = Util.chessDistance(player.location, tile.location) > primaryWeaponRange;
+					var hilightColor:uint = (outOfRange ? OUT_OF_RANGE_COLOR :
+						(enemy == null ? NO_TARGET_TILE_HILIGHT_COLOR : TARGET_TILE_HILIGHT_COLOR));
+					room.moveHilight(tile, hilightColor);
+					moveTargetHilight(outOfRange ? null : enemy);
 					room.updateToolTip(tile.location);
 				}
 			}
@@ -129,7 +135,9 @@ package angel.game.combat {
 		public function mouseClick(tile:FloorTile):void {
 			if ((clickThisEnemyAgainForQuickFire != null) && (tile.location.equals(clickThisEnemyAgainForQuickFire.location))) {
 				doPlayerFireGunAt(clickThisEnemyAgainForQuickFire);
-			} else if (haveGun && Util.entityHasLineOfSight(player, tile.location)) {
+			} else if ((primaryWeaponRange > 0) &&
+						(Util.chessDistance(player.location, tile.location) <= primaryWeaponRange) &&
+						Util.entityHasLineOfSight(player, tile.location)) {
 				clickThisEnemyAgainForQuickFire = room.firstComplexEntityIn(tile.location, filterIsEnemy);
 			} else {
 				clickThisEnemyAgainForQuickFire = null;
@@ -142,7 +150,8 @@ package angel.game.combat {
 			
 			slices.push(new PieSlice(Icon.bitmapData(Icon.CombatPass), "Pass/Reserve Fire", doReserveFire));
 			addGrenadePieSliceIfLegal(slices, tile.location);
-			if (haveGun && (hilightedEnemy != null)) {
+			if (hilightedEnemy != null) {
+				Assert.assertTrue(hilightedEnemy.location.equals(tile.location), "Hilighted enemy not on menu tile");
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFireFirstGun), "Fire", function():void {
 					doPlayerFireGunAt(hilightedEnemy);
 				} ));

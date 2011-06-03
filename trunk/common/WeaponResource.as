@@ -13,6 +13,7 @@ package angel.common {
 		
 		public var displayName:String = Defaults.GUN_DISPLAY_NAME;
 		public var damage:int = Defaults.GUN_DAMAGE;
+		public var range:int = Defaults.WEAPON_RANGE;
 		
 		public function WeaponResource() {
 			
@@ -29,6 +30,7 @@ package angel.common {
 			this.entry = entry;
 			Util.setTextFromXml(this, "displayName", entry.xml, "displayName");
 			Util.setIntFromXml(this, "damage", entry.xml, "damage");
+			Util.setIntFromXml(this, "range", entry.xml, "range");
 			entry.xml = null;
 		}
 		
