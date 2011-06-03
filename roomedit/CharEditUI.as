@@ -18,6 +18,7 @@ package angel.roomedit {
 	import fl.controls.ComboBox;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.display.DisplayObject;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.text.TextField;
@@ -38,6 +39,8 @@ package angel.roomedit {
 		private var healthTextField:TextField;
 		private var damageTextField:TextField;
 		private var mainGunCombo:ComboBox;
+		private var offGunCombo:ComboBox;
+		private var actionsTextField:TextField;
 		private var movePointsTextField:TextField;
 		private var nameTextField:TextField;
 		private var changeImageControl:FilenameControl;
@@ -82,32 +85,30 @@ package angel.roomedit {
 			propCombo = propChooser.comboBox;
 			addChild(propChooser);
 			
-			nameTextField = Util.createTextEditControlBelow(propChooser, "Display Name", 100, 100,
+			changeImageControl = FilenameControl.createBelow(propChooser, false, "Image", 0, 220, changeFilename, 0);
+			nameTextField = Util.createTextEditControlBelow(changeImageControl, "Display Name", 100, 100,
 					function(event:Event):void { changeCharacterProperty(event.target.text, "displayName", Defaults.CHARACTER_DISPLAY_NAME) }, 0);
 			healthTextField = Util.createTextEditControlBelow(nameTextField, "Hits", 100, 40,
 					function(event:Event):void { changeCharacterProperty(int(event.target.text), "health", Defaults.CHARACTER_HEALTH) }, 0);
-			
-			var mainGunLabel:TextField = Util.textBox("Main Gun:", 65);
-			Util.addBelow(mainGunLabel, healthTextField, 5);
-			mainGunLabel.x = 0;
-			var weaponChooser:ComboHolder = catalog.createChooser(CatalogEntry.WEAPON, WIDTH - mainGunLabel.width);
-			weaponChooser.comboBox.addEventListener(Event.CHANGE, 
-				function(event:Event):void { changeCharacterProperty(mainGunCombo.selectedLabel, "mainGun", "") } );
-			Util.addBeside(weaponChooser, mainGunLabel);
-			mainGunCombo = weaponChooser.comboBox;
-			mainGunCombo.addItemAt( { label:"" }, 0 );
-			
-			movePointsTextField = Util.createTextEditControlBelow(weaponChooser, "Move Points", 100, 40,
+			actionsTextField = Util.createTextEditControlBelow(healthTextField, "Actions", 100, 40,
+					function(event:Event):void { changeCharacterProperty(int(event.target.text), "actions", Defaults.ACTIONS_PER_TURN) }, 0 );
+			movePointsTextField = Util.createTextEditControlBelow(actionsTextField, "Move Points", 100, 40,
 					function(event:Event):void { changeCharacterProperty(int(event.target.text), "movePoints", Defaults.MOVE_POINTS) }, 0 );
-			changeImageControl = FilenameControl.createBelow(movePointsTextField, false, "Image", 0, 220, changeFilename, 0);
-			noSprintHackCheckbox = Util.createCheckboxEditControlBelow(changeImageControl, "No Sprint Hack", 120,
-					function(event:Event):void { changeCharacterProperty( (event.target.selected ? 2 : 3), "maxGait", Defaults.MAX_GAIT) }, 0 );	
-			grenadesTextField = Util.createTextEditControlBelow(noSprintHackCheckbox, "Grenades", 100, 40,
+			noSprintHackCheckbox = Util.createCheckboxEditControlBelow(movePointsTextField, "No Sprint Hack", 120,
+					function(event:Event):void { changeCharacterProperty( (event.target.selected ? 2 : 3), "maxGait", Defaults.MAX_GAIT) }, 0 );
+			var weaponChooser:ComboHolder = createWeaponChooserBelow(noSprintHackCheckbox, "Main Gun", 65, WIDTH-65,
+					function(event:Event):void { changeCharacterProperty(mainGunCombo.selectedLabel, "mainGun", "") }, 0);
+			mainGunCombo = weaponChooser.comboBox;
+			weaponChooser = createWeaponChooserBelow(weaponChooser, "Off Gun", 65, WIDTH-65,
+					function(event:Event):void { changeCharacterProperty(offGunCombo.selectedLabel, "offGun", "") }, 0);
+			offGunCombo = weaponChooser.comboBox;
+			grenadesTextField = Util.createTextEditControlBelow(weaponChooser, "Grenades", 100, 40,
 				function(event:Event):void { changeCharacterProperty(int(event.target.text), "grenades", Defaults.GRENADES) }, 0 );
 			
 			deleteFromCatalogButton = new SimplerButton("Delete from catalog", clickedDelete, 0xff0000);
 			deleteFromCatalogButton.width = WIDTH;
-			Util.addBelow(deleteFromCatalogButton, noSprintHackCheckbox, 50);
+			Util.addBelow(deleteFromCatalogButton, grenadesTextField, 50);
+			deleteFromCatalogButton.x = 0;
 			
 			if (startId == null) {
 				propCombo.selectedIndex = 0;
@@ -134,7 +135,9 @@ package angel.roomedit {
 			nameTextField.text = characterStats.displayName;
 			healthTextField.text = String(characterStats.health);
 			mainGunCombo.selectedItem = Util.itemWithLabelInComboBox(mainGunCombo, characterStats.mainGun);
+			offGunCombo.selectedItem = Util.itemWithLabelInComboBox(offGunCombo, characterStats.offGun);
 			movePointsTextField.text = String(characterStats.movePoints);
+			actionsTextField.text = String(characterStats.actionsPerTurn);
 			changeImageControl.text = catalog.getFilenameFromId(charId);
 			noSprintHackCheckbox.selected = (characterStats.maxGait < 3);
 			grenadesTextField.text = String(characterStats.grenades);
@@ -155,6 +158,26 @@ package angel.roomedit {
 			if (propertyName == "mainGun") {
 				catalog.deleteXmlAttribute(charId, "damage");
 			}
+		}
+		
+		private function createWeaponChooserBelow(previousControl:DisplayObject, labelText:String, labelWidth:int, fieldWidth:int, changeHandler:Function, optionalXInsteadOfAligning:int = int.MAX_VALUE):ComboHolder {
+			var weaponChooser:ComboHolder = catalog.createChooser(CatalogEntry.WEAPON, fieldWidth);
+			weaponChooser.comboBox.addItemAt( { label:"" }, 0 );
+			if (labelText != null) {
+				var label:TextField = Util.textBox(labelText + ":", labelWidth);
+				Util.addBelow(label, previousControl, 5);
+				if (optionalXInsteadOfAligning != int.MAX_VALUE) {
+					label.x = optionalXInsteadOfAligning;
+				}
+				Util.addBeside(weaponChooser, label, 5);
+			} else {
+				Util.addBelow(weaponChooser, previousControl, 5);
+				if (optionalXInsteadOfAligning != int.MAX_VALUE) {
+					weaponChooser.x = optionalXInsteadOfAligning;
+				}
+			}
+			weaponChooser.comboBox.addEventListener(Event.CHANGE, changeHandler);
+			return weaponChooser;
 		}
 
 		private function setTopByPixelScan(event:Event):void {

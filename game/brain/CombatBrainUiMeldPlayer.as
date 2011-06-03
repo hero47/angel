@@ -53,11 +53,11 @@ package angel.game.brain {
 		
 		override protected function doFireBody():void {
 			combat.showPhase(CombatBrainUiMeld.PLAYER_FIRE, false);
-			if (me.hasAWeapon()) {
+			if (me.hasAUsableWeapon()) {
 				ui = new CombatFireUi(combat.room, combat);
 				combat.room.enableUi(ui, me);
 			} else {
-				beginFireGunOrReserve(me, null);
+				carryOutAttack(null, null);
 			}
 		}
 		

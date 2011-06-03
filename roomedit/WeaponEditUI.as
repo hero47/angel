@@ -19,6 +19,7 @@ package angel.roomedit {
 		private var nameTextField:TextField;
 		private var damageTextField:TextField;
 		private var rangeTextField:TextField;
+		private var cooldownTextField:TextField;
 		private var deleteFromCatalogButton:SimplerButton;
 		
 		private static const WIDTH:int = 220;
@@ -31,18 +32,20 @@ package angel.roomedit {
 			weaponCombo = weaponChooser.comboBox;
 			addChild(weaponChooser);
 			
-			var weaponType:TextField = Util.textBox("Type: Fire at Character (Gun)", WIDTH); // This will probably be a chooser, someday
+			var weaponType:TextField = Util.textBox("Type: Single Target", WIDTH); // This will probably be a chooser, someday
 			Util.addBelow(weaponType, weaponChooser);
-			nameTextField = Util.createTextEditControlBelow(weaponType, "Display Name", 80, 120,
+			nameTextField = Util.createTextEditControlBelow(weaponType, "Display Name", 85, WIDTH-85,
 					function(event:Event):void { changeWeaponProperty(event.target.text, "displayName", Defaults.GUN_DISPLAY_NAME) }, 0);
-			damageTextField = Util.createTextEditControlBelow(nameTextField, "Damage", 80, 40,
+			damageTextField = Util.createTextEditControlBelow(nameTextField, "Damage", 85, 40,
 					function(event:Event):void { changeWeaponProperty(int(event.target.text), "damage", Defaults.GUN_DAMAGE) }, 0);
-			rangeTextField = Util.createTextEditControlBelow(damageTextField, "Range", 80, 40,
+			rangeTextField = Util.createTextEditControlBelow(damageTextField, "Range", 85, 40,
 					function(event:Event):void { changeWeaponProperty(int(event.target.text), "range", Defaults.WEAPON_RANGE) }, 0);
+			cooldownTextField = Util.createTextEditControlBelow(rangeTextField, "Cooldown", 85, 40,
+					function(event:Event):void { changeWeaponProperty(int(event.target.text), "cooldown", Defaults.WEAPON_COOLDOWN) }, 0);
 			
 			deleteFromCatalogButton = new SimplerButton("Delete from catalog", clickedDelete, 0xff0000);
 			deleteFromCatalogButton.width = WIDTH;
-			Util.addBelow(deleteFromCatalogButton, damageTextField, 50);
+			Util.addBelow(deleteFromCatalogButton, cooldownTextField, 50);
 			deleteFromCatalogButton.x = 0;
 			
 			if (startId == null) {
@@ -61,6 +64,7 @@ package angel.roomedit {
 			nameTextField.text = resource.displayName;
 			damageTextField.text = String(resource.damage);
 			rangeTextField.text = String(resource.range);
+			cooldownTextField.text = String(resource.cooldown);
 		}
 		
 		private function changeWeaponProperty(newValue:*, propertyName:String, defaultValue:* = null):void {

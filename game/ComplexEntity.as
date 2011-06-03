@@ -44,6 +44,7 @@ package angel.game {
 		protected var myDisplayName:String;
 		public var maxHealth:int = 1;
 		public var currentHealth:int;
+		public var actionsPerTurn:int;
 		public var actionsRemaining:int;
 		public var hasCoverFrom:Vector.<ComplexEntity> = new Vector.<ComplexEntity>();
 		
@@ -71,14 +72,19 @@ package angel.game {
 			
 			var characterStats:CharacterStats = resource.characterStats;
 			maxHealth = currentHealth = characterStats.health;
+			actionsPerTurn = characterStats.actionsPerTurn;
 			myDisplayName = characterStats.displayName;
 			initMovement(characterStats.movePoints, characterStats.maxGait);
 			if (characterStats.mainGun != "") {
 				var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(characterStats.mainGun);
-				inventory.add(new SingleTargetWeapon(gunResource, characterStats.mainGun));
+				inventory.equip(new SingleTargetWeapon(gunResource, characterStats.mainGun), Inventory.MAIN_HAND);
+			}
+			if (characterStats.offGun != "") {
+				var offResource:WeaponResource = Settings.catalog.retrieveWeaponResource(characterStats.offGun);
+				inventory.equip(new SingleTargetWeapon(offResource, characterStats.mainGun), Inventory.OFF_HAND);
 			}
 			if (characterStats.grenades > 0) {
-				inventory.add(Grenade.getCopy(), characterStats.grenades);
+				inventory.addToPileOfStuff(Grenade.getCopy(), characterStats.grenades);
 			}
 			solidness = solidnessWhenAlive = resource.solidness;
 			
@@ -231,10 +237,6 @@ package angel.game {
 			return (currentHealth > 0);
 		}
 		
-		public function canBeActiveInCombat():Boolean {
-			return (playerControlled || (combatBrainClass != null) && (currentHealth > 0));
-		}
-		
 		public function setBrain(forExplore:Boolean, newBrainClass:Class, newParam:String):void {
 			if (forExplore) {
 				exploreBrainClass = newBrainClass;
@@ -365,19 +367,24 @@ package angel.game {
 			return false;
 		}
 		
-		public function hasAWeapon():Boolean {
-			return inventory.findA(IWeapon) != null;
+		private function hasAUsableEquippedWeapon():Boolean {
+			return ( ((inventory.mainWeapon() != null) && (inventory.mainWeapon().readyToFire())) ||
+					 ((inventory.offWeapon() != null)  && (inventory.offWeapon().readyToFire())) );
 		}
 		
-		// Eventually entities will be able to switch between different weapons
-		public function primaryWeapon():SingleTargetWeapon {
-			return inventory.findA(SingleTargetWeapon);
+		public function hasAUsableWeapon():Boolean {
+			return (hasAUsableEquippedWeapon() ||
+					 (inventory.findFirstMatchingInPileOfStuff(Grenade) != null));
 		}
 		
-		public function fireCurrentGunAt(target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
-			var gun:SingleTargetWeapon = primaryWeapon();
-			if (gun != null) {
-				gun.fire(this, target, extraDamageReductionPercent);
+		public function hasAUsableWeaponAndEnoughActions():Boolean {
+			return ((hasAUsableEquippedWeapon() && (actionsRemaining > 0)) ||
+					 ((inventory.findFirstMatchingInPileOfStuff(Grenade) != null) && (actionsRemaining > 1)));
+		}
+		
+		public function attack(target:ComplexEntity, weapon:SingleTargetWeapon, extraDamageReductionPercent:int = 0):void {
+			if (weapon != null) {
+				weapon.fire(this, target, extraDamageReductionPercent);
 			}
 		}
 		

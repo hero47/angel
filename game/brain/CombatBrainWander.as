@@ -2,6 +2,7 @@ package angel.game.brain {
 	import angel.common.Assert;
 	import angel.common.Util;
 	import angel.game.combat.RoomCombat;
+	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.ComplexEntity;
 	import angel.game.EntityMovement;
 	import angel.game.Pathfinder;
@@ -45,11 +46,6 @@ package angel.game.brain {
 				gait = combat.mover.extendPath(me, path);
 				Assert.assertTrue(gait == randomGait, "path didn't match planned gait");
 			}
-		}
-		
-		override public function doFire():void {
-			trace(me.aaId, "do fire (CombatBrainWander)");
-			beginFireGunOrReserve(me, UtilBrain.getFirstAvailableTarget(me, combat));
 		}
 		
 		// return total number of reachable tiles

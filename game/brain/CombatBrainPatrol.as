@@ -60,11 +60,6 @@ package angel.game.brain {
 			
 		}
 		
-		override public function doFire():void {
-			trace(me.aaId, "do fire (CombatBrainPatrol)");
-			beginFireGunOrReserve(me, UtilBrain.getFirstAvailableTarget(me, combat));
-		}
-		
 		protected function shouldStop():Boolean {
 			return UtilBrain.canAttackSomeone(me, combat);
 		}

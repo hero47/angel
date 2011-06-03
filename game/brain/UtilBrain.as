@@ -49,9 +49,8 @@ package angel.game.brain {
 			return points;
 		}
 		
-		public static function getFirstAvailableTarget(me:ComplexEntity, combat:RoomCombat):ComplexEntity {
-			var weapon:SingleTargetWeapon = me.primaryWeapon();
-			if (weapon == null) {
+		public static function getFirstAvailableTarget(me:ComplexEntity, weapon:SingleTargetWeapon, combat:RoomCombat):ComplexEntity {
+			if ((weapon == null) || !weapon.readyToFire()) {
 				return null;
 			}
 			for (var i:int = 0; i < combat.fighters.length; i++) {
@@ -64,7 +63,12 @@ package angel.game.brain {
 		}
 		
 		public static function canAttackSomeone(me:ComplexEntity,  combat:RoomCombat):Boolean {
-			return (UtilBrain.getFirstAvailableTarget(me, combat) != null);
+			if ((UtilBrain.getFirstAvailableTarget(me, me.inventory.mainWeapon(), combat) != null) ||
+					(UtilBrain.getFirstAvailableTarget(me, me.inventory.offWeapon(), combat) != null)) {
+				return true;
+			}
+			//UNDONE: ai's can't throw grenades yet
+			return false;
 		}
 		
 	}

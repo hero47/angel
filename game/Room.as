@@ -151,7 +151,7 @@ package angel.game {
 			var i:int = 0;
 			while (i < gamePauseStack.length) {
 				if (gamePauseStack[i].pauseOwner == owner) {
-					gamePauseStack.slice(i, 1);
+					gamePauseStack.splice(i, 1);
 				} else {
 					++i;
 				}

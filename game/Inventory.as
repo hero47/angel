@@ -1,6 +1,7 @@
 package angel.game {
 	import angel.common.Alert;
 	import angel.common.Assert;
+	import angel.game.combat.SingleTargetWeapon;
 	import flash.utils.Dictionary;
 	/**
 	 * ...
@@ -8,56 +9,121 @@ package angel.game {
 	 */
 	public class Inventory {
 		
-		private var items:Dictionary; // mapping from CanBeInInventory to integer number of items
+		public static const PILE_OF_STUFF:int = -1;
+		public static const MAIN_HAND:int = 0;
+		public static const OFF_HAND:int = 1;
+		public static const NUMBER_OF_EQUIPPED_LOCATIONS:int = 2;
+		
+		private var equipmentSlots:Vector.<CanBeInInventory> = new Vector.<CanBeInInventory>(NUMBER_OF_EQUIPPED_LOCATIONS);
+		//Everything that the character has that's not equipped is in the "pile of stuff"; we aren't tracking particular
+		//location of carried objects (at least, not at this time)
+		private var pileOfStuff:Dictionary; // mapping from CanBeInInventory to integer number of items
 		
 		public function Inventory() {
-			items = new Dictionary();
+			pileOfStuff = new Dictionary();
 		}
 		
-		public function add(item:CanBeInInventory, howMany:int = 1):void {
+		public function mainWeapon():SingleTargetWeapon {
+			return equipmentSlots[MAIN_HAND] as SingleTargetWeapon;
+		}
+		
+		public function offWeapon():SingleTargetWeapon {
+			return equipmentSlots[OFF_HAND] as SingleTargetWeapon;
+		}
+		
+		private function isItemLegalInSlot(item:CanBeInInventory, slot:int):Boolean {
+			switch (slot) {
+				case MAIN_HAND:
+				case OFF_HAND:
+					return (item is SingleTargetWeapon);
+				break;
+			}
+			return true;
+		}
+		
+		//return true if successful
+		public function equip(item:CanBeInInventory, slot:int):Boolean {
+			if (!isItemLegalInSlot(item, slot)) {
+				return false;
+			}
+			if (slot < 0 || slot >= NUMBER_OF_EQUIPPED_LOCATIONS) {
+				addToPileOfStuff(item, 1);
+				return true;
+			}
+			if (equipmentSlots[slot] != null) {
+				addToPileOfStuff(equipmentSlots[slot], 1);
+			}
+			equipmentSlots[slot] = item;
+			return true;
+		}
+		
+		public function equipFromPileOfStuff(item:CanBeInInventory, slot:int):Boolean {
+			if (!isItemLegalInSlot(item, slot) || !removeFromPileOfStuff(item, 1)) {
+				return false;
+			}
+			if (!equip(item, slot)) {
+				Assert.fail("Unable to equip legal item");
+				addToPileOfStuff(item, 1);
+				return false;
+			}
+			return true;
+		}
+		
+		// move item from this slot back into general pile or throw it away
+		public function unequip(slot:int, keep:Boolean):void {
+			if ((slot >= 0) && (slot < NUMBER_OF_EQUIPPED_LOCATIONS) && (equipmentSlots[slot] != null)) {
+				if (keep) {
+					addToPileOfStuff(equipmentSlots[slot], 1);
+				}
+				equipmentSlots[slot] = null;
+			}
+		}
+				
+		public function addToPileOfStuff(item:CanBeInInventory, howMany:int = 1):void {
 			if (howMany < 1) {
 				Alert.show("Error! Adding " + howMany + " of something to inventory.");
 				return;
 			}
-			var currentCount:int = items[item];
-			items[item] = currentCount + howMany;
+			var currentCount:int = pileOfStuff[item];
+			pileOfStuff[item] = currentCount + howMany;
 		}
 		
-		public function remove(specificItem:CanBeInInventory, howMany:int):void {
-			var currentCount:int = items[specificItem];
+		// return true if successful
+		public function removeFromPileOfStuff(specificItem:CanBeInInventory, howMany:int):Boolean {
+			var currentCount:int = pileOfStuff[specificItem];
 			if (currentCount == 0) {
-				Alert.show("Error! Removing something that's not in inventory");
-				return;
+				return false;
 			}
 			if (currentCount <= howMany) {
 				if (currentCount < howMany) {
 					Alert.show("Error! Removing " + howMany + " items when inventory contains " + currentCount);
 				}
-				delete items[specificItem];
+				delete pileOfStuff[specificItem];
 			} else {
-				items[specificItem] = currentCount - howMany;
+				pileOfStuff[specificItem] = currentCount - howMany;
 			}
+			return true;
 		}
 		
-		public function removeAll(specificItem:CanBeInInventory):void {
-			var currentCount:int = items[specificItem];
+		public function removeAllFromPileOfStuff(specificItem:CanBeInInventory):void {
+			var currentCount:int = pileOfStuff[specificItem];
 			if (currentCount == 0) {
 				Alert.show("Error! Removing something that's not in inventory");
 				return;
 			}
-			delete items[specificItem];
+			delete pileOfStuff[specificItem];
 		}
 		
-		public function removeAllMatching(classToFind:Class):void {
-			for (var item:Object in items) {
+		public function removeAllMatchingFromPileOfStuff(classToFind:Class):void {
+			for (var item:Object in pileOfStuff) {
 				if (item is classToFind) {
-					delete items[item];
+					delete pileOfStuff[item];
 				}
 			}
 		}
 		
-		public function findA(classToFind:Class):* {
-			for (var item:Object in items) {
+		public function findFirstMatchingInPileOfStuff(classToFind:Class):* {
+			for (var item:Object in pileOfStuff) {
 				if (item is classToFind) {
 					return CanBeInInventory(item);
 				}
@@ -65,23 +131,23 @@ package angel.game {
 			return null;
 		}
 		
-		public function countSpecificItem(specificItem:Object):int {
-			return items[specificItem];
+		public function countSpecificItemInPileOfStuff(specificItem:Object):int {
+			return pileOfStuff[specificItem];
 		}
 		
-		public function count(classToFind:Class):int {
-			var count:int = 0;
-			for (var item:Object in items) {
+		public function countInPileOfStuff(classToFind:Class):int {
+			var countInPileOfStuff:int = 0;
+			for (var item:Object in pileOfStuff) {
 				if (item is classToFind) {
-					count += items[item];
+					countInPileOfStuff += pileOfStuff[item];
 				}
 			}
-			return count;
+			return countInPileOfStuff;
 		}
 		
-		public function slotsUsed():int {
+		public function entriesInPileOfStuff():int {
 			var count:int = 0;
-			for (var item:Object in items) {
+			for (var item:Object in pileOfStuff) {
 				count++;
 			}
 			return count;
@@ -91,16 +157,25 @@ package angel.game {
 			if (header != null) {
 				trace(header);
 			}
-			for (var item:Object in items) {
-				trace(item, items[item]);
+			for (var item:Object in pileOfStuff) {
+				trace(item, pileOfStuff[item]);
 			}
 			
 		}
 		
+		// This is a placeholder for a much fancier inventory interface!
 		public function showInventoryInAlert():void {
 			var text:String = "Placeholder for inventory!\n\nCurrent inventory:";
-			for (var item:Object in items) {
-				text += "\n  " + items[item] + " " + item.displayName;
+			text += "\nMain hand: " + (equipmentSlots[MAIN_HAND] == null ? "[empty]" : equipmentSlots[MAIN_HAND].displayName);
+			text += "\nOffhand: " + (equipmentSlots[OFF_HAND] == null ? "[empty]" : equipmentSlots[OFF_HAND].displayName);
+			text += "\nUnequipped 'pile of stuff':";
+			var countUnequipped:int = 0;
+			for (var item:Object in pileOfStuff) {
+				text += "\n  " + pileOfStuff[item] + " " + item.displayName;
+				++countUnequipped;
+			}
+			if (countUnequipped == 0) {
+				text += " [none]";
 			}
 			Alert.show(text);
 		}

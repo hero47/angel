@@ -154,16 +154,22 @@ package angel.game {
 				}
 				
 				if (pc.@mainGun.length() > 0) {
-					entity.inventory.removeAllMatching(SingleTargetWeapon);
+					entity.inventory.unequip(Inventory.MAIN_HAND, false);
 					var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(pc.@mainGun);
-					entity.inventory.add(new SingleTargetWeapon(gunResource, pc.@mainGun));
+					entity.inventory.equip(new SingleTargetWeapon(gunResource, pc.@mainGun), Inventory.MAIN_HAND);
+				}
+				
+				if (pc.@offGun.length() > 0) {
+					entity.inventory.unequip(Inventory.OFF_HAND, false);
+					var gunResource2:WeaponResource = Settings.catalog.retrieveWeaponResource(pc.@offGun);
+					entity.inventory.equip(new SingleTargetWeapon(gunResource2, pc.@mainGun), Inventory.OFF_HAND);
 				}
 				
 				if (pc.@grenades.length() > 0) {
-					entity.inventory.removeAllMatching(Grenade);
+					entity.inventory.removeAllMatchingFromPileOfStuff(Grenade);
 					var grenades:int = pc.@grenades;
 					if (grenades > 0) {
-						entity.inventory.add(Grenade.getCopy(), grenades);
+						entity.inventory.addToPileOfStuff(Grenade.getCopy(), grenades);
 					}
 				}
 				

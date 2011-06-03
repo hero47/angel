@@ -37,14 +37,12 @@ package angel.common {
 			if (animationData == null) { // first time we've been created
 				if (entry.type == CatalogEntry.CHARACTER) {
 					characterStats = new CharacterStats();
+					characterStats.setFromCatalogXml(entry.xml);
 					solidness = Prop.DEFAULT_CHARACTER_SOLIDITY; // characters can't change this currently
 				} else {
 					solidness = Prop.DEFAULT_SOLIDITY;
 				}
 				
-				if (characterStats != null) {
-					characterStats.setFromCatalogXml(entry.xml);
-				}
 				Util.setUintFromXml(this, "solidness", entry.xml, "solid");
 				Util.setIntFromXml(this, "unusedPixelsAtTopOfCell", entry.xml, "top");
 				
