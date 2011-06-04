@@ -267,20 +267,20 @@ package angel.game {
 			}
 		}
 		
-		public function percentOfFullDamageDealt():int {
+		public function damageDealtSpeedPercent():int {
 			return 100 - (movement == null ? 0 : Settings.speedPenalties[movement.mostRecentGait]);
 		}
 		
-		public function damagePercentAfterSpeedApplied():int {
+		public function damageTakenSpeedPercent():int {
 			return 100 - (movement == null ? 0 : Settings.speedDefenses[movement.mostRecentGait]);
 		}
 		
-		public function takeDamage(baseDamage:int, speedReducesDamage:Boolean, extraDamageReductionPercent:int = 0):void {
+		public function takeDamage(baseDamage:int, speedReducesDamage:Boolean, coverDamageReductionPercent:int = 0):void {
 			if (speedReducesDamage) {
-				baseDamage = baseDamage * damagePercentAfterSpeedApplied() / 100;
+				baseDamage = baseDamage * damageTakenSpeedPercent() / 100;
 			}
-			if (extraDamageReductionPercent > 0) {
-				baseDamage = baseDamage * (100 - extraDamageReductionPercent) / 100;
+			if (coverDamageReductionPercent > 0) {
+				baseDamage = baseDamage * (100 - coverDamageReductionPercent) / 100;
 			}
 			currentHealth -= baseDamage;
 			trace(aaId, "damaged for", baseDamage, ", health now", currentHealth);
@@ -380,12 +380,6 @@ package angel.game {
 		public function hasAUsableWeaponAndEnoughActions():Boolean {
 			return ((hasAUsableEquippedWeapon() && (actionsRemaining > 0)) ||
 					 ((inventory.findFirstMatchingInPileOfStuff(Grenade) != null) && (actionsRemaining > 1)));
-		}
-		
-		public function attack(target:ComplexEntity, weapon:SingleTargetWeapon, extraDamageReductionPercent:int = 0):void {
-			if (weapon != null) {
-				weapon.fire(this, target, extraDamageReductionPercent);
-			}
 		}
 		
 	} // end class ComplexEntity

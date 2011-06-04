@@ -8,6 +8,8 @@ package angel.game.test {
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.TimerEvent;
+	import flash.text.TextField;
+	import flash.text.TextFormatAlign;
 	import flash.utils.Timer;
 	/**
 	 * ...
@@ -79,6 +81,10 @@ package angel.game.test {
 				Autotest.assertEqual(numChildren, 0, "Initialization shouldn't create room or put anything on screen");
 				testsRequiringGameInit();
 				trace("Game tests finished, failCount", Autotest.failCount);
+				var results:TextField = Util.textBox("Tests finished, failcount = " + Autotest.failCount, 600, 50, TextFormatAlign.CENTER, false, 0xffffff);
+				results.x = (stage.stageWidth - results.width) / 2;
+				results.y = (stage.stageHeight - results.height) / 2;
+				addChild(results);
 			}
 		}
 		

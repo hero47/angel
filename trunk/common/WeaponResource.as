@@ -15,6 +15,8 @@ package angel.common {
 		public var damage:int = Defaults.GUN_DAMAGE;
 		public var range:int = Defaults.WEAPON_RANGE;
 		public var cooldown:int = Defaults.WEAPON_COOLDOWN;
+		public var ignoreUserGait:Boolean = false;
+		public var ignoreTargetGait:Boolean = false;
 		
 		public function WeaponResource() {
 			
@@ -33,6 +35,8 @@ package angel.common {
 			Util.setIntFromXml(this, "damage", entry.xml, "damage");
 			Util.setIntFromXml(this, "range", entry.xml, "range");
 			Util.setIntFromXml(this, "cooldown", entry.xml, "cooldown");
+			Util.setBoolFromXml(this, "ignoreUserGait", entry.xml, "ignoreUserGait");
+			Util.setBoolFromXml(this, "ignoreTargetGait", entry.xml, "ignoreTargetGait");
 			entry.xml = null;
 		}
 		
