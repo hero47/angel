@@ -35,6 +35,8 @@ package angel.game {
 		// Combat fire pie menu icons
 		[Embed(source = '../EmbeddedAssets/combat_icon_fire.png')]
 		public static const CombatFireFirstGun:Class;
+		[Embed(source = '../EmbeddedAssets/combat_icon_fire2.png')]
+		public static const CombatFireSecondGun:Class;
 		[Embed(source = '../EmbeddedAssets/combat_icon_pass.png')]
 		public static const CombatPass:Class;
 		[Embed(source='../EmbeddedAssets/combat_icon_grenade.png')]
