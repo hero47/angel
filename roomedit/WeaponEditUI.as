@@ -4,6 +4,7 @@ package angel.roomedit {
 	import angel.common.SimplerButton;
 	import angel.common.Util;
 	import angel.common.WeaponResource;
+	import fl.controls.CheckBox;
 	import fl.controls.ComboBox;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -20,6 +21,8 @@ package angel.roomedit {
 		private var damageTextField:TextField;
 		private var rangeTextField:TextField;
 		private var cooldownTextField:TextField;
+		private var ignoreUserGait:CheckBox;
+		private var ignoreTargetGait:CheckBox;
 		private var deleteFromCatalogButton:SimplerButton;
 		
 		private static const WIDTH:int = 220;
@@ -42,10 +45,14 @@ package angel.roomedit {
 					function(event:Event):void { changeWeaponProperty(int(event.target.text), "range", Defaults.WEAPON_RANGE) }, 0);
 			cooldownTextField = Util.createTextEditControlBelow(rangeTextField, "Cooldown", 85, 40,
 					function(event:Event):void { changeWeaponProperty(int(event.target.text), "cooldown", Defaults.WEAPON_COOLDOWN) }, 0);
+			ignoreUserGait = Util.createCheckboxEditControlBelow(cooldownTextField, "Ignore User Gait", 120,
+					function(event:Event):void { changeWeaponProperty( (event.target.selected ? true : false), "ignoreUserGait", false) }, 0 );
+			ignoreTargetGait = Util.createCheckboxEditControlBelow(ignoreUserGait, "Ignore Target Gait", 120,
+					function(event:Event):void { changeWeaponProperty( (event.target.selected ? true : false), "ignoreTargetGait", false) }, 0 );
 			
 			deleteFromCatalogButton = new SimplerButton("Delete from catalog", clickedDelete, 0xff0000);
 			deleteFromCatalogButton.width = WIDTH;
-			Util.addBelow(deleteFromCatalogButton, cooldownTextField, 50);
+			Util.addBelow(deleteFromCatalogButton, ignoreTargetGait, 50);
 			deleteFromCatalogButton.x = 0;
 			
 			if (startId == null) {
@@ -65,6 +72,8 @@ package angel.roomedit {
 			damageTextField.text = String(resource.damage);
 			rangeTextField.text = String(resource.range);
 			cooldownTextField.text = String(resource.cooldown);
+			ignoreUserGait.selected = resource.ignoreUserGait;
+			ignoreTargetGait.selected = resource.ignoreTargetGait;
 		}
 		
 		private function changeWeaponProperty(newValue:*, propertyName:String, defaultValue:* = null):void {
@@ -75,7 +84,11 @@ package angel.roomedit {
 			if (newValue == defaultValue) {
 				catalog.deleteXmlAttribute(weaponId, propertyName);
 			} else {
-				catalog.changeXmlAttribute(weaponId, propertyName, String(newValue));
+				if (newValue is Boolean) {
+					catalog.changeXmlAttribute(weaponId, propertyName, newValue ? "yes" : "no");
+				} else {
+					catalog.changeXmlAttribute(weaponId, propertyName, String(newValue));
+				}
 			}
 		}
 		

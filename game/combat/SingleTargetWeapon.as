@@ -20,6 +20,8 @@ package angel.game.combat {
 		public var range:int;
 		public var cooldown:int;
 		public var turnsSinceLastFired:int;
+		public var ignoreUserGait:Boolean;
+		public var ignoreTargetGait:Boolean;
 		
 		public function SingleTargetWeapon(resource:WeaponResource, id:String) {
 			this.id = id;
@@ -27,6 +29,8 @@ package angel.game.combat {
 			this.name = resource.displayName;
 			this.range = resource.range;
 			this.cooldown = resource.cooldown;
+			this.ignoreUserGait = resource.ignoreUserGait;
+			this.ignoreTargetGait = resource.ignoreTargetGait;
 			resetCooldown();
 		}
 		
@@ -59,7 +63,7 @@ package angel.game.combat {
 		}
 		
 		//NOTE: "fire" is currently the generic term for "attack target" even if the weapon happens to be melee
-		public function fire(shooter:ComplexEntity, target:ComplexEntity, extraDamageReductionPercent:int = 0):void {
+		public function fire(shooter:ComplexEntity, target:ComplexEntity, coverDamageReductionPercent:int = 0):void {
 			shooter.turnToFaceTile(target.location);
 			--shooter.actionsRemaining;
 			
@@ -69,7 +73,11 @@ package angel.game.combat {
 			}
 			
 			turnsSinceLastFired = 0;
-			target.takeDamage(baseDamage * shooter.percentOfFullDamageDealt() / 100, true, extraDamageReductionPercent);
+			var damage:int = baseDamage;
+			if (!ignoreUserGait) {
+				damage *= shooter.damageDealtSpeedPercent() / 100;
+			}
+			target.takeDamage(damage, !ignoreTargetGait, coverDamageReductionPercent);
 			
 			var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(Settings.FRAMES_PER_SECOND);
 			uglyFireLineThatViolates3D.graphics.lineStyle(2, (shooter.isPlayerControlled ? 0xff0000 : 0xffa500));
@@ -83,7 +91,7 @@ package angel.game.combat {
 		}
 		
 		public function expectedDamage(shooter:ComplexEntity, target:ComplexEntity):int {
-			return baseDamage * shooter.percentOfFullDamageDealt() / 100 * target.damagePercentAfterSpeedApplied() / 100;
+			return baseDamage * shooter.damageDealtSpeedPercent() / 100 * target.damageTakenSpeedPercent() / 100;
 		}
 		
 	}

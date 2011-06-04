@@ -228,12 +228,12 @@ package angel.game.combat {
 						(weapon.expectedDamage(shooter, target) >= Settings.minForOpportunity) &&
 						weapon.inRange(shooter, target.location) &&
 						Util.entityHasLineOfSight(shooter, target.location)) {
-				var extraDefense:int = 0;
+				var coverDamageReductionPercent:int = 0;
 				if (target.hasCoverFrom.indexOf(shooter) >= 0) {
-					extraDefense = Settings.fireFromCoverDamageReduction;
+					coverDamageReductionPercent = Settings.fireFromCoverDamageReduction;
 				}
-				trace(shooter.aaId, "opportunity fire at", target.aaId, "extraDefense=", extraDefense);
-				weapon.fire(shooter, target, extraDefense);
+				trace(shooter.aaId, "opportunity fire at", target.aaId, "coverDamageReductionPercent=", coverDamageReductionPercent);
+				weapon.fire(shooter, target, coverDamageReductionPercent);
 				return true;
 			}
 			return false;

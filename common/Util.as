@@ -64,6 +64,13 @@ package angel.common {
 			}
 		}
 		
+		public static function setBoolFromXml(setInto:Object, objectPropertyName:String, xml:XML, xmlPropertyName:String):void {
+			if ((xml != null) && (xml.attribute(xmlPropertyName).length() > 0)) {
+				var valueAsString:String = xml.attribute(xmlPropertyName);
+				setInto[objectPropertyName] = (valueAsString == "yes" ? true : false);
+			}
+		}
+		
 		public static function setTextFromXml(setInto:Object, objectPropertyName:String, xml:XML, xmlPropertyName:String):void {
 			if ((xml != null) && (xml.attribute(xmlPropertyName).length() > 0)) {
 				var valueAsString:String = xml.attribute(xmlPropertyName);
