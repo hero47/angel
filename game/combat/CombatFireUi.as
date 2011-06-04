@@ -159,8 +159,8 @@ package angel.game.combat {
 			addGrenadePieSliceIfLegal(slices, location);
 			if (hilightedEnemy != null) {
 				Assert.assertTrue(hilightedEnemy.location.equals(location), "Hilighted enemy not on menu tile");
-				addFirePieSliceIfLegal(slices, location, player.inventory.mainWeapon());
-				addFirePieSliceIfLegal(slices, location, player.inventory.offWeapon());
+				addFirePieSliceIfLegal(slices, location, player.inventory.mainWeapon(), Icon.CombatFireFirstGun);
+				addFirePieSliceIfLegal(slices, location, player.inventory.offWeapon(), Icon.CombatFireSecondGun);
 			}
 			
 			return slices;
@@ -169,9 +169,9 @@ package angel.game.combat {
 		
 		/************ Private ****************/
 		
-		private function addFirePieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point, weapon:SingleTargetWeapon):void {
+		private function addFirePieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point, weapon:SingleTargetWeapon, iconClass:Class):void {
 			if ((weapon != null) && (weapon.readyToFire()) && (weapon.inRange(player, targetLocation))) {
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatFireFirstGun), "Fire " + weapon.displayName, function():void {
+				slices.push(new PieSlice(Icon.bitmapData(iconClass), "Fire " + weapon.displayName, function():void {
 					doPlayerFireGunAt(hilightedEnemy, weapon);
 				} ));
 			}
