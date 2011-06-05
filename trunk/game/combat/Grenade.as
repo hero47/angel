@@ -45,7 +45,7 @@ package angel.game.combat {
 		}
 		
 		public function get displayName():String {
-			return "Grenade(s), standard issue";
+			return "Grenade, standard";
 		}
 		
 		public function get iconClass():Class {
@@ -53,7 +53,11 @@ package angel.game.combat {
 		}
 		
 		public function attack(user:ComplexEntity, target:Object):void {
-			throwAt(user, Point(target));
+			if (target is Point) {
+				throwAt(user, Point(target));
+			} else {
+				Assert.fail("Bad target type " + target + " in " + this);
+			}
 		}
 		
 		// per Wm: uses two actions, but someone with only one action can still throw;

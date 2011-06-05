@@ -77,19 +77,17 @@ package angel.game {
 			myDisplayName = characterStats.displayName;
 			initMovement(characterStats.movePoints, characterStats.maxGait);
 			if (characterStats.mainGun != "") {
-				var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(characterStats.mainGun);
-				inventory.equip(new SingleTargetWeapon(gunResource, characterStats.mainGun), Inventory.MAIN_HAND, false);
+				inventory.equip(Inventory.makeOne(characterStats.mainGun), Inventory.MAIN_HAND, false);
 			}
 			if (characterStats.offGun != "") {
-				var offResource:WeaponResource = Settings.catalog.retrieveWeaponResource(characterStats.offGun);
-				inventory.equip(new SingleTargetWeapon(offResource, characterStats.mainGun), Inventory.OFF_HAND, false);
+				inventory.equip(Inventory.makeOne(characterStats.offGun), Inventory.OFF_HAND, false);
 			}
 			if (characterStats.inventory != "") {
-				inventory.addFromText(characterStats.inventory);
+				inventory.addToPileFromText(characterStats.inventory);
 			}
 			//UNDONE: get rid of this once files are converted
 			if (characterStats.grenades > 0) {
-				inventory.addToPileOfStuff(Grenade.getCopy(), characterStats.grenades);
+				inventory.addToPileOfStuff(Inventory.makeOne("grenade"), characterStats.grenades);
 			}
 			
 			solidness = solidnessWhenAlive = resource.solidness;

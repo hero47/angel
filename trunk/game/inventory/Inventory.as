@@ -51,7 +51,7 @@ package angel.game.inventory {
 					return (item is SingleTargetWeapon);
 				break;
 			}
-			return true;
+			return (item is CanBeInInventory);
 		}
 		
 		//return true if successful
@@ -176,21 +176,30 @@ package angel.game.inventory {
 			return count;
 		}
 		
-		public function addFromText(text:String):void {
+		public static function makeOne(id:String):CanBeInInventory {
+			//NOTE: once we have more types of things that can be in inventory, this will need to retrieve
+			//catalog entry, determine the appropriate resource type, and then create the item using that.
+			//UNDONE: grenades don't have a weapon resource yet
+			var item:CanBeInInventory;
+			if (id == "grenade") {
+				item = Grenade.getCopy();
+			} else {
+				var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(id);
+				item = new SingleTargetWeapon(gunResource, id);
+			}
+			return item;
+		}
+		
+		public function addToPileFromText(text:String):void {
 			var list:Array = text.split(",");
 			for each (var entry:String in list) {
 				var splitEntry:Array = entry.split(" ");
 				var count:int = (splitEntry.length == 2) ? int(splitEntry[0]) : 1;
 				var id:String = splitEntry[splitEntry.length - 1];
-				//UNDONE: grenades don't have a weapon resource yet
-				var item:CanBeInInventory;
-				if (id == "grenade") {
-					item = Grenade.getCopy();
-				} else {
-					var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(id);
-					item = new SingleTargetWeapon(gunResource, id);
+				var item:CanBeInInventory = Inventory.makeOne(id);
+				if (item != null) {
+					addToPileOfStuff(item, count);
 				}
-				addToPileOfStuff(item, count);
 			}
 		}
 		
