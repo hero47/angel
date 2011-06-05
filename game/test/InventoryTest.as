@@ -21,8 +21,8 @@ package angel.game.test {
 			var gun1:SingleTargetWeapon = new SingleTargetWeapon(dummyWeaponResource, "xxGun1");
 			var gun2:SingleTargetWeapon = new SingleTargetWeapon(dummyWeaponResource, "xxGun2");
 			var someGun:SingleTargetWeapon;
-			var grenade1:Grenade = Grenade.getCopy();
-			var grenade2:Grenade = Grenade.getCopy();
+			var grenade1:Grenade = Grenade(Inventory.makeOne("grenade"));
+			var grenade2:Grenade = Grenade(Inventory.makeOne("grenade"));
 			
 			Autotest.assertNotEqual(gun1, gun2, "Argh");
 			
@@ -112,7 +112,7 @@ package angel.game.test {
 			var dummyWeaponResource:WeaponResource = new WeaponResource();
 			var gun1:SingleTargetWeapon = new SingleTargetWeapon(dummyWeaponResource, "xxGun1");
 			var gun2:SingleTargetWeapon = new SingleTargetWeapon(dummyWeaponResource, "xxGun2");
-			var grenade1:Grenade = Grenade.getCopy();
+			var grenade1:Grenade = Grenade(Inventory.makeOne("grenade"));
 			
 			Autotest.assertEqual(inventory.mainWeapon(), null);
 			Autotest.assertEqual(inventory.offWeapon(), null);

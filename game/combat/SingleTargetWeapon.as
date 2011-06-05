@@ -50,7 +50,11 @@ package angel.game.combat {
 		}
 		
 		public function attack(user:ComplexEntity, target:Object):void {
-			fire(user, ComplexEntity(target));
+			if (target is ComplexEntity) {
+				fire(user, ComplexEntity(target));
+			} else {
+				Assert.fail("Bad target type " + target + " in " + this);
+			}
 		}
 		
 		public function inRange(shooter:ComplexEntity, targetLocation:Point):Boolean {

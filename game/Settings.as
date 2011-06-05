@@ -155,23 +155,21 @@ package angel.game {
 				}
 				
 				if (pc.@mainGun.length() > 0) {
-					var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(pc.@mainGun);
-					entity.inventory.equip(new SingleTargetWeapon(gunResource, pc.@mainGun), Inventory.MAIN_HAND, false);
+					entity.inventory.equip(Inventory.makeOne(pc.@mainGun), Inventory.MAIN_HAND, false);
 				}
 				if (pc.@offGun.length() > 0) {
-					var gunResource2:WeaponResource = Settings.catalog.retrieveWeaponResource(pc.@offGun);
-					entity.inventory.equip(new SingleTargetWeapon(gunResource2, pc.@mainGun), Inventory.OFF_HAND, false);
+					entity.inventory.equip(Inventory.makeOne(pc.@offGun), Inventory.OFF_HAND, false);
 				}
 				if (pc.@inventory.length() > 0) {
 					entity.inventory.removeAllMatchingFromPileOfStuff(Object);
-					entity.inventory.addFromText(pc.@inventory);
+					entity.inventory.addToPileFromText(pc.@inventory);
 				}
 				
 				//UNDONE: get rid of this once files are converted
 				if (pc.@grenades.length() > 0) {
 					var grenades:int = pc.@grenades;
 					if (grenades > 0) {
-						entity.inventory.addToPileOfStuff(Grenade.getCopy(), grenades);
+						entity.inventory.addToPileOfStuff(Inventory.makeOne("grenade"), grenades);
 					}
 				}
 				

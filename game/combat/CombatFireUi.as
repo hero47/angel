@@ -2,6 +2,7 @@ package angel.game.combat {
 	import angel.common.Assert;
 	import angel.common.FloorTile;
 	import angel.common.Util;
+	import angel.game.brain.CombatBrainUiMeld;
 	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.ComplexEntity;
 	import angel.game.Icon;
@@ -105,9 +106,9 @@ package angel.game.combat {
 				
 				case Keyboard.ENTER:
 					if (clickThisEnemyAgainForQuickFire != null) {
-						doPlayerFireGunAt(clickThisEnemyAgainForQuickFire, quickFireWeapon);
+						doPlayerAttack(quickFireWeapon, clickThisEnemyAgainForQuickFire);
 					} else {
-						doReserveFire();
+						doPlayerAttack(null, null);
 					}
 				break;
 				
@@ -140,7 +141,7 @@ package angel.game.combat {
 		
 		public function mouseClick(tile:FloorTile):void {
 			if ((clickThisEnemyAgainForQuickFire != null) && (tile.location.equals(clickThisEnemyAgainForQuickFire.location))) {
-				doPlayerFireGunAt(clickThisEnemyAgainForQuickFire, quickFireWeapon);
+				doPlayerAttack(quickFireWeapon, clickThisEnemyAgainForQuickFire);
 			} else if ((quickFireWeaponRange > 0) &&
 						(Util.chessDistance(player.location, tile.location) <= quickFireWeaponRange) &&
 						Util.entityHasLineOfSight(player, tile.location)) {
@@ -155,7 +156,8 @@ package angel.game.combat {
 			var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
 			var lineOfSight:Boolean = Util.entityHasLineOfSight(player, location);
 			
-			slices.push(new PieSlice(Icon.bitmapData(Icon.CombatPass), "Pass/Reserve Fire", doReserveFire));
+			slices.push(new PieSlice(Icon.bitmapData(Icon.CombatPass), "Pass/Reserve Fire", 
+						function():void { doPlayerAttack(null, null); }  ));
 			addGrenadePieSliceIfLegal(slices, location);
 			if (hilightedEnemy != null) {
 				Assert.assertTrue(hilightedEnemy.location.equals(location), "Hilighted enemy not on menu tile");
@@ -172,21 +174,22 @@ package angel.game.combat {
 		private function addFirePieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point, weapon:SingleTargetWeapon, iconClass:Class):void {
 			if ((weapon != null) && (weapon.readyToFire()) && (weapon.inRange(player, targetLocation))) {
 				slices.push(new PieSlice(Icon.bitmapData(iconClass), "Fire " + weapon.displayName, function():void {
-					doPlayerFireGunAt(hilightedEnemy, weapon);
+					doPlayerAttack(weapon, hilightedEnemy);
 				} ));
 			}
 		}
 		
 		private function addGrenadePieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point):void {
-			var grenades:int = player.inventory.countInPileOfStuff(Grenade);
-			if ( (grenades > 0) &&
+			var weapon:Grenade = player.inventory.findFirstMatchingInPileOfStuff(Grenade);
+			if ( (weapon != null) &&
 						player.inventory.hasFreeHand() &&
 						((player.actionsPerTurn == 1) || (player.actionsRemaining >= 2)) &&
 						!room.blocksGrenade(targetLocation.x, targetLocation.y) &&
 						Util.entityHasLineOfSight(player, targetLocation)) {
+				var count:int = player.inventory.countSpecificItemInPileOfStuff(weapon);
 				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade),
-					"Throw grenade (" + grenades + " in inventory) at this square",
-					function():void { doPlayerThrowGrenadeAt(targetLocation); }
+					"Throw " + weapon.displayName + " [" + count + " in inventory] at this square",
+					function():void { doPlayerAttack(weapon, targetLocation); }
 				));
 			}
 		}
@@ -196,22 +199,10 @@ package angel.game.combat {
 			return slices;
 		}
 		
-		private function doPlayerFireGunAt(target:ComplexEntity, weapon:SingleTargetWeapon):void {
+		private function doPlayerAttack(weapon:IWeapon, target:Object):void {
 			var playerFiring:ComplexEntity = player;
 			room.disableUi();
-			CombatBrainUiMeldPlayer(playerFiring.brain).carryOutAttack(weapon, target);
-		}
-		
-		private function doPlayerThrowGrenadeAt(loc:Point):void {
-			var playerFiring:ComplexEntity = player;
-			room.disableUi();
-			CombatBrainUiMeldPlayer(playerFiring.brain).carryOutAttack(Grenade.getCopy(), loc);
-		}
-		
-		private function doReserveFire():void {
-			var playerFiring:ComplexEntity = player;
-			room.disableUi();
-			CombatBrainUiMeldPlayer(playerFiring.brain).carryOutAttack(null, null);
+			CombatBrainUiMeld(playerFiring.brain).carryOutAttack(weapon, target);
 		}
 		
 		private function filterIsEnemy(entity:ComplexEntity):Boolean {
