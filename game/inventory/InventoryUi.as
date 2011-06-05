@@ -2,6 +2,7 @@ package angel.game.inventory {
 	import angel.common.ICleanup;
 	import angel.common.SimplerButton;
 	import angel.game.Icon;
+	import angel.game.Room;
 	import flash.display.Bitmap;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
@@ -30,16 +31,23 @@ package angel.game.inventory {
 		private static const PILE:int = Inventory.NUMBER_OF_EQUIPPED_LOCATIONS;
 		private var xInventory:int;
 		private var yInventory:int;
+		private var room:Room;
 		
 		public var inventory:Inventory;
 		
 		public function InventoryUi(parent:DisplayObjectContainer, inventory:Inventory) {
 			this.inventory = inventory;
+			if (parent is Room) {
+				room = Room(parent);
+				room.suspendUi(this);
+				parent = room.parent;
+			}
 			parent.addChild(this);
 			
 			drawBackground();
 			addSlots();
 			addDraggables();
+			
 		}
 		
 		private function drawBackground():void {
@@ -98,6 +106,10 @@ package angel.game.inventory {
 			slots = null;
 			if (parent != null) {
 				parent.removeChild(this);
+			}
+			if (room != null) {
+				room.restoreUiAfterSuspend(this);
+				room = null;
 			}
 		}
 		

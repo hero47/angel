@@ -33,6 +33,10 @@ package angel.game.inventory {
 			return equipmentSlots[OFF_HAND] as SingleTargetWeapon;
 		}
 		
+		public function hasFreeHand():Boolean {
+			return ((equipmentSlots[MAIN_HAND] == null) || (equipmentSlots[OFF_HAND] == null));
+		}
+		
 		public function itemInSlot(slot:int):CanBeInInventory {
 			if (slot < 0 || slot >= NUMBER_OF_EQUIPPED_LOCATIONS) {
 				return null;

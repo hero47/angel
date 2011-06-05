@@ -205,6 +205,11 @@ package angel.game {
 			}
 		}
 		
+		public function endConversation(converse:ConversationInterface):void {
+			conversationInProgress = null;
+			restoreUiAfterSuspend(converse);
+		}
+		
 		/********** Player UI-related  ****************/
 		// CONSIDER: Move this into a class, have the things that now implement IRoomUi subclass it?
 		
@@ -246,11 +251,16 @@ package angel.game {
 		}
 			
 		//UNDONE
-		public function restoreUiAfterConversation():void {
+		public function restoreUiAfterSuspend(suspender:Object):void {
 			Assert.assertTrue(lastUiPlayer.room == this, "Active player was removed from room. This WILL break things.");
-			conversationInProgress = null;
+			unpauseFromLastIndefinitePause(suspender);
 			enableUi(disabledUi, lastUiPlayer);
 			disabledUi = null;
+		}
+		
+		public function suspendUi(suspender:Object):void {
+			pauseGameTimeIndefinitely(suspender);
+			disableUi();
 		}
 		
 		
@@ -264,7 +274,7 @@ package angel.game {
 				break;
 				
 				case Util.KEYBOARD_I:
-					new InventoryUi(this.parent, lastUiPlayer.inventory);
+					new InventoryUi(this, lastUiPlayer.inventory);
 				break;
 				
 				case Keyboard.HOME:
