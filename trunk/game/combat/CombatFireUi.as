@@ -180,6 +180,7 @@ package angel.game.combat {
 		private function addGrenadePieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point):void {
 			var grenades:int = player.inventory.countInPileOfStuff(Grenade);
 			if ( (grenades > 0) &&
+						player.inventory.hasFreeHand() &&
 						((player.actionsPerTurn == 1) || (player.actionsRemaining >= 2)) &&
 						!room.blocksGrenade(targetLocation.x, targetLocation.y) &&
 						Util.entityHasLineOfSight(player, targetLocation)) {

@@ -55,8 +55,7 @@ package angel.game.script {
 		
 		private function addedToStageListener(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
-			room.pauseGameTimeIndefinitely(this);
-			room.disableUi();
+			room.suspendUi(this);
 			context = new ScriptContext(room, target);
 			conversationData.runConversation(this);
 		}
@@ -118,8 +117,7 @@ package angel.game.script {
 				parent.removeChild(this);
 			}
 			target.filters = [];
-			room.unpauseFromLastIndefinitePause(this);
-			room.restoreUiAfterConversation();
+			room.endConversation(this);
 			
 			context.endOfScriptActions();
 			
