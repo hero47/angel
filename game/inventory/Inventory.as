@@ -1,7 +1,10 @@
-package angel.game {
+package angel.game.inventory {
 	import angel.common.Alert;
 	import angel.common.Assert;
+	import angel.common.WeaponResource;
+	import angel.game.combat.Grenade;
 	import angel.game.combat.SingleTargetWeapon;
+	import angel.game.Settings;
 	import flash.utils.Dictionary;
 	/**
 	 * ...
@@ -9,7 +12,6 @@ package angel.game {
 	 */
 	public class Inventory {
 		
-		public static const PILE_OF_STUFF:int = -1;
 		public static const MAIN_HAND:int = 0;
 		public static const OFF_HAND:int = 1;
 		public static const NUMBER_OF_EQUIPPED_LOCATIONS:int = 2;
@@ -31,7 +33,14 @@ package angel.game {
 			return equipmentSlots[OFF_HAND] as SingleTargetWeapon;
 		}
 		
-		private function isItemLegalInSlot(item:CanBeInInventory, slot:int):Boolean {
+		public function itemInSlot(slot:int):CanBeInInventory {
+			if (slot < 0 || slot >= NUMBER_OF_EQUIPPED_LOCATIONS) {
+				return null;
+			}
+			return equipmentSlots[slot];
+		}
+		
+		public static function isItemLegalInSlot(item:CanBeInInventory, slot:int):Boolean {
 			switch (slot) {
 				case MAIN_HAND:
 				case OFF_HAND:
@@ -42,7 +51,7 @@ package angel.game {
 		}
 		
 		//return true if successful
-		public function equip(item:CanBeInInventory, slot:int):Boolean {
+		public function equip(item:CanBeInInventory, slot:int, keepOld:Boolean):Boolean {
 			if (!isItemLegalInSlot(item, slot)) {
 				return false;
 			}
@@ -50,18 +59,18 @@ package angel.game {
 				addToPileOfStuff(item, 1);
 				return true;
 			}
-			if (equipmentSlots[slot] != null) {
+			if (keepOld && (equipmentSlots[slot] != null)) {
 				addToPileOfStuff(equipmentSlots[slot], 1);
 			}
 			equipmentSlots[slot] = item;
 			return true;
 		}
 		
-		public function equipFromPileOfStuff(item:CanBeInInventory, slot:int):Boolean {
+		public function equipFromPileOfStuff(item:CanBeInInventory, slot:int, keepOld:Boolean):Boolean {
 			if (!isItemLegalInSlot(item, slot) || !removeFromPileOfStuff(item, 1)) {
 				return false;
 			}
-			if (!equip(item, slot)) {
+			if (!equip(item, slot, keepOld)) {
 				Assert.fail("Unable to equip legal item");
 				addToPileOfStuff(item, 1);
 				return false;
@@ -78,14 +87,24 @@ package angel.game {
 				equipmentSlots[slot] = null;
 			}
 		}
+		
+		public function everythingInPileOfStuff():Vector.<CanBeInInventory> {
+			var pile:Vector.<CanBeInInventory> = new Vector.<CanBeInInventory>();
+			for (var item:Object in pileOfStuff) {
+				pile.push(item);
+			}
+			return pile;
+		}
 				
-		public function addToPileOfStuff(item:CanBeInInventory, howMany:int = 1):void {
+		// return new count
+		public function addToPileOfStuff(item:CanBeInInventory, howMany:int = 1):int {
 			if (howMany < 1) {
 				Alert.show("Error! Adding " + howMany + " of something to inventory.");
-				return;
+				return howMany;
 			}
-			var currentCount:int = pileOfStuff[item];
-			pileOfStuff[item] = currentCount + howMany;
+			var count:int = int(pileOfStuff[item]) + howMany;
+			pileOfStuff[item] = count;
+			return count;
 		}
 		
 		// return true if successful
@@ -151,6 +170,24 @@ package angel.game {
 				count++;
 			}
 			return count;
+		}
+		
+		public function addFromText(text:String):void {
+			var list:Array = text.split(",");
+			for each (var entry:String in list) {
+				var splitEntry:Array = entry.split(" ");
+				var count:int = (splitEntry.length == 2) ? int(splitEntry[0]) : 1;
+				var id:String = splitEntry[splitEntry.length - 1];
+				//UNDONE: grenades don't have a weapon resource yet
+				var item:CanBeInInventory;
+				if (id == "grenade") {
+					item = Grenade.getCopy();
+				} else {
+					var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(id);
+					item = new SingleTargetWeapon(gunResource, id);
+				}
+				addToPileOfStuff(item, count);
+			}
 		}
 		
 		public function debugListContents(header:String = null):void {

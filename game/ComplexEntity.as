@@ -17,6 +17,7 @@ package angel.game {
 	import angel.game.combat.RoomCombat;
 	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.event.EntityQEvent;
+	import angel.game.inventory.Inventory;
 	import flash.display.Bitmap;
 	import flash.display.DisplayObject;
 	import flash.geom.Point;
@@ -77,15 +78,20 @@ package angel.game {
 			initMovement(characterStats.movePoints, characterStats.maxGait);
 			if (characterStats.mainGun != "") {
 				var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(characterStats.mainGun);
-				inventory.equip(new SingleTargetWeapon(gunResource, characterStats.mainGun), Inventory.MAIN_HAND);
+				inventory.equip(new SingleTargetWeapon(gunResource, characterStats.mainGun), Inventory.MAIN_HAND, false);
 			}
 			if (characterStats.offGun != "") {
 				var offResource:WeaponResource = Settings.catalog.retrieveWeaponResource(characterStats.offGun);
-				inventory.equip(new SingleTargetWeapon(offResource, characterStats.mainGun), Inventory.OFF_HAND);
+				inventory.equip(new SingleTargetWeapon(offResource, characterStats.mainGun), Inventory.OFF_HAND, false);
 			}
+			if (characterStats.inventory != "") {
+				inventory.addFromText(characterStats.inventory);
+			}
+			//UNDONE: get rid of this once files are converted
 			if (characterStats.grenades > 0) {
 				inventory.addToPileOfStuff(Grenade.getCopy(), characterStats.grenades);
 			}
+			
 			solidness = solidnessWhenAlive = resource.solidness;
 			
 			facing = FACE_CAMERA;

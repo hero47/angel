@@ -1,4 +1,5 @@
 package angel.roomedit {
+	import angel.common.ICleanup;
 	import angel.common.SimplerButton;
 	import angel.common.Util;
 	import flash.display.DisplayObject;
@@ -11,7 +12,7 @@ package angel.roomedit {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class FilenameControl extends Sprite {
+	public class FilenameControl extends Sprite implements ICleanup {
 		private static const DEFAULT_WIDTH:int = 250;
 		private static const BUTTON_WIDTH:int = 55;
 		private static const CLEAR_BUTTON_WIDTH:int = 12;

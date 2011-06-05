@@ -8,6 +8,7 @@ package angel.game {
 	import angel.common.Util;
 	import angel.game.event.EntityQEvent;
 	import angel.game.event.QEvent;
+	import angel.game.inventory.InventoryUi;
 	import angel.game.script.ConversationData;
 	import angel.game.script.ConversationInterface;
 	import angel.game.script.RoomScripts;
@@ -263,7 +264,7 @@ package angel.game {
 				break;
 				
 				case Util.KEYBOARD_I:
-					lastUiPlayer.inventory.showInventoryInAlert();
+					new InventoryUi(this.parent, lastUiPlayer.inventory);
 				break;
 				
 				case Keyboard.HOME:

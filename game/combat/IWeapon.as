@@ -1,6 +1,6 @@
 package angel.game.combat {
-	import angel.game.CanBeInInventory;
 	import angel.game.ComplexEntity;
+	import angel.game.inventory.CanBeInInventory;
 	
 	/**
 	 * ...
