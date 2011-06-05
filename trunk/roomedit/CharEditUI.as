@@ -45,7 +45,7 @@ package angel.roomedit {
 		private var nameTextField:TextField;
 		private var changeImageControl:FilenameControl;
 		private var noSprintHackCheckbox:CheckBox;
-		private var grenadesTextField:TextField;
+		private var inventoryTextField:TextField;
 		private var deleteFromCatalogButton:SimplerButton;
 		
 		private static const WIDTH:int = 220;
@@ -102,12 +102,12 @@ package angel.roomedit {
 			weaponChooser = createWeaponChooserBelow(weaponChooser, "Off Gun", 65, WIDTH-65,
 					function(event:Event):void { changeCharacterProperty(offGunCombo.selectedLabel, "offGun", "") }, 0);
 			offGunCombo = weaponChooser.comboBox;
-			grenadesTextField = Util.createTextEditControlBelow(weaponChooser, "Grenades", 100, 40,
-				function(event:Event):void { changeCharacterProperty(int(event.target.text), "grenades", Defaults.GRENADES) }, 0 );
+			inventoryTextField = Util.createTextEditControlBelow(weaponChooser, "Inv.", 30, WIDTH-30,
+				function(event:Event):void { changeCharacterProperty(int(event.target.text), "inventory", "") }, 0 );
 			
 			deleteFromCatalogButton = new SimplerButton("Delete from catalog", clickedDelete, 0xff0000);
 			deleteFromCatalogButton.width = WIDTH;
-			Util.addBelow(deleteFromCatalogButton, grenadesTextField, 50);
+			Util.addBelow(deleteFromCatalogButton, inventoryTextField, 50);
 			deleteFromCatalogButton.x = 0;
 			
 			if (startId == null) {
@@ -132,6 +132,15 @@ package angel.roomedit {
 			animationTypeLabel.text = labelFromAnimationClass[animationClass];
 			
 			var characterStats:CharacterStats = resource.characterStats;
+			
+			//UNDONE remove this when files have been updated
+			if (characterStats.grenades > 0) {
+				catalog.deleteXmlAttribute(charId, "grenades");
+				characterStats.inventory = String(characterStats.grenades) + " grenade";
+				catalog.changeXmlAttribute(charId, "inventory", characterStats.inventory);
+				characterStats.grenades = 0;
+			}
+			
 			nameTextField.text = characterStats.displayName;
 			healthTextField.text = String(characterStats.health);
 			mainGunCombo.selectedItem = Util.itemWithLabelInComboBox(mainGunCombo, characterStats.mainGun);
@@ -140,7 +149,8 @@ package angel.roomedit {
 			actionsTextField.text = String(characterStats.actionsPerTurn);
 			changeImageControl.text = catalog.getFilenameFromId(charId);
 			noSprintHackCheckbox.selected = (characterStats.maxGait < 3);
-			grenadesTextField.text = String(characterStats.grenades);
+			inventoryTextField.text = String(characterStats.inventory);
+			
 		}
 		
 		private function changeCharacterProperty(newValue:*, propertyName:String, defaultValue:* = null):void {

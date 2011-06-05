@@ -11,6 +11,7 @@ package angel.game {
 	import angel.game.combat.Grenade;
 	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.event.EventQueue;
+	import angel.game.inventory.Inventory;
 
 	
 	public class Settings {
@@ -154,19 +155,20 @@ package angel.game {
 				}
 				
 				if (pc.@mainGun.length() > 0) {
-					entity.inventory.unequip(Inventory.MAIN_HAND, false);
 					var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(pc.@mainGun);
-					entity.inventory.equip(new SingleTargetWeapon(gunResource, pc.@mainGun), Inventory.MAIN_HAND);
+					entity.inventory.equip(new SingleTargetWeapon(gunResource, pc.@mainGun), Inventory.MAIN_HAND, false);
 				}
-				
 				if (pc.@offGun.length() > 0) {
-					entity.inventory.unequip(Inventory.OFF_HAND, false);
 					var gunResource2:WeaponResource = Settings.catalog.retrieveWeaponResource(pc.@offGun);
-					entity.inventory.equip(new SingleTargetWeapon(gunResource2, pc.@mainGun), Inventory.OFF_HAND);
+					entity.inventory.equip(new SingleTargetWeapon(gunResource2, pc.@mainGun), Inventory.OFF_HAND, false);
+				}
+				if (pc.@inventory.length() > 0) {
+					entity.inventory.removeAllMatchingFromPileOfStuff(Object);
+					entity.inventory.addFromText(pc.@inventory);
 				}
 				
+				//UNDONE: get rid of this once files are converted
 				if (pc.@grenades.length() > 0) {
-					entity.inventory.removeAllMatchingFromPileOfStuff(Grenade);
 					var grenades:int = pc.@grenades;
 					if (grenades > 0) {
 						entity.inventory.addToPileOfStuff(Grenade.getCopy(), grenades);

@@ -88,6 +88,7 @@ package angel.game.brain {
 			if (me.inventory.offWeapon() != null) {
 				me.inventory.offWeapon().doCooldown();
 			}
+			//UNDONE: cooldown for unequipped weapons
 			doMoveBody();
 		}
 		

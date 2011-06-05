@@ -52,6 +52,15 @@ package angel.game {
 		[Embed(source='../EmbeddedAssets/NoGun.png')]
 		public static const NoGunFloater:Class;
 		
+		
+		// Inventory assets
+		
+		[Embed(source = '../EmbeddedAssets/inventory_background.png')]
+		public static const InventoryBackground:Class;
+		[Embed(source = '../EmbeddedAssets/inventory_main_hand.png')]
+		public static const InventoryMainHand:Class;
+		[Embed(source='../EmbeddedAssets/inventory_off_hand.png')]
+		public static const InventoryOffHand:Class;
 	}
 
 }

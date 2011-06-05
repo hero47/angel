@@ -1,4 +1,5 @@
-package angel.game {
+package angel.game.inventory {
+	import flash.display.Sprite;
 	
 	/**
 	 * ...
@@ -6,6 +7,7 @@ package angel.game {
 	 */
 	public interface CanBeInInventory {
 		function get displayName():String;
+		function get iconClass():Class;
 	}
 	
 	// Inventory singletons should implement static getCopy

@@ -1,10 +1,9 @@
 package angel.game.test {
-	import angel.common.Alert;
 	import angel.common.WeaponResource;
-	import angel.game.CanBeInInventory;
 	import angel.game.combat.Grenade;
 	import angel.game.combat.SingleTargetWeapon;
-	import angel.game.Inventory;
+	import angel.game.inventory.CanBeInInventory;
+	import angel.game.inventory.Inventory;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -118,10 +117,10 @@ package angel.game.test {
 			Autotest.assertEqual(inventory.mainWeapon(), null);
 			Autotest.assertEqual(inventory.offWeapon(), null);
 			
-			Autotest.assertFalse(inventory.equip(grenade1, Inventory.MAIN_HAND), "Hand slots must be SingleTargetWeapon");
+			Autotest.assertFalse(inventory.equip(grenade1, Inventory.MAIN_HAND, true), "Hand slots must be SingleTargetWeapon");
 			Autotest.assertEqual(inventory.mainWeapon(), null);
 			
-			Autotest.assertTrue(inventory.equip(gun1, Inventory.MAIN_HAND), "Put gun in hand slot");
+			Autotest.assertTrue(inventory.equip(gun1, Inventory.MAIN_HAND, true), "Put gun in hand slot");
 			Autotest.assertEqual(inventory.mainWeapon(), gun1);
 			Autotest.assertEqual(inventory.countInPileOfStuff(SingleTargetWeapon), 0);
 			
@@ -129,17 +128,17 @@ package angel.game.test {
 			Autotest.assertEqual(inventory.mainWeapon(), null);
 			Autotest.assertEqual(inventory.countInPileOfStuff(SingleTargetWeapon), 1);
 			
-			Autotest.assertTrue(inventory.equipFromPileOfStuff(gun1, Inventory.MAIN_HAND), "Move gun to hand slot from pile");
+			Autotest.assertTrue(inventory.equipFromPileOfStuff(gun1, Inventory.MAIN_HAND, true), "Move gun to hand slot from pile");
 			Autotest.assertEqual(inventory.mainWeapon(), gun1);
 			Autotest.assertEqual(inventory.countInPileOfStuff(SingleTargetWeapon), 0);
 			
-			Autotest.assertFalse(inventory.equipFromPileOfStuff(gun2, Inventory.MAIN_HAND), "Gun2 wasn't in pile to equip");
+			Autotest.assertFalse(inventory.equipFromPileOfStuff(gun2, Inventory.MAIN_HAND, true), "Gun2 wasn't in pile to equip");
 			
-			Autotest.assertTrue(inventory.equip(gun1, Inventory.MAIN_HAND), "Put gun2 in hand slot");
+			Autotest.assertTrue(inventory.equip(gun1, Inventory.MAIN_HAND, true), "Put gun2 in hand slot");
 			Autotest.assertEqual(inventory.mainWeapon(), gun2);
 			Autotest.assertEqual(inventory.countSpecificItemInPileOfStuff(gun1), 1, "gun1 should have returned to pile");
 			
-			Autotest.assertFalse(inventory.equipFromPileOfStuff(gun1, Inventory.OFF_HAND));
+			Autotest.assertFalse(inventory.equipFromPileOfStuff(gun1, Inventory.OFF_HAND, true));
 			Autotest.assertEqual(inventory.mainWeapon(), gun2);
 			Autotest.assertEqual(inventory.offWeapon(), gun1);
 		}

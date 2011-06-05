@@ -17,7 +17,8 @@ package angel.common {
 		// inventory initializers
 		public var mainGun:String = Defaults.MAIN_WEAPON_ID;
 		public var offGun:String = Defaults.OFF_WEAPON_ID;
-		public var grenades:int = Defaults.GRENADES;
+		public var inventory:String = "";
+		public var grenades:int = Defaults.GRENADES; // UNDONE: get rid of this once files are converted
 		
 		public function CharacterStats() {
 			
@@ -25,12 +26,15 @@ package angel.common {
 		
 		public function setFromCatalogXml(xml:XML):void {
 			Util.setIntFromXml(this, "health", xml, "health");
-			Util.setTextFromXml(this, "mainGun", xml, "mainGun");
-			Util.setTextFromXml(this, "offGun", xml, "offGun");
 			Util.setIntFromXml(this, "movePoints", xml, "movePoints");
 			Util.setIntFromXml(this, "actions", xml, "actions");
 			Util.setTextFromXml(this, "displayName", xml, "displayName");
 			Util.setIntFromXml(this, "maxGait", xml, "maxGait");
+			
+			Util.setTextFromXml(this, "mainGun", xml, "mainGun");
+			Util.setTextFromXml(this, "offGun", xml, "offGun");
+			Util.setTextFromXml(this, "inventory", xml, "inventory");
+			// UNDONE: get rid of this once files are converted
 			Util.setIntFromXml(this, "grenades", xml, "grenades");
 		}
 		

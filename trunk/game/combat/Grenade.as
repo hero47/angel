@@ -3,8 +3,8 @@ package angel.game.combat {
 	import angel.common.Floor;
 	import angel.common.Prop;
 	import angel.common.Util;
-	import angel.game.CanBeInInventory;
 	import angel.game.ComplexEntity;
+	import angel.game.Icon;
 	import angel.game.Room;
 	import angel.game.Settings;
 	import angel.game.TimedSprite;
@@ -46,6 +46,10 @@ package angel.game.combat {
 		
 		public function get displayName():String {
 			return "Grenade(s), standard issue";
+		}
+		
+		public function get iconClass():Class {
+			return Icon.CombatGrenade;
 		}
 		
 		public function attack(user:ComplexEntity, target:Object):void {

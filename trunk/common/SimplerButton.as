@@ -9,7 +9,7 @@ package angel.common {
 	import flash.text.TextFormatAlign;
 
 	// borrowed from Alert class courtesy of http://fatal-exception.co.uk/blog/?p=69
-	public class SimplerButton extends SimpleButton {
+	public class SimplerButton extends SimpleButton implements ICleanup {
 		private var callOnClick:Function = null;
 
 		private static const WIDTH:int = 75
@@ -55,6 +55,9 @@ package angel.common {
 
 		public function cleanup():void {
 			removeEventListener(MouseEvent.CLICK, callOnClick);
+			if (parent != null) {
+				parent.removeChild(this);
+			}
 		}
 		
 		private static function brightenColour(colour:int, modifier:int):int {

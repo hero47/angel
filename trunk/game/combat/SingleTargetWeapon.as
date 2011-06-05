@@ -2,11 +2,14 @@ package angel.game.combat {
 	import angel.common.Assert;
 	import angel.common.Util;
 	import angel.common.WeaponResource;
-	import angel.game.CanBeInInventory;
 	import angel.game.ComplexEntity;
+	import angel.game.Icon;
 	import angel.game.Settings;
 	import angel.game.TimedSprite;
+	import flash.display.Bitmap;
+	import flash.display.Sprite;
 	import flash.geom.Point;
+	import flash.text.TextField;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -40,6 +43,10 @@ package angel.game.combat {
 		
 		public function get displayName():String {
 			return name;
+		}
+		
+		public function get iconClass():Class {
+			return Icon.CombatFireFirstGun;
 		}
 		
 		public function attack(user:ComplexEntity, target:Object):void {
