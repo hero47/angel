@@ -6,6 +6,7 @@ package angel.game.inventory {
 	 * @author Beth Moursund
 	 */
 	public interface CanBeInInventory {
+		function get id():String;
 		function get displayName():String;
 		function get iconClass():Class;
 	}

@@ -15,6 +15,7 @@ package angel.game.script.condition {
 			"compare":CompareCondition,
 			"empty":SpotEmptyCondition,
 			"flag":FlagCondition,
+			"inventoryHas":InventoryHasCondition,
 			"pc":PcCondition
 		}
 		

@@ -1,6 +1,7 @@
 package angel.game.inventory {
 	import angel.common.Alert;
 	import angel.common.Assert;
+	import angel.common.Util;
 	import angel.common.WeaponResource;
 	import angel.game.combat.Grenade;
 	import angel.game.combat.SingleTargetWeapon;
@@ -17,12 +18,46 @@ package angel.game.inventory {
 		public static const NUMBER_OF_EQUIPPED_LOCATIONS:int = 2;
 		
 		private var equipmentSlots:Vector.<CanBeInInventory> = new Vector.<CanBeInInventory>(NUMBER_OF_EQUIPPED_LOCATIONS);
-		//Everything that the character has that's not equipped is in the "pile of stuff"; we aren't tracking particular
-		//location of carried objects (at least, not at this time)
+
 		private var pileOfStuff:Dictionary; // mapping from CanBeInInventory to integer number of items
 		
 		public function Inventory() {
 			pileOfStuff = new Dictionary();
+		}
+		
+		public function toText():String {
+			var text:String = "";
+			for (var i:int = 0; i < NUMBER_OF_EQUIPPED_LOCATIONS; ++i) {
+				if (equipmentSlots[i] != null) {
+					text += "," + String(i) + " 1 " + equipmentSlots[i].id;
+				}
+			}
+			for (var item:Object in pileOfStuff) {
+				var count:int = pileOfStuff[item];
+				text += "," + "99 " + count + " " + CanBeInInventory(item).id;
+			}
+			text = text.substr(1); // remove comma from start
+			return text;
+		}
+		
+		public static function fromText(text:String):Inventory {
+			var inv:Inventory = new Inventory();
+			var list:Array = text.split(",");
+			for each (var entry:String in list) {
+				var slotAndContents:Array = entry.split(" ");
+				var slot:int = int(slotAndContents[0]);
+				var count:int = int(slotAndContents[1]);
+				var id:String = slotAndContents[2];
+				var item:CanBeInInventory = Inventory.makeOne(id);
+				if (item != null) {
+					if (slot < 99) {
+						inv.equipmentSlots[slot] = item;
+					} else {
+						inv.addToPileOfStuff(item, count);
+					}
+				}
+			}
+			return inv;
 		}
 		
 		public function mainWeapon():SingleTargetWeapon {
@@ -106,7 +141,17 @@ package angel.game.inventory {
 				Alert.show("Error! Adding " + howMany + " of something to inventory.");
 				return howMany;
 			}
-			var count:int = int(pileOfStuff[item]) + howMany;
+			var count:int = pileOfStuff[item];
+			if (count == 0) {
+				for (var storedItem:Object in pileOfStuff) {
+					if (CanBeInInventory(storedItem).id == item.id) {
+						// All items with the same id stack. NOTE: this may change in the future if we damage items!
+						item = CanBeInInventory(storedItem);
+						count = pileOfStuff[item];
+					}
+				}
+			}
+			count += howMany;
 			pileOfStuff[item] = count;
 			return count;
 		}
@@ -201,6 +246,85 @@ package angel.game.inventory {
 					addToPileOfStuff(item, count);
 				}
 			}
+		}
+		
+		public function removeFromAnywhereByText(text:String, collectErrorMessages:Vector.<String> = null):void {
+			var myErrors:Vector.<String> = new Vector.<String>();
+			var list:Array = text.split(",");
+			for each (var entry:String in list) {
+				var countAndId:Array = entry.split(" ");
+				var all:Boolean = countAndId[0] == "all";
+				var count:int = (countAndId.length == 2) ? int(countAndId[0]) : 1;
+				var id:String = countAndId[countAndId.length - 1];
+				removeFromAnywhere(all, count, id, myErrors);
+			}
+			if (myErrors.length > 0) {
+				if (collectErrorMessages == null) {
+					Alert.showMulti(myErrors);
+				} else {
+					collectErrorMessages.push(myErrors);
+				}
+			}
+		}
+		
+		public function hasByText(text:String):Boolean {
+			var list:Array = text.split(",");
+			for each (var entry:String in list) {
+				var countAndId:Array = entry.split(" ");
+				var count:int = (countAndId.length == 2) ? int(countAndId[0]) : 1;
+				var id:String = countAndId[countAndId.length - 1];
+				if (!has(count, id)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		
+		private function has(count:int, id:String):Boolean {
+			for (var i:int = 0; i < NUMBER_OF_EQUIPPED_LOCATIONS; ++i) {
+				if ((equipmentSlots[i] != null) && (equipmentSlots[i].id == id)) {
+					if (--count == 0) {
+						return true;
+					}
+				}
+			}
+			for (var item:Object in pileOfStuff) {
+				if ((CanBeInInventory(item).id == id) && (pileOfStuff[item] >= count)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		private function removeFromAnywhere(all:Boolean, count:int, id:String, collectErrorMessages:Vector.<String> = null):void {
+			for (var i:int = 0; i < NUMBER_OF_EQUIPPED_LOCATIONS; ++i) {
+				if ((equipmentSlots[i] != null) && (equipmentSlots[i].id == id)) {
+					equipmentSlots[i] = null;
+					if (!all && (--count == 0)) {
+						return;
+					}
+				}
+			}
+			for (var item:Object in pileOfStuff) {
+				if (CanBeInInventory(item).id == id) {
+					var numberRemaining:int = pileOfStuff[item];
+					if (all) {
+						numberRemaining = 0;
+					} else {
+						numberRemaining -= count;
+					}
+					if (numberRemaining > 0) {
+						pileOfStuff[item] = numberRemaining;
+					} else {
+						delete pileOfStuff[item];
+						if (numberRemaining < 0) {
+							Util.collectOrShowError(collectErrorMessages, "Remove from inventory: not enough " + id + ".");
+						}
+					}
+					return;
+				}
+			}
+			Util.collectOrShowError(collectErrorMessages, "Remove from inventory: " + id + " not found.");
 		}
 		
 		public function debugListContents(header:String = null):void {
