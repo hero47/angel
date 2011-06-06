@@ -73,6 +73,17 @@ package angel.common {
 			assignListeners(myAlert, alertOptions);
 			stage.addChild(myAlert);
 		}
+		
+		public static function showMulti(list:Vector.<String>, ALERTOPTIONS:Object = null):void {
+			var text:String = "";
+			if ((list != null) && (list.length > 0)) {
+				for (var i:int = 0; i < list.length - 1; ++i) {
+					text += list[i] + "\n";
+				}
+				text += list[i];
+			}
+			show(text, ALERTOPTIONS);
+		}
 		//
 		private static function assignListeners(myAlert:Sprite, alertOptions:AlertOptions):void {
 			var promptBackground:* = myAlert.getChildAt(1);

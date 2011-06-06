@@ -134,11 +134,11 @@ package angel.game.test {
 			
 			Autotest.assertFalse(inventory.equipFromPileOfStuff(gun2, Inventory.MAIN_HAND, true), "Gun2 wasn't in pile to equip");
 			
-			Autotest.assertTrue(inventory.equip(gun1, Inventory.MAIN_HAND, true), "Put gun2 in hand slot");
+			Autotest.assertTrue(inventory.equip(gun2, Inventory.MAIN_HAND, true), "Put gun2 in hand slot, keeping gun1");
 			Autotest.assertEqual(inventory.mainWeapon(), gun2);
 			Autotest.assertEqual(inventory.countSpecificItemInPileOfStuff(gun1), 1, "gun1 should have returned to pile");
 			
-			Autotest.assertFalse(inventory.equipFromPileOfStuff(gun1, Inventory.OFF_HAND, true));
+			Autotest.assertTrue(inventory.equipFromPileOfStuff(gun1, Inventory.OFF_HAND, true));
 			Autotest.assertEqual(inventory.mainWeapon(), gun2);
 			Autotest.assertEqual(inventory.offWeapon(), gun1);
 		}

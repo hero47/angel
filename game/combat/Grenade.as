@@ -44,6 +44,10 @@ package angel.game.combat {
 			return singleton;
 		}
 		
+		public function get id():String {
+			return "grenade";
+		}
+		
 		public function get displayName():String {
 			return "Grenade, standard";
 		}

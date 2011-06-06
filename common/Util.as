@@ -161,6 +161,15 @@ package angel.common {
 			textField.text = (value == null ? "" : value);
 		}
 		
+		// Either show the error message in an alert, or add it to a collection to be shown en masse later.
+		public static function collectOrShowError(collect:Vector.<String>, error:String):void {
+			if (collect == null) {
+				Alert.show("Error! " + error);
+			} else {
+				collect.push(error);
+			}
+		}
+		
 		// It baffles me that ComboBox doesn't provide this as a built-in
 		// (If two or more entries have the same label, this just finds the first one)
 		public static function itemWithLabelInComboBox(combo:ComboBox, label:String):Object {

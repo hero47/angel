@@ -13,6 +13,7 @@ package angel.game.test {
 	import angel.game.event.EntityQEvent;
 	import angel.game.event.QEvent;
 	import angel.game.Flags;
+	import angel.game.inventory.Inventory;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
 	import angel.game.script.Script;
@@ -62,6 +63,7 @@ package angel.game.test {
 			//Autotest.testFunction(testChangeRoom); This doesn't work because it loads from file, which is a delayed callback
 			Autotest.testFunction(testChangeAction);
 			Autotest.testFunction(testChangeMainPcAction);
+			Autotest.testFunction(testInventoryActions);
 			
 			testRoom.changeModeTo(null);
 			Autotest.assertEqual(testRoom.mode, null, modeChangeFail);
@@ -266,14 +268,12 @@ package angel.game.test {
 				return;
 			}
 			
-			var room:Room = testRoom;
-			
-			Autotest.assertEqual(room.entityInRoomWithId("nei"), null);
+			Autotest.assertEqual(testRoom.entityInRoomWithId("nei"), null);
 			Autotest.testActionFromXml(removenei); // Removing entity that's not in room does nothing
 			
-			Autotest.assertEqual(room.entityInRoomWithId("nei"), null);
+			Autotest.assertEqual(testRoom.entityInRoomWithId("nei"), null);
 			Autotest.testActionFromXml(addnei);
-			var nei:SimpleEntity = room.entityInRoomWithId("nei");
+			var nei:SimpleEntity = testRoom.entityInRoomWithId("nei");
 			Autotest.assertNotEqual(nei, null, "nei should have been added to room");
 			Autotest.assertTrue(nei is ComplexEntity);
 			Autotest.assertFalse(ComplexEntity(nei).isReallyPlayer, "Should be npc");
@@ -281,28 +281,28 @@ package angel.game.test {
 			Autotest.assertFalse(Settings.isOnPlayerList(nei));
 			
 			Autotest.testActionFromXml(removenei);
-			Autotest.assertEqual(room.entityInRoomWithId("nei"), null, "nei should have been removed");
+			Autotest.assertEqual(testRoom.entityInRoomWithId("nei"), null, "nei should have been removed");
 			
 			Autotest.testActionFromXml(addneiAt12);
-			var nei2:SimpleEntity = room.entityInRoomWithId("nei");
+			var nei2:SimpleEntity = testRoom.entityInRoomWithId("nei");
 			Autotest.assertTrue(nei2.location.equals(new Point(1, 2)), "Should use x & y if provided");
 			Autotest.testActionFromXml(removenei);
 			
 			Autotest.testActionFromXml(addneiAtTestSpot);
-			var nei3:SimpleEntity = room.entityInRoomWithId("nei");
+			var nei3:SimpleEntity = testRoom.entityInRoomWithId("nei");
 			Autotest.assertAlerted("Undefined spot");
 			Autotest.assertTrue(nei3.location.equals(new Point(0, 0)), "Should create at 0,0 if spot undefined");
 			Autotest.testActionFromXml(removenei);
 			
-			room.addOrMoveSpot("test", new Point(3, 4));
+			testRoom.addOrMoveSpot("test", new Point(3, 4));
 			Autotest.testActionFromXml(addneiAtTestSpot);
-			var nei4:SimpleEntity = room.entityInRoomWithId("nei");
+			var nei4:SimpleEntity = testRoom.entityInRoomWithId("nei");
 			Autotest.assertTrue(nei4.location.equals(new Point(3, 4)), "Should create at 0,0 if spot undefined");
 			Autotest.testActionFromXml(removenei);
-			room.removeSpot("test");
+			testRoom.removeSpot("test");
 			
 			Autotest.testActionFromXml(addNeiWithBrains);
-			var nei5:ComplexEntity = ComplexEntity(room.entityInRoomWithId("nei"));
+			var nei5:ComplexEntity = ComplexEntity(testRoom.entityInRoomWithId("nei"));
 			Autotest.assertEqual(nei5.exploreBrainClass, BrainFidget);
 			Autotest.assertEqual(nei5.combatBrainClass, CombatBrainWander);
 			if (testRoom.mode is RoomExplore) {
@@ -510,6 +510,47 @@ package angel.game.test {
 			newPc = ComplexEntity(testRoom.entityInRoomWithId("xxNewMainPc"));
 			Autotest.assertEqual(newPc, null, "remove should have succeeded now that it's not main pc any more");
 		}
+		
+		
+		private static const addGun:XML = <addToInventory id="nei" list="xxGun" />;
+		private static const removeGun:XML = <removeFromInventory id="nei" list="xxGun" />;
+		private static const checkGun:XML = <if>
+			<inventoryHas id="nei" list="xxGun" />
+			<script>
+				<message text="yes" />
+			</script>
+		</if>;
+		//Minimal testing of inventory functionality, that should be done directly in InventoryTest
+		private function testInventoryActions():void {
+			Settings.catalog.retrieveWeaponResource("xxGun");
+			Autotest.clearAlert();
+			
+			Autotest.testActionFromXml(addneiAt12);
+			var nei:ComplexEntity = ComplexEntity(testRoom.entityInRoomWithId("nei"));
+			nei.inventory = new Inventory();
+			
+			Autotest.testActionFromXml(checkGun);
+			Autotest.assertNoAlert();
+			
+			Autotest.testActionFromXml(removeGun);
+			Autotest.assertAlertText("Remove from inventory: xxGun not found.");
+			
+			Autotest.testActionFromXml(addGun);
+			Autotest.assertNoAlert();
+			Autotest.assertEqual(nei.inventory.entriesInPileOfStuff(), 1, "Something got added");
+			
+			Autotest.testActionFromXml(checkGun);
+			Autotest.assertAlertText("yes", "If action found gun");
+			
+			Autotest.testActionFromXml(removeGun);
+			Autotest.assertNoAlert();
+			
+			Autotest.testActionFromXml(checkGun);
+			Autotest.assertNoAlert();
+			
+			Autotest.testActionFromXml(removenei);
+		}
+		
 		
 	} // end class ActionTest
 

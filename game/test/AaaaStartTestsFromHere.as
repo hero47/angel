@@ -39,6 +39,7 @@ package angel.game.test {
 			Autotest.runTest(ConditionTest);
 			Autotest.runTest(ComputationTest);
 			Autotest.runTest(ExploreTest);
+			Autotest.runTest(InventoryWithCatalogTest);
 			return; //******************************************************** Stick this at top while working on new test
 		}
 		
