@@ -58,6 +58,10 @@ package angel.game {
 					}
 				break;
 				
+				case Util.KEYBOARD_I:
+					new RoomInventoryUi(room, room.mainPlayerCharacter);
+				break;
+				
 				case Keyboard.SPACE:
 					if (playerIsMoving) {
 						player.movement.interruptMovementAfterTileFinished();

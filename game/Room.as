@@ -273,10 +273,6 @@ package angel.game {
 					toggleVisibility();
 				break;
 				
-				case Util.KEYBOARD_I:
-					new InventoryUi(this, lastUiPlayer.inventory);
-				break;
-				
 				case Keyboard.HOME:
 					new ConversationNonAutoTest(this);
 				break;
