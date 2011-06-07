@@ -45,6 +45,9 @@ package angel.common {
 				//NOTE: weapons have no image yet; pass null for filename so we won't look for a file.
 				entry = addCatalogEntry(weaponXml.@id, null, weaponXml, CatalogEntry.WEAPON, duplicateNames);
 			}
+			for each (var splashXml:XML in xml.splash) {
+				entry = addCatalogEntry(splashXml.@id, splashXml.@file, splashXml, CatalogEntry.SPLASH, duplicateNames);
+			}
 			
 			//UNDONE For backwards compatibility; remove this once old catalogs have been rewritten
 			for each (var walkerXml:XML in xml.walker) {
@@ -98,6 +101,10 @@ package angel.common {
 		
 		public function retrieveWeaponResource(id:String):WeaponResource {
 			return loadOrRetrieveCatalogEntry(id, CatalogEntry.WEAPON, WeaponResource) as WeaponResource;
+		}
+		
+		public function retrieveSplashResource(id:String):SplashResource {
+			return loadOrRetrieveCatalogEntry(id, CatalogEntry.SPLASH, SplashResource) as SplashResource;
 		}
 
 		// call the function, passing tileset as parameter
@@ -164,6 +171,11 @@ package angel.common {
 					typeName = "Tileset";
 					correctWidth = Tileset.TILESET_X;
 					correctHeight = Tileset.TILESET_Y;
+				break;
+				case CatalogEntry.SPLASH:
+					typeName = "Splash screen";
+					correctWidth = SplashResource.WIDTH;
+					correctHeight = SplashResource.HEIGHT;
 				break;
 			}
 			if ((bitmapData.width != correctWidth) || (bitmapData.height != correctHeight)) {

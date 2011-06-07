@@ -29,6 +29,8 @@ package angel.common {
 		public static const MAX_GAIT:int = 3;
 		public static const GRENADES:int = 0;
 		
+		public static const GAME_MENU_SPLASH_ID:String = "openmenu";
+		
 		public static const CONVERSATION:String = null;
 			
 		public function Defaults() {

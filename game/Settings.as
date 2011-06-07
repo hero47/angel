@@ -59,6 +59,9 @@ package angel.game {
 		public static var fireFromCoverDamageReduction:int;
 		public static var grenadeDamage:int;
 		
+		public static var startRoomFile:String;
+		public static var startSpot:String;
+		
 		// This is currently initialized from game settings file, but will eventually be part of the "game state",
 		// initialized from game settings the first time the game is started and from a saved game any time the
 		// game is reloaded.  Player inventory, current room, flag settings, etc. belong to the same category.
@@ -120,6 +123,16 @@ package angel.game {
 		
 		private static function setBooleanFromXml(propertyName:String, defaultValue:Boolean, xmlValue:String):void {
 			Settings[propertyName] = (defaultValue ? xmlValue != "no" : xmlValue == "yes");
+		}
+		
+		public static function initStartRoomFromXml(xml:XMLList):void {
+			if (xml.length() > 0) {
+				startSpot = xml[0].@start;
+				startRoomFile = xml[0].@file;
+			}
+			if (startRoomFile == "") {
+				Alert.show("Error! Init file must include room to start in.");
+			}
 		}
 		
 		// This part will probably be going away or moving eventually -- identity of main PC and followers will be

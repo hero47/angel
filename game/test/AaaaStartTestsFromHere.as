@@ -62,9 +62,7 @@ package angel.game.test {
 			new InitGameFromFiles(gameInitializedCallback);
 		}
 		
-		private function gameInitializedCallback(initRoomXml:XML):void {
-			//ignore the initRoomXml; any tests that want a room will make their own
-			//wipe out player list from init
+		private function gameInitializedCallback():void {
 			Settings.pcs.length = 0;
 			var playerInitXml:XML = <init><player><pc /></player></init>;
 			playerInitXml.player.pc.@id = Autotest.TEST_ROOM_MAIN_PC_ID;

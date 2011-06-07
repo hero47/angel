@@ -76,6 +76,17 @@ package angel.roomedit {
 			bottomButton.width = topButton.width;
 			Util.addBelow(bottomButton, topButton, 5);
 			
+			topButton = new SimplerButton("Add Splash", clickedAddSplash);
+			topButton.x = left;
+			topButton.y = 5;
+			topButton.width = 100;
+			addChild(topButton);
+			left += topButton.width + 20;
+			
+			bottomButton = new SimplerButton("Edit Splashs", clickedEditSplash);
+			bottomButton.width = topButton.width;
+			Util.addBelow(bottomButton, topButton, 5);
+			
 			topButton = new SimplerButton("Save Catalog", clickedSaveCatalog);
 			topButton.x = left;
 			topButton.y = 5;
@@ -132,6 +143,15 @@ package angel.roomedit {
 		private function clickedAddWeapon(event:Event):void {
 			newFilename = "";
 			launchIdDialog("weapon", userEnteredNameForNewWeapon);
+		}
+		
+		private function clickedAddSplash(event:Event):void {
+			new FileChooser(userSelectedNewSplashFile, null, false);
+		}
+		
+		private function userSelectedNewSplashFile(filename:String):void {
+			newFilename = filename;
+			launchIdDialog("splash", userEnteredNameForNewSplash);
 		}
 		
 		public function launchIdDialog(idForWhat:String, callback:Function, previousError:String = null):void {
@@ -239,6 +259,28 @@ package angel.roomedit {
 			showEditWeaponDialog(id);
 		}
 		
+		private function userEnteredNameForNewSplash(buttonClicked:String, values:Array):void {
+			if (buttonClicked != "OK") {
+				return;
+			}
+			
+			var id:String = values[0];
+			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.SPLASH);
+			
+			if (entry == null) {
+				launchIdDialog("splash", userEnteredNameForNewProp, "Error -- id '" + id + "' already in use.");
+				return;
+			}
+			
+			var xml:XML = <splash/>;
+			xml.@file = newFilename;
+			xml.@id = id;
+			catalog.appendXml(xml);
+			entry.xml = xml;
+			
+			showEditSplashDialog(id);
+		}
+		
 		private var tilesetCombo:ComboBox;
 		private function clickedEditTileNames(event:Event):void {
 			var tilesetChooser:ComboHolder = catalog.createChooser(CatalogEntry.TILESET);
@@ -303,6 +345,16 @@ package angel.roomedit {
 		private function showEditWeaponDialog(id:String = null):void {
 			var options:Object = { buttons:["Done"], inputs:[], customControl:new WeaponEditUI(catalog, id) };
 			var text:String = "Edit Weapon";
+			KludgeDialogBox.show(text, options);
+		}
+		
+		private function clickedEditSplash(event:Event):void {
+			showEditSplashDialog();
+		}
+		
+		private function showEditSplashDialog(id:String = null):void {
+			var options:Object = { buttons:["Done"], inputs:[], customControl:new SplashEditUi(catalog, id) };
+			var text:String = "Edit Splash";
 			KludgeDialogBox.show(text, options);
 		}
 		

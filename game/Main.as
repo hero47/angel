@@ -31,27 +31,8 @@ package angel.game {
 			new InitGameFromFiles(gameInitialized);
 		}
 		
-		private function gameInitialized(initRoomXml:XML):void {
-			startSpot = initRoomXml.@start;
-			var roomFile:String = initRoomXml.@file;
-			if (roomFile == "") {
-				Alert.show("Error! Missing filename for initial room.");
-				return;
-			}
-			LoaderWithErrorCatching.LoadFile(roomFile, roomXmlLoaded);
-		}
-		
-		private function roomXmlLoaded(event:Event, filename:String):void {
-			var xml:XML = Util.parseXml(event.target.data, filename);
-			if (xml == null) {
-				return;
-			}
-			var room:Room = Room.createFromXml(xml, filename);
-			if (room != null) {
-				addChild(room);
-				room.addPlayerCharactersFromSettings(startSpot);
-				room.changeModeTo(RoomExplore, true);
-			}
+		private function gameInitialized():void {
+			new GameMenu(this);
 		}
 		
 		private function mainEnterFrame(event:Event):void {
