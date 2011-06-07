@@ -5,6 +5,7 @@ package angel.game {
 	import angel.common.Floor;
 	import angel.common.FloorTile;
 	import angel.common.Prop;
+	import angel.common.SimplerButton;
 	import angel.common.Util;
 	import angel.game.event.EntityQEvent;
 	import angel.game.event.QEvent;
@@ -39,6 +40,7 @@ package angel.game {
 		// and detect clicks on entities.
 
 		private var contentsLayer:Sprite;
+		private var quitButton:SimplerButton;
 		public var cells:Vector.<Vector.<Cell>>;
 		public var mainPlayerCharacter:ComplexEntity;
 		public var size:Point;
@@ -86,6 +88,11 @@ package angel.game {
 		private function finishInit(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, finishInit);
 			Settings.gameEventQueue.addListener(this, parent, GAME_ENTER_FRAME, enterFrameListener);
+			
+			quitButton = new SimplerButton("Exit Game", clickedQuit);
+			quitButton.x = 5;
+			quitButton.y = stage.stageHeight - quitButton.height - 5;
+			parent.addChild(quitButton);
 		}
 		
 		public function cleanup():void {
@@ -115,6 +122,8 @@ package angel.game {
 			if (Settings.gameEventQueue.numberOfListenersOn(this) > 0) {
 				Settings.gameEventQueue.debugTraceListenersOn(this, "After room cleanup, listeners on room:");
 			}
+			
+			quitButton.cleanup();
 		}
 		
 		public function changeModeTo(newModeClass:Class, entering:Boolean = false):void {
@@ -632,6 +641,11 @@ package angel.game {
 				}
 				spots[id] = new Point(spotXml.@x, spotXml.@y);
 			}
+		}
+		
+		private function clickedQuit(event:Event):void {
+			new GameMenu(this.parent);
+			this.cleanup();
 		}
 		
 	} // end class Room

@@ -10,12 +10,12 @@ package angel.game {
 	 * @author Beth Moursund
 	 */
 	public class InitGameFromFiles {
-		private var callbackWithInitRoomXml:Function;
+		private var initFinishedCallback:Function;
 		private var flagsLoaded:Boolean = false;
 		private var xmlInitData:XML = null;
 		
-		public function InitGameFromFiles(callbackWithInitRoomXml:Function):void {
-			this.callbackWithInitRoomXml = callbackWithInitRoomXml;
+		public function InitGameFromFiles(initFinishedCallback:Function):void {
+			this.initFinishedCallback = initFinishedCallback;
 			
 			var catalog:Catalog = new Catalog();
 			catalog.addEventListener(Event.INIT, catalogLoadedListener);
@@ -54,10 +54,11 @@ package angel.game {
 		private function finishInitIfAllDataLoaded():void {
 			if ((Settings.catalog != null) && flagsLoaded && (xmlInitData != null)) {
 				Settings.initFromXml(xmlInitData.settings);
+				Settings.initStartRoomFromXml(xmlInitData.room);
 				Settings.initPlayersFromXml(xmlInitData.player, Settings.catalog);
 				Flags.initFlagsFromXml(xmlInitData.setFlag);
 				
-				callbackWithInitRoomXml(xmlInitData.room[0]);
+				initFinishedCallback();
 			}
 		}
 		
