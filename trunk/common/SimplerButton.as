@@ -5,6 +5,7 @@ package angel.common {
 	import flash.events.MouseEvent;
 	import flash.geom.Matrix;
 	import flash.text.TextField;
+	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
 
@@ -12,8 +13,8 @@ package angel.common {
 	public class SimplerButton extends SimpleButton implements ICleanup {
 		private var callOnClick:Function = null;
 
-		private static const WIDTH:int = 75
-		private static const HEIGHT:int = 18;
+		public static const WIDTH:int = 75
+		public static const HEIGHT:int = 18;
 		
 		public function SimplerButton(buttonText:String, callOnClick:Function = null, color:uint = 0x808080, textColor:uint = 0) {
 			this.callOnClick = callOnClick;
@@ -58,6 +59,11 @@ package angel.common {
 			if (parent != null) {
 				parent.removeChild(this);
 			}
+		}
+		
+		public function resizeToFitText(minimumWidth:int = 0):void {
+			var sizeNeeded:int = TextField(Sprite(upState).getChildAt(0)).textWidth + 20;
+			this.width = (sizeNeeded < minimumWidth ? minimumWidth : sizeNeeded);
 		}
 		
 		private static function brightenColour(colour:int, modifier:int):int {

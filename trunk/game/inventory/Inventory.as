@@ -11,6 +11,10 @@ package angel.game.inventory {
 	 * ...
 	 * @author Beth Moursund
 	 */
+	
+	//NOTE: currently inventory is not an ICleanup() -- it's just a toss-and-forget.  If inventory items ever start needing
+	//cleanup, then Inventory will need to have a cleanup() function which does that for all its contents, and places that
+	//make use of Inventory will need to call it.
 	public class Inventory {
 		
 		public static const MAIN_HAND:int = 0;
@@ -23,6 +27,12 @@ package angel.game.inventory {
 		
 		public function Inventory() {
 			pileOfStuff = new Dictionary();
+		}
+		
+		public function clone():Inventory {
+			//This isn't the most efficient implementation, but it's quick and easy.
+			var text:String = this.toText();
+			return Inventory.fromText(text);
 		}
 		
 		public function toText():String {

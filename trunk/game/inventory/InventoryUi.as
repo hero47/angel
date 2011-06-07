@@ -13,15 +13,22 @@ package angel.game.inventory {
 	 * ...
 	 * @author Beth Moursund
 	 */
+	
+	//NOTE: if there were a side panel that could produce any inventory item in the catalog as a InventoryUiDraggable,
+	//then this could be used in the Editor to set inventory for characters.  A version might also be used for the "load-out"
+	//portion of the game, where the player equips the character(s) that will be going on a mission.  So it seems worth
+	//going to some extra effort to keep this free of entanglement with room-specific code.  To that end, I'm going to
+	//make a separate subclass to interface between InventoryUi and rooms.
 	public class InventoryUi extends Sprite implements ICleanup {
 		
-		public static const BACK_COLOR:uint = 0x808080;
+		protected static const BACK_COLOR:uint = 0x808080;
+		protected static const BUTTON_COLOR:uint = 0xff6a00;
 		public static const uiImageX:int = 56;
 		public static const uiImageY:int = 56;
 		
 		private static const PILE_HEIGHT:int = uiImageY;
-		private static const WINDOW_X:int = 300;
-		private static const WINDOW_Y:int = 300 + PILE_HEIGHT;
+		protected static const WINDOW_X:int = 300;
+		protected static const WINDOW_Y:int = 300 + PILE_HEIGHT;
 		// These are the on-screen locations representing each inventory slot
 		private static const slotCoords:Vector.<Point> = Vector.<Point>( [ new Point(26, 69), new Point(211, 69) ] );
 		private static const slotIconClass:Vector.<Class> = Vector.<Class>( [ Icon.InventoryMainHand, Icon.InventoryOffHand ] );
@@ -29,22 +36,17 @@ package angel.game.inventory {
 		private var slots:Vector.<InventoryUiSlot> = new Vector.<InventoryUiSlot>(Inventory.NUMBER_OF_EQUIPPED_LOCATIONS + 1);
 		
 		private static const PILE:int = Inventory.NUMBER_OF_EQUIPPED_LOCATIONS;
-		private var xInventory:int;
-		private var yInventory:int;
-		private var room:Room;
+		protected var xInventory:int;
+		protected var yInventory:int;
 		
 		public var inventory:Inventory;
 		
 		public function InventoryUi(parent:DisplayObjectContainer, inventory:Inventory) {
 			this.inventory = inventory;
-			if (parent is Room) {
-				room = Room(parent);
-				room.suspendUi(this);
-				parent = room.parent;
-			}
 			parent.addChild(this);
 			
 			drawBackground();
+			addButtons();
 			addSlots();
 			addDraggables();
 			
@@ -65,8 +67,10 @@ package angel.game.inventory {
 			bitmap.x = xInventory;
 			bitmap.y = yInventory;
 			addChild(bitmap);
-			
-			var doneButton:SimplerButton = new SimplerButton("Done", closeInventory);
+		}
+		
+		protected function addButtons():void {
+			var doneButton:SimplerButton = new SimplerButton("Done", closeInventory, BUTTON_COLOR);
 			doneButton.x = xInventory + WINDOW_X - doneButton.width - 5;
 			doneButton.y = yInventory + 5;
 			addChild(doneButton);
@@ -107,10 +111,6 @@ package angel.game.inventory {
 			if (parent != null) {
 				parent.removeChild(this);
 			}
-			if (room != null) {
-				room.restoreUiAfterSuspend(this);
-				room = null;
-			}
 		}
 		
 		public function dropSlotHit(dragging:InventoryUiDraggable):InventoryUiSlot {
@@ -127,7 +127,7 @@ package angel.game.inventory {
 			return slots[PILE];
 		}
 		
-		private function closeInventory(event:Event):void {
+		protected function closeInventory(event:Event):void {
 			cleanup();
 		}
 		

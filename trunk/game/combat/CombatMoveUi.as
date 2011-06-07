@@ -11,6 +11,7 @@ package angel.game.combat {
 	import angel.game.PieSlice;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
+	import angel.game.RoomInventoryUi;
 	import angel.game.ToolTip;
 	import flash.geom.ColorTransform;
 	import flash.geom.Point;
@@ -62,6 +63,10 @@ package angel.game.combat {
 			switch (keyCode) {
 				case Util.KEYBOARD_C:
 					room.changeModeTo(RoomExplore);
+				break;
+				
+				case Util.KEYBOARD_I:
+					new RoomInventoryUi(room, player, CombatFireUi.COMMIT_INVENTORY_BUTTON_TEXT, 2 );
 				break;
 				
 				case Util.KEYBOARD_M:

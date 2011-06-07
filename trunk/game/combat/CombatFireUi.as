@@ -10,6 +10,7 @@ package angel.game.combat {
 	import angel.game.PieSlice;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
+	import angel.game.RoomInventoryUi;
 	import angel.game.Settings;
 	import angel.game.ToolTip;
 	import flash.display.Bitmap;
@@ -43,6 +44,7 @@ package angel.game.combat {
 		private static const TARGET_TILE_HILIGHT_COLOR:uint = 0xff0000;
 		private static const TARGET_HILIGHT_COLOR:uint = 0xff0000;
 		private static const OUT_OF_RANGE_COLOR:uint = 0xc0c0c0;
+		public static const COMMIT_INVENTORY_BUTTON_TEXT:String = "Save (costs 2 action points!)"
 		
 		public function CombatFireUi(room:Room, combat:RoomCombat) {
 			this.combat = combat;
@@ -59,6 +61,11 @@ package angel.game.combat {
 		
 		public function enable(player:ComplexEntity):void {
 			trace("entering player fire phase for", player.aaId);
+			if (player.actionsRemaining < 1) {
+				room.disableUi();
+				CombatBrainUiMeld(player.brain).finishedLastFirePhase();
+				return;
+			}
 			this.player = player;
 			quickFireWeapon = player.inventory.mainWeapon();
 			if ((quickFireWeapon == null) || !quickFireWeapon.readyToFire()) {
@@ -98,6 +105,10 @@ package angel.game.combat {
 			switch (keyCode) {
 				case Util.KEYBOARD_C:
 					room.changeModeTo(RoomExplore);
+				break;
+				
+				case Util.KEYBOARD_I:
+					new RoomInventoryUi(room, player, COMMIT_INVENTORY_BUTTON_TEXT, 2 );
 				break;
 				
 				case Util.KEYBOARD_M:

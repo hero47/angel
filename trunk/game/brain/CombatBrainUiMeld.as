@@ -76,6 +76,7 @@ package angel.game.brain {
 		
 		public function startTurn():void {
 			myTurn = true;
+			me.actionsRemaining = me.actionsPerTurn;
 			Settings.gameEventQueue.dispatch(new EntityQEvent(me, EntityQEvent.START_TURN));
 			Settings.gameEventQueue.addListener(this, me, EntityQEvent.FINISHED_MOVING, finishedMovingListener);
 			Settings.gameEventQueue.addListener(this, me, EntityQEvent.MOVE_INTERRUPTED, moveInterruptedListener);
@@ -143,8 +144,11 @@ package angel.game.brain {
 			if (endTurnIfDeadOrCombatOver()) {
 				return;
 			}
-			me.actionsRemaining = me.actionsPerTurn;
-			doFireBody();
+			if (me.actionsRemaining > 0) {
+				doFireBody();
+			} else {
+				finishedLastFirePhase();
+			}
 		}
 		
 		private function finishedOneFirePhase():void {
@@ -186,7 +190,7 @@ package angel.game.brain {
 		}
 		
 		// Called when the timer for gazing at the fire graphic expires
-		private function finishedLastFirePhase():void {
+		public function finishedLastFirePhase():void {
 			trace(me.aaId, "finished fire");
 			if (endTurnIfDeadOrCombatOver()) {
 				return;
