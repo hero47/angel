@@ -28,9 +28,14 @@ package angel.game {
 		private var resumeButton:SimplerButton;
 		private var quitButton:SimplerButton;
 		
-		public function GameMenu(main:DisplayObjectContainer, saveDataForCurrentGame:SaveGame = null) {
+		public function GameMenu(main:DisplayObjectContainer, newSaveData:SaveGame = null) {
 			this.main = main;
-			this.saveDataForCurrentGame = saveDataForCurrentGame;
+			saveDataForCurrentGame = newSaveData;
+			if (newSaveData == null) {
+				saveDataForCurrentGame = SaveGame.loadFromDisk();
+			} else {
+				newSaveData.saveToDisk();
+			}
 			
 			var splash:SplashResource = Settings.catalog.retrieveSplashResource(Defaults.GAME_MENU_SPLASH_ID);
 			background = new Bitmap(splash.bitmapData);
@@ -46,7 +51,7 @@ package angel.game {
 			quitButton.width = 100;
 			Util.addBelow(quitButton, startButton, 10);
 			
-			if (saveDataForCurrentGame != null) {
+			if (this.saveDataForCurrentGame != null) {
 				resumeButton = new SimplerButton("Return", resumeGame);
 				resumeButton.width = 100;
 				Util.addBelow(resumeButton, quitButton, 30);
@@ -79,6 +84,7 @@ package angel.game {
 			}
 			var room:Room = Room.createFromXml(xml, saveDataForCurrentGame, filename);
 			if (room != null) {
+				saveDataForCurrentGame.setFlags();
 				main.addChild(room);
 				room.changeModeTo(RoomExplore, true);
 				this.cleanup();

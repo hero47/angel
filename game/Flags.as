@@ -84,8 +84,6 @@ package angel.game {
 			return flags[id];
 		}
 		
-		
-		
 		public static function haveAllFlagsIn(list:Vector.<String>):Boolean {
 			if (list == null) {
 				return true;
@@ -96,6 +94,31 @@ package angel.game {
 				}
 			}
 			return true;
+		}
+		
+		public static function toText():String {
+			var text:String = "";
+			for (var flagId:String in flags) {
+				if (getValue(flagId)) {
+					text += flagId + ",";
+				}
+			}
+			return text.substr(0, text.length-1); // eliminate extra comma
+		}
+		
+		public static function setFlagsFromText(text:String):void {
+			var flagId:String;
+			for (flagId in flags) {
+				setValue(flagId, false);
+			}
+			
+			if (Util.nullOrEmpty(text)) {
+				return;
+			}
+			var flagList:Array = text.split(",");
+			for each (flagId in flagList) {
+				setValue(flagId, true);
+			}
 		}
 		
 	} // end class Flags

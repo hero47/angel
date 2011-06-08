@@ -7,6 +7,7 @@ package angel.game {
 	import angel.common.Prop;
 	import angel.common.SimplerButton;
 	import angel.common.Util;
+	import angel.game.combat.RoomCombat;
 	import angel.game.event.EntityQEvent;
 	import angel.game.event.QEvent;
 	import angel.game.inventory.InventoryUi;
@@ -62,6 +63,7 @@ package angel.game {
 		
 		private var tileWithHilight:FloorTile;
 		private var scrollingTo:Point = null;
+		private var preCombatSave:SaveGame;
 				
 		public function Room(floor:Floor) {
 			this.floor = floor;
@@ -130,6 +132,12 @@ package angel.game {
 		}
 		
 		public function changeModeTo(newModeClass:Class, entering:Boolean = false):void {
+			if (newModeClass == RoomCombat) {
+				preCombatSave = new SaveGame();
+				preCombatSave.collectGameInfo(this);
+			} else {
+				preCombatSave = null;
+			}
 			forEachComplexEntity(function(entity:ComplexEntity):void {
 				if (entity.moving()) {
 					entity.movement.endMoveImmediately();
@@ -634,10 +642,22 @@ package angel.game {
 		}
 		
 		private function clickedQuit(event:Event):void {
-			//UNDONE persist data to disk
+			if (preCombatSave != null) {
+				var options:Object = { buttons:["Yes", "No"], callback:combatQuitCallback };
+				Alert.show("Combat state is not saved!\nYou will be returned to the state just before combat!\nAre you certain you want to exit during combat?", options);
+				return;
+			}
 			var save:SaveGame = new SaveGame();
-			save.collectRoomInfo(this);
+			save.collectGameInfo(this);
 			new GameMenu(this.parent, save);
+			this.cleanup();
+		}
+		
+		private function combatQuitCallback(buttonName:String):void {
+			if (buttonName != "Yes") {
+				return;
+			}
+			new GameMenu(this.parent, preCombatSave);
 			this.cleanup();
 		}
 		
