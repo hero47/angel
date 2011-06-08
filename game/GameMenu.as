@@ -21,19 +21,22 @@ package angel.game {
 		public static const BUTTON_COLOR:uint = 0xffcccc;
 		
 		private var main:DisplayObjectContainer;
+		private var saveDataForCurrentGame:SaveGame;
 		
 		private var background:Bitmap;
 		private var startButton:SimplerButton;
+		private var resumeButton:SimplerButton;
 		private var quitButton:SimplerButton;
 		
-		public function GameMenu(main:DisplayObjectContainer) {
+		public function GameMenu(main:DisplayObjectContainer, saveDataForCurrentGame:SaveGame = null) {
 			this.main = main;
+			this.saveDataForCurrentGame = saveDataForCurrentGame;
 			
 			var splash:SplashResource = Settings.catalog.retrieveSplashResource(Defaults.GAME_MENU_SPLASH_ID);
 			background = new Bitmap(splash.bitmapData);
 			main.addChild(background);
 			
-			startButton = new SimplerButton("New Game", startGame);
+			startButton = new SimplerButton("New Game", startNewGame);
 			startButton.width = 100;
 			startButton.x = (background.width - startButton.width) / 2;
 			startButton.y = 300;
@@ -43,27 +46,40 @@ package angel.game {
 			quitButton.width = 100;
 			Util.addBelow(quitButton, startButton, 10);
 			
+			if (saveDataForCurrentGame != null) {
+				resumeButton = new SimplerButton("Return", resumeGame);
+				resumeButton.width = 100;
+				Util.addBelow(resumeButton, quitButton, 30);
+			}
+			
 		}
 		
 		public function cleanup():void {
 			startButton.cleanup();
 			quitButton.cleanup();
+			if (resumeButton != null) {
+				resumeButton.cleanup();
+			}
 			main.removeChild(background);
 		}
 		
-		private function startGame(event:Event):void {
-			LoaderWithErrorCatching.LoadFile(Settings.startRoomFile, roomXmlLoaded);
+		private function startNewGame(event:Event):void {
+			saveDataForCurrentGame = Settings.saveDataForNewGame;
+			resumeGame(event);
 		}
 		
-		private function roomXmlLoaded(event:Event, filename:String):void {
+		private function resumeGame(event:Event):void {
+			LoaderWithErrorCatching.LoadFile(saveDataForCurrentGame.startRoomFile, roomXmlLoaded);
+		}
+		
+		private function roomXmlLoaded(event:Event, completeParam:Object, filename:String):void {
 			var xml:XML = Util.parseXml(event.target.data, filename);
 			if (xml == null) {
 				return;
 			}
-			var room:Room = Room.createFromXml(xml, filename);
+			var room:Room = Room.createFromXml(xml, saveDataForCurrentGame, filename);
 			if (room != null) {
 				main.addChild(room);
-				room.addPlayerCharactersFromSettings(Settings.startSpot);
 				room.changeModeTo(RoomExplore, true);
 				this.cleanup();
 			}

@@ -1,6 +1,9 @@
 package angel.game.script {
 	import angel.common.Alert;
+	import angel.common.Catalog;
 	import angel.game.Room;
+	import angel.game.SaveGame;
+	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	/**
 	 * ...
@@ -12,9 +15,12 @@ package angel.game.script {
 		private var doAtEnd:Vector.<Function> = new Vector.<Function>();
 		private var message:String;
 		
+		public var catalog:Catalog;
+		
 		public function ScriptContext(room:Room, triggeringEntity:SimpleEntity = null) {
 			this.triggeringEntity = triggeringEntity;
 			this.scriptRoom = room;
+			this.catalog = Settings.catalog;
 		}
 		
 		public function entityWithScriptId(entityId:String):SimpleEntity {
@@ -27,6 +33,10 @@ package angel.game.script {
 		
 		public function get room():Room {
 			return scriptRoom;
+		}
+		
+		public function roomChanged(newRoom:Room):void {
+			scriptRoom = newRoom;
 		}
 		
 		// f should be a function that takes this ScriptContext as a parameter.

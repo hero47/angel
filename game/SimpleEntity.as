@@ -32,19 +32,10 @@ package angel.game {
 		}
 		
 		override public function cleanup():void {
-			Assert.fail("See comment on SimpleEntity.detachFromRoom");
-		}
-		
-		public function detachFromRoom():void {
-			//UNDONE: when we add resource tracking, this will probably be messed up!  When player character is removed
-			//from room, we keep a reference to it in Settings; when other entity is removed, we should free its
-			//resources.  Currently we don't distinguish between those two cases.
 			if (room != null) {
 				room = null;
 			}
-			if (parent != null) {
-				parent.removeChild(this);
-			}
+			super.cleanup();
 		}
 		
 		public static function createFromRoomContentsXml(propXml: XML, version:int, catalog:Catalog) : SimpleEntity {

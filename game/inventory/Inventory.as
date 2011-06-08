@@ -52,6 +52,9 @@ package angel.game.inventory {
 		
 		public static function fromText(text:String):Inventory {
 			var inv:Inventory = new Inventory();
+			if (Util.nullOrEmpty(text)) {
+				return inv;
+			}
 			var list:Array = text.split(",");
 			for each (var entry:String in list) {
 				var slotAndContents:Array = entry.split(" ");

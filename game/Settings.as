@@ -59,13 +59,7 @@ package angel.game {
 		public static var fireFromCoverDamageReduction:int;
 		public static var grenadeDamage:int;
 		
-		public static var startRoomFile:String;
-		public static var startSpot:String;
-		
-		// This is currently initialized from game settings file, but will eventually be part of the "game state",
-		// initialized from game settings the first time the game is started and from a saved game any time the
-		// game is reloaded.  Player inventory, current room, flag settings, etc. belong to the same category.
-		public static var pcs:Vector.<ComplexEntity> = new Vector.<ComplexEntity>();
+		public static var saveDataForNewGame:SaveGame;
 		
 		public function Settings() {
 			
@@ -123,110 +117,6 @@ package angel.game {
 		
 		private static function setBooleanFromXml(propertyName:String, defaultValue:Boolean, xmlValue:String):void {
 			Settings[propertyName] = (defaultValue ? xmlValue != "no" : xmlValue == "yes");
-		}
-		
-		public static function initStartRoomFromXml(xml:XMLList):void {
-			if (xml.length() > 0) {
-				startSpot = xml[0].@start;
-				startRoomFile = xml[0].@file;
-			}
-			if (startRoomFile == "") {
-				Alert.show("Error! Init file must include room to start in.");
-			}
-		}
-		
-		// This part will probably be going away or moving eventually -- identity of main PC and followers will be
-		// script-controlled and stats will carry over from one scene to the next
-		public static function initPlayersFromXml(xml:XMLList, catalog:Catalog):void {
-			var entity:ComplexEntity;
-			if (xml.length() == 0) {
-				entity = new ComplexEntity(catalog.retrieveCharacterResource("PLAYER"), "PLAYER");
-				entity.currentHealth = 100;
-				entity.faction = ComplexEntity.FACTION_FRIEND;
-				pcs.push(entity);
-				return;
-			}
-			
-			var i:int = 1;
-			var previousPcId:String = null;
-			for each (var pc:XML in xml.pc) {
-				var id:String = pc.@id;
-				if (id == "") {
-					id = "PLAYER-" + i;
-				}
-				++i;
-				var resource:RoomContentResource = catalog.retrieveCharacterResource(id);
-				if (resource == null) {
-					continue;
-				}
-				entity = new ComplexEntity(resource, id);
-				entity.faction = ComplexEntity.FACTION_FRIEND;
-				entity.exploreBrainClass = null;
-				entity.combatBrainClass = CombatBrainUiMeldPlayer;
-				if (pc.@health.length() > 0) {
-					entity.maxHealth = entity.currentHealth = pc.@health;
-				}
-				
-				if (pc.@mainGun.length() > 0) {
-					entity.inventory.equip(Inventory.makeOne(pc.@mainGun), Inventory.MAIN_HAND, false);
-				}
-				if (pc.@offGun.length() > 0) {
-					entity.inventory.equip(Inventory.makeOne(pc.@offGun), Inventory.OFF_HAND, false);
-				}
-				if (pc.@inventory.length() > 0) {
-					entity.inventory.removeAllMatchingFromPileOfStuff(Object);
-					entity.inventory.addToPileFromText(pc.@inventory);
-				}
-				
-				//UNDONE: get rid of this once files are converted
-				if (pc.@grenades.length() > 0) {
-					var grenades:int = pc.@grenades;
-					if (grenades > 0) {
-						entity.inventory.addToPileOfStuff(Inventory.makeOne("grenade"), grenades);
-					}
-				}
-				
-				if (previousPcId != null) {
-					entity.exploreBrainClass = BrainFollow;
-					entity.exploreBrainParam = previousPcId;
-				}
-				previousPcId = entity.id;
-				
-				pcs.push(entity);
-			}
-		}
-		
-		public static function addToPlayerList(entity:ComplexEntity):void {
-			if (pcs.indexOf(entity) < 0) {
-				pcs.push(entity);
-			} else {
-				Assert.fail("addToPlayerList: entity already in list");
-			}
-		}
-		
-		public static function removeFromPlayerList(entity:SimpleEntity):void {
-			var index:int = pcs.indexOf(entity);
-			Assert.assertTrue(index >= 0, "removePc not in list");
-			pcs.splice(index, 1);
-		}
-		
-		public static function isOnPlayerList(entity:SimpleEntity):Boolean {
-			return (pcs.indexOf(entity) >= 0);
-		}
-		
-		// return true if succeeded, false if it wasn't on the list to begin with
-		public static function moveToFrontOfPlayerList(entity:SimpleEntity):Boolean {
-			var index:int = pcs.indexOf(entity);
-			if (index < 0) {
-				return false;
-			}
-			pcs.splice(index, 1);
-			pcs.splice(0, 0, entity);
-			return true;
-		}
-		
-		public static function lastEntityOnPlayerList():ComplexEntity {
-			return pcs[pcs.length - 1];
 		}
 		
 	} // end class Settings

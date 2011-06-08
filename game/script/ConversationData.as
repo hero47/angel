@@ -26,12 +26,12 @@ package angel.game.script {
 			LoaderWithErrorCatching.LoadFile(filename, conversationXmlLoaded);
 		}
 		
-		private function conversationXmlLoaded(event:Event, filename:String):void {
-			var xml:XML = Util.parseXml(event.target.data, filename);
+		private function conversationXmlLoaded(event:Event, param:Object, filenameForErrors:String):void {
+			var xml:XML = Util.parseXml(event.target.data, filenameForErrors);
 			if (xml == null) {
 				return;
 			}
-			initializeFromXml(xml, "Error in conversation file " + filename + ":\n");
+			initializeFromXml(xml, "Error in conversation file " + filenameForErrors + ":\n");
 			Settings.gameEventQueue.dispatch(new QEvent(this, QEvent.INIT));
 		}
 			

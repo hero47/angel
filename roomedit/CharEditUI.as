@@ -221,13 +221,14 @@ package angel.roomedit {
 		}
 		
 		private function changeFilename(event:Event):void {
+			var charId:String = propCombo.selectedLabel;
 			var newFilename:String = changeImageControl.text;
-			LoaderWithErrorCatching.LoadBytesFromFile(newFilename, updateToNewFilename);
+			LoaderWithErrorCatching.LoadBytesFromFile(newFilename, updateToNewFilename, charId);
 		}
 		
-		private function updateToNewFilename(event:Event, filename:String):void {
+		private function updateToNewFilename(event:Event, param:Object, filename:String):void {
+			var charId:String = String(param);
 			var bitmapData:BitmapData = Bitmap(event.target.content).bitmapData;
-			var charId:String = propCombo.selectedLabel;
 			catalog.deleteXmlAttribute(charId, "top");
 			catalog.changeFilename(charId, filename);
 			setAnimationTypeFromImageSize(charId, bitmapData.width, bitmapData.height, filename);

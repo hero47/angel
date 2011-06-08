@@ -30,7 +30,7 @@ package angel.game.script.action {
 			if (oldMainPc == newMainPc) {
 				return null; // already is main pc, no need to do anything
 			}
-			if (Settings.moveToFrontOfPlayerList(newMainPc)) {
+			if (newMainPc.isReallyPlayer) {
 				context.room.changeMainPlayerCharacterTo(newMainPc);
 				oldMainPc.setBrain(true, BrainFollow, id);
 				newMainPc.setBrain(true, null, null);

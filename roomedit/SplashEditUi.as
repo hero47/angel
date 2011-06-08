@@ -60,13 +60,14 @@ package angel.roomedit {
 		}
 		
 		private function changeFilename(event:Event):void {
+			var splashId:String = splashCombo.selectedLabel;
 			var newFilename:String = changeImageControl.text;
-			LoaderWithErrorCatching.LoadBytesFromFile(newFilename, updateToNewFilename);
+			LoaderWithErrorCatching.LoadBytesFromFile(newFilename, updateToNewFilename, splashId);
 		}
 		
-		private function updateToNewFilename(event:Event, filename:String):void {
+		private function updateToNewFilename(event:Event, param:Object, filename:String):void {
+			var splashId:String = String(param);
 			var bitmapData:BitmapData = Bitmap(event.target.content).bitmapData;
-			var splashId:String = splashCombo.selectedLabel;
 			catalog.changeFilename(splashId, filename);
 			changeSplash(null);
 		}

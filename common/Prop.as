@@ -8,7 +8,7 @@ package angel.common {
 	// them.
 	// CONSIDER: Room editor creates these either from a cataloged PropImage (when loading) or directly from
 	// a bitmap (when adding to the map by clicking a tile).  That may need to change when we get resource management.
-	public class Prop extends Sprite {
+	public class Prop extends Sprite implements ICleanup {
 
 		// ORing together the solidity for everything on a tile must give solidity for the tile as a whole.
 		public static const SOLID:uint = 0x1;	// normal solid object, prevents movement (default)

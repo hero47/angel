@@ -24,10 +24,10 @@ package angel.game {
 			LoaderWithErrorCatching.LoadFile(FLAG_FILENAME, flagListXmlLoaded);
 		}
 		
-		private static function flagListXmlLoaded(event:Event, filename:String):void {
+		private static function flagListXmlLoaded(event:Event, completeParam:Object, filenameForErrors:String):void {
 			var duplicateNames:String = "";
 			flags = new Object();
-			var xml:XML = Util.parseXml(event.target.data, filename);
+			var xml:XML = Util.parseXml(event.target.data, filenameForErrors);
 			if (xml == null) {
 				return;
 			}
