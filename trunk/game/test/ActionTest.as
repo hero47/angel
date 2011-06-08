@@ -35,7 +35,6 @@ package angel.game.test {
 			Autotest.testFunction(testIfElse);
 			
 			testRoom = Autotest.setupTestRoom();
-			Autotest.assertTrue(Settings.isOnPlayerList(testRoom.mainPlayerCharacter), "Main player not on player list, something earlier screwed up");
 			Autotest.assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Setup test room should leave queue clear");
 			
 			trace("Testing actions for no room mode");
@@ -278,7 +277,6 @@ package angel.game.test {
 			Autotest.assertTrue(nei is ComplexEntity);
 			Autotest.assertFalse(ComplexEntity(nei).isReallyPlayer, "Should be npc");
 			Autotest.assertTrue(nei.location.equals(new Point(0, 0)), "Unspecified location should default to 0,0");
-			Autotest.assertFalse(Settings.isOnPlayerList(nei));
 			
 			Autotest.testActionFromXml(removenei);
 			Autotest.assertEqual(testRoom.entityInRoomWithId("nei"), null, "nei should have been removed");
@@ -337,7 +335,6 @@ package angel.game.test {
 			Autotest.testActionFromXml(addNeiWithBrains);
 			var nei:ComplexEntity = ComplexEntity(room.entityInRoomWithId("nei"));
 			Autotest.assertFalse(nei.isReallyPlayer, "Should be npc");
-			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Npc shouldn't be on player list");
 			Autotest.assertEqual(nei.faction, ComplexEntity.FACTION_ENEMY, "No faction specified npc should be enemy");
 			
 			Autotest.testActionFromXml(changeNeiToNpc);
@@ -346,7 +343,6 @@ package angel.game.test {
 			Autotest.testActionFromXml(changeNeiToPc);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), nei, "Change pc-ness shouldn't change room or identity");
 			Autotest.assertTrue(nei.isReallyPlayer, "Should have changed to player");
-			Autotest.assertTrue(Settings.isOnPlayerList(nei), "Should have added to player list");
 			Autotest.assertEqual(nei.faction, ComplexEntity.FACTION_FRIEND, "PC should always be friend faction");
 			Autotest.assertEqual(nei.exploreBrainClass, BrainFollow, "PC gets follow brain");
 			Autotest.assertEqual(nei.combatBrainClass, CombatBrainUiMeldPlayer, "PC gets special combat brain");
@@ -361,7 +357,6 @@ package angel.game.test {
 			Autotest.testActionFromXml(changeNeiToNpc);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), nei, "Change pc-ness shouldn't change room or identity");
 			Autotest.assertFalse(nei.isReallyPlayer, "Should have changed back to npc");
-			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Should have removed from player list");
 			Autotest.assertEqual(nei.faction, ComplexEntity.FACTION_ENEMY, "No faction specified npc should be enemy");
 			Autotest.assertEqual(nei.exploreBrainClass, null, "No explore brain specified should default to null");
 			Autotest.assertEqual(nei.combatBrainClass, CombatBrainNone, "No combat brain specified should default to CombatBrainNone");
@@ -389,7 +384,6 @@ package angel.game.test {
 			Autotest.testActionFromXml(changeNeiToPc);
 			Autotest.testActionFromXml(removenei);
 			Autotest.assertEqual(room.entityInRoomWithId("nei"), null, "nei should have been removed");
-			Autotest.assertFalse(Settings.isOnPlayerList(nei), "Remove pc from room should also remove from player list");
 			
 			var mainPcId:String = testRoom.mainPlayerCharacter.id;
 			var changeMainPc:XML = changeNeiToNpc.copy();
@@ -486,8 +480,6 @@ package angel.game.test {
 		}
 		
 		private function testChangeMainPcAction():void {
-			Autotest.assertTrue(Settings.isOnPlayerList(testRoom.mainPlayerCharacter), "Main player not on player list, something earlier screwed up");
-			
 			Autotest.testActionFromXml(<addNpc id="xxNewMainPc" />);
 			Autotest.clearAlert(); // should alert the first time through because it's not in catalog
 			Autotest.testActionFromXml(<changeToPc id="xxNewMainPc" />);

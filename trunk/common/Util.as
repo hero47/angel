@@ -223,8 +223,8 @@ package angel.common {
 			return (val < 0) ? (val % mod) + mod : val % mod;
 		}
 		
-		public static function notEmpty(val:String):Boolean {
-			return (val != null) && (val != "");
+		public static function nullOrEmpty(val:String):Boolean {
+			return ((val == null) || (val == ""));
 		}
 		
 		public static function chessDistance(a:Point, b:Point):int {

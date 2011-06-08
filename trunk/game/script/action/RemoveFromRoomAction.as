@@ -28,9 +28,6 @@ package angel.game.script.action {
 				Alert.show("Error! Cannot remove main player character, must make someone else main first.");
 				return null;
 			}
-			if (Settings.isOnPlayerList(entity)) {
-				Settings.removeFromPlayerList(entity);
-			}
 			context.room.removeEntity(entity);
 			return null;
 		}

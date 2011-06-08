@@ -53,7 +53,6 @@ package angel.game {
 		public var exploreBrainParam:String;
 		public var combatBrainClass:Class;
 		public var combatBrainParam:String;
-		// This has no type yet because we aren't doing anything with it yet.  Eventually it will probably be an interface.
 		public var brain:IBrain;
 		public var inventory:Inventory = new Inventory();
 		
@@ -119,12 +118,14 @@ package angel.game {
 			return entity;
 		}
 		
-		override public function detachFromRoom():void {
-			// NOTE: if entity is a pc, a reference to it will still exist through the player list in Settings.
-			if (movement != null) {
-				movement.detachFromRoom();
+		override public function cleanup():void {
+			if (brain != null) {
+				brain.cleanup();
 			}
-			super.detachFromRoom();
+			if (movement != null) {
+				movement.cleanup();
+			}
+			super.cleanup();
 		}
 		
 		override public function set x(value:Number):void {

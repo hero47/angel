@@ -4,6 +4,7 @@ package angel.game.test {
 	import angel.game.ComplexEntity;
 	import angel.game.event.EventQueue;
 	import angel.game.InitGameFromFiles;
+	import angel.game.SaveGame;
 	import angel.game.Settings;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -62,11 +63,7 @@ package angel.game.test {
 			new InitGameFromFiles(gameInitializedCallback);
 		}
 		
-		private function gameInitializedCallback():void {
-			Settings.pcs.length = 0;
-			var playerInitXml:XML = <init><player><pc /></player></init>;
-			playerInitXml.player.pc.@id = Autotest.TEST_ROOM_MAIN_PC_ID;
-			Settings.initPlayersFromXml(playerInitXml.player, Settings.catalog);
+		private function gameInitializedCallback(save:SaveGame):void {
 			Autotest.clearAlert();
 			gameInitialized = true;
 		}

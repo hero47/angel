@@ -31,7 +31,8 @@ package angel.game {
 			new InitGameFromFiles(gameInitialized);
 		}
 		
-		private function gameInitialized():void {
+		private function gameInitialized(save:SaveGame):void {
+			Settings.saveDataForNewGame = save;
 			new GameMenu(this);
 		}
 		

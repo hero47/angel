@@ -18,9 +18,13 @@ package angel.common {
 		private var urlLoader:URLLoader = null;
 		private var dispatcher:EventDispatcher = null;
 		
+		private var completeParam:Object;
+		
 		// Don't use this constructor -- use static method LoadFile, LoadBytes, or LoadBytesFromFile
-		// Callback takes complete event as parameter; callbackFail takes no parameter
-		public function LoaderWithErrorCatching(type:int, filename:String, bytes:ByteArray, callbackWhenComplete:Function, callbackForFailure:Function) {		
+		// Callback takes parameters (event, completeParam, filenameForErrors)
+		// callbackFail takes no parameter
+		public function LoaderWithErrorCatching(type:int, filename:String, bytes:ByteArray,
+				callbackWhenComplete:Function, completeParam:Object, callbackForFailure:Function) {		
 			if (((type == LOAD_FILE) || (type == LOAD_BYTES_FROM_FILE)) && ((filename == null) || (filename == ""))) {
 				Alert.show("Error! Missing filename.");
 				if (callbackForFailure != null) {
@@ -30,6 +34,7 @@ package angel.common {
 			}
 			callback = callbackWhenComplete;
 			callbackFail = callbackForFailure;
+			this.completeParam = completeParam;
 			filenameForErrorMessage = filename;
 			if (type == LOAD_FILE) {
 				urlLoader = new URLLoader();
@@ -55,21 +60,21 @@ package angel.common {
 			}	
 		}
 		
-		public static function LoadBytesFromFile(filename:String, callbackWhenComplete:Function, callbackForFailure:Function = null, loadIntoByteArray:Boolean = false):void {
-			new LoaderWithErrorCatching(LOAD_BYTES_FROM_FILE, filename, null, callbackWhenComplete, callbackForFailure);
+		public static function LoadBytesFromFile(filename:String, callbackWhenComplete:Function, callbackParam:Object = null, callbackForFailure:Function = null, loadIntoByteArray:Boolean = false):void {
+			new LoaderWithErrorCatching(LOAD_BYTES_FROM_FILE, filename, null, callbackWhenComplete, callbackParam, callbackForFailure);
 		}
 
-		public static function LoadBytes(bytes:ByteArray, callbackWhenComplete:Function, callbackForFailure:Function = null, loadIntoByteArray:Boolean = false):void {
-			new LoaderWithErrorCatching(LOAD_BYTES, null, bytes, callbackWhenComplete, callbackForFailure);
+		public static function LoadBytes(bytes:ByteArray, callbackWhenComplete:Function, callbackParam:Object = null, callbackForFailure:Function = null, loadIntoByteArray:Boolean = false):void {
+			new LoaderWithErrorCatching(LOAD_BYTES, null, bytes, callbackWhenComplete, callbackParam, callbackForFailure);
 		}
 
-		public static function LoadFile(filename:String, callbackWhenComplete:Function, callbackForFailure:Function = null, loadIntoByteArray:Boolean = false):void {
-			new LoaderWithErrorCatching(LOAD_FILE, filename, null, callbackWhenComplete, callbackForFailure);
+		public static function LoadFile(filename:String, callbackWhenComplete:Function, callbackParam:Object = null, callbackForFailure:Function = null, loadIntoByteArray:Boolean = false):void {
+			new LoaderWithErrorCatching(LOAD_FILE, filename, null, callbackWhenComplete, callbackParam, callbackForFailure);
 		}
 
 		private function completeListener(event:Event):void {
 			cleanup();
-			callback(event, filenameForErrorMessage);
+			callback(event, completeParam, filenameForErrorMessage);
 		}
 		
 		override protected function cleanup():void {

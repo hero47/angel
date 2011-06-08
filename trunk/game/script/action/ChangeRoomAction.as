@@ -5,6 +5,7 @@ package angel.game.script.action {
 	import angel.game.combat.RoomCombat;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
+	import angel.game.SaveGame;
 	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import flash.display.DisplayObjectContainer;
@@ -17,8 +18,6 @@ package angel.game.script.action {
 		private var filename:String;
 		private var startSpot:String;
 		private var startMode:Class;
-		
-		private var oldRoom:Room;
 		
 		public function ChangeRoomAction(filename:String, startSpot:String=null, startMode:Class=null) {
 			this.filename = filename;
@@ -51,16 +50,23 @@ package angel.game.script.action {
 				Alert.show("Error! Missing filename in change room action");
 				return;
 			}
-			oldRoom = context.room;
-			LoaderWithErrorCatching.LoadFile(filename, roomXmlLoaded);
+			LoaderWithErrorCatching.LoadFile(filename, roomXmlLoaded, context);
 		}
 		
-		private function roomXmlLoaded(event:Event, filename:String):void {
-			var xml:XML = Util.parseXml(event.target.data, filename);
+		private function roomXmlLoaded(event:Event, param:Object, filenameForErrors:String):void {
+			var context:ScriptContext = ScriptContext(param);
+			var xml:XML = Util.parseXml(event.target.data, filenameForErrors);
 			if (xml == null) {
 				return;
 			}
-			var newRoom:Room = Room.createFromXml(xml, filename);
+			
+			var oldRoom:Room = context.room;
+			var save:SaveGame = new SaveGame();
+			save.collectRoomInfo(oldRoom);
+			save.startLocation = null;
+			save.startSpot = startSpot;
+
+			var newRoom:Room = Room.createFromXml(xml, save, filename);
 			if (newRoom != null) {
 				var modeFromOldRoom:Class = (oldRoom.mode == null ? null : Object(oldRoom.mode).constructor);
 				var parentFromOldRoom:DisplayObjectContainer = oldRoom.parent;
@@ -68,11 +74,10 @@ package angel.game.script.action {
 				oldRoom.cleanup();
 				parentFromOldRoom.addChild(newRoom); // Room will start itself running when it goes on stage
 				
-				newRoom.addPlayerCharactersFromSettings(startSpot);
 				if (newMode != null) {
 					newRoom.changeModeTo(newMode, true);
 				}
-				
+				context.roomChanged(newRoom);
 			}
 		}
 		

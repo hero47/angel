@@ -55,7 +55,6 @@ package angel.game.script.action {
 					entity.setBrain(true, exploreBrainClass, exploreParam);
 					entity.setCommonPropertiesFromXml(commonXml);
 					entity.changePlayerControl(false, commonXml.@faction);
-					Settings.removeFromPlayerList(entity);
 				}
 			} else {
 				Alert.show("Script error: no character " + id + " in room for changeToNpc");

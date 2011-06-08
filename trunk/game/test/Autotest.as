@@ -4,6 +4,7 @@ package angel.game.test {
 	import angel.game.brain.CombatBrainWander;
 	import angel.game.ComplexEntity;
 	import angel.game.Room;
+	import angel.game.SaveGame;
 	import angel.game.script.action.ActionFactory;
 	import angel.game.script.action.IAction;
 	import angel.game.script.ScriptContext;
@@ -140,8 +141,13 @@ package angel.game.test {
 		private static const floorXml:XML = <floor x="10" y="10"/>;
 		public static function setupTestRoom():Room {
 			Autotest.assertEqual(testRoom, null, "Test room didn't get cleaned up by previous test");
-			var mainPc:ComplexEntity = Settings.pcs[0];
-			Autotest.assertEqual(Settings.pcs.length, 1, "Extra pc(s) on character list aren't being added to room, this is inconsistant");
+			
+			var save:SaveGame = new SaveGame();
+			var playerInitXml:XML = <init><player><pc /></player></init>;
+			playerInitXml.player.pc.@id = TEST_ROOM_MAIN_PC_ID;
+			save.initPlayerInfoFromXml(playerInitXml.player, Settings.catalog);
+			save.startLocation = new Point(9, 8);
+			
 			var enemy:ComplexEntity = new ComplexEntity(Settings.catalog.retrieveCharacterResource(TEST_ROOM_ENEMY_ID), TEST_ROOM_ENEMY_ID);
 			Autotest.clearAlert(); // should alert the first time we're called, since these aren't in catalog
 			enemy.combatBrainClass = CombatBrainWander;
@@ -150,7 +156,7 @@ package angel.game.test {
 			floor.loadFromXml(Settings.catalog, floorXml);
 			
 			testRoom = new Room(floor);
-			testRoom.addPlayerCharacter(mainPc, new Point(9, 8));
+			save.addPlayerCharactersToRoom(testRoom);
 			testRoom.addEntity(enemy, new Point(8, 9));
 			
 			Autotest.runningFromRoot.addChild(testRoom);

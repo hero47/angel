@@ -22,7 +22,7 @@ package angel.roomedit {
 			super.loadFromXmlFile(filename);
 		}
 		
-		override protected function catalogXmlLoaded(event:Event, filename:String):void {
+		override protected function catalogXmlLoaded(event:Event, param:Object, filename:String):void {
 			// Cache filename so we can use it later to re-save
 			this.filename = filename;
 			// Cache catalog xml so we can re-save it later, rather than re-creating
@@ -31,7 +31,7 @@ package angel.roomedit {
 			if (catalogXml == null) {
 				return;
 			}
-			super.catalogXmlLoaded(event, filename);
+			super.catalogXmlLoaded(event, param, filename);
 						
 			//UNDONE For backwards compatibility; remove this once old catalogs have been rewritten
 			for each (var walkerXml:XML in catalogXml.walker) {

@@ -1,9 +1,11 @@
 package angel.game.script {
 	import angel.common.Alert;
+	import angel.common.Catalog;
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Util;
 	import angel.game.combat.RoomCombat;
 	import angel.game.Room;
+	import angel.game.SaveGame;
 	import angel.game.script.action.ActionFactory;
 	import angel.game.script.action.ConversationAction;
 	import angel.game.script.action.IAction;
@@ -60,7 +62,7 @@ package angel.game.script {
 			LoaderWithErrorCatching.LoadFile(filename, entityScriptXmlLoaded);
 		}
 		
-		private function entityScriptXmlLoaded(event:Event, filename:String):void {
+		private function entityScriptXmlLoaded(event:Event, param:Object, filename:String):void {
 			var xml:XML = Util.parseXml(event.target.data, filename);
 			if (xml != null) {
 				//UNDONE - temporary - remove this once old files have been upgraded

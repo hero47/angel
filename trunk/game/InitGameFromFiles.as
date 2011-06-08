@@ -12,8 +12,9 @@ package angel.game {
 	public class InitGameFromFiles {
 		private var initFinishedCallback:Function;
 		private var flagsLoaded:Boolean = false;
-		private var xmlInitData:XML = null;
+		private var initXml:XML = null;
 		
+		// Calls back with a SaveGame as parameter
 		public function InitGameFromFiles(initFinishedCallback:Function):void {
 			this.initFinishedCallback = initFinishedCallback;
 			
@@ -39,26 +40,27 @@ package angel.game {
 			finishInitIfAllDataLoaded();
 		}
 
-		private function xmlLoadedForInit(event:Event, filename:String):void {
-			xmlInitData = Util.parseXml(event.target.data, filename);
-			if (xmlInitData == null) {
+		private function xmlLoadedForInit(event:Event, param:Object, filenameForErrors:String):void {
+			initXml = Util.parseXml(event.target.data, filenameForErrors);
+			if (initXml == null) {
 				return;
 			}
-			if (xmlInitData.room.length == 0) {
-				Alert.show("ERROR: Bad init file! " + filename);
+			if (initXml.room.length == 0) {
+				Alert.show("ERROR: Bad init file! " + filenameForErrors);
 				return;
 			}
 			finishInitIfAllDataLoaded();
 		}
 			
 		private function finishInitIfAllDataLoaded():void {
-			if ((Settings.catalog != null) && flagsLoaded && (xmlInitData != null)) {
-				Settings.initFromXml(xmlInitData.settings);
-				Settings.initStartRoomFromXml(xmlInitData.room);
-				Settings.initPlayersFromXml(xmlInitData.player, Settings.catalog);
-				Flags.initFlagsFromXml(xmlInitData.setFlag);
+			if ((Settings.catalog != null) && flagsLoaded && (initXml != null)) {
+				Settings.initFromXml(initXml.settings);
+				var save:SaveGame = new SaveGame();
+				save.initStartRoomFromXml(initXml.room);
+				save.initPlayerInfoFromXml(initXml.player, Settings.catalog);
+				Flags.initFlagsFromXml(initXml.setFlag);
 				
-				initFinishedCallback();
+				initFinishedCallback(save);
 			}
 		}
 		

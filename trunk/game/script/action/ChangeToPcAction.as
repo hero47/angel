@@ -31,9 +31,8 @@ package angel.game.script.action {
 				//CONSIDER: should we give error if it's already a player?
 				if (!entity.isReallyPlayer) {
 					entity.setBrain(false, CombatBrainUiMeldPlayer, null);
-					entity.setBrain(true, BrainFollow, Settings.lastEntityOnPlayerList().id);
+					entity.setBrain(true, BrainFollow, context.room.mainPlayerCharacter.id);
 					entity.changePlayerControl(true, ComplexEntity.FACTION_FRIEND);
-					Settings.addToPlayerList(entity);
 				}
 			} else {
 				Alert.show("Script error: no character " + id + " in room for changeToPc");

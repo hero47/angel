@@ -67,12 +67,8 @@ package angel.game {
 		}
 		
 		public function cleanup():void {
-			detachFromRoom();
-			me = null;
-		}
-		
-		public function detachFromRoom():void {
 			Settings.gameEventQueue.removeListener(me.room, Room.ROOM_ENTER_UNPAUSED_FRAME, moveOneFrameAlongPath);
+			me = null;
 		}
 		
 		public function moving():Boolean {

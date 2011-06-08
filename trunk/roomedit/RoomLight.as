@@ -238,7 +238,7 @@ package angel.roomedit {
 			LoaderWithErrorCatching.LoadFile(filename, roomXmlLoaded);
 		}
 		
-		private function roomXmlLoaded(event:Event, filename:String):void {
+		private function roomXmlLoaded(event:Event, param:Object, filename:String):void {
 			var xml:XML = Util.parseXml(event.target.data, filename);
 			if (xml == null) {
 				return;

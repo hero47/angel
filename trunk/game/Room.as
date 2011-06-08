@@ -40,7 +40,10 @@ package angel.game {
 		// and detect clicks on entities.
 
 		private var contentsLayer:Sprite;
+		
+		public var filename:String;
 		private var quitButton:SimplerButton;
+		
 		public var cells:Vector.<Vector.<Cell>>;
 		public var mainPlayerCharacter:ComplexEntity;
 		public var size:Point;
@@ -105,8 +108,7 @@ package angel.game {
 			while (contentsLayer.numChildren > 0) {
 				//NOTE: if/when we add things like tossed grenades, they will be props and this will fail
 				var entity:SimpleEntity = SimpleEntity(contentsLayer.getChildAt(0));
-				//UNDONE: See comment on SimpleEntity.detachFromRoom()
-				entity.detachFromRoom();
+				entity.cleanup();
 			}
 			contentsLayer = null;
 			cells = null;
@@ -118,12 +120,13 @@ package angel.game {
 			if (roomScripts != null) {
 				roomScripts.cleanup();
 			}
+			
+			quitButton.cleanup();
+			
 			Assert.assertTrue(Settings.gameEventQueue.numberOfListenersOn(this) == 0, "Room still has listeners after cleanup");
 			if (Settings.gameEventQueue.numberOfListenersOn(this) > 0) {
 				Settings.gameEventQueue.debugTraceListenersOn(this, "After room cleanup, listeners on room:");
 			}
-			
-			quitButton.cleanup();
 		}
 		
 		public function changeModeTo(newModeClass:Class, entering:Boolean = false):void {
@@ -419,7 +422,7 @@ package angel.game {
 				var location:Point = entity.location;
 				cells[location.x][location.y].remove(entity);
 				Settings.gameEventQueue.dispatch(new EntityQEvent(entity, EntityQEvent.REMOVED_FROM_ROOM));
-				entity.detachFromRoom();
+				entity.cleanup();
 			}
 		}
 		
@@ -572,7 +575,7 @@ package angel.game {
 							 Settings.STAGE_HEIGHT / 2 - desiredTileCenter.y - Floor.FLOOR_TILE_Y / 2 );
 		}
 		
-		public static function createFromXml(xml:XML, filename:String = ""):Room {
+		public static function createFromXml(xml:XML, save:SaveGame, filename:String = ""):Room {
 			if (xml.floor.length() == 0) {
 				Alert.show("Invalid room file " + filename);
 				return null;
@@ -582,6 +585,7 @@ package angel.game {
 			floor.loadFromXml(Settings.catalog, xml.floor[0]);
 			
 			var room:Room = new Room(floor);
+			room.filename = filename;
 			
 			if (xml.contents.length() > 0) {
 				room.initContentsFromXml(Settings.catalog, xml.contents[0]);
@@ -589,25 +593,11 @@ package angel.game {
 			if (xml.spots.length() > 0) {
 				room.initSpotsFromXml(xml.spots[0]);
 			}
+			
+			save.addPlayerCharactersToRoom(room);
 			room.roomScripts = new RoomScripts(room, xml, filename);
 			
 			return room;
-		}
-		
-		public function addPlayerCharactersFromSettings(startSpot:String = null):void {
-			var startLoc:Point;
-			if ((startSpot == null) || (startSpot == "")) {
-				startSpot = "start";
-			}
-			startLoc = spotLocationWithDefault(startSpot);
-			
-			snapToCenter(startLoc);
-			
-			for each (var entity:ComplexEntity in Settings.pcs) {
-				// CONSIDER: start followers near main PC instead of stacked on the same square?
-				// Though, as Wm pointed out, this actually makes sense when they're conceptually entering room through a door.
-				addPlayerCharacter(entity, startLoc);
-			}
 		}
 		
 		// During development we'll support reading (but not writing) some older formats.
@@ -644,7 +634,10 @@ package angel.game {
 		}
 		
 		private function clickedQuit(event:Event):void {
-			new GameMenu(this.parent);
+			//UNDONE persist data to disk
+			var save:SaveGame = new SaveGame();
+			save.collectRoomInfo(this);
+			new GameMenu(this.parent, save);
 			this.cleanup();
 		}
 		

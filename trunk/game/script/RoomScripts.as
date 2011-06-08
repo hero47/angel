@@ -1,7 +1,9 @@
 package angel.game.script {
 	import angel.common.Alert;
+	import angel.common.Catalog;
 	import angel.game.event.EntityQEvent;
 	import angel.game.Room;
+	import angel.game.SaveGame;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	/**

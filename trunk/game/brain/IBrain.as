@@ -1,4 +1,5 @@
 package angel.game.brain {
+	import angel.common.ICleanup;
 	
 	/**
 	 * ...
@@ -6,8 +7,7 @@ package angel.game.brain {
 	 */
 	
 	 // Combat brains will have additional functions and probably get a separate interface once there are more than one
-	public interface IBrain {
-		function cleanup():void;
+	public interface IBrain extends ICleanup {
 	}
 	
 }
