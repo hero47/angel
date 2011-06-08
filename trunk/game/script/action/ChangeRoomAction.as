@@ -62,7 +62,7 @@ package angel.game.script.action {
 			
 			var oldRoom:Room = context.room;
 			var save:SaveGame = new SaveGame();
-			save.collectRoomInfo(oldRoom);
+			save.collectGameInfo(oldRoom);
 			save.startLocation = null;
 			save.startSpot = startSpot;
 

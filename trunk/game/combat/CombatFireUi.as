@@ -76,7 +76,7 @@ package angel.game.combat {
 			player.footprint.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
 			clickThisEnemyAgainForQuickFire = null;
 			Mouse.hide();
-			room.addChild(aimCursor);
+			room.stage.addChild(aimCursor);
 			aimCursor.x = room.mouseX;
 			aimCursor.y = room.mouseY;
 			adjustActionsRemainingDisplay(true);
@@ -91,7 +91,7 @@ package angel.game.combat {
 			room.moveHilight(null, 0);
 			moveTargetHilight(null);
 			if (aimCursor.parent != null) {
-				room.removeChild(aimCursor);
+				room.stage.removeChild(aimCursor);
 			}
 			Mouse.show();
 			adjustActionsRemainingDisplay(false);
@@ -146,8 +146,10 @@ package angel.game.combat {
 					room.updateToolTip(tile.location);
 				}
 			}
-			aimCursor.x = room.mouseX;
-			aimCursor.y = room.mouseY;
+			var global:Point = room.localToGlobal(new Point(room.mouseX, room.mouseY));
+			aimCursor.x = global.x;
+			aimCursor.y = global.y;
+			room.stage.addChild(aimCursor); // keep putting it back on top in case something got added
 		}
 		
 		public function mouseClick(tile:FloorTile):void {

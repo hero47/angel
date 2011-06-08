@@ -22,21 +22,51 @@ package angel.game {
 		public var startRoomFile:String;
 		public var startLocation:Point;
 		public var startSpot:String;
-		private var pcInitXml:Vector.<XML>;
+		private var pcInitXml:XML;
+		private var flags:String;
 		
 		public function SaveGame() {
 		}
 		
-		public static function save(text:String):void {
+		public function saveToDisk():void {
 			try {
 				var shared:SharedObject = SharedObject.getLocal("MaelstromAngelSave");
 			} catch (error:Error) {
 				Alert.show("Error! Unable to access Flash SharedObject for save game.");
 				return;
 			}
-			shared.data.save1 = text;
+			var saveData:Object = new Object;
+			saveData.startRoomFile = startRoomFile;
+			saveData.startX = startLocation.x;
+			saveData.startY = startLocation.y;
+			saveData.players = pcInitXml.toXMLString();
+			saveData.flags = flags;
+			shared.data.save1 = saveData;
 			shared.flush();
 			shared.close();
+			
+		}
+		
+		public static function loadFromDisk():SaveGame {
+			try {
+				var shared:SharedObject = SharedObject.getLocal("MaelstromAngelSave");
+			} catch (error:Error) {
+				Alert.show("Error! Unable to access Flash SharedObject for save game.");
+				return null;
+			}
+			var saveData:Object = shared.data.save1;
+			if (saveData == null) {
+				return null;
+			}
+			var save:SaveGame = new SaveGame();
+			save.startLocation = new Point(saveData.startX, saveData.startY);
+			save.startRoomFile = saveData.startRoomFile;
+			save.pcInitXml = new XML(saveData.players);
+			save.flags = saveData.flags;
+			
+			shared.close();
+			return save;
+			
 		}
 		
 		public static function load():String {
@@ -64,9 +94,9 @@ package angel.game {
 		}
 		
 		public function initPlayerInfoFromXml(playersXmlList:XMLList, catalog:Catalog):void {
-			pcInitXml = new Vector.<XML>();
+			pcInitXml = <player />;
 			if (playersXmlList.length() == 0) {
-				pcInitXml.push(<pcXml id="PLAYER" health="100" />);
+				pcInitXml.appendChild(<pcXml id="PLAYER" health="100" />);
 				return;
 			}
 			var i:int = 1;
@@ -83,7 +113,7 @@ package angel.game {
 					convertXmlInventoryToInv(id, pcXml);
 				}
 				
-				pcInitXml.push(pcXml);
+				pcInitXml.appendChild(pcXml);
 			}
 		}
 		
@@ -154,13 +184,15 @@ package angel.game {
 			
 			room.snapToCenter(startLocation);
 			
-			for (var i:int = 0; i < pcInitXml.length; ++i) {
-				var player:ComplexEntity = playerEntityFromInit(pcInitXml[i]);
+			var previousId:String;
+			for each (var pcXml:XML in pcInitXml.children()) {
+				var player:ComplexEntity = playerEntityFromInit(pcXml);
 				if (player != null) {
-					if (i > 0) {
+					if (previousId != null) {
 						player.exploreBrainClass = BrainFollow;
-						player.exploreBrainParam = pcInitXml[i - 1].@id;
+						player.exploreBrainParam = previousId;
 					}
+					previousId = pcXml.@id;
 					// CONSIDER: start followers near main PC instead of stacked on the same square?
 					// Though, as Wm pointed out, this actually makes sense when they're conceptually entering room through a door.
 					room.addPlayerCharacter(player, startLocation);
@@ -168,22 +200,26 @@ package angel.game {
 			}
 		}
 		
-		public function collectRoomInfo(room:Room):void {
-			startRoomFile = room.filename;
-			startLocation = room.mainPlayerCharacter.location;
-			pcInitXml = new Vector.<XML>();
-			room.forEachComplexEntity(collectPlayerInfo);
+		public function setFlags():void {
+			Flags.setFlagsFromText(flags);
 		}
 		
-		private function collectPlayerInfo(entity:ComplexEntity):void {
-			if (!entity.isReallyPlayer) {
-				return;
-			}
+		public function collectGameInfo(room:Room):void {
+			startRoomFile = room.filename;
+			startLocation = room.mainPlayerCharacter.location;
+			pcInitXml = <player />;
+			storePlayerInfo(room.mainPlayerCharacter);
+			room.forEachComplexEntity(storePlayerInfo, function(entity:ComplexEntity):Boolean {
+					return ((entity != room.mainPlayerCharacter) && entity.isReallyPlayer) } );
+			flags = Flags.toText();
+		}
+		
+		private function storePlayerInfo(entity:ComplexEntity):void {
 			var xml:XML = <pc />
 			xml.@id = entity.id;
 			xml.@health = entity.maxHealth;
 			xml.@inv = entity.inventory.toText();
-			pcInitXml.push(xml);
+			pcInitXml.appendChild(xml);
 		}
 		
 	}
