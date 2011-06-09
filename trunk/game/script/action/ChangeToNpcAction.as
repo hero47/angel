@@ -54,7 +54,7 @@ package angel.game.script.action {
 					entity.setBrain(false, combatBrainClass, combatParam);
 					entity.setBrain(true, exploreBrainClass, exploreParam);
 					entity.setCommonPropertiesFromXml(commonXml);
-					entity.changePlayerControl(false, commonXml.@faction);
+					entity.changePlayerControl(false, ComplexEntity.factionFromName(commonXml.@faction));
 				}
 			} else {
 				Alert.show("Script error: no character " + id + " in room for changeToNpc");

@@ -2,10 +2,14 @@ package angel.game {
 	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.Catalog;
+	import angel.common.LoaderWithErrorCatching;
 	import angel.common.RoomContentResource;
+	import angel.common.Util;
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.inventory.Inventory;
+	import flash.display.DisplayObjectContainer;
+	import flash.events.Event;
 	import flash.geom.Point;
 	import flash.net.SharedObject;
 	/**
@@ -28,11 +32,20 @@ package angel.game {
 		public function SaveGame() {
 		}
 		
-		public function saveToDisk():void {
+		public static function getSharedObject():SharedObject {
+			var shared:SharedObject;
 			try {
-				var shared:SharedObject = SharedObject.getLocal("MaelstromAngelSave");
+				shared = SharedObject.getLocal("MaelstromAngelSave");
 			} catch (error:Error) {
 				Alert.show("Error! Unable to access Flash SharedObject for save game.");
+				return null;
+			}
+			return shared;
+		}
+		
+		public function saveToDisk():void {
+			var shared:SharedObject = getSharedObject();
+			if (shared == null) {
 				return;
 			}
 			var saveData:Object = new Object;
@@ -48,10 +61,8 @@ package angel.game {
 		}
 		
 		public static function loadFromDisk():SaveGame {
-			try {
-				var shared:SharedObject = SharedObject.getLocal("MaelstromAngelSave");
-			} catch (error:Error) {
-				Alert.show("Error! Unable to access Flash SharedObject for save game.");
+			var shared:SharedObject = getSharedObject();
+			if (shared == null) {
 				return null;
 			}
 			var saveData:Object = shared.data.save1;
@@ -66,19 +77,34 @@ package angel.game {
 			
 			shared.close();
 			return save;
-			
 		}
 		
-		public static function load():String {
-			try {
-				var shared:SharedObject = SharedObject.getLocal("MaelstromAngelSave");
-			} catch (error:Error) {
-				Alert.show("Error! Unable to access Flash SharedObject for save game.");
-				return null;
+		public static function deleteFromDisk():void {
+			var shared:SharedObject = getSharedObject();
+			if (shared == null) {
+				return;
 			}
-			var text:String = shared.data.save1;
+			shared.data.save1 = null;
+			shared.flush();
 			shared.close();
-			return text;
+		}
+		
+		public function resumeSavedGame(main:DisplayObjectContainer):void {
+			LoaderWithErrorCatching.LoadFile(startRoomFile, roomXmlLoadedForResume, main);
+		}
+		
+		private function roomXmlLoadedForResume(event:Event, param:Object, filename:String):void {
+			var main:DisplayObjectContainer = DisplayObjectContainer(param);
+			var xml:XML = Util.parseXml(event.target.data, filename);
+			if (xml == null) {
+				return;
+			}
+			var room:Room = Room.createFromXml(xml, this, filename);
+			if (room != null) {
+				setFlags();
+				main.addChild(room);
+				room.changeModeTo(RoomExplore);
+			}
 		}
 		
 		/***************************************************************/

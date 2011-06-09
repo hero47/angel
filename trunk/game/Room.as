@@ -16,6 +16,7 @@ package angel.game {
 	import angel.game.script.RoomScripts;
 	import angel.game.script.Script;
 	import angel.game.test.ConversationNonAutoTest;
+	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
@@ -57,13 +58,13 @@ package angel.game {
 		private var dragging:Boolean = false;
 		
 		private var conversationInProgress:ConversationInterface;
-		private var roomScripts:RoomScripts;
+		public var roomScripts:RoomScripts;
 		
-		private var gamePauseStack:Vector.<PauseInfo> = new Vector.<PauseInfo>(); // LIFO stack
+		private var gamePauseStack:Vector.<PauseInfo> = new Vector.<PauseInfo>(); // LIFO stack with exceptions
 		
 		private var tileWithHilight:FloorTile;
 		private var scrollingTo:Point = null;
-		private var preCombatSave:SaveGame;
+		public var preCombatSave:SaveGame;
 				
 		public function Room(floor:Floor) {
 			this.floor = floor;
@@ -98,6 +99,8 @@ package angel.game {
 			quitButton.x = 5;
 			quitButton.y = stage.stageHeight - quitButton.height - 5;
 			parent.addChild(quitButton);
+			
+			roomScripts.runOnEnter();
 		}
 		
 		public function cleanup():void {
@@ -131,7 +134,7 @@ package angel.game {
 			}
 		}
 		
-		public function changeModeTo(newModeClass:Class, entering:Boolean = false):void {
+		public function changeModeTo(newModeClass:Class):void {
 			if (newModeClass == RoomCombat) {
 				preCombatSave = new SaveGame();
 				preCombatSave.collectGameInfo(this);
@@ -147,9 +150,6 @@ package angel.game {
 				mode.cleanup();
 			}
 			mode = (newModeClass == null ? null : new newModeClass(this));
-			if (entering) {
-				roomScripts.runOnEnter();
-			}
 		}
 		
 		public function pauseGameTimeIndefinitely(pauseOwner:Object):void {
@@ -649,7 +649,7 @@ package angel.game {
 			}
 			var save:SaveGame = new SaveGame();
 			save.collectGameInfo(this);
-			new GameMenu(this.parent, save);
+			new GameMenu(this.parent, true, save);
 			this.cleanup();
 		}
 		
@@ -657,7 +657,16 @@ package angel.game {
 			if (buttonName != "Yes") {
 				return;
 			}
-			new GameMenu(this.parent, preCombatSave);
+			new GameMenu(this.parent, true, preCombatSave);
+			this.cleanup();
+		}
+		
+		public function revertToPreCombatSave():void {
+			if (preCombatSave != null) {
+				preCombatSave.resumeSavedGame(this.parent);
+			} else {
+				new GameMenu(this.parent, true, null);
+			}
 			this.cleanup();
 		}
 		

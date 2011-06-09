@@ -39,6 +39,18 @@ package angel.game {
 		public static const FACTION_FRIEND:int = 1;
 		public static const FACTION_NONE:int = 2;
 		
+		public static function factionFromName(factionName:String):int {
+			switch (factionName) {
+				case "enemy":
+				default:
+					return FACTION_ENEMY;
+				case "friend":
+					return FACTION_FRIEND;
+				case "none":
+					return FACTION_NONE;
+			}
+		}
+		
 		// Entity stats!
 		// CONSIDER: Initial values for some of these come from a CharacterStats. I could have a CharacterStats embedded
 		// here rather than individual variables for the ones that overlap, but currently (5/15/11) that's only two.

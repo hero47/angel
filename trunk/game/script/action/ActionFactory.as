@@ -23,12 +23,13 @@ package angel.game.script.action {
 			"elseIf":ElseIfAction,
 			"goto":GotoAction,
 			"if":IfAction,
+			"loseGame":LoseGameAction,
 			"message":MessageAction,
 			"remove":RemoveFlagAction,
 			"removeFromInventory":RemoveFromInventoryAction,
 			"removeFromRoom":RemoveFromRoomAction,
-			"startCombat":StartCombatAction,
-			"stop":StopAction
+			"stop":StopAction,
+			"winGame":WinGameAction
 		};
 		
 		public function ActionFactory() {

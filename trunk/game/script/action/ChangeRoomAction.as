@@ -14,28 +14,47 @@ package angel.game.script.action {
 	 * ...
 	 * @author Beth Moursund
 	 */
+	
+	// Change to a new room, change current room's mode, or change to a new room in a specific mode.
+	// If changing from one combat room to another combat room, we transfer the original preCombatSave to the new room.
 	public class ChangeRoomAction implements IAction {
 		private var filename:String;
 		private var startSpot:String;
-		private var startMode:Class;
+		private var modeClass:Class;
 		
 		public function ChangeRoomAction(filename:String, startSpot:String=null, startMode:Class=null) {
 			this.filename = filename;
 			this.startSpot = (startSpot == "" ? null : startSpot);
-			this.startMode = startMode;
+			this.modeClass = startMode;
 		}
 		
 		public static function createFromXml(actionXml:XML):IAction {
 			var modeClass:Class;
 			var modeName:String = actionXml.@mode;
-			if (modeName == "combat") {
-				modeClass = RoomCombat;
-			} else if (modeName == "explore") {
-				modeClass = RoomExplore;
-			} else if (modeName != "") {
-				Alert.show("Error! Unknown mode " + modeName);
+			var filename:String = actionXml.@file;
+			var start:String = actionXml.@start;
+			switch (modeName) {
+				case "combat":
+					modeClass = RoomCombat;
+				break;
+				case "explore":
+					modeClass = RoomExplore;
+				break;
+				case "":
+					if (filename == "") {
+						Alert.show("Script error! changeRoom requires filename or mode.");
+						return null;
+					}
+				break;
+				default:
+					Alert.show("Error! Unknown mode " + modeName + " in changeRoom.");
+					return null;
+				break;
 			}
-			return new ChangeRoomAction(actionXml.@file, actionXml.@start, modeClass);
+			if ((filename == "") && (start != "")) {
+				Alert.show("Warning: start location " + start + " ignored since no room file given in changeRoom.");
+			}
+			return new ChangeRoomAction(filename, start, modeClass);
 		}
 		
 		/* INTERFACE angel.game.action.IAction */
@@ -46,11 +65,13 @@ package angel.game.script.action {
 		}
 		
 		private function changeRoom(context:ScriptContext):void {
-			if ((filename == null) || (filename == "")) {
-				Alert.show("Error! Missing filename in change room action");
-				return;
+			if (filename != "") {
+				LoaderWithErrorCatching.LoadFile(filename, roomXmlLoaded, context);
+			} else if (context.room.mode is modeClass) {
+				Alert.show("Error! changeRoom already in requested mode.");
+			} else {
+				context.room.changeModeTo(modeClass);
 			}
-			LoaderWithErrorCatching.LoadFile(filename, roomXmlLoaded, context);
 		}
 		
 		private function roomXmlLoaded(event:Event, param:Object, filenameForErrors:String):void {
@@ -70,12 +91,16 @@ package angel.game.script.action {
 			if (newRoom != null) {
 				var modeFromOldRoom:Class = (oldRoom.mode == null ? null : Object(oldRoom.mode).constructor);
 				var parentFromOldRoom:DisplayObjectContainer = oldRoom.parent;
-				var newMode:Class = (startMode == null ? modeFromOldRoom : startMode);
+				var newMode:Class = (modeClass == null ? modeFromOldRoom : modeClass);
+				var oldPreCombatSave:SaveGame = oldRoom.preCombatSave;
 				oldRoom.cleanup();
 				parentFromOldRoom.addChild(newRoom); // Room will start itself running when it goes on stage
 				
 				if (newMode != null) {
-					newRoom.changeModeTo(newMode, true);
+					newRoom.changeModeTo(newMode);
+					if ((newMode is RoomCombat) && (oldPreCombatSave != null)) {
+						newRoom.preCombatSave = oldPreCombatSave;
+					}
 				}
 				context.roomChanged(newRoom);
 			}

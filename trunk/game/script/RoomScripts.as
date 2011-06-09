@@ -23,10 +23,27 @@ package angel.game.script {
 	 */
 	
 	public class RoomScripts {
+		
+		private static const ON_DEATH_DEFAULT_XML:XML = <script>
+			<onDeath>
+				<if>
+					<compare op="eq">
+						<left alive="enemy" />
+						<right int="0" />
+					</compare>
+					<script>
+						<winGame />
+					</script>
+				</if>
+			</onDeath>
+		</script>;
+		
 		private var room:Room;
 		private var onEnterScripts:Vector.<TriggeredScript>;
 		private var onMoveScripts:Vector.<TriggeredScript>;
 		private var onDeathScripts:Vector.<TriggeredScript>;
+	//	private var onWinScripts:Vector.<TriggeredScript>;
+	//	private var onLoseScripts:Vector.<TriggeredScript>;
 		private var anyMoveScriptCaresAboutSpots:Boolean;
 		
 		public function RoomScripts(room:Room, roomXml:XML, filename:String) {
@@ -40,6 +57,14 @@ package angel.game.script {
 			onEnterScripts = createTriggeredScripts(scriptXml.onEnter, false, false, errorPrefix + " onEnter");
 			onMoveScripts = createTriggeredScripts(scriptXml.onMove, true, true, errorPrefix + " onMove");
 			onDeathScripts = createTriggeredScripts(scriptXml.onDeath, true, false, errorPrefix + " onDeath");
+			/*
+			onDeathScripts = createTriggeredScripts( 
+					(scriptXml.onDeath.length() > 0 ? scriptXml.onDeath : ON_DEATH_DEFAULT_XML.onDeath),
+					true, false, errorPrefix + " onDeath");
+			*/
+			//onWinScripts = createTriggeredScripts(scriptXml.onWin, false, false, errorPrefix + " onWin");
+			//onLoseScripts = createTriggeredScripts(scriptXml.onLose, false, false, errorPrefix + " onLose");
+			
 			
 			if (onMoveScripts != null) {
 				Settings.gameEventQueue.addListener(this, room, EntityQEvent.FINISHED_ONE_TILE_OF_MOVE, moveListener);
@@ -64,6 +89,15 @@ package angel.game.script {
 				runTriggeredScripts(onEnterScripts, null, false);
 			}
 		}
+		
+		/*
+		public function runWinOrLose(win:Boolean):void {
+			var scripts:Vector.<TriggeredScript> = (win ? onWinScripts : onLoseScripts);
+			if (scripts != null) {
+				runTriggeredScripts(scripts, null, false);
+			}
+		}
+		*/
 		
 		private function createTriggeredScripts(scriptsForThisTrigger:XMLList, canFilterOnId:Boolean, canFilterOnSpot:Boolean,
 												errorLocation:String):Vector.<TriggeredScript> {
