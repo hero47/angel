@@ -138,9 +138,14 @@ package angel.game.test {
 			*/
 		}
 		
-		private static const floorXml:XML = <floor x="10" y="10"/>;
 		public static function setupTestRoom():Room {
+			var roomXml:XML = <room> <contents version="1" /><floor x="10" y="10"/>	</room>;
+		
 			Autotest.assertEqual(testRoom, null, "Test room didn't get cleaned up by previous test");
+			
+			Settings.catalog.retrieveCharacterResource(TEST_ROOM_MAIN_PC_ID);
+			Settings.catalog.retrieveCharacterResource(TEST_ROOM_ENEMY_ID);
+			Autotest.clearAlert(); // should alert the first time we're called, since these aren't in catalog
 			
 			var save:SaveGame = new SaveGame();
 			var playerInitXml:XML = <init><player><pc /></player></init>;
@@ -148,16 +153,11 @@ package angel.game.test {
 			save.initPlayerInfoFromXml(playerInitXml.player, Settings.catalog);
 			save.startLocation = new Point(9, 8);
 			
-			var enemy:ComplexEntity = new ComplexEntity(Settings.catalog.retrieveCharacterResource(TEST_ROOM_ENEMY_ID), TEST_ROOM_ENEMY_ID);
-			Autotest.clearAlert(); // should alert the first time we're called, since these aren't in catalog
-			enemy.combatBrainClass = CombatBrainWander;
+			var enemyXml:XML = <char x="8" y="9"/>;
+			enemyXml.@id = TEST_ROOM_ENEMY_ID;
+			roomXml.contents.appendChild(enemyXml);
 			
-			var floor:Floor = new Floor();
-			floor.loadFromXml(Settings.catalog, floorXml);
-			
-			testRoom = new Room(floor);
-			save.addPlayerCharactersToRoom(testRoom);
-			testRoom.addEntity(enemy, new Point(8, 9));
+			testRoom = Room.createFromXml(roomXml, save, "[test code -- no file]");
 			
 			Autotest.runningFromRoot.addChild(testRoom);
 			Autotest.assertNoAlert();

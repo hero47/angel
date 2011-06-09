@@ -1,5 +1,6 @@
 package angel.game.test {
 	import angel.common.Util;
+	import angel.game.ComplexEntity;
 	import angel.game.script.computation.ComputationFactory;
 	import angel.game.script.computation.IComputation;
 	import angel.game.script.ScriptContext;
@@ -19,6 +20,7 @@ package angel.game.test {
 			context = new ScriptContext(Autotest.testRoom);
 			Autotest.testFunction(testHealthComputation);
 			Autotest.testFunction(testDistanceComputation);
+			Autotest.testFunction(testAliveComputation);
 			Autotest.cleanupTestRoom();
 		}
 		
@@ -60,6 +62,26 @@ package angel.game.test {
 			distance = ComputationFactory.createFromXml(compXml);
 			Autotest.assertEqual(distance.value(context), 0, "Missing ids should give error and value 0");
 			Autotest.assertAlertText("Error! No character abcde in current room.", "Bad id should give error");
+		}
+		
+		private function testAliveComputation():void {
+			var alive:IComputation;
+			
+			alive = ComputationFactory.createFromXml(<left alive="enemy" />);
+			Autotest.assertEqual(alive.value(context), 1, "Test room has 1 enemy");
+			ComplexEntity(Autotest.testRoom.entityInRoomWithId(Autotest.TEST_ROOM_ENEMY_ID)).currentHealth = 0;
+			Autotest.assertEqual(alive.value(context), 0, "The only enemy is dead");
+			ComplexEntity(Autotest.testRoom.entityInRoomWithId(Autotest.TEST_ROOM_ENEMY_ID)).currentHealth = 1;
+			
+			alive = ComputationFactory.createFromXml(<left alive="friend" />);
+			Autotest.assertEqual(alive.value(context), 1, "Test room has 1 friend(player)");
+			ComplexEntity(Autotest.testRoom.entityInRoomWithId(Autotest.TEST_ROOM_MAIN_PC_ID)).currentHealth = 0;
+			Autotest.assertEqual(alive.value(context), 0, "The only friend is dead");
+			
+			alive = ComputationFactory.createFromXml(<left alive="all" />);
+			Autotest.assertEqual(alive.value(context), 1, "Only 1 character alive in room");
+			ComplexEntity(Autotest.testRoom.entityInRoomWithId(Autotest.TEST_ROOM_MAIN_PC_ID)).currentHealth = 1;
+			Autotest.assertEqual(alive.value(context), 2, "Now both characters alive");
 		}
 		
 	}

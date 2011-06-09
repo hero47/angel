@@ -33,7 +33,7 @@ package angel.game {
 		
 		private function gameInitialized(save:SaveGame):void {
 			Settings.saveDataForNewGame = save;
-			new GameMenu(this);
+			new GameMenu(this, true, null);
 		}
 		
 		private function mainEnterFrame(event:Event):void {

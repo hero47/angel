@@ -3,19 +3,13 @@ package angel.game.combat {
 	import angel.common.Assert;
 	import angel.common.Util;
 	import angel.game.brain.CombatBrainUiMeld;
-	import angel.game.brain.ICombatBrain;
 	import angel.game.ComplexEntity;
-	import angel.game.EntityMovement;
 	import angel.game.event.EntityQEvent;
-	import angel.game.Icon;
+	import angel.game.IRoomMode;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
-	import angel.game.IRoomMode;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
-	import angel.game.TimedSprite;
-	import flash.display.Bitmap;
-	import flash.display.DisplayObject;
 	import flash.display.Shape;
 	import flash.geom.Point;
 	import flash.text.TextField;
@@ -333,12 +327,21 @@ package angel.game.combat {
 			// This boring message will certainly be replaced with something more dramatic, and game state will
 			// alter in some scripted fashion. But for now, we just drop back to explore mode and everyone comes
 			// back to life.
-			Alert.show(playerAlive ? "You won." : "You have been taken out.", { callback:combatOverOk } );
+		//	room.roomScripts.runWinOrLose(playerAlive);
+			if (playerAlive) {
+				Alert.show("You won.", { callback:combatOverWin } );
+			} else {
+				Alert.show("You will need to try again\nto complete this combat.", { callback:combatOverLose } );
+			}
 			return true;
 		}
 		
-		private function combatOverOk(button:String):void {
+		private function combatOverWin(button:String):void {
 			room.changeModeTo(RoomExplore);
+		}
+		
+		private function combatOverLose(button:String):void {
+			room.revertToPreCombatSave();
 		}
 		
 	} // end class RoomCombat

@@ -29,6 +29,9 @@ package angel.common {
 		private static var btnWidth:int = 75
 		private static var btnHeight:int = 18;
 		private static var minimumWidths:Array = new Array(150, 230, 310);
+		
+		private static var numberOfAlertsOpen:int = 0;
+		
 		//
 		/*	ALERT DIALOG OPTIONS
 		
@@ -72,6 +75,7 @@ package angel.common {
 			myAlert.addChild(getPrompt(alertOptions));
 			assignListeners(myAlert, alertOptions);
 			stage.addChild(myAlert);
+			++numberOfAlertsOpen;
 		}
 		
 		public static function showMulti(list:Vector.<String>, ALERTOPTIONS:Object = null):void {
@@ -84,6 +88,11 @@ package angel.common {
 			}
 			show(text, ALERTOPTIONS);
 		}
+		
+		public static function numberOpen():int {
+			return numberOfAlertsOpen;
+		}
+		
 		//
 		private static function assignListeners(myAlert:Sprite, alertOptions:AlertOptions):void {
 			var promptBackground:* = myAlert.getChildAt(1);
@@ -109,6 +118,7 @@ package angel.common {
 			promptBackground.removeEventListener(MouseEvent.MOUSE_DOWN, doStartDrag);
 			promptBackground.removeEventListener(MouseEvent.MOUSE_UP, doStopDrag);
 			stage.removeChild(myAlert);
+			--numberOfAlertsOpen;
 			myAlert = null;
 		}
 		//	Creates the background for the Alert

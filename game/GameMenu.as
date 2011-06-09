@@ -28,13 +28,17 @@ package angel.game {
 		private var resumeButton:SimplerButton;
 		private var quitButton:SimplerButton;
 		
-		public function GameMenu(main:DisplayObjectContainer, newSaveData:SaveGame = null) {
+		public function GameMenu(main:DisplayObjectContainer, allowResume:Boolean, newSaveData:SaveGame) {
 			this.main = main;
-			saveDataForCurrentGame = newSaveData;
-			if (newSaveData == null) {
-				saveDataForCurrentGame = SaveGame.loadFromDisk();
+			if (allowResume) {
+				if (newSaveData == null) {
+					saveDataForCurrentGame = SaveGame.loadFromDisk();
+				} else {
+					newSaveData.saveToDisk();
+					saveDataForCurrentGame = newSaveData;
+				}
 			} else {
-				newSaveData.saveToDisk();
+				SaveGame.deleteFromDisk();
 			}
 			
 			var splash:SplashResource = Settings.catalog.retrieveSplashResource(Defaults.GAME_MENU_SPLASH_ID);
@@ -73,22 +77,9 @@ package angel.game {
 			resumeGame(event);
 		}
 		
-		private function resumeGame(event:Event):void {
-			LoaderWithErrorCatching.LoadFile(saveDataForCurrentGame.startRoomFile, roomXmlLoaded);
-		}
-		
-		private function roomXmlLoaded(event:Event, completeParam:Object, filename:String):void {
-			var xml:XML = Util.parseXml(event.target.data, filename);
-			if (xml == null) {
-				return;
-			}
-			var room:Room = Room.createFromXml(xml, saveDataForCurrentGame, filename);
-			if (room != null) {
-				saveDataForCurrentGame.setFlags();
-				main.addChild(room);
-				room.changeModeTo(RoomExplore, true);
-				this.cleanup();
-			}
+		public function resumeGame(event:Event):void {
+			this.cleanup();
+			saveDataForCurrentGame.resumeSavedGame(main);
 		}
 		
 		private function quitGame(event:Event):void {
