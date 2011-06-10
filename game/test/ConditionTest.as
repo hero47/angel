@@ -43,9 +43,9 @@ package angel.game.test {
 			Autotest.assertFalse(Flags.getValue("xxTest"));
 			Autotest.clearAlert();
 			
-			var flag:ICondition = ConditionFactory.createFromEnclosingXml(flagCondition);
+			var flag:ICondition = ConditionFactory.createFromEnclosingXml(flagCondition, Autotest.script);
 			Autotest.assertNotEqual(flag, null, "failed to create flag condition");
-			var notFlag:ICondition = ConditionFactory.createFromEnclosingXml(notFlagCondition);
+			var notFlag:ICondition = ConditionFactory.createFromEnclosingXml(notFlagCondition, Autotest.script);
 			Autotest.assertNotEqual(notFlag, null, "failed to create notFlag condition");
 			
 			Autotest.assertFalse(flag.isMet(context), "flag is false, regular");
@@ -55,8 +55,10 @@ package angel.game.test {
 			Autotest.assertTrue(flag.isMet(context), "flag is true, regular");
 			Autotest.assertFalse(notFlag.isMet(context), "flag is true, invert");
 			
-			Autotest.assertEqual(ConditionFactory.createFromEnclosingXml(flagMissingParam), null, "should fail to create");
-			Autotest.assertAlertText("Error! 'flag' condition requires param.");
+			Autotest.assertEqual(ConditionFactory.createFromEnclosingXml(flagMissingParam, Autotest.script), null, "should fail to create");
+			Autotest.script.displayAndClearParseErrors();
+			Autotest.script.initErrorList();
+			Autotest.assertAlertText("Script errors:\nflag condition requires param.");
 			
 			
 			Flags.setValue("xxTest", false);
@@ -67,7 +69,7 @@ package angel.game.test {
 			<flag param="yyTest" />
 		</foo>;
 		private function testMultipleCondition():void {
-			var shouldBeAnd:ICondition = ConditionFactory.createFromEnclosingXml(multipleCondition);
+			var shouldBeAnd:ICondition = ConditionFactory.createFromEnclosingXml(multipleCondition, Autotest.script);
 			verifyAnd(shouldBeAnd, "xxTest", "yyTest", "Two or more individual conditions should produce an And");
 		}
 			
@@ -85,9 +87,9 @@ package angel.game.test {
 			</notAllOf>
 		</foo>;
 		private function testAllOfCondition():void {
-			var shouldBeAnd:ICondition = ConditionFactory.createFromEnclosingXml(andCondition);
+			var shouldBeAnd:ICondition = ConditionFactory.createFromEnclosingXml(andCondition, Autotest.script);
 			verifyAnd(shouldBeAnd, "xxTest", "yyTest", "allOf");
-			var shouldBeNotAnd:ICondition = ConditionFactory.createFromEnclosingXml(notAndCondition);
+			var shouldBeNotAnd:ICondition = ConditionFactory.createFromEnclosingXml(notAndCondition, Autotest.script);
 			verifyNotAnd(shouldBeNotAnd, "xxTest", "yyTest", "allOf");
 		}
 			
@@ -104,9 +106,9 @@ package angel.game.test {
 			</notAnyOf>
 		</foo>;
 		private function testAnyOfCondition():void {
-			var shouldBeOr:ICondition = ConditionFactory.createFromEnclosingXml(orCondition);
+			var shouldBeOr:ICondition = ConditionFactory.createFromEnclosingXml(orCondition, Autotest.script);
 			verifyOr(shouldBeOr, "xxTest", "yyTest", "anyOf");
-			var shouldBeNotOr:ICondition = ConditionFactory.createFromEnclosingXml(notOrCondition);
+			var shouldBeNotOr:ICondition = ConditionFactory.createFromEnclosingXml(notOrCondition, Autotest.script);
 			verifyNotOr(shouldBeNotOr, "xxTest", "yyTest", "anyOf");
 		}
 		
@@ -200,16 +202,16 @@ package angel.game.test {
 			var location:Point = Autotest.testRoom.spotLocation("test");
 			Autotest.assertEqual(location, null, "Spot shouldn't exist until we create it.");
 			
-			var spotEmpty:ICondition = ConditionFactory.createFromEnclosingXml(spotEmptyCondition);
+			var spotEmpty:ICondition = ConditionFactory.createFromEnclosingXml(spotEmptyCondition, Autotest.script);
 			Autotest.assertNoAlert("shouldn't check spot id on creation");
 			Autotest.assertClass(spotEmpty, SpotEmptyCondition, "wrong condition type");
-			var spotNotEmpty:ICondition = ConditionFactory.createFromEnclosingXml(notSpotEmptyCondition);
+			var spotNotEmpty:ICondition = ConditionFactory.createFromEnclosingXml(notSpotEmptyCondition, Autotest.script);
 			Autotest.assertClass(spotNotEmpty, SpotEmptyCondition, "wrong condition type");
 			
 			Autotest.assertFalse(spotEmpty.isMet(context), "undefined spot is not empty");
-			Autotest.assertAlertText("Error in condition: spot 'test' undefined in current room.");
+			Autotest.assertContextMessage(context, "Script error in spotEmpty: spot 'test' undefined in current room.");
 			Autotest.assertFalse(spotNotEmpty.isMet(context), "undefined spot is not not-empty, either");
-			Autotest.assertAlertText("Error in condition: spot 'test' undefined in current room.");
+			Autotest.assertContextMessage(context, "Script error in spotEmpty: spot 'test' undefined in current room.");
 			
 			Autotest.testRoom.addOrMoveSpot("test", new Point(5, 5));
 			Autotest.assertTrue(spotEmpty.isMet(context), "empty check should succeed");
@@ -225,13 +227,13 @@ package angel.game.test {
 		private function testAliveConditions():void {
 			var aliveCondition:XML = <foo><alive param="badId" /></foo>;
 			var notAliveCondition:XML = <foo><notAlive param="badId" /></foo>;
-			var badAlive:ICondition = ConditionFactory.createFromEnclosingXml(aliveCondition);
-			var badNotAlive:ICondition = ConditionFactory.createFromEnclosingXml(notAliveCondition);
+			var badAlive:ICondition = ConditionFactory.createFromEnclosingXml(aliveCondition, Autotest.script);
+			var badNotAlive:ICondition = ConditionFactory.createFromEnclosingXml(notAliveCondition, Autotest.script);
 			Autotest.assertNoAlert("shouldn't check id on creation");
 			aliveCondition.alive.@param = Autotest.TEST_ROOM_MAIN_PC_ID;
 			notAliveCondition.notAlive.@param = Autotest.TEST_ROOM_MAIN_PC_ID;
-			var alive:ICondition = ConditionFactory.createFromEnclosingXml(aliveCondition);
-			var notAlive:ICondition = ConditionFactory.createFromEnclosingXml(notAliveCondition);
+			var alive:ICondition = ConditionFactory.createFromEnclosingXml(aliveCondition, Autotest.script);
+			var notAlive:ICondition = ConditionFactory.createFromEnclosingXml(notAliveCondition, Autotest.script);
 			
 			Autotest.assertClass(badAlive, AliveCondition, "wrong condition type");
 			Autotest.assertClass(badNotAlive, AliveCondition, "wrong condition type");
@@ -239,9 +241,9 @@ package angel.game.test {
 			Autotest.assertClass(notAlive, AliveCondition, "wrong condition type");
 			
 			Autotest.assertFalse(badAlive.isMet(context), "unknown character is not alive");
-			Autotest.assertAlertText("Error in condition: no character 'badId' in current room.");
+			Autotest.assertContextMessage(context, "Script error in alive: No character 'badId' in current room.");
 			Autotest.assertFalse(badNotAlive.isMet(context), "undefined character is not not-alive, either");
-			Autotest.assertAlertText("Error in condition: no character 'badId' in current room.");
+			Autotest.assertContextMessage(context, "Script error in alive: No character 'badId' in current room.");
 			
 			Autotest.assertTrue(alive.isMet(context), "main character is alive");
 			Autotest.assertFalse(notAlive.isMet(context), "main character is not not-alive");
@@ -271,18 +273,18 @@ package angel.game.test {
 		</foo>;
 		private function testCompareCondition():void {
 			//NOTE: Not a full or complete test, but covers the basic concept
-			var comp:ICondition = ConditionFactory.createFromEnclosingXml(compareCondition);
+			var comp:ICondition = ConditionFactory.createFromEnclosingXml(compareCondition, Autotest.script);
 			Autotest.assertClass(comp, CompareCondition, "wrong condition type");
 			Autotest.assertTrue(comp.isMet(context), "1 lt 2");
-			var notComp:ICondition = ConditionFactory.createFromEnclosingXml(notCompareCondition);
+			var notComp:ICondition = ConditionFactory.createFromEnclosingXml(notCompareCondition, Autotest.script);
 			Autotest.assertFalse(notComp.isMet(context), "not 1 lt 2");
 			
 			compareCondition.compare.@op = "le";
-			comp = ConditionFactory.createFromEnclosingXml(compareCondition);
+			comp = ConditionFactory.createFromEnclosingXml(compareCondition, Autotest.script);
 			Autotest.assertTrue(comp.isMet(context), "1 le 2");
 			
 			compareCondition.compare.@op = "eq";
-			comp = ConditionFactory.createFromEnclosingXml(compareCondition);
+			comp = ConditionFactory.createFromEnclosingXml(compareCondition, Autotest.script);
 			Autotest.assertFalse(comp.isMet(context), "1 eq 2");
 			
 		}
@@ -291,28 +293,28 @@ package angel.game.test {
 		private function testPcConditions():void {
 			var pcCondition:XML = <foo><pc param="badId" /></foo>; 
 			var notPcCondition:XML = <foo><notPc param="badId" /></foo>;
-			var badPc:ICondition = ConditionFactory.createFromEnclosingXml(pcCondition);
-			var badNotPc:ICondition = ConditionFactory.createFromEnclosingXml(notPcCondition);
+			var badPc:ICondition = ConditionFactory.createFromEnclosingXml(pcCondition, Autotest.script);
+			var badNotPc:ICondition = ConditionFactory.createFromEnclosingXml(notPcCondition, Autotest.script);
 			Autotest.assertNoAlert("shouldn't check id on creation");
 			pcCondition.pc.@param = Autotest.TEST_ROOM_MAIN_PC_ID;
 			notPcCondition.notPc.@param = Autotest.TEST_ROOM_MAIN_PC_ID;
-			var isPc:ICondition = ConditionFactory.createFromEnclosingXml(pcCondition);
-			var notPc:ICondition = ConditionFactory.createFromEnclosingXml(notPcCondition);
+			var isPc:ICondition = ConditionFactory.createFromEnclosingXml(pcCondition, Autotest.script);
+			var notPc:ICondition = ConditionFactory.createFromEnclosingXml(notPcCondition, Autotest.script);
 			
 			Autotest.assertClass(badPc, PcCondition, "wrong condition type");
 			
 			Autotest.assertFalse(badPc.isMet(context), "unknown character is not pc");
-			Autotest.assertAlertText("Error in condition: no character 'badId' in current room.");
+			Autotest.assertContextMessage(context, "Script error in pc: No character 'badId' in current room.");
 			Autotest.assertFalse(badNotPc.isMet(context), "undefined character is not not-pc, either");
-			Autotest.assertAlertText("Error in condition: no character 'badId' in current room.");
+			Autotest.assertContextMessage(context, "Script error in pc: No character 'badId' in current room.");
 			
 			Autotest.assertTrue(isPc.isMet(context), "main character is pc");
 			Autotest.assertFalse(notPc.isMet(context), "main character is not not-pc");
 			
 			pcCondition.pc.@param = Autotest.TEST_ROOM_ENEMY_ID;
 			notPcCondition.notPc.@param = Autotest.TEST_ROOM_ENEMY_ID;
-			isPc = ConditionFactory.createFromEnclosingXml(pcCondition);
-			notPc= ConditionFactory.createFromEnclosingXml(notPcCondition);
+			isPc = ConditionFactory.createFromEnclosingXml(pcCondition, Autotest.script);
+			notPc= ConditionFactory.createFromEnclosingXml(notPcCondition, Autotest.script);
 			Autotest.assertFalse(isPc.isMet(context), "enemy is not pc");
 			Autotest.assertTrue(notPc.isMet(context), "enemy is not-pc");
 		}

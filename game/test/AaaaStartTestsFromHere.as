@@ -5,6 +5,7 @@ package angel.game.test {
 	import angel.game.event.EventQueue;
 	import angel.game.InitGameFromFiles;
 	import angel.game.SaveGame;
+	import angel.game.script.Script;
 	import angel.game.Settings;
 	import flash.display.Sprite;
 	import flash.events.Event;

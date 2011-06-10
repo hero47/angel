@@ -12,13 +12,15 @@ package angel.game.script.action {
 		private var myScript:Script;
 		private var myCondition:ICondition;
 		
+		public static const TAG:String = "elseIf";
+		
 		public function ElseIfAction(condition:ICondition, script:Script) {
 			myCondition = condition;
 			myScript = script;
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
-			var conditionAndScript:Object = IfAction.conditionAndScriptFromXml(actionXml);
+		public static function createFromXml(actionXml:XML, rootScript:Script):IAction {
+			var conditionAndScript:Object = IfAction.conditionAndScriptFromXml(actionXml, rootScript);
 			return (conditionAndScript.script == null ? null : new ElseIfAction(conditionAndScript.condition, conditionAndScript.script));
 		}
 		

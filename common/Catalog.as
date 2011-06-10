@@ -13,7 +13,6 @@ package angel.common {
 		public var loaded:Boolean = false;
 		
 		protected var lookup:Object = new Object(); // associative array mapping name to CatalogEntry
-		protected var collectMessages:String = null; // if not null, suppress warning/error messages and stash them here instead
 		
 		public function Catalog() {
 		}
@@ -29,56 +28,53 @@ package angel.common {
 		}
 		
 		protected function catalogXmlLoaded(event:Event, param:Object, filenameForErrors:String):void {
-			var duplicateNames:String = "";
+			var errors:MessageCollector = new MessageCollector();
 			var xml:XML = Util.parseXml(event.target.data, filenameForErrors);
 			if (xml == null) {
 				return;
 			}
 			var entry:CatalogEntry;
 			for each (var propXml:XML in xml.prop) {
-				entry = addCatalogEntry(propXml.@id, propXml.@file, propXml, CatalogEntry.PROP, duplicateNames);
+				entry = addCatalogEntry(propXml.@id, propXml.@file, propXml, CatalogEntry.PROP, errors);
 			}
 			for each (var charXml:XML in xml.char) {
-				entry = addCatalogEntry(charXml.@id, charXml.@file, charXml, CatalogEntry.CHARACTER, duplicateNames);
+				entry = addCatalogEntry(charXml.@id, charXml.@file, charXml, CatalogEntry.CHARACTER, errors);
 			}
 			for each (var weaponXml:XML in xml.weapon) {
 				//NOTE: weapons have no image yet; pass null for filename so we won't look for a file.
-				entry = addCatalogEntry(weaponXml.@id, null, weaponXml, CatalogEntry.WEAPON, duplicateNames);
+				entry = addCatalogEntry(weaponXml.@id, null, weaponXml, CatalogEntry.WEAPON, errors);
 			}
 			for each (var splashXml:XML in xml.splash) {
-				entry = addCatalogEntry(splashXml.@id, splashXml.@file, splashXml, CatalogEntry.SPLASH, duplicateNames);
+				entry = addCatalogEntry(splashXml.@id, splashXml.@file, splashXml, CatalogEntry.SPLASH, errors);
 			}
 			
 			//UNDONE For backwards compatibility; remove this once old catalogs have been rewritten
 			for each (var walkerXml:XML in xml.walker) {
-				entry = addCatalogEntry(walkerXml.@id, walkerXml.@file, walkerXml, CatalogEntry.CHARACTER, duplicateNames);
+				entry = addCatalogEntry(walkerXml.@id, walkerXml.@file, walkerXml, CatalogEntry.CHARACTER, errors);
 			}
 			
 			for each (var tilesetXml:XML in xml.tileset) {
-				entry = addCatalogEntry(tilesetXml.@id, tilesetXml.@file, tilesetXml, CatalogEntry.TILESET, duplicateNames);
+				entry = addCatalogEntry(tilesetXml.@id, tilesetXml.@file, tilesetXml, CatalogEntry.TILESET, errors);
 			}
 			
-			if (duplicateNames.length > 0) {
-				message("WARNING: Duplicate name(s) in catalog:\n" + duplicateNames);
-			}
+			errors.endSection("WARNING: Duplicate name(s) in catalog:");
+			errors.displayIfNotEmpty("Errors loading catalog!");
 			loaded = true;
 			dispatchEvent(new Event(Event.INIT));
 		}
 		
-		protected function message(text:String):void {
-			if (collectMessages == null) {
+		protected function message(text:String, errors:MessageCollector = null):void {
+			if (errors == null) {
 				Alert.show(text);
 			} else {
-				collectMessages += text;
+				errors.add(text);
 			}
 		}
 		
-		// add the specified entry. If it's a duplicate, add to duplicateNames for reporting & return null
-		public function addCatalogEntry(id:String, filename:String, xml:XML, type:int, duplicateNames:String = null):CatalogEntry {
+		// add the specified entry. If it's a duplicate, add to errors for reporting & return null
+		public function addCatalogEntry(id:String, filename:String, xml:XML, type:int, errors:MessageCollector):CatalogEntry {
 			if (lookup[id] != undefined) {
-				if (duplicateNames != null) {
-					duplicateNames += id + "\n";
-				}
+				message(id, errors);
 				return null;
 			}
 			var entry:CatalogEntry = new CatalogEntry(filename, type);
@@ -87,46 +83,45 @@ package angel.common {
 			return entry;
 		}
 		
-		public function retrievePropResource(id:String):RoomContentResource {
-			return retrieveRoomContentResource(id, CatalogEntry.PROP);
+		public function retrievePropResource(id:String, errors:MessageCollector = null):RoomContentResource {
+			return retrieveRoomContentResource(id, CatalogEntry.PROP, errors);
 		}
 		
-		public function retrieveCharacterResource(id:String):RoomContentResource {
-			return retrieveRoomContentResource(id, CatalogEntry.CHARACTER);
+		public function retrieveCharacterResource(id:String, errors:MessageCollector = null):RoomContentResource {
+			return retrieveRoomContentResource(id, CatalogEntry.CHARACTER, errors);
 		}
 		
-		public function retrieveRoomContentResource(id:String, type:int):RoomContentResource {
-			return loadOrRetrieveCatalogEntry(id, type, RoomContentResource) as RoomContentResource;
+		public function retrieveRoomContentResource(id:String, type:int, errors:MessageCollector = null):RoomContentResource {
+			return loadOrRetrieveCatalogEntry(id, type, RoomContentResource, errors) as RoomContentResource;
 		}
 		
-		public function retrieveWeaponResource(id:String):WeaponResource {
-			return loadOrRetrieveCatalogEntry(id, CatalogEntry.WEAPON, WeaponResource) as WeaponResource;
+		public function retrieveWeaponResource(id:String, errors:MessageCollector = null):WeaponResource {
+			return loadOrRetrieveCatalogEntry(id, CatalogEntry.WEAPON, WeaponResource, errors) as WeaponResource;
 		}
 		
-		public function retrieveSplashResource(id:String):SplashResource {
-			return loadOrRetrieveCatalogEntry(id, CatalogEntry.SPLASH, SplashResource) as SplashResource;
+		public function retrieveSplashResource(id:String, errors:MessageCollector = null):SplashResource {
+			return loadOrRetrieveCatalogEntry(id, CatalogEntry.SPLASH, SplashResource, errors) as SplashResource;
 		}
 
-		// call the function, passing tileset as parameter
-		public function retrieveTileset(tilesetId:String):Tileset {
-			return loadOrRetrieveCatalogEntry(tilesetId, CatalogEntry.TILESET, Tileset) as Tileset;
+		public function retrieveTileset(tilesetId:String, errors:MessageCollector = null):Tileset {
+			return loadOrRetrieveCatalogEntry(tilesetId, CatalogEntry.TILESET, Tileset, errors) as Tileset;
 		}
 		
 		// finishEntry takes CatalogEntry with data set to bitmapData (and xml if appropriate),
 		// and replaces data with the finished object to cache
-		private function loadOrRetrieveCatalogEntry(id:String, type:int, resourceClass:Class):ICatalogedResource {
+		private function loadOrRetrieveCatalogEntry(id:String, type:int, resourceClass:Class, errors:MessageCollector = null):ICatalogedResource {
 			var entry:CatalogEntry = lookup[id];
 			var inCatalog:Boolean = true;
 		
 			if (entry == null) {
 				inCatalog = false;
-				message("Error: " + id + " not in catalog.");
+				message("Error: " + id + " not in catalog.", errors);
 				entry = new CatalogEntry(null, type);
 				lookup[id] = entry;
 			}
 			
 			if (entry.type != type) {
-				Alert.show("Error! Catalog entry " + id + " is wrong type.");
+				message("Error! Catalog entry " + id + " is wrong type.", errors);
 				return null;
 			}
 			
@@ -135,7 +130,7 @@ package angel.common {
 			}
 
 			//UNDONE: remove this when catalog entries have stabilized
-			temporaryMungeXmlForOldData(type, entry.xml);
+			temporaryMungeXmlForOldData(type, entry.xml, errors);
 			
 			entry.data = new resourceClass();
 			entry.data.prepareTemporaryVersionForUse(id, entry);
@@ -144,7 +139,7 @@ package angel.common {
 				LoaderWithErrorCatching.LoadBytesFromFile(entry.filename,
 					function(event:Event, param:Object, filename:String):void {
 						var bitmap:Bitmap = event.target.content;
-						warnIfBitmapIsWrongSize(entry, bitmap.bitmapData);
+						warnIfBitmapIsWrongSize(entry, bitmap.bitmapData, errors);
 						entry.data.dataFinishedLoading(bitmap.bitmapData);
 					}
 				);
@@ -153,7 +148,7 @@ package angel.common {
 			return entry.data;
 		}
 		
-		protected function warnIfBitmapIsWrongSize(entry:CatalogEntry, bitmapData:BitmapData):void {
+		protected function warnIfBitmapIsWrongSize(entry:CatalogEntry, bitmapData:BitmapData, errors:MessageCollector = null):void {
 			if (entry.type == CatalogEntry.CHARACTER) {
 				//NOTE: CatalogEntry.CHARACTER will check this itself since it can take several different sizes
 				return;
@@ -180,7 +175,7 @@ package angel.common {
 			}
 			if ((bitmapData.width != correctWidth) || (bitmapData.height != correctHeight)) {
 				message("Warning: " + typeName + " file " + entry.filename + " is not " +
-						correctWidth + "x" + correctHeight + ".  Please fix!");
+						correctWidth + "x" + correctHeight + ".  Please fix!", errors);
 			}
 		}
 		
@@ -190,7 +185,7 @@ package angel.common {
 		
 		
 		//UNDONE: remove this when catalog entries have stabilized
-		private function temporaryMungeXmlForOldData(type:int, xml:XML):void {
+		private function temporaryMungeXmlForOldData(type:int, xml:XML, errors:MessageCollector):void {
 			if (xml == null) {
 				return;
 			}
@@ -203,7 +198,7 @@ package angel.common {
 					var weaponXml:XML = <weapon />;
 					weaponXml.@displayName = weaponId;
 					weaponXml.@damage = damage;
-					addCatalogEntry(weaponId, null, weaponXml, CatalogEntry.WEAPON);
+					addCatalogEntry(weaponId, null, weaponXml, CatalogEntry.WEAPON, errors);
 				}
 				
 				xml.@mainGun = weaponId;

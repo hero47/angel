@@ -153,12 +153,10 @@ package angel.game {
 		}
 		
 		public function pauseGameTimeIndefinitely(pauseOwner:Object):void {
-			trace("Pausing game time indefinitely", pauseOwner);
 			gamePauseStack.push(new PauseInfo(int.MAX_VALUE, pauseOwner));
 		}
 		
 		public function pauseGameTimeForFixedDelay(seconds:Number, pauseOwner:Object, callback:Function = null):void {
-			trace("Pausing game time for", seconds, "seconds, owner =", pauseOwner, (callback == null) ? ", no callback" : ", with callback");
 			gamePauseStack.push(new PauseInfo(getTimer() + seconds * 1000, pauseOwner, callback));
 		}
 		
@@ -168,7 +166,6 @@ package angel.game {
 		
 		// For use when mode change makes callbacks obsolete
 		public function unpauseAndDeleteAllOwnedBy(owner:Object):void {
-			trace("unpause and delete all owned by", owner);
 			var i:int = 0;
 			while (i < gamePauseStack.length) {
 				if (gamePauseStack[i].pauseOwner == owner) {
@@ -187,7 +184,6 @@ package angel.game {
 			for (var i:int = gamePauseStack.length - 1; i >= 0; --i) {
 				var lastPauseInfo:PauseInfo = gamePauseStack[i];
 				if ((lastPauseInfo.pauseUntil == int.MAX_VALUE) && (lastPauseInfo.pauseOwner == owner)) {
-					trace("unpaused from last indefinite", owner);
 					gamePauseStack.splice(i, 1);
 					return;
 				}

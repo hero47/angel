@@ -12,38 +12,40 @@ package angel.game.script.action {
 	public class IfAction implements IAction {
 		private var cases:Vector.<ConditionAndScript>;
 		
+		public static const TAG:String = "if";
+		
 		public function IfAction(condition:ICondition, script:Script) {
 			cases = new Vector.<ConditionAndScript>();
 			cases.push(new ConditionAndScript(condition, script));
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
-			var conditionAndScript:ConditionAndScript = conditionAndScriptFromXml(actionXml);
+		public static function createFromXml(actionXml:XML, rootScript:Script):IAction {
+			var conditionAndScript:ConditionAndScript = conditionAndScriptFromXml(actionXml, rootScript);
 			if ((conditionAndScript == null) || (conditionAndScript.script == null)) {
 				return null;
 			}
 			return new IfAction(conditionAndScript.condition, conditionAndScript.script);
 		}
 		
-		public static function conditionAndScriptFromXml(actionXml:XML):ConditionAndScript {
+		public static function conditionAndScriptFromXml(actionXml:XML, rootScript:Script):ConditionAndScript {
 			var condition:ICondition;
 			var scriptXml:XML;
-			condition = ConditionFactory.checkForShortcutVersion(actionXml);
+			condition = ConditionFactory.checkForShortcutVersion(actionXml, rootScript);
 			if (condition != null) {
 				scriptXml = actionXml;
 			} else {
-				condition = ConditionFactory.createFromEnclosingXml(actionXml, true);
+				condition = ConditionFactory.createFromEnclosingXml(actionXml, rootScript, true);
 				if (condition == null) {
 					return null;
 				}
 				var scriptXmlList:XMLList = actionXml.script;
 				if (scriptXmlList.length() != 1) {
-					Alert.show("Error! Long version of 'if' action requires exactly one 'script' child.");
+					rootScript.addError("Long version of 'if' action requires exactly one 'script' child.");
 					return null;
 				}
 				scriptXml = scriptXmlList[0];
 			}
-			var script:Script = new Script(scriptXml, "In if action: ");
+			var script:Script = new Script(scriptXml, rootScript);
 			return new ConditionAndScript(condition, script);
 		}
 		

@@ -12,12 +12,14 @@ package angel.game.script.action {
 		
 		private var myScript:Script;
 		
+		public static const TAG:String = "else";
+		
 		public function ElseAction(script:Script) {
 			this.myScript = script;
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
-			var script:Script = new Script(actionXml, "In else action: ");
+		public static function createFromXml(actionXml:XML, rootScript:Script):IAction {
+			var script:Script = new Script(actionXml, rootScript);
 			return new ElseAction(script);
 		}
 		

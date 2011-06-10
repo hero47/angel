@@ -26,7 +26,7 @@ package angel.game.script {
 			script.addAction(newAction);
 		}
 		
-		public static function createFromXml(xml:XML, errorPrefix:String = ""):ConversationSegment {
+		public static function createFromXml(xml:XML, rootScript:Script):ConversationSegment {
 			var text:String = xml.@text;
 			
 			// A \n for newline in XML attribute doesn't translate, and a CRLF looks like two newlines, so fix them
@@ -46,7 +46,7 @@ package angel.game.script {
 					}
 					segment.need.push(child.@flag);
 				} else {
-					segment.addAction(ActionFactory.createFromXml(child, errorPrefix));
+					segment.addAction(ActionFactory.createFromXml(child, rootScript));
 				}
 			}
 			return segment;

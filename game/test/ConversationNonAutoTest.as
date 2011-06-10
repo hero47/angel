@@ -2,33 +2,34 @@ package angel.game.test {
 	import angel.game.event.QEvent;
 	import angel.game.Room;
 	import angel.game.script.ConversationData;
+	import angel.game.script.Script;
 	import angel.game.Settings;
 	/**
 	 * ...
 	 * @author Beth Moursund
 	 */
 	public class ConversationNonAutoTest {
-		private static var conversationData:ConversationData;
+		private static var frobScript:Script;
 		private var room:Room;
 		
 		public function ConversationNonAutoTest(room:Room) {
 			this.room = room;
-			if (conversationData == null) {
-				conversationData = new ConversationData();
-				Settings.gameEventQueue.addListener(this, conversationData, QEvent.INIT, dataLoaded);
-				conversationData.loadFromXmlFile("testActions.xml");
+			if (frobScript == null) {
+				frobScript = new Script();
+				Settings.gameEventQueue.addListener(this, frobScript, QEvent.INIT, dataLoaded);
+				frobScript.loadEntityScriptFromXmlFile("testActions.xml");
 			} else {
 				doTest();
 			}
 		}
 		
 		private function dataLoaded(event:QEvent):void {
-			Settings.gameEventQueue.removeListener(conversationData, QEvent.INIT, dataLoaded);
+			Settings.gameEventQueue.removeListener(frobScript, QEvent.INIT, dataLoaded);
 			doTest();
 		}
 		
 		private function doTest():void {
-			room.startConversation(room.mainPlayerCharacter, conversationData);
+			frobScript.run(room, room.mainPlayerCharacter);
 		}
 		
 	}

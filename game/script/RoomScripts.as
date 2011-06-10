@@ -53,18 +53,19 @@ package angel.game.script {
 				return;
 			}
 			var scriptXml:XML = scriptsXml[0];
-			var errorPrefix:String =  "in room file " + filename;
-			onEnterScripts = createTriggeredScripts(scriptXml.onEnter, false, false, errorPrefix + " onEnter");
-			onMoveScripts = createTriggeredScripts(scriptXml.onMove, true, true, errorPrefix + " onMove");
-			onDeathScripts = createTriggeredScripts(scriptXml.onDeath, true, false, errorPrefix + " onDeath");
+			var rootScriptForErrors:Script = new Script();
+			rootScriptForErrors.initErrorList();
+			onEnterScripts = createTriggeredScripts(scriptXml, "onEnter", false, false, rootScriptForErrors);
+			onMoveScripts = createTriggeredScripts(scriptXml, "onMove", true, true, rootScriptForErrors);
+			onDeathScripts = createTriggeredScripts(scriptXml, "onDeath", true, false, rootScriptForErrors);
 			/*
 			onDeathScripts = createTriggeredScripts( 
-					(scriptXml.onDeath.length() > 0 ? scriptXml.onDeath : ON_DEATH_DEFAULT_XML.onDeath),
-					true, false, errorPrefix + " onDeath");
+					(scriptXml.onDeath.length() > 0 ? scriptXml : ON_DEATH_DEFAULT_XML),
+					"onDeath", true, false, rootScriptForErrors);
 			*/
-			//onWinScripts = createTriggeredScripts(scriptXml.onWin, false, false, errorPrefix + " onWin");
-			//onLoseScripts = createTriggeredScripts(scriptXml.onLose, false, false, errorPrefix + " onLose");
-			
+			//onWinScripts = createTriggeredScripts(scriptXml, "onWin", false, false, rootScriptForErrors);
+			//onLoseScripts = createTriggeredScripts(scriptXml, "onLose", false, false, rootScriptForErrors);
+			rootScriptForErrors.displayAndClearParseErrors("Script errors in room file " + filename);
 			
 			if (onMoveScripts != null) {
 				Settings.gameEventQueue.addListener(this, room, EntityQEvent.FINISHED_ONE_TILE_OF_MOVE, moveListener);
@@ -99,8 +100,9 @@ package angel.game.script {
 		}
 		*/
 		
-		private function createTriggeredScripts(scriptsForThisTrigger:XMLList, canFilterOnId:Boolean, canFilterOnSpot:Boolean,
-												errorLocation:String):Vector.<TriggeredScript> {
+		private function createTriggeredScripts(scriptXML:XML, triggerName:String, canFilterOnId:Boolean, canFilterOnSpot:Boolean,
+												rootScript:Script):Vector.<TriggeredScript> {
+			var scriptsForThisTrigger:XMLList = scriptXML.children().(name() == triggerName);
 			if ((scriptsForThisTrigger == null) || (scriptsForThisTrigger.length() == 0)) {
 				return null;
 			}
@@ -113,21 +115,22 @@ package angel.game.script {
 					if (canFilterOnId) {
 						one.entityIds = Vector.<String>(idsParam.split(","));
 					} else {
-						Alert.show("Warning: ids ignored " + errorLocation);
+						rootScript.addError("Warning: ids ignored");
 					}
 				}
 				if (spotsParam != "") {
 					if (canFilterOnSpot) {
 						one.spotIds = Vector.<String>(spotsParam.split(","));
 					} else {
-						Alert.show("Warning: spots ignored " + errorLocation);
+						rootScript.addError("Warning: spots ignored");
 					}
 				}
-				one.script = new Script(xml, "Script error " + errorLocation + ":\n");
+				one.script = new Script(xml, rootScript);
 				if (one.script != null) {
 					triggeredScripts.push(one);
 				}
 			}
+			rootScript.endErrorSection(triggerName);
 			return triggeredScripts;
 		}
 		

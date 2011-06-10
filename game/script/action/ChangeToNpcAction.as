@@ -20,6 +20,8 @@ package angel.game.script.action {
 		private var exploreParam:String;
 		private var combatParam:String;
 		
+		public static const TAG:String = "changeToNpc";
+		
 		public function ChangeToNpcAction(id:String, explore:Class, exploreParam:String, combat:Class, combatParam:String, otherXml:XML) {
 			this.id = id;
 			this.exploreBrainClass = explore;
@@ -29,7 +31,10 @@ package angel.game.script.action {
 			this.commonXml = otherXml;
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
+		public static function createFromXml(actionXml:XML, script:Script):IAction {
+			if (script.requires(TAG, "id", actionXml)) {
+				return null;
+			}
 			var otherXml:XML = actionXml.copy();
 			for each (var attributeName:String in ["explore", "exploreParam", "combat", "combatParam", "id", "x", "y", "spot"]) {
 				if (otherXml.@[attributeName].length() > 0) { // delete these
@@ -43,12 +48,11 @@ package angel.game.script.action {
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(context:ScriptContext):Object {
-			var entityWithId:SimpleEntity = context.entityWithScriptId(id);
-			if (entityWithId is ComplexEntity) {
-				var entity:ComplexEntity = ComplexEntity(entityWithId);
+			var entity:ComplexEntity = context.charWithScriptId(id, TAG);
+			if (entity != null) {
 				if (entity.isReallyPlayer) {
 					if (entity == context.room.mainPlayerCharacter) {
-						Alert.show("Error! Cannot change main player character to NPC, must make someone else main first.");
+						context.scriptError("Cannot change main player character to NPC, must make someone else main first.", TAG);
 						return null;
 					}
 					entity.setBrain(false, combatBrainClass, combatParam);
@@ -56,9 +60,7 @@ package angel.game.script.action {
 					entity.setCommonPropertiesFromXml(commonXml);
 					entity.changePlayerControl(false, ComplexEntity.factionFromName(commonXml.@faction));
 				}
-			} else {
-				Alert.show("Script error: no character " + id + " in room for changeToNpc");
-			}
+			} 
 			return null;
 		}
 		

@@ -1,4 +1,5 @@
 package angel.game.script.condition {
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	/**
 	 * ...
@@ -9,6 +10,8 @@ package angel.game.script.condition {
 		private var conditions:Vector.<ICondition>;
 		private var desiredValue:Boolean;
 		
+		public static const TAG:String = "or";
+		
 		public function OrCondition(conditions:Vector.<ICondition>, desiredValue:Boolean) {
 			this.conditions = conditions;
 			this.desiredValue = desiredValue;
@@ -18,8 +21,8 @@ package angel.game.script.condition {
 			return false;
 		}
 		
-		public static function createFromXml(conditionXml:XML):ICondition {
-			var andVersion:ICondition = ConditionFactory.createFromEnclosingXml(conditionXml);
+		public static function createFromXml(conditionXml:XML, script:Script):ICondition {
+			var andVersion:ICondition = ConditionFactory.createFromEnclosingXml(conditionXml, script);
 			if (andVersion is AndCondition) {
 				return new OrCondition(AndCondition(andVersion).conditions, AndCondition(andVersion).desiredValue);
 			} else {

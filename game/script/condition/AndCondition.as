@@ -1,4 +1,5 @@
 package angel.game.script.condition {
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	/**
 	 * ...
@@ -10,6 +11,8 @@ package angel.game.script.condition {
 		public var conditions:Vector.<ICondition>;
 		public var desiredValue:Boolean;
 		
+		public static const TAG:String = "and";
+		
 		public function AndCondition(conditions:Vector.<ICondition>, desiredValue:Boolean) {
 			this.conditions = conditions;
 			this.desiredValue = desiredValue;
@@ -19,8 +22,8 @@ package angel.game.script.condition {
 			return false;
 		}
 		
-		public static function createFromXml(conditionXml:XML):ICondition {
-			return ConditionFactory.createFromEnclosingXml(conditionXml);
+		public static function createFromXml(conditionXml:XML, rootScript:Script):ICondition {
+			return ConditionFactory.createFromEnclosingXml(conditionXml, rootScript);
 		}
 			
 		

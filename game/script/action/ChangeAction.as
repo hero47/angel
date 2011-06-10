@@ -17,19 +17,24 @@ package angel.game.script.action {
 		private var xyFromXml:Point;
 		private var xml:XML;
 		
+		public static const TAG:String = "change";
+		
 		public function ChangeAction(id:String, xml:XML, xyFromXml:Point) {
 			this.id = id;
 			this.xml = xml;
 			this.xyFromXml = xyFromXml;
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
+		public static function createFromXml(actionXml:XML, script:Script):IAction {
+			if (script.requires(TAG, "id", actionXml)) {
+				return null;
+			}
 			var id:String = actionXml.@id;
 			var xyFromXml:Point;
 			if ((String(actionXml.@x) != "") || (String(actionXml.@y) != "")) {
 				xyFromXml = new Point(int(actionXml.@x), int(actionXml.@y));
 				if ((xyFromXml.x < 0) || (xyFromXml.y < 0)) {
-					Alert.show("Error! Negative position");
+					script.addError(TAG + ": Negative position");
 					xyFromXml = null;
 				}
 			}
@@ -46,27 +51,23 @@ package angel.game.script.action {
 		
 		public function doAction(context:ScriptContext):Object {
 			var id:String = xml.@id;
-			var entity:SimpleEntity = context.entityWithScriptId(id);
-			var complexEntity:ComplexEntity = entity as ComplexEntity;
+			var entity:SimpleEntity = context.entityWithScriptId(id, TAG);
 			if (entity == null) {
-				Alert.show("Script error: no id " + id + " in room for changeAttributes");
 				return null;
 			}
 			
+			var complexEntity:ComplexEntity = entity as ComplexEntity; // it's not an error for this to be null!
 			var spotId:String = xml.@spot;
 			var newLocation:Point;
 			if (spotId != "") {
-				newLocation = context.room.spotLocation(spotId);
-				if (newLocation == null) {
-					Alert.show("Error in change: spot '" + spotId + "' undefined in current room.");
-				}
+				newLocation = context.locationWithSpotId(spotId, TAG);
 			}
 			if (xyFromXml != null) {
 				if (newLocation != null) {
-					Alert.show("Error: change action with both spot and x,y");
+					context.scriptError("contains both spot and x,y", TAG);
 				}
 				if ((xyFromXml.x > context.room.size.x) || (xyFromXml.y > context.room.size.y)) {
-					Alert.show("Error in change: position out of room boundaries");
+					context.scriptError("position out of room boundaries", TAG);
 				} else {
 					newLocation = new Point(int(xml.@x), int(xml.@y));
 				}
@@ -95,7 +96,7 @@ package angel.game.script.action {
 				}
 				if (xml.@faction.length() > 0) {
 					if (complexEntity.isReallyPlayer) {
-						Alert.show("Error in change: cannot change faction of a player character");
+						context.scriptError("cannot change faction of a player character", TAG);
 					} else {
 						complexEntity.changeFaction(xml.@faction);
 					}

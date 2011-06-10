@@ -1,6 +1,7 @@
 package angel.game.script.computation {
 	import angel.common.Util;
 	import angel.game.ComplexEntity;
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	/**
 	 * ...
@@ -10,7 +11,9 @@ package angel.game.script.computation {
 		private var all:Boolean;
 		private var faction:int;
 		
-		public function AliveComputation(param:String) {
+		public static const TAG:String = "alive";
+		
+		public function AliveComputation(param:String, script:Script) {
 			if (param == "all") {
 				all = true;
 			} else {

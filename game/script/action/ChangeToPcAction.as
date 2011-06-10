@@ -14,28 +14,30 @@ package angel.game.script.action {
 	public class ChangeToPcAction implements IAction {
 		private var id:String;
 		
+		public static const TAG:String = "changeToPc";
+		
 		public function ChangeToPcAction(id:String) {
 			this.id = id;
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
+		public static function createFromXml(actionXml:XML, script:Script):IAction {
+			if (script.requires(TAG, "id", actionXml)) {
+				return null;
+			}
 			return new ChangeToPcAction(actionXml.@id);
 		}
 		
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(context:ScriptContext):Object {
-			var entityWithId:SimpleEntity = context.entityWithScriptId(id);
-			if (entityWithId is ComplexEntity) {
-				var entity:ComplexEntity = ComplexEntity(entityWithId);
+			var entity:ComplexEntity = context.charWithScriptId(id, TAG);
+			if (entity != null) {
 				//CONSIDER: should we give error if it's already a player?
 				if (!entity.isReallyPlayer) {
 					entity.setBrain(false, CombatBrainUiMeldPlayer, null);
 					entity.setBrain(true, BrainFollow, context.room.mainPlayerCharacter.id);
 					entity.changePlayerControl(true, ComplexEntity.FACTION_FRIEND);
 				}
-			} else {
-				Alert.show("Script error: no character " + id + " in room for changeToPc");
 			}
 			return null;
 		}

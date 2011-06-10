@@ -3,6 +3,7 @@ package angel.game.script.condition {
 	import angel.common.Assert;
 	import angel.game.script.computation.ComputationFactory;
 	import angel.game.script.computation.IComputation;
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	/**
 	 * ...
@@ -13,6 +14,8 @@ package angel.game.script.condition {
 		private var right:IComputation;
 		private var op:Function;
 		private var desiredValue:Boolean;
+		
+		public static const TAG:String = "compare";
 		
 		private static const legalOps:Object = { "lt":less, "gt":greater, "eq":equal, "le":lessOrEqual, "ge":greaterOrEqual,
 		"ne":notEqual };
@@ -28,20 +31,20 @@ package angel.game.script.condition {
 			return false;
 		}
 		
-		public static function createFromXml(conditionXml:XML):ICondition {
+		public static function createFromXml(conditionXml:XML, rootScript:Script):ICondition {
 			var op:Function = legalOps[conditionXml.@op];
 			if (op == null) {
-				Alert.show("Error: missing or invalid op in compare");
+				rootScript.addError(TAG + ": missing or invalid op");
 				return null;
 			}
 			var leftXml:XMLList = conditionXml.left;
 			var rightXml:XMLList = conditionXml.right;
 			if ((leftXml.length() != 1) || (rightXml.length() != 1)) {
-				Alert.show("Error: compare requires left and right children");
+				rootScript.addError(TAG + " requires left and right children");
 				return null;
 			}
-			var left:IComputation = ComputationFactory.createFromXml(leftXml[0], "Error: compare left");
-			var right:IComputation = ComputationFactory.createFromXml(rightXml[0], "Error: compare right");
+			var left:IComputation = ComputationFactory.createFromXml(leftXml[0], rootScript);
+			var right:IComputation = ComputationFactory.createFromXml(rightXml[0], rootScript);
 			if ((left == null) || (right == null)) {
 				return null;
 			}
