@@ -1,6 +1,7 @@
 package angel.game.script.action {
 	import angel.common.Alert;
 	import angel.game.ComplexEntity;
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import flash.geom.Point;
@@ -18,19 +19,24 @@ package angel.game.script.action {
 		private var walkerXml:XML;
 		private static const CONTENTS_VERSION:int = 1;
 		
+		public static const TAG:String = "addNpc";
 		
 		public function AddNpcAction(walkerXml:XML) {
 			this.walkerXml = walkerXml;
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
+		public static function createFromXml(actionXml:XML, script:Script):IAction {
+			if (script.requires(TAG, "id", actionXml)) {
+				return null;
+			}
 			return new AddNpcAction(actionXml);
 		}
 		
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(context:ScriptContext):Object {
-			var walker:ComplexEntity = ComplexEntity.createFromRoomContentsXml(walkerXml, CONTENTS_VERSION, Settings.catalog);
+			var walker:ComplexEntity = ComplexEntity.createFromRoomContentsXml(walkerXml, CONTENTS_VERSION, Settings.catalog,
+										context.messages);
 			if (walker == null) {
 				// don't show another error, catalog will already have displayed error
 				return null;
@@ -38,10 +44,7 @@ package angel.game.script.action {
 			var spotId:String = walkerXml.@spot;
 			var location:Point;
 			if (spotId != "") {
-				location = context.room.spotLocation(spotId);
-				if (location == null) {
-					Alert.show("Error in addNpc: spot '" + spotId + "' undefined in current room.");
-				}
+				location = context.locationWithSpotId(spotId, TAG);
 			}
 			if (location == null) {
 				context.room.addEntityUsingItsLocation(walker);

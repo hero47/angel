@@ -2,6 +2,7 @@ package angel.game.script.action {
 	import angel.common.Alert;
 	import angel.common.Util;
 	import angel.game.ComplexEntity;
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	/**
 	 * ...
@@ -11,14 +12,15 @@ package angel.game.script.action {
 		private var id:String;
 		private var itemText:String;
 		
+		public static const TAG:String = "removeFromInventory";
+		
 		public function RemoveFromInventoryAction(id:String, itemText:String) {
 			this.id = id;
 			this.itemText = itemText;
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
-			if ((actionXml.@id.length() == 0) || (actionXml.@list.length() == 0)) {
-				Alert.show("Script error: RemoveFromInventory requires id and list");
+		public static function createFromXml(actionXml:XML, script:Script):IAction {
+			if (script.requires(TAG, "id", actionXml) || script.requires("removeFromInventory", "list", actionXml)) {
 				return null;
 			}
 			return new RemoveFromInventoryAction(actionXml.@id, actionXml.@list);
@@ -27,15 +29,9 @@ package angel.game.script.action {
 		/* INTERFACE angel.game.script.action.IAction */
 		
 		public function doAction(context:ScriptContext):Object {
-			var entity:ComplexEntity = ComplexEntity(context.entityWithScriptId(id));
-			if (entity == null) {
-				Alert.show("Script error: no character " + id + " in room for removeFromInventory");
-			} else {
-				var errors:Vector.<String> = new Vector.<String>();
-				entity.inventory.removeFromAnywhereByText(itemText, errors);
-				if (errors.length > 0) {
-					Alert.showMulti(errors);
-				}
+			var entity:ComplexEntity = context.charWithScriptId(id, TAG);
+			if (entity != null) {
+				entity.inventory.removeFromAnywhereByText(itemText, context.messages);
 			}
 			return null;
 		}

@@ -6,6 +6,7 @@ package angel.game.script.action {
 	import angel.game.Room;
 	import angel.game.RoomExplore;
 	import angel.game.SaveGame;
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import flash.display.DisplayObjectContainer;
@@ -22,13 +23,15 @@ package angel.game.script.action {
 		private var startSpot:String;
 		private var modeClass:Class;
 		
+		public static const TAG:String = "changeRoom";
+		
 		public function ChangeRoomAction(filename:String, startSpot:String=null, startMode:Class=null) {
 			this.filename = filename;
 			this.startSpot = (startSpot == "" ? null : startSpot);
 			this.modeClass = startMode;
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
+		public static function createFromXml(actionXml:XML, script:Script):IAction {
 			var modeClass:Class;
 			var modeName:String = actionXml.@mode;
 			var filename:String = actionXml.@file;
@@ -42,17 +45,17 @@ package angel.game.script.action {
 				break;
 				case "":
 					if (filename == "") {
-						Alert.show("Script error! changeRoom requires filename or mode.");
+						script.addError(TAG + " requires filename or mode");
 						return null;
 					}
 				break;
 				default:
-					Alert.show("Error! Unknown mode " + modeName + " in changeRoom.");
+					script.addError(TAG + ": Unknown mode " + modeName);
 					return null;
 				break;
 			}
 			if ((filename == "") && (start != "")) {
-				Alert.show("Warning: start location " + start + " ignored since no room file given in changeRoom.");
+				script.addError(TAG + ": start location " + start + " ignored since no room file given.");
 			}
 			return new ChangeRoomAction(filename, start, modeClass);
 		}
@@ -68,7 +71,7 @@ package angel.game.script.action {
 			if (filename != "") {
 				LoaderWithErrorCatching.LoadFile(filename, roomXmlLoaded, context);
 			} else if (context.room.mode is modeClass) {
-				Alert.show("Error! changeRoom already in requested mode.");
+				context.scriptError("already in requested mode.", TAG);
 			} else {
 				context.room.changeModeTo(modeClass);
 			}

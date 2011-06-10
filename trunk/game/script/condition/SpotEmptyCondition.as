@@ -1,5 +1,6 @@
 package angel.game.script.condition {
 	import angel.common.Alert;
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import flash.geom.Point;
@@ -11,7 +12,9 @@ package angel.game.script.condition {
 		private var spotId:String;
 		private var desiredValue:Boolean;
 		
-		public function SpotEmptyCondition(spotId:String, desiredValue:Boolean) {
+		public static const TAG:String = "spotEmpty";
+		
+		public function SpotEmptyCondition(spotId:String, desiredValue:Boolean, script:Script) {
 			this.spotId = spotId;
 			this.desiredValue = desiredValue;
 		}
@@ -23,9 +26,8 @@ package angel.game.script.condition {
 		/* INTERFACE angel.game.action.ICondition */
 		
 		public function isMet(context:ScriptContext):Boolean {
-			var location:Point = context.room.spotLocation(spotId);
+			var location:Point = context.locationWithSpotId(spotId, TAG);
 			if (location == null) {
-				Alert.show("Error in condition: spot '" + spotId + "' undefined in current room.");
 				return false;
 			}
 			return(context.room.firstEntityIn(location) == null ? desiredValue : !desiredValue);

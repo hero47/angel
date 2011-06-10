@@ -1,6 +1,7 @@
 package angel.game.script.condition {
 	import angel.common.Alert;
 	import angel.game.Flags;
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	/**
 	 * ...
@@ -11,7 +12,9 @@ package angel.game.script.condition {
 		private var flagId:String;
 		private var desiredFlagValue:Boolean;
 		
-		public function FlagCondition(flagId:String, desiredValue:Boolean) {
+		public static const TAG:String = "flag";
+		
+		public function FlagCondition(flagId:String, desiredValue:Boolean, script:Script) {
 			this.flagId = flagId;
 			this.desiredFlagValue = desiredValue;
 			

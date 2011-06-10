@@ -1,6 +1,7 @@
 package angel.game.script.computation {
 	import angel.common.Alert;
 	import angel.common.Assert;
+	import angel.game.script.Script;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -18,9 +19,9 @@ package angel.game.script.computation {
 			Assert.fail("Should never be called");
 		}
 		
-		public static function createFromXml(xml:XML, errorPrefix:String = "Script computation"):IComputation {
+		public static function createFromXml(xml:XML, script:Script):IComputation {
 			if (xml.attributes().length() != 1) {
-				Alert.show(errorPrefix + " requires attribute");
+				script.addError("computation requires attribute");
 				return null;
 			}
 			
@@ -29,11 +30,11 @@ package angel.game.script.computation {
 			var computationClass:Class = computationNameToClass[attributeName];
 			
 			if (computationClass == null) {
-				Alert.show(errorPrefix + " unknown computation " + attributeName);
+				script.addError("unknown computation " + attributeName);
 				return null;
 			}
 			
-			return new computationClass(xml.@[attributeName]);
+			return new computationClass(xml.@[attributeName], script);
 		}
 		
 	}

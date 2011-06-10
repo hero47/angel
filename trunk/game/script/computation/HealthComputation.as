@@ -1,6 +1,7 @@
 package angel.game.script.computation {
 	import angel.common.Alert;
 	import angel.game.ComplexEntity;
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	/**
@@ -10,19 +11,17 @@ package angel.game.script.computation {
 	public class HealthComputation implements IComputation {
 		private var id:String;
 		
-		public function HealthComputation(param:String) {
+		public static const TAG:String = "health";
+		
+		public function HealthComputation(param:String, script:Script) {
 			id = param;
 		}
 		
 		/* INTERFACE angel.game.action.IComputation */
 		
 		public function value(context:ScriptContext):int {
-			var entity:ComplexEntity = ComplexEntity(context.entityWithScriptId(id));
-			if (entity == null) {
-				Alert.show("Error! No character " + id + " in current room.");
-				return 0;
-			}
-			return entity.currentHealth;
+			var entity:ComplexEntity = context.charWithScriptId(id, TAG);
+			return (entity == null ? 0 : entity.currentHealth);
 		}
 		
 	}

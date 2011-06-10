@@ -12,14 +12,16 @@ package angel.game.script.action {
 		private var conversationData:ConversationData;
 		private var targetId:String;
 		
+		public static const TAG:String = "conversation";
+		
 		public function ConversationAction(conversationData:ConversationData, targetId:String = null) {
 			this.conversationData = conversationData;
 			this.targetId = targetId;
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
+		public static function createFromXml(actionXml:XML, rootScript:Script):IAction {
 			var data:ConversationData = new ConversationData();
-			data.initializeFromXml(actionXml, "");
+			data.initializeFromXml(actionXml, rootScript);
 			return new ConversationAction(data, actionXml.@id);
 		}
 		

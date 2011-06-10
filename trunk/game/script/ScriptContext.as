@@ -2,12 +2,15 @@ package angel.game.script {
 	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.Catalog;
+	import angel.common.MessageCollector;
+	import angel.game.ComplexEntity;
 	import angel.game.GameMenu;
 	import angel.game.Room;
 	import angel.game.SaveGame;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import flash.display.DisplayObjectContainer;
+	import flash.geom.Point;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -16,7 +19,7 @@ package angel.game.script {
 		private var triggeringEntity:SimpleEntity;
 		private var scriptRoom:Room;
 		private var doAtEnd:Vector.<Function> = new Vector.<Function>();
-		private var message:String;
+		public var messages:MessageCollector; // holds both script-generated messages and script error messages
 		private var gameLost:Boolean;
 		private var gameOver:Boolean;
 		
@@ -26,14 +29,45 @@ package angel.game.script {
 			this.triggeringEntity = triggeringEntity;
 			this.scriptRoom = room;
 			this.catalog = Settings.catalog;
+			this.messages = new MessageCollector();
 		}
 		
-		public function entityWithScriptId(entityId:String):SimpleEntity {
+		public function entityWithScriptId(entityId:String, actionName:String = null):SimpleEntity {
+			var entity:SimpleEntity;
 			if (entityId == Script.TRIGGERING_ENTITY_ID) {
-				return triggeringEntity;
+				entity = triggeringEntity;
 			} else {
-				return room.entityInRoomWithId(entityId);
+				entity = room.entityInRoomWithId(entityId);
 			}
+			if (entity == null) {
+				scriptError("No entity '" + entityId + "' in current room.", actionName);
+			}
+			return entity;
+		}
+		
+		public function charWithScriptId(entityId:String, actionName:String = null):ComplexEntity {
+			var entity:SimpleEntity;
+			if (entityId == Script.TRIGGERING_ENTITY_ID) {
+				entity = triggeringEntity;
+			} else {
+				entity = room.entityInRoomWithId(entityId);
+			}
+			if (!(entity is ComplexEntity)) {
+				scriptError("No character '" + entityId + "' in current room.", actionName);
+			}
+			return entity as ComplexEntity;
+		}
+		
+		public function locationWithSpotId(spotId:String, actionName:String = null):Point {
+			var location:Point = room.spotLocation(spotId);
+			if (location == null) {
+				scriptError("spot '" + spotId + "' undefined in current room.", actionName);
+			}
+			return location;
+		}
+		
+		public function scriptError(text:String, actionName:String = null):void {
+			messages.add("Script error" + (actionName == null ? "" : " in " + actionName) + ": " + text);
 		}
 		
 		public function get room():Room {
@@ -59,11 +93,7 @@ package angel.game.script {
 			if (room != null) {
 				room.pauseGameTimeIndefinitely(this);
 			}
-			if (message == null) {
-				message = text;
-			} else {
-				message += "\n" + text;
-			}
+			messages.add(text);
 		}
 		
 		public function endOfScriptActions():void {
@@ -71,18 +101,21 @@ package angel.game.script {
 				var f:Function = doAtEnd.shift();
 				f(this); // No, this is not a comment on my satisfaction with the code!
 			}
-			if (message != null) {
+			if (!messages.empty()) {
+				if (room != null) {
+					room.pauseGameTimeIndefinitely(this);
+				}
 				var options:Object = { callback:continueAfterMessageOk };
 				if (gameOver && !gameLost) {
 					options.buttons = ["Kewl"];
 				}
-				Alert.show(message, options );
+				messages.displayIfNotEmpty(null, options);
 			}
 		}
 		
 		private function continueAfterMessageOk(button:String):void {
 			if (room != null) {
-				room.unpauseFromLastIndefinitePause(this);
+				room.unpauseAndDeleteAllOwnedBy(this);
 			}
 			if (gameOver) {
 				// Room had better not be null here!

@@ -1,6 +1,7 @@
 package angel.game.script.condition {
 	import angel.common.Alert;
 	import angel.game.ComplexEntity;
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import flash.geom.Point;
@@ -12,7 +13,9 @@ package angel.game.script.condition {
 		private var charId:String;
 		private var desiredValue:Boolean;
 		
-		public function AliveCondition(charId:String, desiredValue:Boolean) {
+		public static const TAG:String = "alive";
+		
+		public function AliveCondition(charId:String, desiredValue:Boolean, script:Script) {
 			this.charId = charId;
 			this.desiredValue = desiredValue;
 		}
@@ -24,9 +27,8 @@ package angel.game.script.condition {
 		/* INTERFACE angel.game.action.ICondition */
 		
 		public function isMet(context:ScriptContext):Boolean {
-			var char:ComplexEntity = context.entityWithScriptId(charId) as ComplexEntity;
+			var char:ComplexEntity = context.charWithScriptId(charId, TAG);
 			if (char == null) {
-				Alert.show("Error in condition: no character '" + charId + "' in current room.");
 				return false;
 			}
 			return(char.currentHealth > 0 ? desiredValue : !desiredValue);

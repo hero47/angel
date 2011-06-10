@@ -13,11 +13,16 @@ package angel.game.script.action {
 	public class ChangeMainPcAction implements IAction {
 		private var id:String;
 		
+		public static const TAG:String = "changeMainPc";
+		
 		public function ChangeMainPcAction(id:String) {
 			this.id = id;
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
+		public static function createFromXml(actionXml:XML, script:Script):IAction {
+			if (script.requires(TAG, "id", actionXml)) {
+				return null;
+			}
 			return new ChangeMainPcAction(actionXml.@id);
 			
 		}
@@ -25,17 +30,17 @@ package angel.game.script.action {
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(context:ScriptContext):Object {
-			var newMainPc:ComplexEntity = ComplexEntity(context.entityWithScriptId(id));
+			var newMainPc:ComplexEntity = context.charWithScriptId(id, TAG);
 			var oldMainPc:ComplexEntity = context.room.mainPlayerCharacter;
-			if (oldMainPc == newMainPc) {
-				return null; // already is main pc, no need to do anything
+			if ((newMainPc == null) || (newMainPc == oldMainPc)) {
+				return null; // already is main pc, or already gave error; no need to do anything
 			}
 			if (newMainPc.isReallyPlayer) {
 				context.room.changeMainPlayerCharacterTo(newMainPc);
 				oldMainPc.setBrain(true, BrainFollow, id);
 				newMainPc.setBrain(true, null, null);
 			} else {
-				Alert.show("Error in changeMainPc: " + id + " is not a player character.");
+				context.scriptError(id + " is not a player character.", TAG);
 			}
 			return null;
 		}

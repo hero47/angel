@@ -60,18 +60,6 @@ package angel.game {
 			}
 			var scriptFile:String = xml.@script;
 			
-			//UNDONE: @talk is pre-5/13/11 version; get rid of this eventually
-			var talk:String = xml.@talk;
-			if (talk != "") {
-				if (scriptFile != "") {
-					Alert.show("Error! @talk and @script on same room item, id " + id);
-				}
-				var conversationData:ConversationData = new ConversationData();
-				conversationData.loadFromXmlFile(talk);
-				frobScript = new Script();
-				frobScript.addAction(new ConversationAction(conversationData, Script.TRIGGERING_ENTITY_ID));
-			}
-			
 			if (xml.@script.length() > 0) {
 				if (scriptFile == "") {
 					frobScript = null;

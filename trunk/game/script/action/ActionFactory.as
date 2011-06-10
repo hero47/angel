@@ -2,6 +2,7 @@ package angel.game.script.action {
 	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.game.Flags;
+	import angel.game.script.Script;
 	/**
 	 * ...
 	 * @author Beth Moursund
@@ -36,7 +37,7 @@ package angel.game.script.action {
 			Assert.fail("Should never be called");
 		}
 		
-		public static function createFromXml(actionXml:XML, errorPrefix:String=""):IAction {
+		public static function createFromXml(actionXml:XML, script:Script):IAction {
 			var name:String = actionXml.name();
 			if (name == "comment") {
 				return null;
@@ -44,11 +45,11 @@ package angel.game.script.action {
 			
 			var actionClass:Class = actionNameToClass[name];
 			if (actionClass == null) {
-				Alert.show(errorPrefix + "Unknown action " + name);
+				script.addError("Unknown action " + name);
 				return null;
 			}
 			
-			return actionClass.createFromXml(actionXml);
+			return actionClass.createFromXml(actionXml, script);
 		}
 		
 	}

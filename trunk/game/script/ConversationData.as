@@ -16,28 +16,14 @@ package angel.game.script {
 		private var currentTopic:Topic;
 		private var currentEntry:ConversationEntry;
 		
+		//UNDONE can we initialize from xml in constructor now?
 		public function ConversationData() {
 			
 		}
-		
-		// Loads data from specified file.
-		// NOTE: File must be in the same directory that we're running from!
-		public function loadFromXmlFile(filename:String):void {
-			LoaderWithErrorCatching.LoadFile(filename, conversationXmlLoaded);
-		}
-		
-		private function conversationXmlLoaded(event:Event, param:Object, filenameForErrors:String):void {
-			var xml:XML = Util.parseXml(event.target.data, filenameForErrors);
-			if (xml == null) {
-				return;
-			}
-			initializeFromXml(xml, "Error in conversation file " + filenameForErrors + ":\n");
-			Settings.gameEventQueue.dispatch(new QEvent(this, QEvent.INIT));
-		}
 			
-		public function initializeFromXml(xml:XML, errorPrefix:String):void {
+		public function initializeFromXml(xml:XML, rootScript:Script):void {
 			if (xml.topic.length() == 0) {
-				Alert.show(errorPrefix + "No topics (or missing root element that contains the topics).");
+				rootScript.addError("conversation: No topics (or missing root element that contains the topics).");
 			}
 			for each (var topicXml:XML in xml.topic) {
 				var topic:Topic = new Topic();
@@ -52,11 +38,11 @@ package angel.game.script {
 				
 				topic.entries = new Object();
 				for each (var entryXml:XML in topicXml.entry) {
-					topic.entries[entryXml.@id] = ConversationEntry.createFromXml(entryXml, errorPrefix);
+					topic.entries[entryXml.@id] = ConversationEntry.createFromXml(entryXml, rootScript);
 				}
 				if (topic.entries["start"] == null) {
-					Alert.show(errorPrefix + "Topic " + topicId + " has no start entry.");
-					topic.entries["start"] = ConversationEntry.createFromXml(topicXml.entry[0], errorPrefix);
+					rootScript.addError("conversation: Topic " + topicId + " has no start entry.");
+					topic.entries["start"] = ConversationEntry.createFromXml(topicXml.entry[0], rootScript);
 				}
 				
 				topics[topicId] = topic;

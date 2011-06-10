@@ -7,6 +7,7 @@ package angel.game.test {
 	import angel.game.SaveGame;
 	import angel.game.script.action.ActionFactory;
 	import angel.game.script.action.IAction;
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	import angel.game.Settings;
 	import flash.display.Sprite;
@@ -20,6 +21,7 @@ package angel.game.test {
 		public static var failCount:int = 0;
 		public static var runningFromRoot:Sprite;
 		public static var testRoom:Room = null;
+		public static var script:Script;
 		public static const TEST_ROOM_MAIN_PC_ID:String = "xxMainPc";
 		public static const TEST_ROOM_ENEMY_ID:String = "xxEnemy";
 		
@@ -86,10 +88,25 @@ package angel.game.test {
 			failCount++;
 		}
 		
+		public static function assertContextMessage(context:ScriptContext, text:String, message:String = ""):void {
+			context.messages.displayIfNotEmpty();
+			assertAlertText(text, message);
+			context.messages.clear();
+		}
+		
+		public static function assertContextHadMessage(context:ScriptContext, message:String = ""):void {
+			context.messages.displayIfNotEmpty();
+			assertAlerted(message);
+			context.messages.clear();
+		}
+		
 		public static function runTest(testClass:Class):void {
+			script = new Script();
+			script.initErrorList();
 			trace("Running:", testClass);
 			clearAlert();
 			new testClass();
+			script.displayAndClearParseErrors();
 			assertNoAlert("Something in " + testClass + " caused an alert.");
 			if (Settings.gameEventQueue != null) {
 				assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Queue has leftover events after "+ testClass);
@@ -97,8 +114,12 @@ package angel.game.test {
 		}
 		
 		public static function testFunction(testFunction:Function):void {
+			script.displayAndClearParseErrors();
+			script.initErrorList();
 			assertNoAlert("Leftover alert before testFunction");
 			testFunction();
+			script.displayAndClearParseErrors();
+			script.initErrorList();
 			assertNoAlert("Something in a tested function caused an alert.");
 			if (Settings.gameEventQueue != null) {
 				assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Queue has leftover events after tested function");
@@ -175,7 +196,7 @@ package angel.game.test {
 		public static function testActionFromXml(xml:XML, shouldDelayUntilEnd:Boolean = false):void {
 			Autotest.assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Queue not empty before testing action");
 			var context:ScriptContext = new ScriptContext(testRoom);
-			var action:IAction = ActionFactory.createFromXml(xml);
+			var action:IAction = ActionFactory.createFromXml(xml, script);
 			Autotest.assertNoAlert();
 			Autotest.assertNotEqual(action, null, "Action creation failed");
 			if (action != null) {

@@ -2,8 +2,10 @@ package angel.game.script {
 	import angel.common.Alert;
 	import angel.common.Catalog;
 	import angel.common.LoaderWithErrorCatching;
+	import angel.common.MessageCollector;
 	import angel.common.Util;
 	import angel.game.combat.RoomCombat;
+	import angel.game.event.QEvent;
 	import angel.game.Room;
 	import angel.game.SaveGame;
 	import angel.game.script.action.ActionFactory;
@@ -21,17 +23,24 @@ package angel.game.script {
 	public class Script {
 		private var actions:Vector.<IAction>;
 		private var lastActionAddedIfItWasAnIf:IfAction;
+		private var errors:MessageCollector; // used to accumulate parse errors for display at end of script creation
 		
 		public static const TRIGGERING_ENTITY_ID:String = "*this";
 		
-		
-		public function Script(xml:XML = null, errorPrefix:String = "") {
+//UNDONE: check if initializeFromXml and loadEntityScriptFromXmlFile should be static functions
+		public function Script(xml:XML = null, rootScript:Script = null) {
 			if (xml != null) {
-				initializeFromXml(xml, errorPrefix);
+				initializeFromXml(xml, rootScript);
 			}
 		}
 		
-		public function initializeFromXml(xml:XML, errorPrefix:String = ""):void {
+		public function initializeFromXml(xml:XML, rootScript:Script = null):void {
+			var displayErrorsAfterParse:Boolean;
+			if (rootScript == null) {
+				rootScript = this;
+				initErrorList();
+				displayErrorsAfterParse = true;
+			}
 			if ((xml == null) || (xml.length() == 0)) {
 				return;
 			}
@@ -43,13 +52,16 @@ package angel.game.script {
 				// As a shorthand/convenience, if a script file has the enclosing topic "conversations" we turn its contents
 				// into a conversation action with the frobbed entity
 				var data:ConversationData = new ConversationData();
-				data.initializeFromXml(xml, errorPrefix);
+				data.initializeFromXml(xml, rootScript);
 				addAction(new ConversationAction(data, TRIGGERING_ENTITY_ID));
 			} else {
 				var children:XMLList = xml.children();
 				for each (var child:XML in xml.children()) {
-					addAction(ActionFactory.createFromXml(child, errorPrefix));
+					addAction(ActionFactory.createFromXml(child, rootScript));
 				}
+			}
+			if (displayErrorsAfterParse) {
+				errors.displayIfNotEmpty("Script errors:");
 			}
 		}
 		
@@ -69,8 +81,11 @@ package angel.game.script {
 				if ((xml.name() != "conversations") && (xml.onFrob.length() == 0)) {
 					Alert.show("Please change script file " + filename + "\nto use onFrob element inside outer script.\nThis will allow adding more triggers later.");
 				}
-				initializeFromXml(xml, "Error in script file " + filename + ":\n");
+				initErrorList();
+				initializeFromXml(xml, null);
+				displayAndClearParseErrors("Script errors in file " + filename + ":");
 			}
+			Settings.gameEventQueue.dispatch(new QEvent(this, QEvent.INIT));
 		}
 		
 		public function run(room:Room, triggeredBy:SimpleEntity = null):void {
@@ -127,6 +142,37 @@ package angel.game.script {
 			return nextEntryReference;
 		}
 		
+		/**************************************************/
+		// Parse error stuff
+		
+		// Return true and add an error to the list (for display at end of parsing)
+		// if the xml doesn't contain the required attribute
+		public function requires(from:String, attribute:String, xml:XML):Boolean {
+			if (String(xml.@[attribute]) == "") {
+				errors.add(from + " requires " + attribute);
+				return true;
+			}
+			return false;
+		}
+		
+		public function addError(text:String):void {
+			errors.add(text);
+		}
+		
+		public function endErrorSection(sectionName:String):void {
+			errors.endSection("** in " + sectionName + " **");
+		}
+		
+		public function initErrorList():void {
+			errors = new MessageCollector();
+		}
+		
+		public function displayAndClearParseErrors(scriptLocation:String = null):void {
+			if (errors != null) {
+				errors.displayIfNotEmpty(scriptLocation != null ? scriptLocation : "Script errors:");
+			}
+			errors = null;
+		}
 		
 	}
 

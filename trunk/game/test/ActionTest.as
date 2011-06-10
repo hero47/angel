@@ -231,7 +231,7 @@ package angel.game.test {
 		</script>;
 		
 		private function testIfElse():void {
-			var script:Script = new Script(ifElseScript, "testIfElse");
+			var script:Script = new Script(ifElseScript, Autotest.script);
 			Autotest.assertNoAlert("ifElse script parsing failed");
 			
 			Flags.setValue("xxTest", true);
@@ -268,7 +268,8 @@ package angel.game.test {
 			}
 			
 			Autotest.assertEqual(testRoom.entityInRoomWithId("nei"), null);
-			Autotest.testActionFromXml(removenei); // Removing entity that's not in room does nothing
+			Autotest.testActionFromXml(removenei);
+			Autotest.assertAlertText("Script error in removeFromRoom: No entity 'nei' in current room.");
 			
 			Autotest.assertEqual(testRoom.entityInRoomWithId("nei"), null);
 			Autotest.testActionFromXml(addnei);
@@ -327,10 +328,10 @@ package angel.game.test {
 			var room:Room = testRoom;
 			
 			Autotest.testActionFromXml(changeNeiToPc);
-			Autotest.assertAlertText("Script error: no character nei in room for changeToPc");			
+			Autotest.assertAlertText("Script error in changeToPc: No character 'nei' in current room.");			
 			
 			Autotest.testActionFromXml(changeNeiToNpc);
-			Autotest.assertAlertText("Script error: no character nei in room for changeToNpc");
+			Autotest.assertAlertText("Script error in changeToNpc: No character 'nei' in current room.");
 			
 			Autotest.testActionFromXml(addNeiWithBrains);
 			var nei:ComplexEntity = ComplexEntity(room.entityInRoomWithId("nei"));
@@ -431,7 +432,7 @@ package angel.game.test {
 			Autotest.testActionFromXml(changeNeiWithXY);
 			Autotest.assertTrue(nei.location.equals(new Point(4, 7)), "Didn't move correctly with X & Y parameters");
 			Autotest.testActionFromXml(changeNeiSpotAndXY);
-			Autotest.assertAlertText("Error: change action with both spot and x,y");
+			Autotest.assertAlertText("Script error in change: contains both spot and x,y");
 			
 			Autotest.testActionFromXml(changeNeiBrain);
 			var neiComplex:ComplexEntity = ComplexEntity(nei);

@@ -1,4 +1,5 @@
 package angel.game.script.computation {
+	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
 	/**
 	 * ...
@@ -7,7 +8,9 @@ package angel.game.script.computation {
 	public class ConstantComputation implements IComputation {
 		private var val:int;
 		
-		public function ConstantComputation(param:String) {
+		public static const TAG:String = "constant";
+		
+		public function ConstantComputation(param:String, script:Script) {
 			this.val = int(param);
 		}
 		

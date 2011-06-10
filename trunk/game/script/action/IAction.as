@@ -8,7 +8,7 @@ package angel.game.script.action {
 	public interface IAction {
 		function doAction(context:ScriptContext):Object; // returns object with topic & id if action is goto, null otherwise
 		
-		// also static function createFromXml(actionXml:XML):IAction but Actionscript doesn't allow that in interface
+		// also static function createFromXml(actionXml:XML, rootScript:Script):IAction but Actionscript doesn't allow that in interface
 	}
 	
 }

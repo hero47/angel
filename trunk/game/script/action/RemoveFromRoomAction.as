@@ -14,18 +14,23 @@ package angel.game.script.action {
 	public class RemoveFromRoomAction implements IAction {
 		private var id:String;
 		
+		public static const TAG:String = "removeFromRoom";
+		
 		public function RemoveFromRoomAction(id:String) {
 			this.id = id;
 		}
 		
-		public static function createFromXml(actionXml:XML):IAction {
+		public static function createFromXml(actionXml:XML, script:Script):IAction {
+			if (script.requires(TAG, "id", actionXml)) {
+				return null;
+			}
 			return new RemoveFromRoomAction(actionXml.@id);
 		}
 		
 		public function doAction(context:ScriptContext):Object {
-			var entity:SimpleEntity = context.entityWithScriptId(id);
+			var entity:SimpleEntity = context.entityWithScriptId(id, TAG);
 			if (entity == context.room.mainPlayerCharacter) {
-				Alert.show("Error! Cannot remove main player character, must make someone else main first.");
+				context.scriptError("Cannot remove main player character, must make someone else main first.", TAG);
 				return null;
 			}
 			context.room.removeEntity(entity);

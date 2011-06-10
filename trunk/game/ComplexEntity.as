@@ -4,6 +4,7 @@ package angel.game {
 	import angel.common.CharacterStats;
 	import angel.common.Defaults;
 	import angel.common.IEntityAnimation;
+	import angel.common.MessageCollector;
 	import angel.common.Prop;
 	import angel.common.RoomContentResource;
 	import angel.common.Tileset;
@@ -107,7 +108,7 @@ package angel.game {
 			animation = new resource.animationData.animationClass(resource.animationData, this.imageBitmap);
 		}
 		
-		public static function createFromRoomContentsXml(charXml:XML, version:int, catalog:Catalog):ComplexEntity {
+		public static function createFromRoomContentsXml(charXml:XML, version:int, catalog:Catalog, errors:MessageCollector = null):ComplexEntity {
 			var id:String;
 			
 			//Delete older version support eventually
@@ -117,7 +118,7 @@ package angel.game {
 				id = charXml.@id
 			}
 			
-			var resource:RoomContentResource = catalog.retrieveCharacterResource(id);
+			var resource:RoomContentResource = catalog.retrieveCharacterResource(id, errors);
 			if (resource == null) { // Catalog had something with this id that's not a character resource
 				return null;
 			}
