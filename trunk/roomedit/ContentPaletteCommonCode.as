@@ -110,7 +110,7 @@ package angel.roomedit {
 			}
 		}
 		
-		protected function get catalogEntryType():int {
+		protected function get catalogEntryType():Class {
 			return CatalogEntry.PROP;
 		}
 		

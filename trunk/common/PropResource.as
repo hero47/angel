@@ -9,6 +9,8 @@ package angel.common {
 	 */
 	public class PropResource extends RoomContentResource {
 		
+		public static const TAG:String = "prop";
+		
 		public function PropResource() {
 			
 		}

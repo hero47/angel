@@ -16,6 +16,8 @@ package angel.common {
 				unknown:UnknownAnimationData // temporary, when new character being created in editor
 		};
 		
+		public static const TAG:String = "char";
+		
 		public var characterStats:CharacterStats;
 		
 		public function CharResource() {

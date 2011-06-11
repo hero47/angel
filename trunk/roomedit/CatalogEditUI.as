@@ -2,6 +2,7 @@ package angel.roomedit {
 	import angel.common.Alert;
 	import angel.common.CatalogEntry;
 	import angel.common.KludgeDialogBox;
+	import angel.common.MessageCollector;
 	import angel.common.SimplerButton;
 	import angel.common.Tileset;
 	import angel.common.Util;
@@ -179,7 +180,7 @@ package angel.roomedit {
 			if (buttonClicked != "OK") {
 				return;
 			}
-			if (!catalog.addCatalogEntry(values[0], newFilename, null, CatalogEntry.TILESET)) {
+			if (!catalog.addCatalogEntry(values[0], newFilename, null, CatalogEntry.TILESET, new MessageCollector())) {
 				launchIdDialog("tileset", userEnteredNameForNewTileset, "Error -- id '" + values[0] + "' already in use.");
 				return;
 			}
@@ -199,7 +200,7 @@ package angel.roomedit {
 			}
 			
 			var id:String = values[0];
-			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.CHARACTER);
+			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.CHARACTER, new MessageCollector());
 			
 			if (entry == null) {
 				launchIdDialog("character", userEnteredNameForNewChar, "Error -- id '" + id + "' already in use.");
@@ -222,7 +223,7 @@ package angel.roomedit {
 			}
 			
 			var id:String = values[0];
-			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.PROP);
+			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.PROP, new MessageCollector());
 			
 			if (entry == null) {
 				launchIdDialog("prop", userEnteredNameForNewProp, "Error -- id '" + id + "' already in use.");
@@ -244,7 +245,7 @@ package angel.roomedit {
 			}
 			
 			var id:String = values[0];
-			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.WEAPON);
+			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.WEAPON, new MessageCollector());
 			
 			if (entry == null) {
 				launchIdDialog("weapon", userEnteredNameForNewWeapon, "Error -- id '" + id + "' already in use.");
@@ -265,7 +266,7 @@ package angel.roomedit {
 			}
 			
 			var id:String = values[0];
-			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.SPLASH);
+			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.SPLASH, new MessageCollector());
 			
 			if (entry == null) {
 				launchIdDialog("splash", userEnteredNameForNewProp, "Error -- id '" + id + "' already in use.");

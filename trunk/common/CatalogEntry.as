@@ -19,23 +19,18 @@ import flash.display.BitmapData;
 	
 	public class CatalogEntry {
 		
-		//CONSIDER: Get rid of these constants, use the Class of the created resource instead.  (Would require
-		//splitting RoomContentResource into PropResource and CharResource.)  The class could have a static
-		//that gives the xmlTag for that class.  Disadvantage: the tags aren't all in one place for easy reference.
-		public static const NO_TYPE:int = 0;
-		public static const PROP:int = 1;
-		public static const CHARACTER:int = 2;
-		public static const TILESET:int = 3;
-		public static const WEAPON:int = 4;
-		public static const SPLASH:int = 5;
-		public static const xmlTag:Vector.<String> = Vector.<String>(["unknown", "prop", "char", "tileset", "weapon", "splash"]);
+		public static const PROP:Class = PropResource;
+		public static const CHARACTER:Class = CharResource;
+		public static const TILESET:Class = Tileset;
+		public static const WEAPON:Class = WeaponResource;
+		public static const SPLASH:Class = SplashResource;
 		
 		public var filename:String;
-		public var type:int;
+		public var type:Class;
 		public var data:ICatalogedResource;	// null if not yet loaded
 		public var xml:XML;	// CONSIDER: store this in more compact type-specific format?
 		
-		public function CatalogEntry(filename:String, type:int) {
+		public function CatalogEntry(filename:String, type:Class) {
 			this.filename = filename;
 			this.type = type;
 		}

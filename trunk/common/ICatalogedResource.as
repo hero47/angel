@@ -7,6 +7,9 @@ package angel.common {
 	 */
 	public interface ICatalogedResource {
 		
+		//Also requires:
+		//public static const TAG:String = xml tag
+		
 		function get catalogEntry():CatalogEntry;
 		
 		// Catalog calls this the first time an entry is requested.  Resource should do anything needed so that

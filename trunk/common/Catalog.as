@@ -64,7 +64,7 @@ package angel.common {
 		}
 		
 		// add the specified entry. If it's a duplicate, add to errors for reporting & return null
-		public function addCatalogEntry(id:String, filename:String, xml:XML, type:int, errors:MessageCollector = null):CatalogEntry {
+		public function addCatalogEntry(id:String, filename:String, xml:XML, type:Class, errors:MessageCollector = null):CatalogEntry {
 			if (lookup[id] != undefined) {
 				MessageCollector.collectOrShowMessage(errors, id);
 				return null;
@@ -76,28 +76,28 @@ package angel.common {
 		}
 		
 		public function retrievePropResource(id:String, errors:MessageCollector = null):PropResource {
-			return loadOrRetrieveCatalogEntry(id, CatalogEntry.PROP, PropResource, errors) as PropResource;
+			return loadOrRetrieveCatalogEntry(id, PropResource, errors) as PropResource;
 		}
 		
 		public function retrieveCharacterResource(id:String, errors:MessageCollector = null):CharResource {
-			return loadOrRetrieveCatalogEntry(id, CatalogEntry.CHARACTER, CharResource, errors) as CharResource;
+			return loadOrRetrieveCatalogEntry(id, CharResource, errors) as CharResource;
 		}
 		
 		public function retrieveWeaponResource(id:String, errors:MessageCollector = null):WeaponResource {
-			return loadOrRetrieveCatalogEntry(id, CatalogEntry.WEAPON, WeaponResource, errors) as WeaponResource;
+			return loadOrRetrieveCatalogEntry(id, WeaponResource, errors) as WeaponResource;
 		}
 		
 		public function retrieveSplashResource(id:String, errors:MessageCollector = null):SplashResource {
-			return loadOrRetrieveCatalogEntry(id, CatalogEntry.SPLASH, SplashResource, errors) as SplashResource;
+			return loadOrRetrieveCatalogEntry(id, SplashResource, errors) as SplashResource;
 		}
 
 		public function retrieveTileset(tilesetId:String, errors:MessageCollector = null):Tileset {
-			return loadOrRetrieveCatalogEntry(tilesetId, CatalogEntry.TILESET, Tileset, errors) as Tileset;
+			return loadOrRetrieveCatalogEntry(tilesetId, Tileset, errors) as Tileset;
 		}
 		
 		// finishEntry takes CatalogEntry with data set to bitmapData (and xml if appropriate),
 		// and replaces data with the finished object to cache
-		private function loadOrRetrieveCatalogEntry(id:String, type:int, resourceClass:Class, errors:MessageCollector = null):ICatalogedResource {
+		private function loadOrRetrieveCatalogEntry(id:String, type:Class, errors:MessageCollector = null):ICatalogedResource {
 			var entry:CatalogEntry = lookup[id];
 		
 			if (entry == null) {
@@ -117,7 +117,7 @@ package angel.common {
 			//UNDONE: remove this when catalog entries have stabilized
 			temporaryMungeXmlForOldData(type, entry.xml, errors);
 			
-			entry.data = new resourceClass();
+			entry.data = new type();
 			entry.data.prepareTemporaryVersionForUse(id, entry, errors);
 
 
@@ -129,7 +129,7 @@ package angel.common {
 		
 		
 		//UNDONE: remove this when catalog entries have stabilized
-		private function temporaryMungeXmlForOldData(type:int, xml:XML, errors:MessageCollector):void {
+		private function temporaryMungeXmlForOldData(type:Class, xml:XML, errors:MessageCollector):void {
 			if (xml == null) {
 				return;
 			}

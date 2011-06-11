@@ -45,7 +45,7 @@ package angel.roomedit {
 			return "NPCs";
 		}
 		
-		override protected function get catalogEntryType():int {
+		override protected function get catalogEntryType():Class {
 			return CatalogEntry.CHARACTER;
 		}
 		

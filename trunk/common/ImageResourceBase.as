@@ -46,7 +46,7 @@ package angel.common {
 				return;
 			}
 			if ((bitmapData.width != expectedSize.x) || (bitmapData.height != expectedSize.y)) {
-				var typeName:String = CatalogEntry.xmlTag[entry.type];
+				var typeName:String = entry.type.TAG;
 				MessageCollector.collectOrShowMessage(errors, "Warning: " + typeName + " file " + entry.filename + " is not " +
 						expectedSize.x + "x" + expectedSize.y + ".  Please fix!");
 			}

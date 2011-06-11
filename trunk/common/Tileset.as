@@ -5,6 +5,7 @@ package angel.common {
 	import flash.geom.Rectangle;
 
 	public class Tileset extends ImageResourceBase implements ICatalogedResource{
+		
 		protected static const TILESET_X_TILES:int = 4;
 		protected static const TILESET_Y_TILES:int = 5;
 		public static const TILES_IN_SET:int = (TILESET_X_TILES * TILESET_Y_TILES);
@@ -14,6 +15,8 @@ package angel.common {
 		public static const TILE_HEIGHT:int = TILESET_Y / TILESET_Y_TILES;	// 32
 		
 		private static var defaultTileData:BitmapData = null;
+		
+		public static const TAG:String = "tileset";
 		
 		protected var tiles:Vector.<BitmapData>;
 		protected var tileNames:Vector.<String>;
