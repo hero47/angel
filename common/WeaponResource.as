@@ -28,7 +28,7 @@ package angel.common {
 			return entry;
 		}
 		
-		public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry):void {
+		public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry, errors:MessageCollector):void {
 			// We don't have graphics for weapons yet, so this is the only version there is
 			this.entry = entry;
 			Util.setTextFromXml(this, "displayName", entry.xml, "displayName");
@@ -40,7 +40,7 @@ package angel.common {
 			entry.xml = null;
 		}
 		
-		public function dataFinishedLoading(bitmapData:BitmapData):void {
+		public function dataFinishedLoading(bitmapData:BitmapData, param:Object = null):void {
 			// We don't have graphics for weapons yet, so this is irrelevant
 			Assert.fail("Weapon should never load data from file");
 			

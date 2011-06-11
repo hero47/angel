@@ -63,18 +63,10 @@ package angel.common {
 			dispatchEvent(new Event(Event.INIT));
 		}
 		
-		protected function message(text:String, errors:MessageCollector = null):void {
-			if (errors == null) {
-				Alert.show(text);
-			} else {
-				errors.add(text);
-			}
-		}
-		
 		// add the specified entry. If it's a duplicate, add to errors for reporting & return null
-		public function addCatalogEntry(id:String, filename:String, xml:XML, type:int, errors:MessageCollector):CatalogEntry {
+		public function addCatalogEntry(id:String, filename:String, xml:XML, type:int, errors:MessageCollector = null):CatalogEntry {
 			if (lookup[id] != undefined) {
-				message(id, errors);
+				MessageCollector.collectOrShowMessage(errors, id);
 				return null;
 			}
 			var entry:CatalogEntry = new CatalogEntry(filename, type);
@@ -111,18 +103,15 @@ package angel.common {
 		// and replaces data with the finished object to cache
 		private function loadOrRetrieveCatalogEntry(id:String, type:int, resourceClass:Class, errors:MessageCollector = null):ICatalogedResource {
 			var entry:CatalogEntry = lookup[id];
-			var inCatalog:Boolean = true;
 		
 			if (entry == null) {
-				inCatalog = false;
-				message("Error: " + id + " not in catalog.", errors);
+				MessageCollector.collectOrShowMessage(errors, "Error: " + id + " not in catalog.");
 				entry = new CatalogEntry(null, type);
 				lookup[id] = entry;
 			}
 			
 			if (entry.type != type) {
-				message("Error! Catalog entry " + id + " is wrong type.", errors);
-				return null;
+				MessageCollector.collectOrShowMessage(errors, "Error! Catalog entry " + id + " is wrong type.");
 			}
 			
 			if (entry.data != null) {
@@ -133,52 +122,11 @@ package angel.common {
 			temporaryMungeXmlForOldData(type, entry.xml, errors);
 			
 			entry.data = new resourceClass();
-			entry.data.prepareTemporaryVersionForUse(id, entry);
+			entry.data.prepareTemporaryVersionForUse(id, entry, errors);
 
-			if (inCatalog && (entry.filename != null) && (entry.filename != "")) {
-				LoaderWithErrorCatching.LoadBytesFromFile(entry.filename,
-					function(event:Event, param:Object, filename:String):void {
-						var bitmap:Bitmap = event.target.content;
-						warnIfBitmapIsWrongSize(entry, bitmap.bitmapData, errors);
-						entry.data.dataFinishedLoading(bitmap.bitmapData);
-					}
-				);
-			}
 
 			return entry.data;
 		}
-		
-		protected function warnIfBitmapIsWrongSize(entry:CatalogEntry, bitmapData:BitmapData, errors:MessageCollector = null):void {
-			if (entry.type == CatalogEntry.CHARACTER) {
-				//NOTE: CatalogEntry.CHARACTER will check this itself since it can take several different sizes
-				return;
-			}
-			var typeName:String;
-			var correctWidth:int;
-			var correctHeight:int;
-			switch (entry.type) {
-				case CatalogEntry.PROP:
-					typeName = "Prop";
-					correctWidth = Prop.WIDTH;
-					correctHeight = Prop.HEIGHT;
-				break;
-				case CatalogEntry.TILESET:
-					typeName = "Tileset";
-					correctWidth = Tileset.TILESET_X;
-					correctHeight = Tileset.TILESET_Y;
-				break;
-				case CatalogEntry.SPLASH:
-					typeName = "Splash screen";
-					correctWidth = SplashResource.WIDTH;
-					correctHeight = SplashResource.HEIGHT;
-				break;
-			}
-			if ((bitmapData.width != correctWidth) || (bitmapData.height != correctHeight)) {
-				message("Warning: " + typeName + " file " + entry.filename + " is not " +
-						correctWidth + "x" + correctHeight + ".  Please fix!", errors);
-			}
-		}
-		
 		private function makeDefaultTileset(id:String):Tileset {
 			return new Tileset();
 		}
