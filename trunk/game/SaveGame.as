@@ -2,8 +2,8 @@ package angel.game {
 	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.Catalog;
+	import angel.common.CharResource;
 	import angel.common.LoaderWithErrorCatching;
-	import angel.common.RoomContentResource;
 	import angel.common.Util;
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.CombatBrainUiMeldPlayer;
@@ -149,7 +149,7 @@ package angel.game {
 		// if so, this function will no longer be needed.
 		private function convertXmlInventoryToInv(id:String, xml:XML):void {
 			var inventory:Inventory;
-			var resource:RoomContentResource = Settings.catalog.retrieveCharacterResource(id);
+			var resource:CharResource = Settings.catalog.retrieveCharacterResource(id);
 			if (resource == null) {
 				inventory = new Inventory();
 			} else {
@@ -185,7 +185,7 @@ package angel.game {
 		}
 		
 		private function playerEntityFromInit(initXml:XML):ComplexEntity {
-			var resource:RoomContentResource = Settings.catalog.retrieveCharacterResource(initXml.@id);
+			var resource:CharResource = Settings.catalog.retrieveCharacterResource(initXml.@id);
 			if (resource == null) {
 				return null;
 			}

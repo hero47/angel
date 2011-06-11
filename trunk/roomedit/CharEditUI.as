@@ -3,6 +3,7 @@ package angel.roomedit {
 	import angel.common.Assert;
 	import angel.common.CatalogEntry;
 	import angel.common.CharacterStats;
+	import angel.common.CharResource;
 	import angel.common.Defaults;
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Prop;
@@ -35,7 +36,7 @@ package angel.roomedit {
 		private var catalog:CatalogEdit;
 		private var propBitmap:Bitmap;
 		private var animationTypeLabel:TextField;
-		private var propCombo:ComboBox;
+		private var charIdCombo:ComboBox;
 		private var healthTextField:TextField;
 		private var damageTextField:TextField;
 		private var mainGunCombo:ComboBox;
@@ -79,13 +80,13 @@ package angel.roomedit {
 			propBitmap.y = 1;
 			addChild(propBitmap);
 			
-			var propChooser:ComboHolder = catalog.createChooser(CatalogEntry.CHARACTER, WIDTH);
-			propChooser.comboBox.addEventListener(Event.CHANGE, changeProp);
-			propChooser.y = propBitmap.y + propBitmap.height + 10;
-			propCombo = propChooser.comboBox;
-			addChild(propChooser);
+			var charChooser:ComboHolder = catalog.createChooser(CatalogEntry.CHARACTER, WIDTH);
+			charChooser.comboBox.addEventListener(Event.CHANGE, changeChar);
+			charChooser.y = propBitmap.y + propBitmap.height + 10;
+			charIdCombo = charChooser.comboBox;
+			addChild(charChooser);
 			
-			changeImageControl = FilenameControl.createBelow(propChooser, false, "Image", 0, 220, changeFilename, 0);
+			changeImageControl = FilenameControl.createBelow(charChooser, false, "Image", 0, 220, changeFilename, 0);
 			nameTextField = Util.createTextEditControlBelow(changeImageControl, "Display Name", 100, 100,
 					function(event:Event):void { changeCharacterProperty(event.target.text, "displayName", Defaults.CHARACTER_DISPLAY_NAME) }, 0);
 			healthTextField = Util.createTextEditControlBelow(nameTextField, "Hits", 100, 40,
@@ -111,18 +112,18 @@ package angel.roomedit {
 			deleteFromCatalogButton.x = 0;
 			
 			if (startId == null) {
-				propCombo.selectedIndex = 0;
+				charIdCombo.selectedIndex = 0;
 			} else {
-				propCombo.selectedItem = Util.itemWithLabelInComboBox(propCombo, startId);
+				charIdCombo.selectedItem = Util.itemWithLabelInComboBox(charIdCombo, startId);
 			}
 			
-			changeProp(null);
+			changeChar(null);
 		}
 		
-		private function changeProp(event:Event):void {
-			var charId:String = propCombo.selectedLabel;
+		private function changeChar(event:Event):void {
+			var charId:String = charIdCombo.selectedLabel;
 
-			var resource:RoomContentResource = catalog.retrieveCharacterResource(charId);
+			var resource:CharResource = catalog.retrieveCharacterResource(charId);
 			propBitmap.bitmapData = resource.standardImage();
 			var animationClass:Class = resource.animationData.animationClass;
 			if (animationClass == null) {
@@ -154,7 +155,7 @@ package angel.roomedit {
 		}
 		
 		private function changeCharacterProperty(newValue:*, propertyName:String, defaultValue:* = null):void {
-			var charId:String = propCombo.selectedLabel;
+			var charId:String = charIdCombo.selectedLabel;
 			var characterStats:CharacterStats = catalog.retrieveCharacterResource(charId).characterStats;
 			
 			characterStats[propertyName] = newValue;
@@ -191,7 +192,7 @@ package angel.roomedit {
 		}
 
 		private function setTopByPixelScan(event:Event):void {
-			var charId:String = propCombo.selectedLabel;
+			var charId:String = charIdCombo.selectedLabel;
 			
 			var resource:RoomContentResource = catalog.retrieveCharacterResource(charId);
 			
@@ -214,14 +215,14 @@ package angel.roomedit {
 		}
 		
 		private function resetTop(event:Event):void {
-			var charId:String = propCombo.selectedLabel;
+			var charId:String = charIdCombo.selectedLabel;
 			catalog.deleteXmlAttribute(charId, "top");
 			catalog.discardCachedData(charId);
-			changeProp(null);
+			changeChar(null);
 		}
 		
 		private function changeFilename(event:Event):void {
-			var charId:String = propCombo.selectedLabel;
+			var charId:String = charIdCombo.selectedLabel;
 			var newFilename:String = changeImageControl.text;
 			LoaderWithErrorCatching.LoadBytesFromFile(newFilename, updateToNewFilename, charId);
 		}
@@ -252,8 +253,8 @@ package angel.roomedit {
 			
 			catalog.changeXmlAttribute(charId, "animate", animationName);
 			catalog.discardCachedData(charId);
-			if (propCombo.selectedLabel == charId) {
-				changeProp(null);
+			if (charIdCombo.selectedLabel == charId) {
+				changeChar(null);
 			}
 		}
 		
@@ -273,12 +274,12 @@ package angel.roomedit {
 			if (buttonClicked != "Delete") {
 				return;
 			}
-			var charId:String = propCombo.selectedLabel;
+			var charId:String = charIdCombo.selectedLabel;
 			catalog.deleteCatalogEntry(charId);
 			
-			propCombo.removeItem(propCombo.selectedItem);
-			propCombo.selectedIndex = 0;
-			changeProp(null);
+			charIdCombo.removeItem(charIdCombo.selectedItem);
+			charIdCombo.selectedIndex = 0;
+			changeChar(null);
 			CatalogEditUI.warnSaveCatalogAndRestart();
 		}
 		

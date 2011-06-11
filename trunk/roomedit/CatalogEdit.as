@@ -2,6 +2,8 @@ package angel.roomedit {
 	import angel.common.Catalog;
 	import angel.common.CatalogEntry;
 	import angel.common.LoaderWithErrorCatching;
+	import angel.common.MessageCollector;
+	import angel.common.RoomContentResource;
 	import angel.common.Util;
 	import fl.controls.ComboBox;
 	import flash.display.Bitmap;
@@ -37,6 +39,14 @@ package angel.roomedit {
 			for each (var walkerXml:XML in catalogXml.walker) {
 				walkerXml.setName("char");
 				walkerXml.@animate = "walker";
+			}
+		}
+		
+		public function retrieveRoomContentResource(id:String, type:int, errors:MessageCollector = null):RoomContentResource {
+			if (type == CatalogEntry.CHARACTER) {
+				return retrieveCharacterResource(id, errors);
+			} else {
+				return retrievePropResource(id, errors);
 			}
 		}
 		

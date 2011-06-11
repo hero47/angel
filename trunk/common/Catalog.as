@@ -75,16 +75,12 @@ package angel.common {
 			return entry;
 		}
 		
-		public function retrievePropResource(id:String, errors:MessageCollector = null):RoomContentResource {
-			return retrieveRoomContentResource(id, CatalogEntry.PROP, errors);
+		public function retrievePropResource(id:String, errors:MessageCollector = null):PropResource {
+			return loadOrRetrieveCatalogEntry(id, CatalogEntry.PROP, PropResource, errors) as PropResource;
 		}
 		
-		public function retrieveCharacterResource(id:String, errors:MessageCollector = null):RoomContentResource {
-			return retrieveRoomContentResource(id, CatalogEntry.CHARACTER, errors);
-		}
-		
-		public function retrieveRoomContentResource(id:String, type:int, errors:MessageCollector = null):RoomContentResource {
-			return loadOrRetrieveCatalogEntry(id, type, RoomContentResource, errors) as RoomContentResource;
+		public function retrieveCharacterResource(id:String, errors:MessageCollector = null):CharResource {
+			return loadOrRetrieveCatalogEntry(id, CatalogEntry.CHARACTER, CharResource, errors) as CharResource;
 		}
 		
 		public function retrieveWeaponResource(id:String, errors:MessageCollector = null):WeaponResource {

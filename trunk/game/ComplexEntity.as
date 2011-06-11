@@ -2,11 +2,11 @@ package angel.game {
 	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.CharacterStats;
+	import angel.common.CharResource;
 	import angel.common.Defaults;
 	import angel.common.IEntityAnimation;
 	import angel.common.MessageCollector;
 	import angel.common.Prop;
-	import angel.common.RoomContentResource;
 	import angel.common.Tileset;
 	import angel.common.Util;
 	import angel.common.WeaponResource;
@@ -80,7 +80,7 @@ package angel.game {
 		public var movement:EntityMovement;
 		private var animation:IEntityAnimation;
 		
-		public function ComplexEntity(resource:RoomContentResource, id:String = "") {
+		public function ComplexEntity(resource:CharResource, id:String = "") {
 			super(new Bitmap(resource.standardImage()), resource.solidness, id);
 			
 			var characterStats:CharacterStats = resource.characterStats;
@@ -118,7 +118,7 @@ package angel.game {
 				id = charXml.@id
 			}
 			
-			var resource:RoomContentResource = catalog.retrieveCharacterResource(id, errors);
+			var resource:CharResource = catalog.retrieveCharacterResource(id, errors);
 			if (resource == null) { // Catalog had something with this id that's not a character resource
 				return null;
 			}
