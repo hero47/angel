@@ -5,7 +5,7 @@ package angel.roomedit {
 	import angel.common.FloorTile;
 	import angel.common.KludgeDialogBox;
 	import angel.common.Prop;
-	import angel.common.RoomContentResource;
+	import angel.common.PropResource;
 	import angel.common.Util;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -50,7 +50,7 @@ package angel.roomedit {
 		
 		override protected function itemComboBoxChanged(event:Event = null):void {
 			var propId:String = itemCombo.selectedLabel;
-			var resource:RoomContentResource = catalog.retrieveRoomContentResource(propId, CatalogEntry.PROP);
+			var resource:PropResource = catalog.retrievePropResource(propId);
 			itemImage.bitmapData = resource.standardImage();
 		}
 		

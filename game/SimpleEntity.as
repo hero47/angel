@@ -3,7 +3,7 @@ package angel.game {
 	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.Prop;
-	import angel.common.RoomContentResource;
+	import angel.common.PropResource;
 	import angel.common.Util;
 	import angel.game.event.EntityQEvent;
 	import angel.game.script.action.ConversationAction;
@@ -48,7 +48,7 @@ package angel.game {
 				id = propXml.@id
 			}
 			
-			var resource:RoomContentResource = catalog.retrievePropResource(id);
+			var resource:PropResource = catalog.retrievePropResource(id);
 			var simpleEntity:SimpleEntity = new SimpleEntity(new Bitmap(resource.standardImage()), resource.solidness, id);
 			simpleEntity.setCommonPropertiesFromXml(propXml);
 			return simpleEntity;
