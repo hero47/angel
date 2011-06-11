@@ -18,6 +18,8 @@ package angel.common {
 		public var ignoreUserGait:Boolean = false;
 		public var ignoreTargetGait:Boolean = false;
 		
+		public static const TAG:String = "weapon";
+		
 		public function WeaponResource() {
 			
 		}

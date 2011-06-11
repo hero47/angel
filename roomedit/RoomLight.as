@@ -73,7 +73,7 @@ package angel.roomedit {
 
 		// Add something at the given location.  If there's already something there, this replaces previous content.
 		// type is CatalogEntry type for saving (all content items are turned into props for room editor)
-		public function addContentItem(prop:Prop, type:int, id:String, location:Point, attributes:Object = null):void {
+		public function addContentItem(prop:Prop, type:Class, id:String, location:Point, attributes:Object = null):void {
 			if (propGrid[location.x][location.y] != null) {
 				contentsLayer.removeChild(propGrid[location.x][location.y].prop);
 			}
@@ -142,7 +142,7 @@ package angel.roomedit {
 		
 		private static const contentItemXmlAttributes:Vector.<String> = Vector.<String>(
 				["explore", "exploreParam", "combat", "combatParam", "script", "faction"]);
-		public function addContentItemByName(type:int, id:String, location:Point, xml:XML):void {
+		public function addContentItemByName(type:Class, id:String, location:Point, xml:XML):void {
 			trace("adding", id);
 			var resource:RoomContentResource = catalog.retrieveRoomContentResource(id, type);
 			var prop:Prop = Prop.createFromBitmapData(resource.standardImage());
@@ -214,11 +214,11 @@ package angel.roomedit {
 			return null;
 		}
 		
-		public function typeOfItemAt(loc:Point):int {
+		public function typeOfItemAt(loc:Point):Class {
 			if (propGrid[loc.x][loc.y] != null) {
 				return propGrid[loc.x][loc.y].type;
 			}
-			return CatalogEntry.NO_TYPE;
+			return null;
 			
 		}
 
@@ -324,7 +324,7 @@ package angel.roomedit {
 			for (var i:int = 0; i < propGrid.length; i++) {
 				for (var j:int = 0; j < propGrid[i].length; j++) {
 					if (propGrid[i][j] != null) {
-						var propXml:XML = new XML("<" + CatalogEntry.xmlTag[propGrid[i][j].type] + "/>");
+						var propXml:XML = new XML("<" + propGrid[i][j].type.TAG + "/>");
 						propXml.@id = propGrid[i][j].id;
 						propXml.@x = i;
 						propXml.@y = j;
@@ -384,10 +384,10 @@ import angel.common.Prop;
 
 class ContentItem {
 	public var prop:Prop; // All content items are turned into props in room editor
-	public var type:int;
+	public var type:Class;
 	public var id:String;
 	public var attributes:Object; // associative array mapping attribute name to value
-	public function ContentItem(prop:Prop, type:int, id:String, attributes:Object = null) {
+	public function ContentItem(prop:Prop, type:Class, id:String, attributes:Object = null) {
 		this.prop = prop;
 		this.type = type;
 		this.id = id;

@@ -15,6 +15,8 @@ package angel.common {
 		public static const HEIGHT:int = 600;
 		private static const COLOR_BEFORE_IMAGE_LOADS:uint = 0xffffcc;
 		
+		public static const TAG:String = "splash";
+		
 		public function SplashResource() {
 		}
 		

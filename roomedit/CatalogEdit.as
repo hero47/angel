@@ -42,7 +42,7 @@ package angel.roomedit {
 			}
 		}
 		
-		public function retrieveRoomContentResource(id:String, type:int, errors:MessageCollector = null):RoomContentResource {
+		public function retrieveRoomContentResource(id:String, type:Class, errors:MessageCollector = null):RoomContentResource {
 			if (type == CatalogEntry.CHARACTER) {
 				return retrieveCharacterResource(id, errors);
 			} else {
@@ -60,7 +60,7 @@ package angel.roomedit {
 
 		public function changeXml(id:String, newXml:XML):void {
 			var entry:CatalogEntry = lookup[id];
-			var tag:String = CatalogEntry.xmlTag[entry.type];
+			var tag:String = entry.type.TAG;
 			
 			var current:XMLList = catalogXml[tag].(@id == id);
 			
@@ -69,7 +69,7 @@ package angel.roomedit {
 		
 		public function changeXmlAttribute(id:String, attribute:String, newValue:String):void {
 			var entry:CatalogEntry = lookup[id];
-			var tag:String = CatalogEntry.xmlTag[entry.type];
+			var tag:String = entry.type.TAG;
 			
 			var current:XMLList = catalogXml[tag].(@id == id);
 			current[0].@[attribute] = newValue;
@@ -77,7 +77,7 @@ package angel.roomedit {
 		
 		public function deleteXmlAttribute(id:String, attribute:String):void {
 			var entry:CatalogEntry = lookup[id];
-			var tag:String = CatalogEntry.xmlTag[entry.type];
+			var tag:String = entry.type.TAG;
 			
 			var current:XMLList = catalogXml[tag].(@id == id);
 			if (current[0].@[attribute].length() > 0) {
@@ -87,7 +87,7 @@ package angel.roomedit {
 		
 		public function deleteCatalogEntry(id:String):void {
 			var entry:CatalogEntry = lookup[id];
-			var tag:String = CatalogEntry.xmlTag[entry.type];
+			var tag:String = entry.type.TAG;
 			var entryXmlList:XMLList = catalogXml[tag].(@id == id);
 			if (entryXmlList.length() > 0) {
 				delete catalogXml[tag].(@id == id)[0];
@@ -98,7 +98,7 @@ package angel.roomedit {
 		
 		// Create a combobox holding all catalog ids for the given CatalogEntry type.
 		// Due to pecularities of ComboBox, we embed it in a holder object.
-		public function createChooser(type:int, width:int = 200):ComboHolder {
+		public function createChooser(type:Class, width:int = 200):ComboHolder {
 			var combo:ComboBox = new ComboBox();
 			combo.width = width;
 			
@@ -110,7 +110,7 @@ package angel.roomedit {
 			return new ComboHolder(width, combo);
 		}
 		
-		public function allNames(type:int):Array {
+		public function allNames(type:Class):Array {
 			var all:Array = new Array();
 			for (var foo:String in lookup) {
 				var entry:CatalogEntry = lookup[foo];
@@ -129,7 +129,7 @@ package angel.roomedit {
 			var entry:CatalogEntry = lookup[id];
 			if (entry != null) {
 				entry.data = null;
-				var tag:String = CatalogEntry.xmlTag[entry.type];
+				var tag:String = entry.type.TAG;
 				var current:XMLList = catalogXml[tag].(@id == id);
 				entry.xml = current[0];
 				trace(entry.xml);
