@@ -14,10 +14,11 @@ package angel.common {
 		// may be displayed.  Later, when the real data finishes loading, it can be drawn over the temporary
 		// images and then disposed.
 		// CONSIDER: can we get rid of the places that call constructor directly and merge this into constructor?
-		function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry):void;
+		function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry, errors:MessageCollector):void;
 		
 		// Catalog calls this to draw over the temporary version with real data.
-		function dataFinishedLoading(bitmapData:BitmapData):void;
+		// Some catalog types have more than one piece of data; the pass-along param allows identifying what is loaded.
+		function dataFinishedLoading(bitmapData:BitmapData, param:Object = null):void;
 		
 	}
 	

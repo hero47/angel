@@ -4,7 +4,7 @@ package angel.common {
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
-	public class Tileset implements ICatalogedResource {
+	public class Tileset extends ImageResourceBase implements ICatalogedResource{
 		protected static const TILESET_X_TILES:int = 4;
 		protected static const TILESET_Y_TILES:int = 5;
 		public static const TILES_IN_SET:int = (TILESET_X_TILES * TILESET_Y_TILES);
@@ -14,8 +14,6 @@ package angel.common {
 		public static const TILE_HEIGHT:int = TILESET_Y / TILESET_Y_TILES;	// 32
 		
 		private static var defaultTileData:BitmapData = null;
-		
-		protected var entry:CatalogEntry;
 		
 		protected var tiles:Vector.<BitmapData>;
 		protected var tileNames:Vector.<String>;
@@ -49,8 +47,8 @@ package angel.common {
 			return defaultTileData;
 		}
 		
-		public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry):void {
-			this.entry = entry;
+		override public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry, errors:MessageCollector):void {
+			super.prepareTemporaryVersionForUse(id, entry, errors);
 			if (entry.xml != null) {
 				fillNamesFromXml(entry.xml);
 				entry.xml = null;
@@ -58,12 +56,12 @@ package angel.common {
 			createTilesToDrawOnLater();
 		}
 		
-		public function get catalogEntry():CatalogEntry {
-			return entry;
+		override protected function expectedBitmapSize():Point {
+			return new Point(TILESET_X, TILESET_Y);
 		}
 		
 		// Copy new images onto the already-existing tiles (which may already be displayed)
-		public function dataFinishedLoading(bitmapData:BitmapData):void {
+		public function dataFinishedLoading(bitmapData:BitmapData, param:Object = null):void {
 			var zerozero:Point = new Point(0, 0);
 			var i:int = 0;
 			for (var tileY:int = 0; tileY < TILESET_Y_TILES; tileY++) {

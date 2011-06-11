@@ -13,6 +13,15 @@ package angel.common {
 			
 		}
 		
+		// Either show the error message in an alert, or add it to a collection to be shown en masse later.
+		public static function collectOrShowMessage(collect:MessageCollector, message:String):void {
+			if (collect == null) {
+				Alert.show(message);
+			} else {
+				collect.add(message);
+			}
+		}
+		
 		public function add(text:String):void {
 			messages.push(text);
 		}

@@ -1,11 +1,12 @@
 package angel.common {
 	import flash.display.BitmapData;
 	import angel.common.CatalogEntry;
+	import flash.geom.Point;
 	/**
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class RoomContentResource implements ICatalogedResource {
+	public class RoomContentResource extends ImageResourceBase implements ICatalogedResource{
 		
 		private static var animationNameToDataClass:Object = {
 				prop:SingleImageAnimationData,
@@ -15,7 +16,6 @@ package angel.common {
 				unknown:UnknownAnimationData // temporary, when new character being created in editor
 		};
 		
-		private var entry:CatalogEntry;
 		public var animationData:IAnimationData;
 		public var solidness:uint = Prop.DEFAULT_SOLIDITY;
 		public var unusedPixelsAtTopOfCell:int = 0;
@@ -27,12 +27,8 @@ package angel.common {
 		
 		/* INTERFACE angel.common.ICatalogedResource */
 		
-		public function get catalogEntry():CatalogEntry {
-			return entry;
-		}
-		
-		public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry):void {
-			this.entry = entry;
+		override public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry, errors:MessageCollector):void {
+			super.prepareTemporaryVersionForUse(id, entry, errors);
 			
 			if (animationData == null) { // first time we've been created
 				if (entry.type == CatalogEntry.CHARACTER) {
@@ -59,7 +55,7 @@ package angel.common {
 				if (animationName != "") {
 					animationDataClass = animationNameToDataClass[animationName];
 					if (animationDataClass == null) {
-						Alert.show("Unknown animation type [" + animationName + "] in catalog for id " + id);
+						MessageCollector.collectOrShowMessage(errors, "Unknown animation type [" + animationName + "] in catalog for id " + id);
 					}
 				}
 				if (animationDataClass == null) {
@@ -72,7 +68,15 @@ package angel.common {
 			
 		}
 		
-		public function dataFinishedLoading(bitmapData:BitmapData):void {
+		override protected function expectedBitmapSize():Point {
+			if (entry.type == CatalogEntry.CHARACTER) {
+				//NOTE: CatalogEntry.CHARACTER will check this itself since it can take several different sizes
+				return null;
+			}
+			return new Point(Prop.WIDTH, Prop.HEIGHT);
+		}
+		
+		public function dataFinishedLoading(bitmapData:BitmapData, param:Object = null):void {
 			animationData.dataFinishedLoading(bitmapData, entry);
 		}
 		

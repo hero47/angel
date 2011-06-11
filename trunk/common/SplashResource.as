@@ -8,8 +8,7 @@ package angel.common {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class SplashResource implements ICatalogedResource {
-		private var entry:CatalogEntry;
+	public class SplashResource extends ImageResourceBase implements ICatalogedResource {
 		private var bits:BitmapData;
 		
 		public static const WIDTH:int = 1000;
@@ -21,16 +20,16 @@ package angel.common {
 		
 		/* INTERFACE angel.common.ICatalogedResource */
 		
-		public function get catalogEntry():CatalogEntry {
-			return entry;
-		}
-		
-		public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry):void {
-			this.entry = entry;
+		override public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry, errors:MessageCollector):void {
+			super.prepareTemporaryVersionForUse(id, entry, errors);
 			bits = new BitmapData(WIDTH, HEIGHT, false, COLOR_BEFORE_IMAGE_LOADS);
 		}
 		
-		public function dataFinishedLoading(bitmapData:BitmapData):void {
+		override protected function expectedBitmapSize():Point {
+			return new Point(WIDTH, HEIGHT);
+		}
+		
+		public function dataFinishedLoading(bitmapData:BitmapData, param:Object = null):void {
 			bits.copyPixels(bitmapData, new Rectangle(0, 0, WIDTH, HEIGHT), new Point(0, 0));
 		}
 		
