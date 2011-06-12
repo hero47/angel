@@ -33,7 +33,7 @@ package angel.roomedit {
 			super(catalog, room);
 			
 			locationText = Util.textBox("", EditorSettings.PALETTE_XSIZE, Util.DEFAULT_TEXT_HEIGHT, TextFormatAlign.CENTER);
-			Util.addBelow(locationText, itemChooser, 5);
+			Util.addBelow(locationText, itemCombo, 5);
 			
 			Util.addBelow(attributeDisplay, locationText, 5);
 			

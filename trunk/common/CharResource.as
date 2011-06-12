@@ -1,14 +1,18 @@
 package angel.common {
+	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import angel.common.MessageCollector;
 	import angel.common.CatalogEntry;
+	import flash.events.Event;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	/**
 	 * ...
 	 * @author Beth Moursund
 	 */
 	public class CharResource extends RoomContentResource {
 		
-		private static var animationNameToDataClass:Object = {
+		private static const animationNameToDataClass:Object = {
 				prop:SingleImageAnimationData,
 				single:SingleImageAnimationData,
 				spinner:SpinnerAnimationData,
@@ -16,9 +20,14 @@ package angel.common {
 				unknown:UnknownAnimationData // temporary, when new character being created in editor
 		};
 		
-		public static const TAG:String = "char";
+		private static const MAX_PORTRAIT_WIDTH:int = 329;
+		private static const MAX_PORTRAIT_HEIGHT:int = 276;
 		
 		public var characterStats:CharacterStats;
+		private var portraitDone:Boolean = false;
+		private var portraitData:BitmapData = null;
+		
+		public static const TAG:String = "char";
 		
 		public function CharResource() {
 			
@@ -57,6 +66,29 @@ package angel.common {
 				
 			}
 			
+		}
+		
+		private function prepareTemporaryPortraitForUse():void {
+			if (!Util.nullOrEmpty(characterStats.portraitFile)) {
+				portraitData = new BitmapData(MAX_PORTRAIT_WIDTH, MAX_PORTRAIT_HEIGHT, true, 0x00000000);
+				LoaderWithErrorCatching.LoadBytesFromFile(characterStats.portraitFile, portraitFinishedLoading);
+			}
+			portraitDone = true;
+		}
+		
+		private function portraitFinishedLoading(event:Event, param:Object, filename:String):void {
+			var bitmap:Bitmap = event.target.content;
+			var sourceRect:Rectangle = new Rectangle(0, 0, (bitmap.width > MAX_PORTRAIT_WIDTH ? MAX_PORTRAIT_WIDTH : bitmap.width),
+													(bitmap.height > MAX_PORTRAIT_HEIGHT ? MAX_PORTRAIT_HEIGHT : bitmap.height));
+			var destPoint:Point = new Point((portraitData.width - sourceRect.width) / 2, (portraitData.height - sourceRect.height) / 2);
+			portraitData.copyPixels(bitmap.bitmapData, sourceRect, destPoint);
+		}
+		
+		public function get portraitBitmapData():BitmapData {
+			if (!portraitDone) {
+				prepareTemporaryPortraitForUse();
+			}
+			return portraitData;
 		}
 		
 	}

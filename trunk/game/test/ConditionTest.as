@@ -29,7 +29,7 @@ package angel.game.test {
 			Autotest.testFunction(testCompareCondition);
 			
 			Autotest.setupTestRoom();
-			context = new ScriptContext(Autotest.testRoom);
+			context = new ScriptContext(Autotest.testRoom, Autotest.testRoom.activePlayer());
 			Autotest.testFunction(testSpotConditions);
 			Autotest.testFunction(testAliveConditions);
 			Autotest.testFunction(testPcConditions);

@@ -40,7 +40,7 @@ package angel.game.script.action {
 			if (targetEntity == null) {
 				targetEntity = context.room.mainPlayerCharacter;
 			}
-			context.room.startConversation(targetEntity, conversationData);
+			context.room.startConversation(context.player, targetEntity, conversationData);
 		}
 		
 	}

@@ -1,11 +1,13 @@
 package angel.game.script {
 	import angel.common.Alert;
 	import angel.game.combat.RoomCombat;
+	import angel.game.ComplexEntity;
 	import angel.game.event.QEvent;
 	import angel.game.Room;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
@@ -27,26 +29,31 @@ package angel.game.script {
 		
 		// Temporary -- eventually these will come from catalog I believe
 		// size 276 x 329 ???
-		[Embed(source = '../../EmbeddedAssets/conversation_NPC_portrait.png')]
-		private static const NpcPortrait:Class;
-		[Embed(source = '../../EmbeddedAssets/conversation_MC_portrait.png')]
-		private static const PcPortrait:Class;
+		[Embed(source = '../../EmbeddedAssets/conversation_portrait_Blank.png')]
+		private static const defaultPortrait:Class;
 		
 		private static const TARGET_HILIGHT_COLOR:uint = 0x0000ff;
 		
 		private var npcBox:ConversationBox;
 		private var pcBox:ConversationBox;
+		private var player:ComplexEntity;
 		private var target:SimpleEntity;
 		private var conversationData:ConversationData;
 		private var room:Room;
 		
+		private var playerBitmap:Bitmap;
+		private var targetBitmap:Bitmap;
+		
 		//UNDONE: investigate: merge this with script's?
 		public var context:ScriptContext;
 		
-		public function ConversationInterface(target:SimpleEntity, conversationData:ConversationData) {
+		public function ConversationInterface(player:ComplexEntity, target:SimpleEntity, conversationData:ConversationData) {
+			this.player = player;
 			this.target = target;
 			this.room = target.room;
 			this.conversationData = conversationData;
+			playerBitmap = portraitBitmap(player);
+			targetBitmap = portraitBitmap(target);
 			var glow:GlowFilter = new GlowFilter(TARGET_HILIGHT_COLOR, 1, 20, 20, 2, 1, false, false);
 			target.filters = [ glow ];
 			room.snapToCenter(target.location);
@@ -56,7 +63,7 @@ package angel.game.script {
 		private function addedToStageListener(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
 			room.suspendUi(this);
-			context = new ScriptContext(room, target);
+			context = new ScriptContext(room, player, target);
 			conversationData.runConversation(this);
 		}
 		
@@ -65,7 +72,7 @@ package angel.game.script {
 			var havePcSegments:Boolean = pcSegments.length > 0;
 			
 			if (npcSegment != null) {
-				npcBox = displayConversationSegment(new NpcPortrait(), false, Vector.<ConversationSegment>([npcSegment]),
+				npcBox = displayConversationSegment(targetBitmap, false, Vector.<ConversationSegment>([npcSegment]),
 						500, 100, (havePcSegments ? null : entryFinishedListener));
 				if (havePcSegments) {
 					executeAtStart.push(npcSegment);
@@ -73,7 +80,7 @@ package angel.game.script {
 			}
 			
 			if (havePcSegments) {
-				pcBox = displayConversationSegment(new PcPortrait(), true, pcSegments, 500, 300, entryFinishedListener);
+				pcBox = displayConversationSegment(playerBitmap, true, pcSegments, 500, 300, entryFinishedListener);
 				pcBox.addDisplayedHeadersToList(executeAtStart);
 			}
 			
@@ -110,6 +117,17 @@ package angel.game.script {
 				removeChild(npcBox);
 				npcBox = null;
 			}
+		}
+		
+		private function portraitBitmap(entity:SimpleEntity):Bitmap {
+			var bitmap:Bitmap;
+			var data:BitmapData = entity.portraitBitmapData();
+			if (data == null) {
+				bitmap = new defaultPortrait();
+			} else {
+				bitmap = new Bitmap(data);
+			}
+			return bitmap;
 		}
 		
 		public function cleanup():void {

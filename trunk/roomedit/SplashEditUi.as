@@ -29,13 +29,12 @@ package angel.roomedit {
 			splashBitmap.x = (WIDTH - splashBitmap.width) / 2;
 			addChild(splashBitmap)
 			
-			var splashChooser:ComboHolder = catalog.createChooser(CatalogEntry.SPLASH, WIDTH);
-			splashChooser.comboBox.addEventListener(Event.CHANGE, changeSplash);
-			splashChooser.y = splashBitmap.y + splashBitmap.height + 10;
-			splashCombo = splashChooser.comboBox;
-			addChild(splashChooser);
+			splashCombo = catalog.createChooser(CatalogEntry.SPLASH, WIDTH);
+			splashCombo.addEventListener(Event.CHANGE, changeSplash);
+			splashCombo.y = splashBitmap.y + splashBitmap.height + 10;
+			addChild(splashCombo);
 			
-			changeImageControl = FilenameControl.createBelow(splashChooser, false, "Image", 0, 220, changeFilename, 0);
+			changeImageControl = FilenameControl.createBelow(splashCombo, false, "Image", 0, 220, changeFilename, 0);
 			
 			var deleteFromCatalogButton:SimplerButton = new SimplerButton("Delete from catalog", clickedDelete, 0xff0000);
 			deleteFromCatalogButton.width = WIDTH;

@@ -22,11 +22,11 @@ package angel.roomedit {
 			super(catalog, room);
 			
 			graphics.lineStyle(0x000000, 2);
-			var lineY:int = itemChooser.y + itemChooser.height + 10;
+			var lineY:int = itemCombo.y + itemCombo.height + 10;
 			graphics.moveTo(0, lineY);
 			graphics.lineTo(EditorSettings.PALETTE_XSIZE, lineY);
 			
-			Util.addBelow(attributeDisplay, itemChooser, 20);
+			Util.addBelow(attributeDisplay, itemCombo, 20);
 			updateAvailabilityAndAttributes();
 			
 			itemCombo.selectedIndex = 0;

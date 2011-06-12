@@ -212,11 +212,11 @@ package angel.game {
 			}			
 		}
 		
-		public function startConversation(entity:SimpleEntity, conversationData:ConversationData):void {
+		public function startConversation(player:ComplexEntity, targetEntity:SimpleEntity, conversationData:ConversationData):void {
 			if (conversationInProgress != null) {
 				Alert.show("Error! Cannot start a conversation inside another conversation.");
 			} else {
-				conversationInProgress = new ConversationInterface(entity, conversationData);
+				conversationInProgress = new ConversationInterface(player, targetEntity, conversationData);
 				stage.addChild(conversationInProgress); // Conversation takes over ui when added to stage, removes itself & restores when finished
 			}
 		}
@@ -372,6 +372,13 @@ package angel.game {
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 		}
 
+		public function activePlayer():ComplexEntity {
+			if (activeUi == null) {
+				return mainPlayerCharacter;
+			}
+			return activeUi.currentPlayer;
+		}
+		
 		/********************* end general ui **********************/
 		
 		public function moveHilight(tile:FloorTile, color:uint):void {

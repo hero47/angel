@@ -10,6 +10,7 @@ package angel.game {
 	import angel.game.script.ConversationData;
 	import angel.game.script.Script;
 	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	import flash.geom.Point;
 	
 	public class SimpleEntity extends Prop {
@@ -71,6 +72,10 @@ package angel.game {
 		}
 		
 		public function get displayName():String {
+			return null;
+		}
+		
+		public function portraitBitmapData():BitmapData {
 			return null;
 		}
 

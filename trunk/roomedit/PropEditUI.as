@@ -36,13 +36,12 @@ package angel.roomedit {
 			propBitmap.x = (WIDTH - Prop.WIDTH) / 2;
 			addChild(propBitmap);
 			
-			var propChooser:Sprite = catalog.createChooser(CatalogEntry.PROP, WIDTH);
-			propCombo = ComboBox(propChooser.getChildAt(0));
+			propCombo = catalog.createChooser(CatalogEntry.PROP, WIDTH);
 			propCombo.addEventListener(Event.CHANGE, changeProp);
-			propChooser.y = propBitmap.y + propBitmap.height + 10;
-			addChild(propChooser);
+			propCombo.y = propBitmap.y + propBitmap.height + 10;
+			addChild(propCombo);
 			
-			ghostCheck = Util.createCheckboxEditControlBelow(propChooser, "Ghost/Hologram", 120, changeSolidness);
+			ghostCheck = Util.createCheckboxEditControlBelow(propCombo, "Ghost/Hologram", 120, changeSolidness);
 			hardCornerCheck = Util.createCheckboxEditControlBelow(ghostCheck, "Hard corners", 120, changeSolidness);
 			shortCheck = Util.createCheckboxEditControlBelow(hardCornerCheck, "Short", 120, changeSolidness);
 			fillsTileCheck = Util.createCheckboxEditControlBelow(shortCheck, "Fills Tile", 120, changeSolidness);

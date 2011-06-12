@@ -4,6 +4,7 @@ package angel.common {
 	import fl.controls.CheckBox;
 	import fl.controls.ComboBox;
 	import flash.display.DisplayObject;
+	import flash.display.DisplayObjectContainer;
 	import flash.display.Graphics;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -132,7 +133,26 @@ package angel.common {
 			if (changeHandler != null) {
 				checkBox.addEventListener(Event.CHANGE, changeHandler);
 			}
+			// This hack fixes bizarre checkbox behavior: the heights of the children are reading as 100, but the height
+			// of the checkbox itself reads as only 22, but when you add the checkbox to a container, the container's height
+			// adjusts as if the checkbox's height is 100.  
+			for (var i:int = 0; i < checkBox.numChildren; ++i) {
+				checkBox.getChildAt(i).height = checkBox.height;
+			}
 			return checkBox;
+		}
+		
+		public static function fixedCombo(width:int):ComboBox {
+			var combo:ComboBox = new ComboBox();
+			// This hack fixes bizarre combobox behavior: the heights of the combobox itself and its text component both
+			// read as 22, but the child of that text component is a textfield which reads as 100.  Anything that the
+			// combobox is added to finds that height and gives height as if the combobox is 100, *EVEN IF THE COMBO
+			// HOLDER OVERRIDES .height and returns the correct value*
+			var screwyTextField:DisplayObject = DisplayObjectContainer(combo.getChildAt(1)).getChildAt(0);
+			screwyTextField.height = combo.height;
+			screwyTextField.width = width;
+			combo.width = width;
+			return combo;
 		}
 		
 		public static const DEFAULT_TEXT_WIDTH:int = 100;

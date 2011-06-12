@@ -16,6 +16,7 @@ package angel.game.script {
 	 * @author Beth Moursund
 	 */
 	public class ScriptContext {
+		public var player:ComplexEntity;
 		private var triggeringEntity:SimpleEntity;
 		private var scriptRoom:Room;
 		private var doAtEnd:Vector.<Function> = new Vector.<Function>();
@@ -25,9 +26,10 @@ package angel.game.script {
 		
 		public var catalog:Catalog;
 		
-		public function ScriptContext(room:Room, triggeringEntity:SimpleEntity = null) {
+		public function ScriptContext(room:Room, player:ComplexEntity, triggeringEntity:SimpleEntity = null) {
 			this.triggeringEntity = triggeringEntity;
 			this.scriptRoom = room;
+			this.player = player;
 			this.catalog = Settings.catalog;
 			this.messages = new MessageCollector();
 		}

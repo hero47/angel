@@ -89,7 +89,7 @@ package angel.game.script {
 		}
 		
 		public function run(room:Room, triggeredBy:SimpleEntity = null):void {
-			var context:ScriptContext = new ScriptContext(room, triggeredBy);
+			var context:ScriptContext = new ScriptContext(room, (room == null ? null : room.activePlayer()), triggeredBy);
 			
 			doActions(context);
 			context.endOfScriptActions();
