@@ -284,10 +284,9 @@ package angel.roomedit {
 		
 		private var tilesetCombo:ComboBox;
 		private function clickedEditTileNames(event:Event):void {
-			var tilesetChooser:ComboHolder = catalog.createChooser(CatalogEntry.TILESET);
-			tilesetCombo = tilesetChooser.comboBox;
+			tilesetCombo = catalog.createChooser(CatalogEntry.TILESET);
 
-			var options:Object = { buttons:["OK", "Cancel"], inputs:[], customControl:tilesetChooser,
+			var options:Object = { buttons:["OK", "Cancel"], inputs:[], customControl:tilesetCombo,
 					callback:selectTilesetCallback };
 			var text:String = "Select tileset:";
 			KludgeDialogBox.show(text, options);

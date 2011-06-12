@@ -246,7 +246,10 @@ package angel.common {
 				heightForInputs += alertOptions.customControl.height;
 				myWidth = Math.max(myWidth, alertOptions.customControl.width + 30);
 			}
-			var myHeight:int = textField.height + 65 + heightForInputs;
+			var inputsTop:int = textField.height + 5;
+			var myHeight:int = inputsTop + heightForInputs + btnHeight + 20;
+			trace("text", textField.height, "inputs", heightForInputs, "btnHeight", btnHeight);
+			trace("inputs top", inputsTop, "inputs bottom", inputsTop + heightForInputs);
 			if (myWidth < minimumWidths[alertOptions.buttons.length-1]) {
 				myWidth = minimumWidths[alertOptions.buttons.length-1];
 			}
@@ -296,7 +299,7 @@ package angel.common {
 			for (var i:int = 0; i < alertOptions.inputs.length; i++) {
 				var label:TextField = createInputLabel(alertOptions.inputs[i], alertOptions);
 				label.x = 10;
-				label.y = myHeight - 45 - heightForInputs + (i * (btnHeight +2));
+				label.y = inputsTop + (i * (btnHeight +2));
 				actualPrompt.addChild(label);
 				maxLabelWidth = Math.max(maxLabelWidth, label.width);
 			}
@@ -310,7 +313,7 @@ package angel.common {
 				}
 				input.x = 20 + maxLabelWidth;
 				input.width = actualPrompt.width - input.x - 15;
-				input.y = myHeight - 45 - heightForInputs + (i * (btnHeight +2));
+				input.y = inputsTop + (i * (btnHeight +2));
 				actualPrompt.addChild(input);
 				if (i == 0) {
 					stage.focus = input;
@@ -321,11 +324,12 @@ package angel.common {
 			if (alertOptions.customControl != null) {
 				actualPrompt.addChild(alertOptions.customControl);
 				alertOptions.customControl.x = (actualPrompt.width - alertOptions.customControl.width) / 2;
-				alertOptions.customControl.y = myHeight - 45 - alertOptions.customControl.height;
+				alertOptions.customControl.y = inputsTop + (alertOptions.inputs.length * (btnHeight + 2));
 			}	
 			
+			trace("Button y", myHeight - btnHeight - 10);
 			for (i=0;i<alertButtons.length;i++) {
-				alertButtons[i].y = myHeight-35;
+				alertButtons[i].y = myHeight - btnHeight - 10;
 				actualPrompt.addChild(alertButtons[i]);
 			}
 			//
@@ -350,10 +354,12 @@ package angel.common {
 			var Text:String = alertOptions.text;
 			var myTextField:TextField = new TextField();
 			myTextField.textColor = alertOptions.textColour;
-			myTextField.multiline = true;
+			//myTextField.multiline = true;
 			myTextField.selectable = false;
 			myTextField.autoSize = TextFieldAutoSize.CENTER;	
-			myTextField.htmlText = '<font face="Verdana">'+Text+'</font>';
+			myTextField.height = btnHeight + 2;
+			myTextField.defaultTextFormat = new TextFormat("Ariel", btnHeight-2);
+			myTextField.text = Text;
 			myTextField.x = (btnWidth/2)-(myTextField.width/2);
 			return myTextField;
 		}

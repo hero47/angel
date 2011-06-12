@@ -30,13 +30,12 @@ package angel.roomedit {
 		public function WeaponEditUI(catalog:CatalogEdit, startId:String = null) {
 			this.catalog = catalog;
 			
-			var weaponChooser:ComboHolder = catalog.createChooser(CatalogEntry.WEAPON, WIDTH);
-			weaponChooser.comboBox.addEventListener(Event.CHANGE, changeWeapon);
-			weaponCombo = weaponChooser.comboBox;
-			addChild(weaponChooser);
+			weaponCombo = catalog.createChooser(CatalogEntry.WEAPON, WIDTH);
+			weaponCombo.addEventListener(Event.CHANGE, changeWeapon);
+			addChild(weaponCombo);
 			
 			var weaponType:TextField = Util.textBox("Type: Single Target", WIDTH); // This will probably be a chooser, someday
-			Util.addBelow(weaponType, weaponChooser);
+			Util.addBelow(weaponType, weaponCombo);
 			nameTextField = Util.createTextEditControlBelow(weaponType, "Display Name", 85, WIDTH-85,
 					function(event:Event):void { changeWeaponProperty(event.target.text, "displayName", Defaults.GUN_DISPLAY_NAME) }, 0);
 			damageTextField = Util.createTextEditControlBelow(nameTextField, "Damage", 85, 40,

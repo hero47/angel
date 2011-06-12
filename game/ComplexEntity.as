@@ -20,6 +20,7 @@ package angel.game {
 	import angel.game.event.EntityQEvent;
 	import angel.game.inventory.Inventory;
 	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
 	import flash.geom.Point;
 	import flash.text.TextField;
@@ -157,6 +158,11 @@ package angel.game {
 		
 		override public function get displayName():String {
 			return myDisplayName;
+		}
+		
+		override public function portraitBitmapData():BitmapData {
+			var resource:CharResource = Settings.catalog.retrieveCharacterResource(id);
+			return resource.portraitBitmapData;
 		}
 		
 		public function canMove():Boolean {

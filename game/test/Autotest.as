@@ -195,7 +195,7 @@ package angel.game.test {
 		
 		public static function testActionFromXml(xml:XML, shouldDelayUntilEnd:Boolean = false):void {
 			Autotest.assertEqual(Settings.gameEventQueue.numberOfCallbacksWaitingProcessing(), 0, "Queue not empty before testing action");
-			var context:ScriptContext = new ScriptContext(testRoom);
+			var context:ScriptContext = new ScriptContext(testRoom, testRoom == null ? null : testRoom.activePlayer());
 			var action:IAction = ActionFactory.createFromXml(xml, script);
 			Autotest.assertNoAlert();
 			Autotest.assertNotEqual(action, null, "Action creation failed");

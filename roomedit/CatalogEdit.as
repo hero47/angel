@@ -98,16 +98,15 @@ package angel.roomedit {
 		
 		// Create a combobox holding all catalog ids for the given CatalogEntry type.
 		// Due to pecularities of ComboBox, we embed it in a holder object.
-		public function createChooser(type:Class, width:int = 200):ComboHolder {
-			var combo:ComboBox = new ComboBox();
-			combo.width = width;
+		public function createChooser(type:Class, width:int = 200):ComboBox {
+			var combo:ComboBox = Util.fixedCombo(width);
 			
 			var allNamesOfThisType:Array = allNames(type);
 			for (var i:int = 0; i < allNamesOfThisType.length; i++) {
 				combo.addItem( { label:allNamesOfThisType[i] } );
 			}
 			
-			return new ComboHolder(width, combo);
+			return combo;
 		}
 		
 		public function allNames(type:Class):Array {

@@ -20,7 +20,6 @@ package angel.roomedit {
 		protected var room:RoomLight;
 		protected var removeButton:SimplerButton;
 		protected var itemImage:Bitmap;
-		protected var itemChooser:ComboHolder;
 		protected var itemCombo:ComboBox;
 		protected var attributeDisplay:Sprite;
 		
@@ -43,10 +42,9 @@ package angel.roomedit {
 			Util.addBelow(itemImage, removeButton);
 			itemImage.x = (EditorSettings.PALETTE_XSIZE - itemImage.width) / 2;
 			
-			itemChooser = catalog.createChooser(catalogEntryType, EditorSettings.PALETTE_XSIZE - 10);
-			Util.addBelow(itemChooser, itemImage, -(Tileset.TILE_HEIGHT/2));
-			itemChooser.x = (EditorSettings.PALETTE_XSIZE - itemChooser.width) / 2;
-			itemCombo = itemChooser.comboBox;
+			itemCombo = catalog.createChooser(catalogEntryType, EditorSettings.PALETTE_XSIZE - 10);
+			Util.addBelow(itemCombo, itemImage, -(Tileset.TILE_HEIGHT/2));
+			itemCombo.x = (EditorSettings.PALETTE_XSIZE - itemCombo.width) / 2;
 			itemCombo.addEventListener(Event.CHANGE, itemComboBoxChanged);
 			
 			attributeDisplay = createAttributeDisplay();

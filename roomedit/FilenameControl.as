@@ -84,7 +84,7 @@ package angel.roomedit {
 
 		public static function createBelow(previousControl:DisplayObject, includeClearButton:Boolean, labelText:String, labelWidth:int, controlWidth:int, changeHandler:Function, optionalXInsteadOfAligning:int = int.MAX_VALUE):FilenameControl {
 			var control:FilenameControl = new FilenameControl(includeClearButton, labelText, controlWidth, labelWidth);
-			Util.addBelow(control, previousControl);
+			Util.addBelow(control, previousControl, 5);
 			if (optionalXInsteadOfAligning != int.MAX_VALUE) {
 				control.x = optionalXInsteadOfAligning;
 			}
