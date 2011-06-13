@@ -37,11 +37,11 @@ package angel.game.brain {
 		
 		/* INTERFACE angel.game.brain.ICombatBrain */
 		
-		override public function chooseMoveAndDrawDots():void {
+		override public function chooseMoveAndDrawDots():Boolean {
 			trace(me.aaId, "Patrol: Choose move and draw dots");
 			if (!me.canMove() || shouldStop()) {
 				//If we can't move, or have a gun and a target in sight, just stand still and shoot for max damage.
-				return;
+				return false;
 			}
 			if (me.location.equals(goals[currentGoalIndex])) {
 				currentGoalIndex = (currentGoalIndex + 1) % goals.length;
@@ -58,6 +58,7 @@ package angel.game.brain {
 				Assert.assertTrue(gaitNeeded <= gait, "path didn't match planned gait");
 			}
 			
+			return ((path != null) && (path.length > 0));
 		}
 		
 		protected function shouldStop():Boolean {

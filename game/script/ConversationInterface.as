@@ -29,7 +29,7 @@ package angel.game.script {
 		
 		// Temporary -- eventually these will come from catalog I believe
 		// size 276 x 329 ???
-		[Embed(source = '../../EmbeddedAssets/conversation_portrait_Blank.png')]
+		[Embed(source = '../../EmbeddedAssets/conversation_portrait_Aura.png')]
 		private static const defaultPortrait:Class;
 		
 		private static const TARGET_HILIGHT_COLOR:uint = 0x0000ff;

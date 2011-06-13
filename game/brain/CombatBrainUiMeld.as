@@ -57,9 +57,11 @@ package angel.game.brain {
 			me = null;
 		}
 		
-		public function chooseMoveAndDrawDots():void {
+		// return true if actually moved, false if not
+		public function chooseMoveAndDrawDots():Boolean {
 			//override
 			Assert.fail("Should be overridden");
+			return false;
 		}
 		
 		public function doFire():void {
@@ -108,7 +110,11 @@ package angel.game.brain {
 			// the total time between enemy's turn starting and enemy beginning to follow dots should
 			// stay at that time unless we're really slow.)
 			combat.room.pauseGameTimeForFixedDelay(RoomCombat.PAUSE_TO_VIEW_MOVE_SECONDS, this, carryOutPlottedMove);
-			chooseMoveAndDrawDots();
+			var moving:Boolean = chooseMoveAndDrawDots();
+			if (!moving) {
+				combat.room.unpauseAndDeleteAllOwnedBy(this);
+				finishedMovingListener(null);
+			}
 		}
 		
 		// Called when the timer for gazing at the enemy's move dots expires, or when player commits move from ui
@@ -165,28 +171,35 @@ package angel.game.brain {
 		
 		public function carryOutAttack(weapon:IWeapon, target:Object):void {
 			var giveAnotherFirePhase:Boolean = false;
+			var pauseToViewFireGraphic:Boolean;
 			if ((weapon == null) || (target == null)) {
-				showNoGunOrReserveFire();
+				pauseToViewFireGraphic = showNoGunOrReserveFire();
 			} else {
 				weapon.attack(me, target);
 				giveAnotherFirePhase = me.hasAUsableWeaponAndEnoughActions();
+				pauseToViewFireGraphic = true;
 			}
 			if (me.isPlayerControlled || Settings.showEnemyMoves) {
 				me.centerRoomOnMe();
 			}
 			
-			// Give the player some time to gaze at the fire graphic before continuing with turn.
-			combat.room.pauseGameTimeForFixedDelay(RoomCombat.PAUSE_TO_VIEW_FIRE_SECONDS, this, 
-				(giveAnotherFirePhase ? finishedOneFirePhase : finishedLastFirePhase));
+			var goHereNext:Function = (giveAnotherFirePhase ? finishedOneFirePhase : finishedLastFirePhase);
+			if (pauseToViewFireGraphic) {
+				// Give the player some time to gaze at the fire graphic before continuing with turn.
+				combat.room.pauseGameTimeForFixedDelay(RoomCombat.PAUSE_TO_VIEW_FIRE_SECONDS, this, goHereNext);
+			} else {
+				goHereNext();
+			}
 		}
 		
-		public function showNoGunOrReserveFire():void {
+		// return true if should pause, false if not
+		public function showNoGunOrReserveFire():Boolean {
 			if (me.isPlayerControlled) {
 				displayActionFloater(me, (me.hasAUsableWeapon() ? Icon.ReserveFireFloater : Icon.NoGunFloater));
-			} else if (me.visible) {
-				// Don't reveal whether NPC is armed or not -- always show reserve fire for them
-				displayActionFloater(me, Icon.ReserveFireFloater);
-			}
+				return true;
+			} 
+			// No reserve fire notice now for NPCs
+			return false;
 		}
 		
 		// Called when the timer for gazing at the fire graphic expires

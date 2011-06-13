@@ -13,8 +13,9 @@ package angel.game.brain {
 		
 		/* INTERFACE angel.game.brain.ICombatBrain */
 		
-		override public function chooseMoveAndDrawDots():void {
+		override public function chooseMoveAndDrawDots():Boolean {
 			// Do nothing
+			return false;
 		}
 		
 		override public function doFire():void {

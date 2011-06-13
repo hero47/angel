@@ -24,15 +24,15 @@ package angel.game.brain {
 		}
 
 		
-		override public function chooseMoveAndDrawDots():void {
+		override public function chooseMoveAndDrawDots():Boolean {
 			if (!me.canMove()) {
-				return;
+				return false;
 			}
 			trace(me.aaId, "Wander: Choose move and draw dots");
 			
 			var tiles:int = fillListWithReachableTiles();
 			if (tiles == 0) {
-				return;
+				return false;
 			}
 			var randomGait:int;
 			do {
@@ -46,6 +46,8 @@ package angel.game.brain {
 				gait = combat.mover.extendPath(me, path);
 				Assert.assertTrue(gait == randomGait, "path didn't match planned gait");
 			}
+			
+			return ((path != null) && (path.length > 0));
 		}
 		
 		// return total number of reachable tiles
