@@ -27,7 +27,7 @@ package angel.roomedit {
 		private static const exploreChoices:Vector.<String> = Vector.<String>(["", "fidget", "follow", "patrol", "wander"]);
 		private static const combatChoices:Vector.<String> = Vector.<String>(["", "patrol", "patrolNoStops", "wander"]);
 		//NOTE: faction is index in factionChoices, not the string itself
-		private static const factionChoices:Vector.<String> = Vector.<String>(["enemy", "friend", "non-aligned"]);
+		private static const factionChoices:Vector.<String> = Vector.<String>(["enemy", "friend", "non-aligned", "enemy2"]);
 		
 		public function NpcPalette(catalog:CatalogEdit, room:RoomLight) {
 			super(catalog, room);

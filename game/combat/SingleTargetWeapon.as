@@ -94,11 +94,15 @@ package angel.game.combat {
 			}
 			target.takeDamage(damage, !ignoreTargetGait, coverDamageReductionPercent);
 			
-			var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(Settings.FRAMES_PER_SECOND);
-			uglyFireLineThatViolates3D.graphics.lineStyle(2, (shooter.isPlayerControlled ? 0xff0000 : 0xffa500));
-			uglyFireLineThatViolates3D.graphics.moveTo(shooter.centerOfImage().x, shooter.centerOfImage().y);
-			uglyFireLineThatViolates3D.graphics.lineTo(target.centerOfImage().x, target.centerOfImage().y);
-			shooter.room.addChild(uglyFireLineThatViolates3D);
+			if (shooter.isPlayerControlled || target.isPlayerControlled ||
+							RoomCombat(shooter.room.mode).anyPlayerCanSeeLocation(target.location) ||
+							RoomCombat(target.room.mode).anyPlayerCanSeeLocation(shooter.location) ) {				
+				var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(Settings.FRAMES_PER_SECOND);
+				uglyFireLineThatViolates3D.graphics.lineStyle(2, (shooter.isPlayerControlled ? 0xff0000 : 0xffa500));
+				uglyFireLineThatViolates3D.graphics.moveTo(shooter.centerOfImage().x, shooter.centerOfImage().y);
+				uglyFireLineThatViolates3D.graphics.lineTo(target.centerOfImage().x, target.centerOfImage().y);
+				shooter.room.addChild(uglyFireLineThatViolates3D);
+			}
 			
 			if (target.isPlayerControlled) {
 				target.centerRoomOnMe();

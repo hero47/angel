@@ -38,6 +38,10 @@ package angel.game {
 			timeQueue = null;
 		}
 		
+		public function activePlayer():ComplexEntity {
+			return room.mainPlayerCharacter;
+		}
+		
 		public function entityAddedToRoom(entity:SimpleEntity):void {
 			if (entity is ComplexEntity) {
 				initEntityForExplore(entity as ComplexEntity);

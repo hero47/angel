@@ -88,6 +88,11 @@ package angel.game.combat {
 			}
 		}
 		
+		public function activePlayer():ComplexEntity {
+			var fighter:ComplexEntity = currentFighter();
+			return (fighter.isReallyPlayer ? fighter : room.mainPlayerCharacter);
+		}
+		
 		// CONSIDER: Adds to end of fighter list. Would it be better to add somewhere else, like right before/after current?
 		public function entityAddedToRoom(entity:SimpleEntity):void {
 			if (entity is ComplexEntity) {
@@ -316,7 +321,7 @@ package angel.game.combat {
 			for (var i:int = 0; i < fighters.length; i++) {
 				if (fighters[i].isPlayerControlled) {
 					playerAlive = true;
-				} else if (fighters[i].faction == ComplexEntity.FACTION_ENEMY) {
+				} else if ((fighters[i].faction == ComplexEntity.FACTION_ENEMY) || (fighters[i].faction == ComplexEntity.FACTION_ENEMY2)) {
 					enemyAlive = true;
 				}
 				if (playerAlive && enemyAlive) {

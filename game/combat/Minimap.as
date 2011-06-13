@@ -191,6 +191,7 @@ package angel.game.combat {
 					}
 				break;
 				case ComplexEntity.FACTION_ENEMY:
+				case ComplexEntity.FACTION_ENEMY2:
 					return (entity.isAlive() ?
 						(entity.visible ? enemyBitmapData : enemyLastSeenBitmapData) :
 						deadEnemyBitmapData);

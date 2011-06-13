@@ -181,6 +181,7 @@ package angel.game.combat {
 		private function factionColor(entity:ComplexEntity):uint {
 			switch (entity.faction) {
 				case ComplexEntity.FACTION_ENEMY:
+				case ComplexEntity.FACTION_ENEMY2:
 					return ENEMY_FOOTPRINT_COLOR;
 				break;
 				case ComplexEntity.FACTION_FRIEND:

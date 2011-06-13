@@ -373,10 +373,10 @@ package angel.game {
 		}
 
 		public function activePlayer():ComplexEntity {
-			if (activeUi == null) {
+			if (mode == null) {
 				return mainPlayerCharacter;
 			}
-			return activeUi.currentPlayer;
+			return mode.activePlayer();
 		}
 		
 		/********************* end general ui **********************/

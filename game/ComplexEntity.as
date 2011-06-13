@@ -40,6 +40,7 @@ package angel.game {
 		public static const FACTION_ENEMY:int = 0;
 		public static const FACTION_FRIEND:int = 1;
 		public static const FACTION_NONE:int = 2;
+		public static const FACTION_ENEMY2:int = 3;
 		
 		public static function factionFromName(factionName:String):int {
 			switch (factionName) {
@@ -50,6 +51,8 @@ package angel.game {
 					return FACTION_FRIEND;
 				case "none":
 					return FACTION_NONE;
+				case "enemy2":
+					return FACTION_ENEMY2;
 			}
 		}
 		
