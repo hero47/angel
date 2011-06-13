@@ -113,7 +113,7 @@ package angel.game.script {
 				var spotsParam:String = xml.@spots;
 				if (idsParam != "") {
 					if (canFilterOnId) {
-						one.entityIds = Vector.<String>(idsParam.split(","));
+						one.setEntityIds(idsParam);
 					} else {
 						rootScript.addError("Warning: ids ignored");
 					}
@@ -134,40 +134,17 @@ package angel.game.script {
 			return triggeredScripts;
 		}
 		
-		private function runTriggeredScripts(scripts:Vector.<TriggeredScript>, entityWhoTriggered:SimpleEntity, anyoneCaresAboutSpots:Boolean):void {			
+		private function runTriggeredScripts(scripts:Vector.<TriggeredScript>, entityWhoTriggered:SimpleEntity, anyoneCaresAboutSpots:Boolean):void {
+			var context:ScriptContext = new ScriptContext(room, room.activePlayer(), entityWhoTriggered);
 			var spotsThisEntityIsOn:Vector.<String>;
 			if (anyoneCaresAboutSpots) {
 				spotsThisEntityIsOn = room.spotsMatchingLocation(entityWhoTriggered.location);
 			}
 			for each (var thisScript:TriggeredScript in scripts) {
-				if (passesIdFilter(thisScript, entityWhoTriggered)) {
-					if (!anyoneCaresAboutSpots || passesSpotFilter(thisScript, spotsThisEntityIsOn)) {
-						thisScript.script.run(room, entityWhoTriggered);
-					}
-				}
+				thisScript.run(context, entityWhoTriggered, spotsThisEntityIsOn);
 			}
+			context.endOfScriptActions();
 		}
-		
-		private function passesIdFilter(thisScript:TriggeredScript, entity:SimpleEntity):Boolean {
-			if (thisScript.entityIds == null) {
-				return true;
-			}
-			return (thisScript.entityIds.indexOf(entity.id) >= 0);
-		}
-		
-		private function passesSpotFilter(thisScript:TriggeredScript, spotsThisEntityIsOn:Vector.<String>):Boolean {
-			if (thisScript.spotIds == null) {
-				return true;
-			}
-			
-			for each (var spotId:String in spotsThisEntityIsOn) {
-				if (thisScript.spotIds.indexOf(spotId) >= 0) {
-					return true;
-				}
-			}
-			return false;
-		}
-		
 		
 		private function moveListener(event:EntityQEvent):void {
 			runTriggeredScripts(onMoveScripts, event.simpleEntity, anyMoveScriptCaresAboutSpots);
@@ -181,12 +158,67 @@ package angel.game.script {
 
 }
 
+import angel.common.Util;
 import angel.game.script.Script;
-class TriggeredScript {
+import angel.game.script.ScriptContext;
+import angel.game.SimpleEntity;
+internal class TriggeredScript {
 	public var script:Script;
 	public var entityIds:Vector.<String>;
+	public var entitySpecialIds:Vector.<String>;
 	public var spotIds:Vector.<String>;
+	
 	public function TriggeredScript() {
 		
 	}
+	
+	public function setEntityIds(idsParam:String):void {
+		if (Util.nullOrEmpty(idsParam)) {
+			return;
+		}
+		entityIds = Vector.<String>(idsParam.split(","));
+		entitySpecialIds = new Vector.<String>();
+		for (var i:int = entityIds.length - 1; i >= 0; --i) {
+			if (entityIds[i].charAt(0) == "*") {
+				entitySpecialIds.push(entityIds.splice(i, 1));
+			}
+		}
+	}
+			
+	public function passesIdFilter(context:ScriptContext, entity:SimpleEntity):Boolean {
+		if (entityIds == null) {
+			return true;
+		}
+		if (entityIds.indexOf(entity.id) >= 0) {
+			return true;
+		}
+		for (var i:int = 0; i < entitySpecialIds.length; ++i) {
+			if (context.entityWithScriptId(entitySpecialIds[i]) == entity) {
+				return true;
+			}
+		}
+		return false;
+	}
+		
+	public function passesSpotFilter(spotsThisEntityIsOn:Vector.<String>):Boolean {
+		if (spotIds == null) {
+			return true;
+		}
+		
+		for each (var spotId:String in spotsThisEntityIsOn) {
+			if (spotIds.indexOf(spotId) >= 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+		
+	public function run(context:ScriptContext, entityWhoTriggered:SimpleEntity, spotsIfAnyoneCares:Vector.<String>):void {
+		if (passesIdFilter(context, entityWhoTriggered)) {
+			if ((spotsIfAnyoneCares == null) || passesSpotFilter(spotsIfAnyoneCares)) {
+				script.doActions(context);
+			}
+		}
+	}
+		
 }

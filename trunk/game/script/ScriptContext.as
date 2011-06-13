@@ -16,9 +16,9 @@ package angel.game.script {
 	 * @author Beth Moursund
 	 */
 	public class ScriptContext {
-		public var player:ComplexEntity;
 		private var triggeringEntity:SimpleEntity;
 		private var scriptRoom:Room;
+		private var scriptIds:Object;
 		private var doAtEnd:Vector.<Function> = new Vector.<Function>();
 		public var messages:MessageCollector; // holds both script-generated messages and script error messages
 		private var gameLost:Boolean;
@@ -27,17 +27,20 @@ package angel.game.script {
 		public var catalog:Catalog;
 		
 		public function ScriptContext(room:Room, player:ComplexEntity, triggeringEntity:SimpleEntity = null) {
-			this.triggeringEntity = triggeringEntity;
+			scriptIds = { "it":triggeringEntity, "pc":player };
 			this.scriptRoom = room;
-			this.player = player;
 			this.catalog = Settings.catalog;
 			this.messages = new MessageCollector();
 		}
 		
+		public function get player():ComplexEntity {
+			return scriptIds["pc"];
+		}
+		
 		public function entityWithScriptId(entityId:String, actionName:String = null):SimpleEntity {
 			var entity:SimpleEntity;
-			if (entityId == Script.TRIGGERING_ENTITY_ID) {
-				entity = triggeringEntity;
+			if (entityId.charAt(0) == "*") {
+				entity = scriptIds[entityId.substr(1)];
 			} else {
 				entity = room.entityInRoomWithId(entityId);
 			}
@@ -49,8 +52,8 @@ package angel.game.script {
 		
 		public function charWithScriptId(entityId:String, actionName:String = null):ComplexEntity {
 			var entity:SimpleEntity;
-			if (entityId == Script.TRIGGERING_ENTITY_ID) {
-				entity = triggeringEntity;
+			if (entityId.charAt(0) == "*") {
+				entity = scriptIds[entityId.substr(1)];
 			} else {
 				entity = room.entityInRoomWithId(entityId);
 			}

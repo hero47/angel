@@ -246,6 +246,7 @@ package angel.game.brain {
 		private function phaseLabel():String {
 			switch (me.faction) {
 				case ComplexEntity.FACTION_ENEMY:
+				case ComplexEntity.FACTION_ENEMY2:
 					return ENEMY_ACTION;
 				case ComplexEntity.FACTION_FRIEND:
 					return FRIEND_ACTION;
