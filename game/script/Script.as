@@ -25,7 +25,7 @@ package angel.game.script {
 		private var lastActionAddedIfItWasAnIf:IfAction;
 		private var errors:MessageCollector; // used to accumulate parse errors for display at end of script creation
 		
-		public static const TRIGGERING_ENTITY_ID:String = "*this";
+		public static const TRIGGERING_ENTITY_ID:String = "*it";
 		public static const ACTIVE_PLAYER_ID:String = "*pc";
 		
 //UNDONE: check if initializeFromXml and loadEntityScriptFromXmlFile should be static functions

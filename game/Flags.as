@@ -14,7 +14,7 @@ package angel.game {
 		//NOTE: Currently flags are boolean, but we may decide later to make them integers
 		private static var flags:Object; // mapping from flag to boolean
 		
-		public static var flagLoader:Object;
+		public static var flagLoader:Object = new Object();
 		
 		public function Flags() {
 			

@@ -1,0 +1,47 @@
+Each room has a Triggers created by parsing room's script section in xml.
+Each entity has a Triggers created by parsing entity's conversation/script file (null or empty if none).
+
+Triggers parse xml and determine a set of trigger names (onMove, etc.) that they are interested in, and for each one a list
+of (filters + script).  They register with the trigger manager for the trigger names they care about.  They need to be able
+to delete this registration when room/entity cleans up, or (when entity's script file is changed by an action -- I think
+this is/will be possible?), and new ones need to be able to register.
+
+
+Trigger manager listens for QEvents as current RoomScripts does.  It has its own internal QEvent queue and QEvent id constants.
+Triggers' can register with trigger manager for triggers that they are interested in.  This sets listeners on the trigger
+manager's internal queue.
+When trigger manager receives a (game) event, it dispatches (trigger) events using internal queue.
+** Can filtering take place in the trigger manager, rather than in the Triggers ?
+
+All trigger dispatch/filtering should take place before the triggered scripts actually run; that's why we want to
+do it using an event queue.
+
+Everything that triggers from a single (game) event should be processed inside a single script context, with all of the
+do-at-end stuff happening at the end of that full set of trigger-processing.  The "*me" of the context needs to change during
+this cycle as triggers are processed for different entities.  So *me would be wrong during do-at-end.  Are all of the delays
+safe for that?  **No.  Conversation is a delayed action.**  So do-at-end needs to save its original *me and restore to that.
+
+A single event-processing-cycle in the game can generate multiple trigger-events -- possibilities include (depending on
+what trigger-events we support) loading a new room causes enter for room & each entity, starting combat ditto, one
+grenade can generate multiple death events.  So perhaps the trigger manager should accumulate filtered triggers rather
+than processing them immediately, and either be called by the room or listen for (who?) to dispatch a do-triggers-now.
+This doesn't want to wait for unpaused-enter-frame.  Could be on GAME_ENTER_FRAME maybe?  Or check if the queue is empty
+and dispatch its own do-triggers-now if not, keep repeating this until eventually it finds an empty queue?  (That strategy
+only works if there's only one thing in the game using it, otherwise they'd each keep waiting for the other's event to clear
+in a lovely infinite loop.)  This is where we would like event priorities!
+
+
+
+Possible implementation
+
+Manager receives (game) event, translates to triggerId, creates script context with room, *it, *pc.
+Manager dispatches trigger-event on internal queue with param that contains context and the manager itself.
+After manager dispatches its trigger-event, it tells internal queue to handle events.
+
+Trigger receives trigger-event, loops through its entries checking context vs. filters.  For ones that match,
+call a fuction on the manager to push script and *me onto a list.
+
+When all events in manager's internal queue have been handled, manager processes its script list [for now; may want
+to accumulate more events, see above].  It can use the same context it created before dispatching, setting *me to saved values.
+[Some of this processing may trigger new (game) events, too.  Think about that later.]
+Then 
