@@ -3,6 +3,7 @@ package angel.game {
 	import angel.game.brain.BrainFollow;
 	import angel.game.event.EventQueue;
 	import angel.game.event.QEvent;
+	import angel.game.script.TriggerMaster;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;

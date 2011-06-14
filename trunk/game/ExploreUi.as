@@ -117,6 +117,7 @@ package angel.game {
 				playerIsMoving = player.movement.startFreeMovementToward(loc);
 				if (playerIsMoving) {
 					Settings.gameEventQueue.addListener(this, player, EntityQEvent.FINISHED_MOVING, playerFinishedMoving);
+					Settings.gameEventQueue.addListener(this, player, EntityQEvent.MOVE_INTERRUPTED, playerFinishedMoving);
 					if (!(Settings.testExploreScroll > 0)) {
 						room.scrollToCenter(loc);
 					}
@@ -135,6 +136,7 @@ package angel.game {
 			Assert.assertTrue((event.complexEntity == player), "Got a playerFinishedMoving event, but with an entity other than our player");
 			playerIsMoving = false;
 			Settings.gameEventQueue.removeListener(player, EntityQEvent.FINISHED_MOVING, playerFinishedMoving);
+			Settings.gameEventQueue.removeListener(player, EntityQEvent.MOVE_INTERRUPTED, playerFinishedMoving);
 		}
 		
 		private function moveFrobHilight(target:SimpleEntity):void {

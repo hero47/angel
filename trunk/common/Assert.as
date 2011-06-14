@@ -10,36 +10,41 @@ package angel.common {
 		}
 		
 		public static function fail(message:String):void {
-				Alert.show("Assert failed!\n" + message + "\n" + GetStackTrace());
+			assertMessage(message);
 		}
 		
 		public static function assertTrue(check:Boolean, message:String):void {
 			if (!check) {
-				Alert.show("Assert failed!\n" + message + "\n" + GetStackTrace());
+				assertMessage(message);
 			}
 		}
 		
 		public static function assertFalse(check:Boolean, message:String):void {
 			if (check) {
-				Alert.show("Assert failed!\n" + message + "\n" + GetStackTrace());
+				assertMessage(message);
 			}
+		}
+		
+		private static function assertMessage(message:String):void {
+			message = "Assert failed!\n" + message + "\n" + getStackTrace();
+			Alert.show(message);
+			trace(message);
 		}
 		
 		/**
 		 * Returns the stack trace (filtered)
 		 * @return stack trace
 		 */
-		public static function GetStackTrace() : String {
-			if (Capabilities.isDebugger == true) {
-				try { throw new Error(); }
-				catch (e:Error) { return FilterStackTrace(e.getStackTrace()); }
-				return "";
-			}
-			else
+		public static function getStackTrace():String {
+			if (!Capabilities.isDebugger) {
 				return "Stack trace not available in non-debugger version.";
+			}
+			try { throw new Error(); }
+			catch (e:Error) { return filterStackTrace(e.getStackTrace()); }
+			return "";
 		}
 
-		public static function FilterStackTrace(stack:String):String {
+		public static function filterStackTrace(stack:String):String {
 			var lines:Array = stack.split("\n");
 			// remove the path
 			// it's too long and we can get the info from the method trace

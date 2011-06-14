@@ -6,6 +6,7 @@ package angel.game {
 	import angel.common.SimplerButton;
 	import angel.common.SplashResource;
 	import angel.common.Util;
+	import angel.game.script.TriggerMaster;
 	import flash.display.Bitmap;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;

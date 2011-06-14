@@ -10,13 +10,11 @@ package angel.game {
 	import angel.game.combat.RoomCombat;
 	import angel.game.event.EntityQEvent;
 	import angel.game.event.QEvent;
-	import angel.game.inventory.InventoryUi;
 	import angel.game.script.ConversationData;
 	import angel.game.script.ConversationInterface;
-	import angel.game.script.RoomScripts;
-	import angel.game.script.Script;
+	import angel.game.script.RoomTriggers;
+	import angel.game.script.TriggerMaster;
 	import angel.game.test.ConversationNonAutoTest;
-	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
@@ -32,6 +30,7 @@ package angel.game {
 		static public const GAME_ENTER_FRAME:String = "gameEnterFrame";
 		static public const ROOM_ENTER_FRAME:String = "roomEnterFrame";
 		static public const ROOM_ENTER_UNPAUSED_FRAME:String = "unpausedEnterFrame"; // only triggers when not paused
+		static public const ROOM_INIT:String = "roomInit";
 		
 		static private const SCROLL_SPEED:Number = 3;
 		
@@ -58,7 +57,7 @@ package angel.game {
 		private var dragging:Boolean = false;
 		
 		private var conversationInProgress:ConversationInterface;
-		public var roomScripts:RoomScripts;
+		public var roomTriggers:RoomTriggers;
 		
 		private var gamePauseStack:Vector.<PauseInfo> = new Vector.<PauseInfo>(); // LIFO stack with exceptions
 		
@@ -100,7 +99,7 @@ package angel.game {
 			quitButton.y = stage.stageHeight - quitButton.height - 5;
 			parent.addChild(quitButton);
 			
-			roomScripts.runOnEnter();
+			Settings.gameEventQueue.dispatch(new QEvent(this, ROOM_INIT));
 		}
 		
 		public function cleanup():void {
@@ -122,8 +121,9 @@ package angel.game {
 			if (parent != null) {
 				parent.removeChild(this);
 			}
-			if (roomScripts != null) {
-				roomScripts.cleanup();
+			if (roomTriggers != null) {
+				roomTriggers.master.changeRoom(null);
+				roomTriggers.cleanup();
 			}
 			
 			quitButton.cleanup();
@@ -291,6 +291,14 @@ package angel.game {
 				
 				case Keyboard.HOME:
 					new ConversationNonAutoTest(this);
+				break;
+				
+				case Keyboard.PAGE_UP:
+					Settings.gameEventQueue.debugTraceListeners();
+				break;
+				
+				case Keyboard.PAGE_UP:
+					Settings.gameEventQueue.debugTraceCallbacks();
 				break;
 				
 				default:
@@ -586,7 +594,7 @@ package angel.game {
 							 Settings.STAGE_HEIGHT / 2 - desiredTileCenter.y - Floor.FLOOR_TILE_Y / 2 );
 		}
 		
-		public static function createFromXml(xml:XML, save:SaveGame, filename:String = ""):Room {
+		public static function createFromXml(xml:XML, save:SaveGame, triggerMaster:TriggerMaster, filename:String = ""):Room {
 			if (xml.floor.length() == 0) {
 				Alert.show("Invalid room file " + filename);
 				return null;
@@ -605,8 +613,9 @@ package angel.game {
 				room.initSpotsFromXml(xml.spots[0]);
 			}
 			
+			triggerMaster.changeRoom(room);
+			room.roomTriggers = new RoomTriggers(triggerMaster, room, xml, filename);
 			save.addPlayerCharactersToRoom(room);
-			room.roomScripts = new RoomScripts(room, xml, filename);
 			
 			return room;
 		}

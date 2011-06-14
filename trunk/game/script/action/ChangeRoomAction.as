@@ -8,6 +8,7 @@ package angel.game.script.action {
 	import angel.game.SaveGame;
 	import angel.game.script.Script;
 	import angel.game.script.ScriptContext;
+	import angel.game.script.TriggerMaster;
 	import angel.game.Settings;
 	import flash.display.DisplayObjectContainer;
 	import flash.events.Event;
@@ -90,7 +91,8 @@ package angel.game.script.action {
 			save.startLocation = null;
 			save.startSpot = startSpot;
 
-			var newRoom:Room = Room.createFromXml(xml, save, filename);
+			var triggerMaster:TriggerMaster = context.room.roomTriggers.master;
+			var newRoom:Room = Room.createFromXml(xml, save, triggerMaster, filename);
 			if (newRoom != null) {
 				var modeFromOldRoom:Class = (oldRoom.mode == null ? null : Object(oldRoom.mode).constructor);
 				var parentFromOldRoom:DisplayObjectContainer = oldRoom.parent;

@@ -3,6 +3,7 @@ package angel.game.script {
 	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.MessageCollector;
+	import angel.common.Util;
 	import angel.game.ComplexEntity;
 	import angel.game.GameMenu;
 	import angel.game.Room;
@@ -52,10 +53,12 @@ package angel.game.script {
 		
 		public function charWithScriptId(entityId:String, actionName:String = null):ComplexEntity {
 			var entity:SimpleEntity;
-			if (entityId.charAt(0) == "*") {
-				entity = scriptIds[entityId.substr(1)];
-			} else {
-				entity = room.entityInRoomWithId(entityId);
+			if (!Util.nullOrEmpty(entityId)) {
+				if (entityId.charAt(0) == "*") {
+					entity = scriptIds[entityId.substr(1)];
+				} else {
+					entity = room.entityInRoomWithId(entityId);
+				}
 			}
 			if (!(entity is ComplexEntity)) {
 				scriptError("No character '" + entityId + "' in current room.", actionName);
@@ -81,6 +84,14 @@ package angel.game.script {
 		
 		public function roomChanged(newRoom:Room):void {
 			scriptRoom = newRoom;
+		}
+		
+		public function setMe(newMe:Object):void {
+			scriptIds["me"] = newMe;
+		}
+		
+		public function entityWithSpecialId(idMinusFirstCharacter:String):SimpleEntity {
+			return scriptIds[idMinusFirstCharacter];
 		}
 		
 		public function gameIsOver(lose:Boolean):void {

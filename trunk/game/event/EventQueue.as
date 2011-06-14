@@ -94,6 +94,7 @@ package angel.game.event {
 		}
 		
 		public function addListener(owner:Object, eventSource:Object, eventId:String, callback:Function, optionalCallbackParam:Object = null):void {
+			Assert.assertTrue(eventSource != null, "There's that null!");
 			var listener:ListenerReference = new ListenerReference(owner, eventSource, eventId, callback, optionalCallbackParam);
 			//UNDONE priority
 			var listenersOnThisSource:Object = lookup[eventSource];
@@ -158,24 +159,42 @@ package angel.game.event {
 			deleteReferencesWithThisEventSource(callbacks, source);
 		}
 		
-		public function removeAllListenersOwnedBy(owner:Object):void {
-			for (var source:Object in lookup) {
-				var listenersOnThisSource:Object = lookup[source];
-				if (listenersOnThisSource == null) {
-					continue;
-				}
-				for (var eventId:String in listenersOnThisSource) {
-					var list:Vector.<ListenerReference> = listenersOnThisSource[eventId];
-					if (list != null) {
-						deleteReferencesOwnedBy(list, owner);
-						if (list.length == 0) {
-							delete listenersOnThisSource[eventId];
-						}
+		private function removeByOwnerAndSource(owner:Object, source:Object):void {
+			var listenersOnThisSource:Object = lookup[source];
+			if (listenersOnThisSource == null) {
+				return;
+			}
+			for (var eventId:String in listenersOnThisSource) {
+				var list:Vector.<ListenerReference> = listenersOnThisSource[eventId];
+				if (list != null) {
+					deleteReferencesOwnedBy(list, owner);
+					if (list.length == 0) {
+						delete listenersOnThisSource[eventId];
 					}
 				}
-				if (isEmpty(listenersOnThisSource)) {
-					delete lookup[source];
+			}
+			if (isEmpty(listenersOnThisSource)) {
+				delete lookup[source];
+			}
+			
+		}
+		
+		public function removeListenersByOwnerAndSource(owner:Object, source:Object):void {
+			removeByOwnerAndSource(owner, source);
+			
+			var i:int = 0;
+			while (i < callbacks.length) {
+				if ((callbacks[i].owner == owner) && (callbacks[i].eventSource == source)) {
+					callbacks.splice(i, 1);
+				} else {
+					i++;
 				}
+			}
+		}
+		
+		public function removeAllListenersOwnedBy(owner:Object):void {
+			for (var source:Object in lookup) {
+				removeByOwnerAndSource(owner, source);
 			}
 			//NOTE: unclear whether I should do this, but I think benefits outweigh drawbacks
 			deleteReferencesOwnedBy(callbacks, owner);

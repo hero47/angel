@@ -8,6 +8,7 @@ package angel.game {
 	import angel.game.brain.BrainFollow;
 	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.inventory.Inventory;
+	import angel.game.script.TriggerMaster;
 	import flash.display.DisplayObjectContainer;
 	import flash.events.Event;
 	import flash.geom.Point;
@@ -99,9 +100,11 @@ package angel.game {
 			if (xml == null) {
 				return;
 			}
-			var room:Room = Room.createFromXml(xml, this, filename);
+			var triggerMaster:TriggerMaster = new TriggerMaster();
+			var room:Room = Room.createFromXml(xml, this, triggerMaster, filename);
 			if (room != null) {
 				setFlags();
+				triggerMaster.changeRoom(room);
 				main.addChild(room);
 				room.changeModeTo(RoomExplore);
 			}
