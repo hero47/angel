@@ -27,6 +27,7 @@ package angel.game.script {
 		
 		public static const TRIGGERING_ENTITY_ID:String = "*it";
 		public static const ACTIVE_PLAYER_ID:String = "*pc";
+		public static const SELF_ID:String = "*me";
 		
 //UNDONE: check if initializeFromXml and loadEntityScriptFromXmlFile should be static functions
 		public function Script(xml:XML = null, rootScript:Script = null) {
@@ -45,48 +46,15 @@ package angel.game.script {
 			if ((xml == null) || (xml.length() == 0)) {
 				return;
 			}
-			//UNDONE - placeholder until entity script files have more than one trigger.
-			if (xml.onFrob.length() > 0) {
-				xml = xml.onFrob[0];
+			
+			var children:XMLList = xml.children();
+			for each (var child:XML in xml.children()) {
+				addAction(ActionFactory.createFromXml(child, rootScript));
 			}
-			if (xml.name() == "conversations") {
-				// As a shorthand/convenience, if a script file has the enclosing topic "conversations" we turn its contents
-				// into a conversation action with the frobbed entity
-				var data:ConversationData = new ConversationData();
-				data.initializeFromXml(xml, rootScript);
-				addAction(new ConversationAction(data, TRIGGERING_ENTITY_ID));
-			} else {
-				var children:XMLList = xml.children();
-				for each (var child:XML in xml.children()) {
-					addAction(ActionFactory.createFromXml(child, rootScript));
-				}
-			}
+			
 			if (displayErrorsAfterParse) {
 				errors.displayIfNotEmpty("Script errors:");
 			}
-		}
-		
-		// Loads data from specified file.
-		// NOTE: File must be in the same directory that we're running from!
-		// UNDONE: Currently (May 2011) this is a single script, to be executed when entity is frobbed.
-		// I'm anticipating that eventually it will contain multiple triggered scripts, like the script section of
-		// a room file.
-		public function loadEntityScriptFromXmlFile(filename:String):void {
-			LoaderWithErrorCatching.LoadFile(filename, entityScriptXmlLoaded);
-		}
-		
-		private function entityScriptXmlLoaded(event:Event, param:Object, filename:String):void {
-			var xml:XML = Util.parseXml(event.target.data, filename);
-			if (xml != null) {
-				//UNDONE - temporary - remove this once old files have been upgraded
-				if ((xml.name() != "conversations") && (xml.onFrob.length() == 0)) {
-					Alert.show("Please change script file " + filename + "\nto use onFrob element inside outer script.\nThis will allow adding more triggers later.");
-				}
-				initErrorList();
-				initializeFromXml(xml, null);
-				displayAndClearParseErrors("Script errors in file " + filename + ":");
-			}
-			Settings.gameEventQueue.dispatch(new QEvent(this, QEvent.INIT));
 		}
 		
 		public function run(room:Room, triggeredBy:SimpleEntity = null):void {

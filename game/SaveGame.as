@@ -104,7 +104,6 @@ package angel.game {
 			var room:Room = Room.createFromXml(xml, this, triggerMaster, filename);
 			if (room != null) {
 				setFlags();
-				triggerMaster.changeRoom(room);
 				main.addChild(room);
 				room.changeModeTo(RoomExplore);
 			}

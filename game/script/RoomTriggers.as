@@ -24,7 +24,7 @@ package angel.game.script {
 	 * onDeath filters by the entity who died.
 	 */
 	
-	public class RoomTriggers implements ICleanup {
+	public class RoomTriggers extends TriggerBase implements ICleanup {
 		
 		private static const ROOM_ON_DEATH_DEFAULT_XML:XML = <script>
 			<onDeath>
@@ -40,12 +40,10 @@ package angel.game.script {
 			</onDeath>
 		</script>;
 		
-		public var master:TriggerMaster;
 		private var room:Room;
-		private var triggers:Object = new Object(); // associative array mapping triggerName to Vector.<TriggeredScript>
 		
 		public function RoomTriggers(master:TriggerMaster, room:Room, roomXml:XML, filename:String) {
-			this.master = master;
+			super(master);
 			this.room = room;
 			var scriptsXml:XMLList = roomXml.script;
 			if (scriptsXml.length() == 0) {
@@ -54,9 +52,9 @@ package angel.game.script {
 			var scriptXml:XML = scriptsXml[0];
 			var rootScriptForErrors:Script = new Script();
 			rootScriptForErrors.initErrorList();
-			createTriggeredScripts(scriptXml, TriggerMaster.ON_INIT, false, false, rootScriptForErrors);
-			createTriggeredScripts(scriptXml, TriggerMaster.ON_MOVE, true, true, rootScriptForErrors);
-			createTriggeredScripts(scriptXml, TriggerMaster.ON_DEATH, true, false, rootScriptForErrors);
+			createTriggeredScripts(room, scriptXml, TriggerMaster.ON_INIT, false, false, rootScriptForErrors);
+			createTriggeredScripts(room, scriptXml, TriggerMaster.ON_MOVE, true, true, rootScriptForErrors);
+			createTriggeredScripts(room, scriptXml, TriggerMaster.ON_DEATH, true, false, rootScriptForErrors);
 			/*
 			onDeathScripts = createTriggeredScripts( 
 					(scriptXml.onDeath.length() > 0 ? scriptXml : ROOM_ON_DEATH_DEFAULT_XML),
@@ -68,51 +66,13 @@ package angel.game.script {
 			
 		}
 		
-		public function cleanup():void {
-			master.triggerEventQueue.removeAllListenersOwnedBy(this);
-			//CONSIDER: remove not-yet-executed scripts???
-		}
-		
-		private function createTriggeredScripts(scriptXML:XML, triggerName:String,
+		private function createTriggeredScripts(me:Object, scriptXML:XML, triggerName:String,
 								canFilterOnId:Boolean, canFilterOnSpot:Boolean,	rootScript:Script):void {
 			var scriptsForThisTrigger:XMLList = scriptXML.children().(name() == triggerName);
 			if ((scriptsForThisTrigger == null) || (scriptsForThisTrigger.length() == 0)) {
 				return;
 			}
-			var triggeredScripts:Vector.<TriggeredScript> = new Vector.<TriggeredScript>();
-			for each (var xml:XML in scriptsForThisTrigger) {
-				var one:TriggeredScript = new TriggeredScript(room);
-				var idsParam:String = xml.@ids;
-				var spotsParam:String = xml.@spots;
-				if (idsParam != "") {
-					if (canFilterOnId) {
-						one.setEntityIds(idsParam);
-					} else {
-						rootScript.addError("Warning: ids ignored in " + triggerName);
-					}
-				}
-				if (spotsParam != "") {
-					if (canFilterOnSpot) {
-						one.spotIds = Vector.<String>(spotsParam.split(","));
-					} else {
-						rootScript.addError("Warning: spots ignored in " + triggerName);
-					}
-				}
-				one.script = new Script(xml, rootScript);
-				if (one.script != null) {
-					triggeredScripts.push(one);
-				}
-			}
-			rootScript.endErrorSection(triggerName);
-			triggers[triggerName] = triggeredScripts;
-			master.triggerEventQueue.addListener(this, master, triggerName, triggerListener);
-		}
-		
-		private function triggerListener(event:QEvent):void {
-			var triggeredScripts:Vector.<TriggeredScript> = triggers[event.eventId];
-			for each (var triggeredScript:TriggeredScript in triggeredScripts) {
-				master.addToRunListIfPassesFilter(triggeredScript);
-			}
+			addTriggeredScriptsFromXmlList(me, me, scriptsForThisTrigger, triggerName, canFilterOnId, canFilterOnSpot, rootScript);
 		}
 		
 	}

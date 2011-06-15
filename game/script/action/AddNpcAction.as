@@ -35,9 +35,9 @@ package angel.game.script.action {
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(context:ScriptContext):Object {
-			var walker:ComplexEntity = ComplexEntity.createFromRoomContentsXml(walkerXml, CONTENTS_VERSION, Settings.catalog,
-										context.messages);
-			if (walker == null) {
+			var entity:ComplexEntity = ComplexEntity.createFromRoomContentsXml(walkerXml, CONTENTS_VERSION, Settings.catalog,
+										context.room.triggerMaster, context.messages);
+			if (entity == null) {
 				// don't show another error, catalog will already have displayed error
 				return null;
 			}
@@ -47,9 +47,9 @@ package angel.game.script.action {
 				location = context.locationWithSpotId(spotId, TAG);
 			}
 			if (location == null) {
-				context.room.addEntityUsingItsLocation(walker);
+				context.room.addEntityUsingItsLocation(entity);
 			} else {
-				context.room.addEntity(walker, location);
+				context.room.addEntity(entity, location);
 			}
 			return null;
 		}

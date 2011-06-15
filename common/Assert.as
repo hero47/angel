@@ -49,7 +49,8 @@ package angel.common {
 			// remove the path
 			// it's too long and we can get the info from the method trace
 			var regEx:RegExp = /\w:[\\\/]([\w-]+[\\\/])*\w+.as/ig;
-			var newStack:String = new String("\n");
+			var newStack:String = new String("");
+			lines.shift(); // remove header line
 			while (lines[0].indexOf("Assert$") >= 0) {
 				lines.shift();
 			}

@@ -57,7 +57,7 @@ package angel.game.script.action {
 					}
 					entity.setBrain(false, combatBrainClass, combatParam);
 					entity.setBrain(true, exploreBrainClass, exploreParam);
-					entity.setCommonPropertiesFromXml(commonXml);
+					entity.setCommonPropertiesFromXml(commonXml, entity.triggers.master);
 					entity.changePlayerControl(false, ComplexEntity.factionFromName(commonXml.@faction));
 				}
 			} 

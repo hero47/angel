@@ -12,9 +12,18 @@ package angel.game.script {
 	 */
 	public class TriggerMaster {
 		
+		public static const ON_DEATH:String = "onDeath";
+		public static const ON_FROB:String = "onFrob";
 		public static const ON_INIT:String = "onInit";
 		public static const ON_MOVE:String = "onMove";
-		public static const ON_DEATH:String = "onDeath";
+		
+		//can't use the constants to init the left side of, it doesn't translate them to strings
+		private static const triggerNameToGameEvent:Object = {
+			"onDeath":EntityQEvent.DEATH,
+			"onFrob":EntityQEvent.FROBBED,
+			"onInit":Room.ROOM_INIT,
+			"onMove":EntityQEvent.FINISHED_ONE_TILE_OF_MOVE
+		}
 		
 		public var triggerEventQueue:EventQueue = new EventQueue();
 		private var context:ScriptContext;
@@ -24,7 +33,7 @@ package angel.game.script {
 		private var room:Room;
 		
 		public function TriggerMaster() {
-			
+			triggerEventQueue.debugId = "TRIGGER";
 		}
 		
 		public function changeRoom(newRoom:Room):void {
@@ -32,34 +41,37 @@ package angel.game.script {
 				Settings.gameEventQueue.removeListenersByOwnerAndSource(this, room);
 			}
 			room = newRoom;
-			if (room != null) {
-				Settings.gameEventQueue.addListener(this, room, Room.ROOM_INIT, roomEventListener, ON_INIT);
-				Settings.gameEventQueue.addListener(this, room, EntityQEvent.FINISHED_ONE_TILE_OF_MOVE, entityEventListener, ON_MOVE);
-				Settings.gameEventQueue.addListener(this, room, EntityQEvent.DEATH, entityEventListener, ON_DEATH);
+		}
+		
+		public function cleaningUpRoom(oldRoom:Room):void {
+			if (room == oldRoom) {
+				changeRoom(null);
 			}
 		}
 		
-		public function cleanupFor(owner:Object):void {
+		public function addTrigger(owner:Object, sourceIfNotCurrentRoom:Object, triggerName:String, triggerListener:Function):void {
+			var gameEvent:String = triggerNameToGameEvent[triggerName];
+			Assert.assertTrue(gameEvent != null, "Missing trigger " + triggerName);
+			if (sourceIfNotCurrentRoom == null) {
+				sourceIfNotCurrentRoom = room;
+			}
+			//Note: this game listener will be duplicated if more than one room/entity cares about the same trigger, but
+			//the parameter should be the same triggerName so duplicates are ignored by queue
+			Settings.gameEventQueue.addListener(this, (sourceIfNotCurrentRoom == null ? room : sourceIfNotCurrentRoom),
+					gameEvent, gameEventListener, triggerName);
+			triggerEventQueue.addListener(owner, sourceIfNotCurrentRoom, triggerName, triggerListener);
 		}
 		
-		
-		private function entityEventListener(event:EntityQEvent):void {
-			// event.listenerParam is the trigger name
-			filterAndProcessTriggers(event.source, String(event.listenerParam), event.simpleEntity);
-		}
-		
-		private function roomEventListener(event:QEvent):void {
-			filterAndProcessTriggers(event.source, String(event.listenerParam), null);
-		}
-		
-		private function filterAndProcessTriggers(eventSource:Object, triggerName:String, entityWhoTriggered:SimpleEntity):void {
+		private function gameEventListener(event:QEvent):void {
+			var triggerName:String = String(event.listenerParam);
 			Assert.assertTrue(context == null, "reentry on TriggerMaster.filterAndProcessTriggers");
+			var entityWhoTriggered:SimpleEntity = (event.source is SimpleEntity ? SimpleEntity(event.source) : null);
 			context = new ScriptContext(room, room.activePlayer(), entityWhoTriggered);
 			runThese = new Vector.<TriggeredScript>();
 			if (triggerName == "onMove") {
 				spotsThisEntityIsOn = room.spotsMatchingLocation(entityWhoTriggered.location);
 			}
-			triggerEventQueue.dispatch(new QEvent(this, triggerName));
+			triggerEventQueue.dispatch(new QEvent(event.source, triggerName, event.param));
 			triggerEventQueue.handleEvents();
 			// now all triggers that need to be run should be in runThese
 			
