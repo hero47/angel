@@ -8,7 +8,9 @@ package angel.game {
 	import angel.game.event.EntityQEvent;
 	import angel.game.script.action.ConversationAction;
 	import angel.game.script.ConversationData;
+	import angel.game.script.EntityTriggers;
 	import angel.game.script.Script;
+	import angel.game.script.TriggerMaster;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.geom.Point;
@@ -18,7 +20,8 @@ package angel.game {
 		public var id:String;
 		
 		public var frobScript:Script;
-
+		public var triggers:EntityTriggers;
+		public var hasFrobScript:Boolean;
 		
 		public var aaId:String; // catalog id + arbitrary index, for debugging, at top of alphabet for easy seeing!
 		private static var totalEntitiesCreated:int = 0;
@@ -36,10 +39,14 @@ package angel.game {
 			if (room != null) {
 				room = null;
 			}
+			if (triggers != null) {
+				triggers.cleanup();
+				triggers = null;
+			}
 			super.cleanup();
 		}
 		
-		public static function createFromRoomContentsXml(propXml: XML, version:int, catalog:Catalog) : SimpleEntity {
+		public static function createFromRoomContentsXml(propXml:XML, version:int, catalog:Catalog, master:TriggerMaster):SimpleEntity {
 			var id:String;
 			
 			//Delete older version support eventually
@@ -51,22 +58,23 @@ package angel.game {
 			
 			var resource:PropResource = catalog.retrievePropResource(id);
 			var simpleEntity:SimpleEntity = new SimpleEntity(new Bitmap(resource.standardImage()), resource.solidness, id);
-			simpleEntity.setCommonPropertiesFromXml(propXml);
+			simpleEntity.setCommonPropertiesFromXml(propXml, master);
 			return simpleEntity;
 		}
 		
-		public function setCommonPropertiesFromXml(xml:XML):void {
+		public function setCommonPropertiesFromXml(xml:XML, master:TriggerMaster):void {
 			if ((String(xml.@x) != "") || (String(xml.@y) != "")) {
 				myLocation = new Point(xml.@x, xml.@y);
 			}
-			var scriptFile:String = xml.@script;
+			if (triggers != null) {
+				triggers.cleanup();
+				triggers = null;
+			}
 			
 			if (xml.@script.length() > 0) {
-				if (scriptFile == "") {
-					frobScript = null;
-				} else {
-					frobScript = new Script();
-					frobScript.loadEntityScriptFromXmlFile(scriptFile);
+				var scriptFile:String = xml.@script;
+				if (scriptFile != "") {
+					triggers = new EntityTriggers(master, this, scriptFile);
 				}
 			}
 		}
@@ -98,11 +106,11 @@ package angel.game {
 				Alert.show("Too far away.");
 				return;
 			}
-			if (frobScript != null) {
-				frobScript.run(this.room, this);
+			if (hasFrobScript) {
+				Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.FROBBED, whoFrobbedMe));
 			} else {
 				var nameOrIt:String = displayName;
-				if ((nameOrIt == null) || (nameOrIt == "")) {
+				if (Util.nullOrEmpty(nameOrIt)) {
 					nameOrIt = "It";
 				}
 				Alert.show(nameOrIt + " ignores you.");

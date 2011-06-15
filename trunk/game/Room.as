@@ -57,7 +57,8 @@ package angel.game {
 		private var dragging:Boolean = false;
 		
 		private var conversationInProgress:ConversationInterface;
-		public var roomTriggers:RoomTriggers;
+		public var triggerMaster:TriggerMaster;
+		private var triggers:RoomTriggers;
 		
 		private var gamePauseStack:Vector.<PauseInfo> = new Vector.<PauseInfo>(); // LIFO stack with exceptions
 		
@@ -121,9 +122,9 @@ package angel.game {
 			if (parent != null) {
 				parent.removeChild(this);
 			}
-			if (roomTriggers != null) {
-				roomTriggers.master.changeRoom(null);
-				roomTriggers.cleanup();
+			if (triggers != null) {
+				triggerMaster.cleaningUpRoom(this);
+				triggers.cleanup();
 			}
 			
 			quitButton.cleanup();
@@ -294,11 +295,11 @@ package angel.game {
 				break;
 				
 				case Keyboard.PAGE_UP:
-					Settings.gameEventQueue.debugTraceListeners();
+					Settings.gameEventQueue.debugTraceListeners(null, "Game event listeners");
 				break;
 				
-				case Keyboard.PAGE_UP:
-					Settings.gameEventQueue.debugTraceCallbacks();
+				case Keyboard.PAGE_DOWN:
+					triggerMaster.triggerEventQueue.debugTraceListeners(null, "Trigger listeners");
 				break;
 				
 				default:
@@ -605,6 +606,7 @@ package angel.game {
 			
 			var room:Room = new Room(floor);
 			room.filename = filename;
+			room.triggerMaster = triggerMaster;
 			
 			if (xml.contents.length() > 0) {
 				room.initContentsFromXml(Settings.catalog, xml.contents[0]);
@@ -613,8 +615,8 @@ package angel.game {
 				room.initSpotsFromXml(xml.spots[0]);
 			}
 			
+			room.triggers = new RoomTriggers(triggerMaster, room, xml, filename);
 			triggerMaster.changeRoom(room);
-			room.roomTriggers = new RoomTriggers(triggerMaster, room, xml, filename);
 			save.addPlayerCharactersToRoom(room);
 			
 			return room;
@@ -629,16 +631,16 @@ package angel.game {
 			var version:int = int(contentsXml.@version);
 			
 			for each (var propXml: XML in contentsXml.prop) {
-				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXml(propXml, version, catalog));
+				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXml(propXml, version, catalog, triggerMaster));
 			}
 			
 			//UNDONE For backwards compatibility; remove this eventually
 			for each (var walkerXml: XML in contentsXml.walker) {
-				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(walkerXml, version, catalog));
+				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(walkerXml, version, catalog, triggerMaster));
 			}
 			
 			for each (var charXml: XML in contentsXml.char) {
-				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(charXml, version, catalog));
+				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(charXml, version, catalog, triggerMaster));
 			}
 		}
 

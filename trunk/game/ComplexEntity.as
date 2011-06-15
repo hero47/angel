@@ -19,6 +19,7 @@ package angel.game {
 	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.event.EntityQEvent;
 	import angel.game.inventory.Inventory;
+	import angel.game.script.TriggerMaster;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
@@ -112,7 +113,7 @@ package angel.game {
 			animation = new resource.animationData.animationClass(resource.animationData, this.imageBitmap);
 		}
 		
-		public static function createFromRoomContentsXml(charXml:XML, version:int, catalog:Catalog, errors:MessageCollector = null):ComplexEntity {
+		public static function createFromRoomContentsXml(charXml:XML, version:int, catalog:Catalog, triggerMaster:TriggerMaster, errors:MessageCollector = null):ComplexEntity {
 			var id:String;
 			
 			//Delete older version support eventually
@@ -131,7 +132,7 @@ package angel.game {
 			entity.setBrain(true, UtilBrain.exploreBrainClassFromString(charXml.@explore), charXml.@exploreParam);
 			entity.setBrain(false, UtilBrain.combatBrainClassFromString(charXml.@combat), charXml.@combatParam);
 			entity.faction = int(charXml.@faction);
-			entity.setCommonPropertiesFromXml(charXml);
+			entity.setCommonPropertiesFromXml(charXml, triggerMaster);
 			return entity;
 		}
 		

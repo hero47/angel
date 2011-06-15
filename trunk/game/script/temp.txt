@@ -44,4 +44,19 @@ call a fuction on the manager to push script and *me onto a list.
 When all events in manager's internal queue have been handled, manager processes its script list [for now; may want
 to accumulate more events, see above].  It can use the same context it created before dispatching, setting *me to saved values.
 [Some of this processing may trigger new (game) events, too.  Think about that later.]
-Then 
+
+
+
+Translation from game-events to triggers
+
+Problem: entity onFrob, onDeath, etc. should trigger only on self, not on anything with same id (as would happen if we
+just translated those into a filtered anyone-onMove etc.).
+So: instead of everything in the triggerQueue having triggerMaster as the source, should put them in with the original
+source object as the source (even though that object doesn't have any access to the triggerQueue).
+Instead of each of those objects directly calling triggerMaster to cleanup, they can broadcast a cleanup event and
+triggerMaster can listen for it.  This replaces the odd call through RoomTriggers in room's cleanup.
+
+triggerMaster's game listeners can be set up with a param holding the trigger name that they should translate the
+event to when placing it on the trigger queue.  Need to ensure that the room's (self) triggers have the same name as
+the entity's (any) triggers, since they'll both be listening for the same game event with the same translation
+callback.

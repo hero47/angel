@@ -1,0 +1,77 @@
+package angel.game.script {
+	import angel.common.Assert;
+	import angel.common.ICleanup;
+	import angel.common.LoaderWithErrorCatching;
+	import angel.common.Util;
+	import angel.game.event.QEvent;
+	import angel.game.SimpleEntity;
+	import flash.events.Event;
+	/**
+	 * ...
+	 * @author Beth Moursund
+	 */
+	public class EntityTriggers extends TriggerBase implements ICleanup {
+		
+		private var me:SimpleEntity;
+		
+		public function EntityTriggers(master:TriggerMaster, me:SimpleEntity, filename:String) {
+			this.me = me;
+			super(master);
+			LoaderWithErrorCatching.LoadFile(filename, entityScriptXmlLoaded);
+		}
+		
+		private function entityScriptXmlLoaded(event:Event, param:Object, filename:String):void {
+			var xml:XML = Util.parseXml(event.target.data, filename);
+			if (xml != null) {
+				var rootScriptForErrors:Script = new Script();
+				rootScriptForErrors.initErrorList();
+			
+				if (xml.name() == "conversation") {
+					// As a shorthand/convenience, if a script file has the enclosing topic "conversation" we turn its contents
+					// into an onFrob trigger conversation action with the frobbed entity
+					var newXml:XML = <script>
+						<onFrob>
+						</onFrob>
+					</script>;
+					xml.@id = Script.SELF_ID;
+					newXml.onFrob.appendChild(xml);
+					xml = newXml;
+				}
+				
+				me.hasFrobScript = (xml.onFrob.length() > 0);
+				
+				createTriggeredScripts(me, xml, TriggerMaster.ON_DEATH, false, rootScriptForErrors);
+				createTriggeredScripts(me, xml, TriggerMaster.ON_FROB, true, rootScriptForErrors);
+				createTriggeredScripts(me, xml, TriggerMaster.ON_MOVE, true, rootScriptForErrors);
+			
+				rootScriptForErrors.displayAndClearParseErrors("Script errors in file " + filename);
+			}
+		}
+		
+		private function createTriggeredScripts(me:Object, scriptXML:XML, triggerName:String,
+								canFilterOnSpot:Boolean, rootScript:Script):void {
+			var scriptsForThisTrigger:XMLList = scriptXML.children().(name() == triggerName);
+			if (scriptsForThisTrigger.length() > 0) {
+				addTriggeredScriptsComplicated(me, me, scriptsForThisTrigger, triggerName, triggerName+"Self",
+					false, canFilterOnSpot, rootScript, selfListener);
+			}
+			
+			scriptsForThisTrigger = scriptXML.children().(name() == triggerName+"Any");
+			if (scriptsForThisTrigger.length() > 0) {
+				addTriggeredScriptsComplicated(me, null, scriptsForThisTrigger, triggerName, triggerName,
+					true, canFilterOnSpot, rootScript, null);
+			}
+									
+		}
+		
+		private function selfListener(event:QEvent):void {
+			trace("selfListener");
+			var triggeredScripts:Vector.<TriggeredScript> = triggers[event.eventId + "Self"];
+			for each (var triggeredScript:TriggeredScript in triggeredScripts) {
+				master.addToRunListIfPassesFilter(triggeredScript);
+			}
+		}
+		
+	}
+
+}
