@@ -40,11 +40,8 @@ package angel.game.script {
 			</onDeath>
 		</script>;
 		
-		private var room:Room;
-		
-		public function RoomTriggers(master:TriggerMaster, room:Room, roomXml:XML, filename:String) {
-			super(master);
-			this.room = room;
+		public function RoomTriggers(room:Room, roomXml:XML, filename:String) {
+			super(room);
 			var scriptsXml:XMLList = roomXml.script;
 			if (scriptsXml.length() == 0) {
 				return;
@@ -72,7 +69,8 @@ package angel.game.script {
 			if ((scriptsForThisTrigger == null) || (scriptsForThisTrigger.length() == 0)) {
 				return;
 			}
-			addTriggeredScriptsFromXmlList(me, me, scriptsForThisTrigger, triggerName, canFilterOnId, canFilterOnSpot, rootScript);
+			addTriggeredScriptsFromXmlList(me, me, scriptsForThisTrigger, triggerName, triggerName,
+				canFilterOnId, canFilterOnSpot, rootScript);
 		}
 		
 	}

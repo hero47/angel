@@ -170,7 +170,6 @@ package angel.game.test {
 			Autotest.clearAlert(); // should alert the first time we're called, since these aren't in catalog
 			
 			var save:SaveGame = new SaveGame();
-			var triggerMaster:TriggerMaster = new TriggerMaster();
 			var playerInitXml:XML = <init><player><pc /></player></init>;
 			playerInitXml.player.pc.@id = TEST_ROOM_MAIN_PC_ID;
 			save.initPlayerInfoFromXml(playerInitXml.player, Settings.catalog);
@@ -180,7 +179,7 @@ package angel.game.test {
 			enemyXml.@id = TEST_ROOM_ENEMY_ID;
 			roomXml.contents.appendChild(enemyXml);
 			
-			testRoom = Room.createFromXml(roomXml, save, triggerMaster, "[test code -- no file]");
+			testRoom = Room.createFromXml(roomXml, save, "[test code -- no file]");
 			
 			Autotest.runningFromRoot.addChild(testRoom);
 			Autotest.assertNoAlert();

@@ -266,7 +266,6 @@ package angel.game {
 			movingTo = null;
 			coordsForEachFrameOfMove = null;
 			me.adjustImageForMove(0, 0); // make sure we end up in "standing" posture even if move was ultra-fast
-			trace("***** Dispatching finished one tile event");
 			Settings.gameEventQueue.dispatch(new EntityQEvent(me, EntityQEvent.FINISHED_ONE_TILE_OF_MOVE));
 			if (interruptAfterThisTile) {
 				finishedMoving(true);

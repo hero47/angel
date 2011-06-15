@@ -57,7 +57,6 @@ package angel.game {
 		private var dragging:Boolean = false;
 		
 		private var conversationInProgress:ConversationInterface;
-		public var triggerMaster:TriggerMaster;
 		private var triggers:RoomTriggers;
 		
 		private var gamePauseStack:Vector.<PauseInfo> = new Vector.<PauseInfo>(); // LIFO stack with exceptions
@@ -123,7 +122,7 @@ package angel.game {
 				parent.removeChild(this);
 			}
 			if (triggers != null) {
-				triggerMaster.cleaningUpRoom(this);
+				Settings.triggerMaster.cleaningUpRoom(this);
 				triggers.cleanup();
 			}
 			
@@ -296,10 +295,6 @@ package angel.game {
 				
 				case Keyboard.PAGE_UP:
 					Settings.gameEventQueue.debugTraceListeners(null, "Game event listeners");
-				break;
-				
-				case Keyboard.PAGE_DOWN:
-					triggerMaster.triggerEventQueue.debugTraceListeners(null, "Trigger listeners");
 				break;
 				
 				default:
@@ -595,7 +590,7 @@ package angel.game {
 							 Settings.STAGE_HEIGHT / 2 - desiredTileCenter.y - Floor.FLOOR_TILE_Y / 2 );
 		}
 		
-		public static function createFromXml(xml:XML, save:SaveGame, triggerMaster:TriggerMaster, filename:String = ""):Room {
+		public static function createFromXml(xml:XML, save:SaveGame, filename:String = ""):Room {
 			if (xml.floor.length() == 0) {
 				Alert.show("Invalid room file " + filename);
 				return null;
@@ -606,7 +601,6 @@ package angel.game {
 			
 			var room:Room = new Room(floor);
 			room.filename = filename;
-			room.triggerMaster = triggerMaster;
 			
 			if (xml.contents.length() > 0) {
 				room.initContentsFromXml(Settings.catalog, xml.contents[0]);
@@ -615,8 +609,8 @@ package angel.game {
 				room.initSpotsFromXml(xml.spots[0]);
 			}
 			
-			room.triggers = new RoomTriggers(triggerMaster, room, xml, filename);
-			triggerMaster.changeRoom(room);
+			room.triggers = new RoomTriggers(room, xml, filename);
+			Settings.triggerMaster.changeRoom(room);
 			save.addPlayerCharactersToRoom(room);
 			
 			return room;
@@ -631,16 +625,16 @@ package angel.game {
 			var version:int = int(contentsXml.@version);
 			
 			for each (var propXml: XML in contentsXml.prop) {
-				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXml(propXml, version, catalog, triggerMaster));
+				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXml(propXml, version, catalog));
 			}
 			
 			//UNDONE For backwards compatibility; remove this eventually
 			for each (var walkerXml: XML in contentsXml.walker) {
-				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(walkerXml, version, catalog, triggerMaster));
+				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(walkerXml, version, catalog));
 			}
 			
 			for each (var charXml: XML in contentsXml.char) {
-				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(charXml, version, catalog, triggerMaster));
+				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(charXml, version, catalog));
 			}
 		}
 
@@ -663,7 +657,7 @@ package angel.game {
 			}
 			var save:SaveGame = new SaveGame();
 			save.collectGameInfo(this);
-			new GameMenu(this.parent, true, save);
+			new GameMenu(Main(this.parent), true, save);
 			this.cleanup();
 		}
 		
@@ -671,15 +665,15 @@ package angel.game {
 			if (buttonName != "Yes") {
 				return;
 			}
-			new GameMenu(this.parent, true, preCombatSave);
+			new GameMenu(Main(this.parent), true, preCombatSave);
 			this.cleanup();
 		}
 		
 		public function revertToPreCombatSave():void {
 			if (preCombatSave != null) {
-				preCombatSave.resumeSavedGame(this.parent);
+				preCombatSave.resumeSavedGame(Main(this.parent));
 			} else {
-				new GameMenu(this.parent, true, null);
+				new GameMenu(Main(this.parent), true, null);
 			}
 			this.cleanup();
 		}

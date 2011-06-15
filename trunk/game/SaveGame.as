@@ -100,8 +100,7 @@ package angel.game {
 			if (xml == null) {
 				return;
 			}
-			var triggerMaster:TriggerMaster = new TriggerMaster();
-			var room:Room = Room.createFromXml(xml, this, triggerMaster, filename);
+			var room:Room = Room.createFromXml(xml, this, filename);
 			if (room != null) {
 				setFlags();
 				main.addChild(room);

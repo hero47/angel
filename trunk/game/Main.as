@@ -40,6 +40,9 @@ package angel.game {
 		private function mainEnterFrame(event:Event):void {
 			Settings.gameEventQueue.dispatch(new QEvent(this, Room.GAME_ENTER_FRAME));
 			Settings.gameEventQueue.handleEvents();
+			if (Settings.triggerMaster != null) {
+				Settings.triggerMaster.gameEventsFinishedForFrame();
+			}
 		}
 		
 	}	// end class Main
