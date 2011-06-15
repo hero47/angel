@@ -18,25 +18,28 @@ package angel.game.script {
 		public static const ON_MOVE:String = "onMove";
 		
 		//can't use the constants to init the left side of, it doesn't translate them to strings
-		private static const triggerNameToGameEvent:Object = {
+		public static const TRIGGER_NAME_TO_GAME_EVENT:Object = {
 			"onDeath":EntityQEvent.DEATH,
 			"onFrob":EntityQEvent.FROBBED,
 			"onInit":Room.ROOM_INIT,
 			"onMove":EntityQEvent.FINISHED_ONE_TILE_OF_MOVE
 		}
 		
-		public var triggerEventQueue:EventQueue = new EventQueue();
 		private var context:ScriptContext;
-		private var spotsThisEntityIsOn:Vector.<String>;
-		private var runThese:Vector.<TriggeredScript>;
+		private var runThese:Vector.<RunInfo>;
 		
-		private var room:Room;
+		public var room:Room;
 		
 		public function TriggerMaster() {
-			triggerEventQueue.debugId = "TRIGGER";
+			runThese = new Vector.<RunInfo>();
+		}
+		
+		public function gameEventsFinishedForFrame():void {
+			runTriggeredEvents();
 		}
 		
 		public function changeRoom(newRoom:Room):void {
+			runTriggeredEvents();
 			if (room != null) {
 				Settings.gameEventQueue.removeListenersByOwnerAndSource(this, room);
 			}
@@ -49,48 +52,55 @@ package angel.game.script {
 			}
 		}
 		
-		public function addTrigger(owner:Object, sourceIfNotCurrentRoom:Object, triggerName:String, triggerListener:Function):void {
-			var gameEvent:String = triggerNameToGameEvent[triggerName];
-			Assert.assertTrue(gameEvent != null, "Missing trigger " + triggerName);
-			if (sourceIfNotCurrentRoom == null) {
-				sourceIfNotCurrentRoom = room;
+		private function runTriggeredEvents():void {
+			while (runThese.length > 0) {
+				context = new ScriptContext(room, room.activePlayer());
+				var runningNow:Vector.<RunInfo> = runThese;
+				runThese = new Vector.<RunInfo>();
+				for each (var runInfo:RunInfo in runningNow) {
+					runInfo.adjustContextAndDoScriptActions(context);
+				}
+				context.endOfScriptActions();
 			}
-			//Note: this game listener will be duplicated if more than one room/entity cares about the same trigger, but
-			//the parameter should be the same triggerName so duplicates are ignored by queue
-			Settings.gameEventQueue.addListener(this, (sourceIfNotCurrentRoom == null ? room : sourceIfNotCurrentRoom),
-					gameEvent, gameEventListener, triggerName);
-			triggerEventQueue.addListener(owner, sourceIfNotCurrentRoom, triggerName, triggerListener);
+			context = null;
 		}
 		
-		private function gameEventListener(event:QEvent):void {
-			var triggerName:String = String(event.listenerParam);
-			Assert.assertTrue(context == null, "reentry on TriggerMaster.filterAndProcessTriggers");
-			var entityWhoTriggered:SimpleEntity = (event.source is SimpleEntity ? SimpleEntity(event.source) : null);
-			context = new ScriptContext(room, room.activePlayer(), entityWhoTriggered);
-			runThese = new Vector.<TriggeredScript>();
-			if (triggerName == "onMove") {
+		public function addToRunListIfPassesFilter(triggeredScript:TriggeredScript, me:Object, entityWhoTriggered:SimpleEntity):void {
+			var context:ScriptContext = new ScriptContext(room, room.activePlayer(), entityWhoTriggered);
+			context.setMe(me);
+			var spotsThisEntityIsOn:Vector.<String>;
+			if (triggeredScript.spotIds != null) {
 				spotsThisEntityIsOn = room.spotsMatchingLocation(entityWhoTriggered.location);
 			}
-			triggerEventQueue.dispatch(new QEvent(event.source, triggerName, event.param));
-			triggerEventQueue.handleEvents();
-			// now all triggers that need to be run should be in runThese
-			
-			for each (var triggeredScript:TriggeredScript in runThese) {
-				context.setMe(triggeredScript.me);
-				triggeredScript.script.doActions(context);
-			}
-			context.endOfScriptActions();
-			context = null;
-			runThese = null;
-			spotsThisEntityIsOn = null;
-		}
-		
-		public function addToRunListIfPassesFilter(triggeredScript:TriggeredScript):void {
 			if (triggeredScript.passesFilter(context, spotsThisEntityIsOn)) {
-				runThese.push(triggeredScript);
+				var runInfo:RunInfo = new RunInfo(triggeredScript.script, me, entityWhoTriggered);
+				runThese.push(runInfo);
 			}
+			context.endOfScriptActions(); // display any errors
+			//CONSIDER: keep context around, updating contents here, display errors at end of frame processing
 		}
 		
 	}
 
+}
+import angel.game.script.Script;
+import angel.game.script.ScriptContext;
+import angel.game.SimpleEntity;
+
+internal class RunInfo {
+	public var script:Script;
+	public var me:Object;
+	public var entityWhoTriggered:SimpleEntity;
+	public function RunInfo(script:Script, me:Object, entityWhoTriggered:SimpleEntity) {
+		this.script = script;
+		this.me = me;
+		this.entityWhoTriggered = entityWhoTriggered;
+	}
+	
+	public function adjustContextAndDoScriptActions(context:ScriptContext):void {
+		context.setMe(me);
+		context.setIt(entityWhoTriggered);
+		script.doActions(context);
+	}
+	
 }

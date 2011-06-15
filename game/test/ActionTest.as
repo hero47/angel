@@ -17,6 +17,7 @@ package angel.game.test {
 	import angel.game.Room;
 	import angel.game.RoomExplore;
 	import angel.game.script.Script;
+	import angel.game.script.TriggerMaster;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
 	import flash.geom.Point;

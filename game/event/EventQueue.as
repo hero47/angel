@@ -81,8 +81,6 @@ package angel.game.event {
 	// 
 	
 	public class EventQueue {
-		public var debugId:String = "GAME";
-		public var debugCount:int;
 		
 		private var callbacks:Vector.<ListenerReference> = new Vector.<ListenerReference>(); // Callbacks for the event currently being handled
 		private var lookup:Dictionary = new Dictionary(); // map event source to (associative array mapping eventId to Vector.<ListenerReference>)
@@ -243,7 +241,6 @@ package angel.game.event {
 		// removeAllListenersOn(it): listeners with pending events that listened to the child directly will not trigger,
 		// but those that listened to its parent will still trigger for the bubbled event.
 		public function handleEvents():void {
-			debugCount++;
 			
 			if (handlingEvents) {
 				// Not sure if reentrant call should be an error or not.  We can cope with it fine; just add the
@@ -255,9 +252,6 @@ package angel.game.event {
 			handlingEvents = true;
 			while (callbacks.length > 0) {
 				var oneCallback:ListenerReferenceForOneEvent = callbacks.shift();
-				if ((oneCallback.eventId != "gameEnterFrame") && (oneCallback.eventId != "unpausedEnterFrame")) {
-					trace(debugId, debugCount, "Handling event", oneCallback.event.eventId, "source", oneCallback.event.source, "currentSource", oneCallback.event.currentSource);
-				}
 				oneCallback.callback(oneCallback.event);
 			}
 			handlingEvents = false;

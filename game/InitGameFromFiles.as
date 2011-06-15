@@ -4,6 +4,7 @@ package angel.game {
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Util;
 	import angel.game.event.QEvent;
+	import angel.game.script.TriggerMaster;
 	import flash.events.Event;
 	/**
 	 * ...
@@ -18,6 +19,7 @@ package angel.game {
 		public function InitGameFromFiles(initFinishedCallback:Function):void {
 			this.initFinishedCallback = initFinishedCallback;
 			
+			Settings.triggerMaster = new TriggerMaster();
 			var catalog:Catalog = new Catalog();
 			catalog.addEventListener(Event.INIT, catalogLoadedListener);
 			catalog.loadFromXmlFile("AngelCatalog.xml");

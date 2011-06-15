@@ -91,8 +91,7 @@ package angel.game.script.action {
 			save.startLocation = null;
 			save.startSpot = startSpot;
 
-			var triggerMaster:TriggerMaster = context.room.triggerMaster;
-			var newRoom:Room = Room.createFromXml(xml, save, triggerMaster, filename);
+			var newRoom:Room = Room.createFromXml(xml, save, filename);
 			if (newRoom != null) {
 				var modeFromOldRoom:Class = (oldRoom.mode == null ? null : Object(oldRoom.mode).constructor);
 				var parentFromOldRoom:DisplayObjectContainer = oldRoom.parent;

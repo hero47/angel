@@ -12,12 +12,12 @@ package angel.game.script {
 	 */
 	public class EntityTriggers extends TriggerBase implements ICleanup {
 		
-		private var me:SimpleEntity;
 		
-		public function EntityTriggers(master:TriggerMaster, me:SimpleEntity, filename:String) {
-			this.me = me;
-			super(master);
-			LoaderWithErrorCatching.LoadFile(filename, entityScriptXmlLoaded);
+		public function EntityTriggers(me:SimpleEntity, filename:String) {
+			super(me);
+			if (!Util.nullOrEmpty(filename)) {
+				LoaderWithErrorCatching.LoadFile(filename, entityScriptXmlLoaded);
+			}
 		}
 		
 		private function entityScriptXmlLoaded(event:Event, param:Object, filename:String):void {
@@ -52,24 +52,15 @@ package angel.game.script {
 								canFilterOnSpot:Boolean, rootScript:Script):void {
 			var scriptsForThisTrigger:XMLList = scriptXML.children().(name() == triggerName);
 			if (scriptsForThisTrigger.length() > 0) {
-				addTriggeredScriptsComplicated(me, me, scriptsForThisTrigger, triggerName, triggerName+"Self",
-					false, canFilterOnSpot, rootScript, selfListener);
+				addTriggeredScriptsFromXmlList(me, me, scriptsForThisTrigger, triggerName, triggerName,
+					false, canFilterOnSpot, rootScript);
 			}
 			
 			scriptsForThisTrigger = scriptXML.children().(name() == triggerName+"Any");
 			if (scriptsForThisTrigger.length() > 0) {
-				addTriggeredScriptsComplicated(me, null, scriptsForThisTrigger, triggerName, triggerName,
-					true, canFilterOnSpot, rootScript, null);
-			}
-									
-		}
-		
-		private function selfListener(event:QEvent):void {
-			trace("selfListener");
-			var triggeredScripts:Vector.<TriggeredScript> = triggers[event.eventId + "Self"];
-			for each (var triggeredScript:TriggeredScript in triggeredScripts) {
-				master.addToRunListIfPassesFilter(triggeredScript);
-			}
+				addTriggeredScriptsFromXmlList(me, me.room, scriptsForThisTrigger, triggerName, triggerName+"Any",
+					true, canFilterOnSpot, rootScript);
+			}					
 		}
 		
 	}

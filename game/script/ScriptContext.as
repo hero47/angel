@@ -17,7 +17,6 @@ package angel.game.script {
 	 * @author Beth Moursund
 	 */
 	public class ScriptContext {
-		private var triggeringEntity:SimpleEntity;
 		private var scriptRoom:Room;
 		private var scriptIds:Object;
 		private var doAtEnd:Vector.<Function> = new Vector.<Function>();
@@ -90,6 +89,10 @@ package angel.game.script {
 			scriptIds["me"] = newMe;
 		}
 		
+		public function setIt(newIt:Object):void {
+			scriptIds["it"] = newIt;
+		}
+		
 		public function entityWithSpecialId(idMinusFirstCharacter:String):SimpleEntity {
 			return scriptIds[idMinusFirstCharacter];
 		}
@@ -138,7 +141,7 @@ package angel.game.script {
 				if (gameLost) {
 					room.revertToPreCombatSave();
 				} else {
-					var main:DisplayObjectContainer = room.parent;
+					var main:DisplayObjectContainer = DisplayObjectContainer(room.parent);
 					room.cleanup();
 					new GameMenu(main, false, null);
 				}

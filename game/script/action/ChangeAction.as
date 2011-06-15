@@ -103,7 +103,7 @@ package angel.game.script.action {
 				}
 			}
 			
-			entity.setCommonPropertiesFromXml(xml, entity.triggers.master);
+			entity.setCommonPropertiesFromXml(xml);
 			return null;
 		}
 		

@@ -46,7 +46,7 @@ package angel.game {
 			super.cleanup();
 		}
 		
-		public static function createFromRoomContentsXml(propXml:XML, version:int, catalog:Catalog, master:TriggerMaster):SimpleEntity {
+		public static function createFromRoomContentsXml(propXml:XML, version:int, catalog:Catalog):SimpleEntity {
 			var id:String;
 			
 			//Delete older version support eventually
@@ -58,23 +58,22 @@ package angel.game {
 			
 			var resource:PropResource = catalog.retrievePropResource(id);
 			var simpleEntity:SimpleEntity = new SimpleEntity(new Bitmap(resource.standardImage()), resource.solidness, id);
-			simpleEntity.setCommonPropertiesFromXml(propXml, master);
+			simpleEntity.setCommonPropertiesFromXml(propXml);
 			return simpleEntity;
 		}
 		
-		public function setCommonPropertiesFromXml(xml:XML, master:TriggerMaster):void {
+		public function setCommonPropertiesFromXml(xml:XML):void {
 			if ((String(xml.@x) != "") || (String(xml.@y) != "")) {
 				myLocation = new Point(xml.@x, xml.@y);
-			}
-			if (triggers != null) {
-				triggers.cleanup();
-				triggers = null;
 			}
 			
 			if (xml.@script.length() > 0) {
 				var scriptFile:String = xml.@script;
 				if (scriptFile != "") {
-					triggers = new EntityTriggers(master, this, scriptFile);
+					if (triggers != null) {
+						triggers.cleanup();
+					}
+					triggers = new EntityTriggers(this, scriptFile);
 				}
 			}
 		}

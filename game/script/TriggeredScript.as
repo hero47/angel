@@ -8,14 +8,13 @@ package angel.game.script {
 	 * @author Beth Moursund
 	 */
 	public class TriggeredScript {
-		public var me:Object;
 		public var script:Script;
 		public var entityIds:Vector.<String>;
 		public var entitySpecialIds:Vector.<String>;
 		public var spotIds:Vector.<String>;
 		
-		public function TriggeredScript(me:Object) {
-			this.me = me;
+		public function TriggeredScript() {
+			
 		}
 
 		public function setEntityIds(idsParam:String):void {
@@ -62,15 +61,6 @@ package angel.game.script {
 		
 		public function passesFilter(context:ScriptContext, spotsIfAnyoneCares:Vector.<String>):Boolean {
 			return (passesIdFilter(context) && ((spotsIfAnyoneCares == null) || passesSpotFilter(spotsIfAnyoneCares)));
-		}
-			
-		public function filterAndRun(context:ScriptContext, spotsIfAnyoneCares:Vector.<String>):void {
-			if (passesIdFilter(context)) {
-				if ((spotsIfAnyoneCares == null) || passesSpotFilter(spotsIfAnyoneCares)) {
-					context.setMe(me);
-					script.doActions(context);
-				}
-			}
 		}
 	
 		

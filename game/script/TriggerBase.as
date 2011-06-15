@@ -1,37 +1,34 @@
 package angel.game.script {
+	import angel.game.event.EntityQEvent;
 	import angel.game.event.QEvent;
+	import angel.game.Settings;
+	import angel.game.SimpleEntity;
 	/**
 	 * ...
 	 * @author Beth Moursund
 	 */
 	public class TriggerBase {
 		
-		public var master:TriggerMaster;
+		protected var me:Object;
 		protected var triggers:Object = new Object(); // associative array mapping triggerName to Vector.<TriggeredScript>
 		
-		public function TriggerBase(master:TriggerMaster) {
-			this.master = master;
+		public function TriggerBase(me:Object) {
+			this.me =  me;
 		}
 		
 		public function cleanup():void {
-			master.triggerEventQueue.removeAllListenersOwnedBy(this);
+			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
 			//CONSIDER: remove not-yet-executed scripts???
+			triggers = null;
+			me = null;
 		}
 		
-		protected function addTriggeredScriptsFromXmlList(me:Object, sourceIfNotCurrentRoom:Object, xmlList:XMLList,
-								triggerName:String, 
-								canFilterOnId:Boolean, canFilterOnSpot:Boolean,	rootScript:Script):void {
-			addTriggeredScriptsComplicated(me, sourceIfNotCurrentRoom, xmlList,
-				triggerName, triggerName,
-				canFilterOnId, canFilterOnSpot, rootScript, null);
-		}
-		
-		protected function addTriggeredScriptsComplicated(me:Object, sourceIfNotCurrentRoom:Object, xmlList:XMLList,
+		protected function addTriggeredScriptsFromXmlList(me:Object, source:Object, xmlList:XMLList,
 								triggerName:String, indexBy:String,
-								canFilterOnId:Boolean, canFilterOnSpot:Boolean,	rootScript:Script, otherListener:Function):void {
+								canFilterOnId:Boolean, canFilterOnSpot:Boolean,	rootScript:Script):void {
 			var triggeredScripts:Vector.<TriggeredScript> = new Vector.<TriggeredScript>();
 			for each (var xml:XML in xmlList) {
-				var one:TriggeredScript = new TriggeredScript(me);
+				var one:TriggeredScript = new TriggeredScript();
 				var idsParam:String = xml.@ids;
 				var spotsParam:String = xml.@spots;
 				if (idsParam != "") {
@@ -61,14 +58,16 @@ package angel.game.script {
 				} else {
 					triggers[indexBy] = triggers[indexBy].concat(triggeredScripts);
 				}
-				master.addTrigger(this, sourceIfNotCurrentRoom, triggerName, (otherListener == null ? triggerListener : otherListener));
+				var gameEventName:String = TriggerMaster.TRIGGER_NAME_TO_GAME_EVENT[triggerName];
+				Settings.gameEventQueue.addListener(this, source, gameEventName, triggerListener, indexBy);
 			}
 		}
 		
 		private function triggerListener(event:QEvent):void {
-			var triggeredScripts:Vector.<TriggeredScript> = triggers[event.eventId];
+			var indexBy:String = String(event.listenerParam);
+			var triggeredScripts:Vector.<TriggeredScript> = triggers[indexBy];
 			for each (var triggeredScript:TriggeredScript in triggeredScripts) {
-				master.addToRunListIfPassesFilter(triggeredScript);
+				Settings.triggerMaster.addToRunListIfPassesFilter(triggeredScript, me, (event.source as SimpleEntity));
 			}
 		}
 		

@@ -12,6 +12,7 @@ package angel.game {
 	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.event.EventQueue;
 	import angel.game.inventory.Inventory;
+	import angel.game.script.TriggerMaster;
 
 	
 	public class Settings {
@@ -25,6 +26,7 @@ package angel.game {
 		// UNDONE: if this is legit, root out all the places I'm passing around catalog and use Settings.catalog instead
 		// CONSIDER: should Catalog itself enforce being a singleton, and provide public static var catalog?
 		public static var catalog:Catalog;
+		public static var triggerMaster:TriggerMaster;
 		public static var gameEventQueue:EventQueue;
 		
 		// "Constants" initialized from the game settings file.
