@@ -216,6 +216,7 @@ package angel.game {
 			if (conversationInProgress != null) {
 				Alert.show("Error! Cannot start a conversation inside another conversation.");
 			} else {
+				quitButton.visible = false;
 				conversationInProgress = new ConversationInterface(player, targetEntity, conversationData);
 				stage.addChild(conversationInProgress); // Conversation takes over ui when added to stage, removes itself & restores when finished
 			}
@@ -224,6 +225,7 @@ package angel.game {
 		public function endConversation(converse:ConversationInterface):void {
 			conversationInProgress = null;
 			restoreUiAfterSuspend(converse);
+			quitButton.visible = true;
 		}
 		
 		/********** Player UI-related  ****************/
