@@ -45,8 +45,8 @@ package angel.game.script.action {
 			if (!Util.nullOrEmpty(playerId)) {
 				playerEntity = context.charWithScriptId(playerId);
 			}
-			if (targetEntity == null) {
-				targetEntity = context.room.mainPlayerCharacter;
+			if (playerEntity == null) {
+				playerEntity = context.room.mainPlayerCharacter;
 			}
 			if (targetEntity == null) {
 				targetEntity = context.room.mainPlayerCharacter;
