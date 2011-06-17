@@ -90,12 +90,12 @@ package angel.game {
 			shared.close();
 		}
 		
-		public function resumeSavedGame(main:Main):void {
+		public function resumeSavedGame(main:IAngelMain):void {
 			LoaderWithErrorCatching.LoadFile(startRoomFile, roomXmlLoadedForResume, main);
 		}
 		
 		private function roomXmlLoadedForResume(event:Event, param:Object, filename:String):void {
-			var main:Main = Main(param);
+			var main:IAngelMain = IAngelMain(param);
 			var xml:XML = Util.parseXml(event.target.data, filename);
 			if (xml == null) {
 				return;

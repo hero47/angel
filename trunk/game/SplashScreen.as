@@ -16,7 +16,7 @@ package angel.game {
 		
 		public static const BUTTON_COLOR:uint = 0xffcccc;
 		
-		private var main:Main;
+		private var main:IAngelMain;
 		private var suspendedRoom:Room;
 		private var activePlayer:ComplexEntity;
 		private var scriptTriggeredBy:SimpleEntity;
@@ -24,7 +24,7 @@ package angel.game {
 		private var buttons:Vector.<SimplerButton> = new Vector.<SimplerButton>();
 		private var scripts:Vector.<Script> = new Vector.<Script>();
 		
-		public function SplashScreen(splashId:String, main:Main, scriptTriggeredBy:SimpleEntity = null) {
+		public function SplashScreen(splashId:String, main:IAngelMain, scriptTriggeredBy:SimpleEntity = null) {
 			this.main = main;
 			if (main.currentRoom != null) {
 				suspendedRoom = main.currentRoom;
@@ -35,7 +35,7 @@ package angel.game {
 			var splash:SplashResource = Settings.catalog.retrieveSplashResource(splashId);
 			background = new Bitmap(splash.bitmapData);
 			addChild(background);
-			main.addChild(this);
+			main.asDisplayObjectContainer.addChild(this);
 		}
 		
 		public function cleanup():void {

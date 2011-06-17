@@ -10,9 +10,9 @@ package angel.game.script.condition {
 	public class ConditionFactory {
 		
 		private static const conditionNameToClass:Object = {
+			"active":ActiveCondition,
 			"allOf":AndCondition,
 			"anyOf":OrCondition,
-			"alive":AliveCondition,
 			"compare":CompareCondition,
 			"empty":SpotEmptyCondition,
 			"flag":FlagCondition,

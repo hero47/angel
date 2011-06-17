@@ -6,6 +6,7 @@ package angel.game.script {
 	import angel.common.Util;
 	import angel.game.ComplexEntity;
 	import angel.game.GameMenu;
+	import angel.game.IAngelMain;
 	import angel.game.Main;
 	import angel.game.Room;
 	import angel.game.SaveGame;
@@ -18,7 +19,7 @@ package angel.game.script {
 	 * @author Beth Moursund
 	 */
 	public class ScriptContext {
-		private var mainWindow:Main;
+		private var mainWindow:IAngelMain;
 		private var scriptRoom:Room;
 		private var scriptIds:Object;
 		private var doAtEnd:Vector.<Function> = new Vector.<Function>();
@@ -32,9 +33,9 @@ package angel.game.script {
 			scriptIds = { "it":triggeringEntity, "pc":player };
 			if (roomOrMain is Room) {
 				this.scriptRoom = Room(roomOrMain);
-				mainWindow = Main(room.parent);
+				mainWindow = IAngelMain(room.parent);
 			} else {
-				mainWindow = Main(roomOrMain);
+				mainWindow = IAngelMain(roomOrMain);
 			}
 			this.catalog = Settings.catalog;
 			this.messages = new MessageCollector();
@@ -88,7 +89,7 @@ package angel.game.script {
 			return scriptRoom;
 		}
 		
-		public function get main():Main {
+		public function get main():IAngelMain {
 			return mainWindow;
 		}
 		
@@ -162,8 +163,10 @@ package angel.game.script {
 				// Wm may have put this in the user story as a joke, but I'm going to take him literally
 				options.buttons = ["Kewl"];
 			}
-			messages.displayIfNotEmpty(null, options);
-			messages.clear();
+			var oldMessages:MessageCollector = messages;
+			messages = new MessageCollector();
+			oldMessages.displayIfNotEmpty(null, options);
+			oldMessages.clear();
 		}
 		
 		private function continueAfterMessageOk(button:String):void {
