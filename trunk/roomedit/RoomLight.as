@@ -141,11 +141,9 @@ package angel.roomedit {
 		}
 		
 		private static const contentItemXmlAttributes:Vector.<String> = Vector.<String>(
-				["explore", "exploreParam", "combat", "combatParam", "script", "faction"]);
+				["explore", "exploreParam", "combat", "combatParam", "script", "faction", "down"]);
 		public function addContentItemByName(type:Class, id:String, location:Point, xml:XML):void {
 			trace("adding", id);
-			var resource:RoomContentResource = catalog.retrieveRoomContentResource(id, type);
-			var prop:Prop = Prop.createFromBitmapData(resource.standardImage());
 			
 			var attributes:Object = null;
 			for each (var attributeName:String in contentItemXmlAttributes) {
@@ -166,6 +164,11 @@ package angel.roomedit {
 				attributes["script"] = String(xml.@talk);
 				trace("  converted attribute talk to script", attributes["script"]);				
 			}
+			
+			var down:Boolean = (attributes != null) && (attributes["down"] == "yes");
+			var resource:RoomContentResource = catalog.retrieveRoomContentResource(id, type);
+			var bitmapData:BitmapData = resource.standardImage(down);
+			var prop:Prop = Prop.createFromBitmapData(bitmapData);
 			
 			addContentItem(prop, type, id, location, attributes);
 		}

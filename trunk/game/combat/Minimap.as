@@ -153,9 +153,8 @@ package angel.game.combat {
 			offsetX -= mainPlayerBitmapData.width / 2;
 			offsetY -= mainPlayerBitmapData.height / 2;
 			
-			for (var i:int = 0; i < combat.fighters.length; i++) {
-				addFighter(combat.fighters[i]);
-			}
+			combat.room.forEachComplexEntity(addFighter);
+			
 			roomSprite.addChild(activeEntityMarker);
 			activeEntity = combat.fighters[0];
 			setIconPositionFromEntityLocation(activeEntityMarker, activeEntity);
@@ -175,29 +174,30 @@ package angel.game.combat {
 			setIconPositionFromEntityLocation(icon, fighter);
 			roomSprite.addChild(icon);
 			entityToMapIcon[fighter] = icon;
+			
 		}
 		
 		private function bitmapDataForEntity(entity:ComplexEntity):BitmapData {
 			switch (entity.faction) {
 				case ComplexEntity.FACTION_FRIEND:
 					if (entity.isReallyPlayer) {
-						return (entity.isAlive() ?
+						return (entity.isActive() ?
 								((entity == entity.room.mainPlayerCharacter) ? mainPlayerBitmapData : otherPlayerBitmapData) :
 								deadPlayerBitmapData);
 					} else {
-						return (entity.isAlive() ?
+						return (entity.isActive() ?
 								(entity.visible ? friendBitmapData : friendLastSeenBitmapData) :
 								deadFriendBitmapData);
 					}
 				break;
 				case ComplexEntity.FACTION_ENEMY:
 				case ComplexEntity.FACTION_ENEMY2:
-					return (entity.isAlive() ?
+					return (entity.isActive() ?
 						(entity.visible ? enemyBitmapData : enemyLastSeenBitmapData) :
 						deadEnemyBitmapData);
 				break;
 				default:
-					return (entity.isAlive() ?
+					return (entity.isActive() ?
 						(entity.visible ? civilianBitmapData : civilianLastSeenBitmapData) :
 						deadCivilianBitmapData);
 				break;

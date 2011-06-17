@@ -25,6 +25,7 @@ package angel.common {
 		public static const KEYBOARD_C:uint = 67;
 		public static const KEYBOARD_I:uint = 73;
 		public static const KEYBOARD_M:uint = 77;
+		public static const KEYBOARD_R:uint = 82;
 		public static const KEYBOARD_V:uint = 86;
 		
 		public function Util() {

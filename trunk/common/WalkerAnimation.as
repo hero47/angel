@@ -39,9 +39,11 @@ package angel.common {
 			imageBitmap.bitmapData = animationData.bitsFacing(facing, step);
 		}
 		
+		// Facing == rotation/45 if we were in a top-down view, or 8 for dead/down
 		public function turnToFacing(newFacing:int):void {
 			stopDeathAnimation();
-			imageBitmap.bitmapData = animationData.bitsFacing(newFacing);
+			imageBitmap.bitmapData = animationData.bitsFacing(newFacing,
+					(newFacing == WalkerAnimationData.FACE_DYING ? WalkerAnimationData.STEP_DEAD : WalkerAnimationData.STAND));
 		}
 		
 		private function stopDeathAnimation():void {

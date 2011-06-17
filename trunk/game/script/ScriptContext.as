@@ -148,7 +148,6 @@ package angel.game.script {
 				if (gameLost) {
 					room.revertToPreCombatSave();
 				} else {
-					room.cleanup();
 					new GameMenu(mainWindow, false, null);
 				}
 			} 

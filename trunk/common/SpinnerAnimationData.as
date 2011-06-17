@@ -64,11 +64,11 @@ package angel.common {
 			bitmapData.dispose();
 		}
 		
-		public function standardImage():BitmapData {
-			return bitsFacing(1);
+		public function standardImage(down:Boolean = false):BitmapData {
+			return bitsFacing(down ? FACE_DYING : 1);
 		}
 		
-		// Facing == rotation/45 if we were in a top-down view.
+		// Facing == rotation/45 if we were in a top-down view, or 8 for dead/down.
 		public function bitsFacing(facing:int):BitmapData {
 			return bits[facing];
 		}

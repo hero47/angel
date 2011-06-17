@@ -26,7 +26,7 @@ package angel.game.script.computation {
 		public function value(context:ScriptContext):int {
 			var count:int = 0;
 			context.room.forEachComplexEntity(function(entity:ComplexEntity):void{
-				if (entity.isAlive() && (all || (entity.faction == faction))) {
+				if (entity.isActive() && (all || (entity.faction == faction))) {
 					++count;
 				}
 			} );

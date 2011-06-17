@@ -53,7 +53,9 @@ package angel.game {
 				currentRoom.cleanup();
 			}
 			this.room = room;
-			addChildAt(room, 0);
+			if (room != null) {
+				addChildAt(room, 0);
+			}
 		}
 		
 		public function get asDisplayObjectContainer():DisplayObjectContainer {

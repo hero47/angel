@@ -4,7 +4,9 @@ package angel.roomedit {
 	import angel.common.Prop;
 	import angel.common.RoomContentResource;
 	import angel.common.Util;
+	import fl.controls.CheckBox;
 	import fl.controls.ComboBox;
+	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.geom.Point;
@@ -23,6 +25,7 @@ package angel.roomedit {
 		private var combatParameters:TextField;
 		private var scriptFile:FilenameControl;
 		private var factionCombo:ComboBox;
+		private var downCheckbox:CheckBox;
 		
 		private static const exploreChoices:Vector.<String> = Vector.<String>(["", "fidget", "follow", "patrol", "wander"]);
 		private static const combatChoices:Vector.<String> = Vector.<String>(["", "patrol", "patrolNoStops", "wander"]);
@@ -136,6 +139,8 @@ package angel.roomedit {
 				changeAttribute("faction", String(factionCombo.selectedIndex));
 			});
 			
+			downCheckbox = Util.createCheckboxEditControlBelow(factionCombo, "Down", EditorSettings.PALETTE_XSIZE, changeDown);
+			
 			return holder;
 		}
 		
@@ -159,6 +164,7 @@ package angel.roomedit {
 					Util.nullSafeSetText(exploreParameters, attributes["exploreParam"]);
 					Util.nullSafeSetText(combatParameters, attributes["combatParam"]);
 					factionCombo.selectedIndex = int(attributes["faction"]);
+					downCheckbox.selected = (attributes["down"] == "yes");
 				}
 				adjustParamVisibilities();
 			}
@@ -176,6 +182,14 @@ package angel.roomedit {
 				combo.addItem( { label:choices[i] } );
 			}
 			return combo;
+		}
+		
+		private function changeDown(event:Event):void {
+			var down:Boolean = downCheckbox.selected;
+			changeAttribute("down", down ? "yes" : null);
+			var resource:RoomContentResource = catalog.retrieveRoomContentResource(itemCombo.selectedLabel, CatalogEntry.CHARACTER);
+			var bitmapData:BitmapData = resource.standardImage(down);
+			room.propAt(locationOfCurrentSelection).changeImage(bitmapData);
 		}
 		
 	} // end class NpcPalette

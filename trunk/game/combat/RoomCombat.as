@@ -111,7 +111,7 @@ package angel.game.combat {
 		}
 		
 		public function playerControlChanged(entity:ComplexEntity, pc:Boolean):void {
-			if (entity.isAlive()) {
+			if (entity.isActive()) {
 				augmentedReality.removeFighter(entity);
 				augmentedReality.addFighter(entity);
 			}
@@ -135,7 +135,6 @@ package angel.game.combat {
 		}
 		
 		private function initEntityForCombat(entity:ComplexEntity):void {
-			entity.initHealth();
 			entity.actionsRemaining = 0;
 			if (entity.inventory.mainWeapon() != null) {
 				entity.inventory.mainWeapon().resetCooldown();
@@ -143,9 +142,10 @@ package angel.game.combat {
 			if (entity.inventory.offWeapon() != null) {
 				entity.inventory.offWeapon().resetCooldown();
 			}
-			
-			fighters.push(entity);
 			entity.adjustBrainForRoomMode(this);
+			if (entity.isActive()) {
+				fighters.push(entity);
+			}
 		}
 		
 		private function removeFighterFromCombat(deadFighter:ComplexEntity):void {
@@ -342,7 +342,12 @@ package angel.game.combat {
 		}
 		
 		private function combatOverWin(button:String):void {
+			room.forEachComplexEntity(defaultAfterCombat);
 			room.changeModeTo(RoomExplore);
+		}
+		
+		private function defaultAfterCombat(entity:ComplexEntity):void {
+			entity.initHealth(!entity.isEnemyOf(room.mainPlayerCharacter));
 		}
 		
 		private function combatOverLose(button:String):void {
