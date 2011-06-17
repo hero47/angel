@@ -1,4 +1,5 @@
 package angel.game {
+	import angel.common.Alert;
 	import angel.common.Assert;
 	import angel.common.Catalog;
 	import angel.common.CharacterStats;
@@ -171,6 +172,32 @@ package angel.game {
 		override public function portraitBitmapData():BitmapData {
 			var resource:CharResource = Settings.catalog.retrieveCharacterResource(id);
 			return resource.portraitBitmapData;
+		}
+		
+		override public function frobOk(whoFrobbedMe:ComplexEntity):Boolean {
+			return Util.chessDistance(whoFrobbedMe.location, myLocation) <= 2;
+		}
+		
+		// If frobbing the entity gives choices, return pie slices for those choices.
+		// Otherwise, carry out the frob and return null.
+		// NOTE: The frob-ee is passed to the script for reference by "*it".
+		override public function frob(whoFrobbedMe:ComplexEntity):Vector.<PieSlice> {
+			if (!frobOk(whoFrobbedMe)) {
+				//NOTE: currently (5/17/11) shouldn't ever get here -- UI will only call frob if frobOk is true.
+				//We may change that, either frob anyway (and get here), or make clicking on a too-far-away object
+				//cause the player to attempt to walk up to frobbing distance and then frob. (Complicated, user-friendly
+				//for majority cases, but horribly not-what-I-meant!-unfriendly for some cases.)
+				Alert.show("Too far away.");
+				return null;
+			}
+			if (isActive()) {
+				return super.frob(whoFrobbedMe);
+			} else {
+				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
+				slices.push(new PieSlice(Icon.bitmapData(Icon.TestIconBitmap), "Revive", 
+						function():void { initHealth(true) }  ));
+				return slices;
+			}
 		}
 		
 		public function canMove():Boolean {

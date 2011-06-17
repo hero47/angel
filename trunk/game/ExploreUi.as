@@ -108,7 +108,10 @@ package angel.game {
 			if (player.movement.tileBlocked(tile.location)) {
 				var target:SimpleEntity = room.firstEntityIn(tile.location);
 				if (target != null && target.frobOk(player)) {
-					target.frob(player);
+					var slices:Vector.<PieSlice> = target.frob(player);
+					if (slices != null) {
+						room.launchPieMenu(tile, slices);
+					}
 					return;
 				}
 			}
