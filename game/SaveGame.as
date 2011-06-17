@@ -90,12 +90,12 @@ package angel.game {
 			shared.close();
 		}
 		
-		public function resumeSavedGame(main:DisplayObjectContainer):void {
+		public function resumeSavedGame(main:Main):void {
 			LoaderWithErrorCatching.LoadFile(startRoomFile, roomXmlLoadedForResume, main);
 		}
 		
 		private function roomXmlLoadedForResume(event:Event, param:Object, filename:String):void {
-			var main:DisplayObjectContainer = DisplayObjectContainer(param);
+			var main:Main = Main(param);
 			var xml:XML = Util.parseXml(event.target.data, filename);
 			if (xml == null) {
 				return;
@@ -103,7 +103,7 @@ package angel.game {
 			var room:Room = Room.createFromXml(xml, this, filename);
 			if (room != null) {
 				setFlags();
-				main.addChild(room);
+				main.startRoom(room);
 				room.changeModeTo(RoomExplore);
 			}
 		}

@@ -135,9 +135,9 @@ package angel.game.script {
 				parent.removeChild(this);
 			}
 			target.filters = [];
-			room.endConversation(this);
+			room.endConversation(this, room);
 			
-			context.endOfScriptActions();
+			context.finish();
 			
 			if (room.mode is RoomCombat) {
 				RoomCombat(room.mode).checkForCombatOver();

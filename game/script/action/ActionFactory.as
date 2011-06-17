@@ -29,6 +29,7 @@ package angel.game.script.action {
 			"remove":RemoveFlagAction,
 			"removeFromInventory":RemoveFromInventoryAction,
 			"removeFromRoom":RemoveFromRoomAction,
+			"splash":SplashAction,
 			"stop":StopAction,
 			"winGame":WinGameAction
 		};

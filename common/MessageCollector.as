@@ -49,6 +49,7 @@ package angel.common {
 		
 		public function clear():void {
 			messages.length = 0;
+			lengthAtSectionEnd = 0;
 		}
 		
 	}

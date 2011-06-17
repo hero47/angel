@@ -57,6 +57,7 @@ package angel.game {
 		private function finishInitIfAllDataLoaded():void {
 			if ((Settings.catalog != null) && flagsLoaded && (initXml != null)) {
 				Settings.initFromXml(initXml.settings);
+				Settings.initStartScript(initXml.startScript[0]);
 				var save:SaveGame = new SaveGame();
 				save.initStartRoomFromXml(initXml.room);
 				save.initPlayerInfoFromXml(initXml.player, Settings.catalog);

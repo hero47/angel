@@ -3,6 +3,7 @@ package angel.game.script.action {
 	import angel.common.LoaderWithErrorCatching;
 	import angel.common.Util;
 	import angel.game.combat.RoomCombat;
+	import angel.game.Main;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
 	import angel.game.SaveGame;
@@ -94,11 +95,9 @@ package angel.game.script.action {
 			var newRoom:Room = Room.createFromXml(xml, save, filename);
 			if (newRoom != null) {
 				var modeFromOldRoom:Class = (oldRoom.mode == null ? null : Object(oldRoom.mode).constructor);
-				var parentFromOldRoom:DisplayObjectContainer = oldRoom.parent;
 				var newMode:Class = (modeClass == null ? modeFromOldRoom : modeClass);
 				var oldPreCombatSave:SaveGame = oldRoom.preCombatSave;
-				oldRoom.cleanup();
-				parentFromOldRoom.addChild(newRoom); // Room will start itself running when it goes on stage
+				context.main.startRoom(newRoom);
 				
 				if (newMode != null) {
 					newRoom.changeModeTo(newMode);

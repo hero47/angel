@@ -6,6 +6,7 @@ package angel.game.script {
 	import angel.common.Util;
 	import angel.game.ComplexEntity;
 	import angel.game.GameMenu;
+	import angel.game.Main;
 	import angel.game.Room;
 	import angel.game.SaveGame;
 	import angel.game.Settings;
@@ -17,6 +18,7 @@ package angel.game.script {
 	 * @author Beth Moursund
 	 */
 	public class ScriptContext {
+		private var mainWindow:Main;
 		private var scriptRoom:Room;
 		private var scriptIds:Object;
 		private var doAtEnd:Vector.<Function> = new Vector.<Function>();
@@ -26,9 +28,14 @@ package angel.game.script {
 		
 		public var catalog:Catalog;
 		
-		public function ScriptContext(room:Room, player:ComplexEntity, triggeringEntity:SimpleEntity = null) {
+		public function ScriptContext(roomOrMain:DisplayObjectContainer, player:ComplexEntity, triggeringEntity:SimpleEntity = null) {
 			scriptIds = { "it":triggeringEntity, "pc":player };
-			this.scriptRoom = room;
+			if (roomOrMain is Room) {
+				this.scriptRoom = Room(roomOrMain);
+				mainWindow = Main(room.parent);
+			} else {
+				mainWindow = Main(roomOrMain);
+			}
 			this.catalog = Settings.catalog;
 			this.messages = new MessageCollector();
 		}
@@ -81,6 +88,10 @@ package angel.game.script {
 			return scriptRoom;
 		}
 		
+		public function get main():Main {
+			return mainWindow;
+		}
+		
 		public function roomChanged(newRoom:Room):void {
 			scriptRoom = newRoom;
 		}
@@ -97,9 +108,10 @@ package angel.game.script {
 			return scriptIds[idMinusFirstCharacter];
 		}
 		
-		public function gameIsOver(lose:Boolean):void {
+		public function gameIsOver(lose:Boolean, message:String):void {
 			gameOver = true;
 			gameLost = lose;
+			pauseAndAddMessage(message);
 		}
 		
 		// f should be a function that takes this ScriptContext as a parameter.
@@ -115,37 +127,50 @@ package angel.game.script {
 			messages.add(text);
 		}
 		
-		public function endOfScriptActions():void {
+		public function finish():void {
+			if (!messages.empty()) { // Display messages; will call this again after user OK's the messagebox
+				displayMessagesAsAlert();
+			} else {
+				doEndOfScriptActions();
+			}
+		}
+		
+		private function doEndOfScriptActions():void {
 			while (doAtEnd.length > 0) {
 				var f:Function = doAtEnd.shift();
 				f(this); // No, this is not a comment on my satisfaction with the code!
 			}
 			if (!messages.empty()) {
-				if (room != null) {
-					room.pauseGameTimeIndefinitely(this);
+				displayMessagesAsAlert();
+			} else if (gameOver) {
+				// Room had better not be null here!
+				if (gameLost) {
+					room.revertToPreCombatSave();
+				} else {
+					room.cleanup();
+					new GameMenu(mainWindow, false, null);
 				}
-				var options:Object = { callback:continueAfterMessageOk };
-				if (gameOver && !gameLost) {
-					options.buttons = ["Kewl"];
-				}
-				messages.displayIfNotEmpty(null, options);
+			} 
+		}
+		
+		private function displayMessagesAsAlert():void {
+			if (room != null) {
+				room.pauseGameTimeIndefinitely(this);
 			}
+			var options:Object = { callback:continueAfterMessageOk };
+			if (gameOver && !gameLost) {
+				// Wm may have put this in the user story as a joke, but I'm going to take him literally
+				options.buttons = ["Kewl"];
+			}
+			messages.displayIfNotEmpty(null, options);
+			messages.clear();
 		}
 		
 		private function continueAfterMessageOk(button:String):void {
 			if (room != null) {
 				room.unpauseAndDeleteAllOwnedBy(this);
 			}
-			if (gameOver) {
-				// Room had better not be null here!
-				if (gameLost) {
-					room.revertToPreCombatSave();
-				} else {
-					var main:DisplayObjectContainer = DisplayObjectContainer(room.parent);
-					room.cleanup();
-					new GameMenu(main, false, null);
-				}
-			}
+			finish();
 		}
 		
 		public function hasEndOfScriptActions():Boolean {
