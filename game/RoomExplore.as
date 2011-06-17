@@ -64,7 +64,6 @@ package angel.game {
 		}
 		
 		private function initEntityForExplore(entity:ComplexEntity):void {
-			entity.initHealth();
 			entity.adjustBrainForRoomMode(this);
 		}
 		

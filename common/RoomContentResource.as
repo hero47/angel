@@ -31,8 +31,8 @@ package angel.common {
 			animationData.dataFinishedLoading(bitmapData, entry);
 		}
 		
-		public function standardImage():BitmapData {
-			return animationData.standardImage();
+		public function standardImage(down:Boolean = false):BitmapData {
+			return animationData.standardImage(down);
 		}
 		
 	}

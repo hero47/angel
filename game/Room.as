@@ -303,9 +303,11 @@ package angel.game {
 				case Keyboard.HOME:
 					new ConversationNonAutoTest(this);
 				break;
-				
 				case Keyboard.PAGE_UP:
 					Settings.gameEventQueue.debugTraceListeners(null, "Game event listeners");
+				break;
+				case Util.KEYBOARD_R:
+					forEachComplexEntity(function(entity:ComplexEntity):void { entity.initHealth(true); } );
 				break;
 				
 				default:
@@ -682,11 +684,10 @@ package angel.game {
 		
 		public function revertToPreCombatSave():void {
 			if (preCombatSave != null) {
-				preCombatSave.resumeSavedGame(Main(this.parent));
+				preCombatSave.resumeSavedGame(IAngelMain(this.parent));
 			} else {
-				new GameMenu(Main(this.parent), true, null);
+				new GameMenu(IAngelMain(this.parent), true, null);
 			}
-			this.cleanup();
 		}
 		
 	} // end class Room

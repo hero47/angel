@@ -39,7 +39,7 @@ package angel.common {
 			imageData.copyPixels(bitmapData, sourceRect, new Point(0, 0));	
 		}
 		
-		public function standardImage():BitmapData {
+		public function standardImage(down:Boolean = false):BitmapData {
 			return imageData;
 		}
 		

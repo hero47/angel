@@ -41,6 +41,8 @@ package angel.game {
 				SaveGame.deleteFromDisk();
 			}
 			
+			main.startRoom(null);
+			
 			var splash:SplashResource = Settings.catalog.retrieveSplashResource(Defaults.GAME_MENU_SPLASH_ID);
 			background = new Bitmap(splash.bitmapData);
 			addChild(background);

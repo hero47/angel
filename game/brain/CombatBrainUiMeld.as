@@ -218,7 +218,7 @@ package angel.game.brain {
 		}
 		
 		protected function endTurnIfDeadOrCombatOver():Boolean {
-			if (!me.isAlive() || combat.checkForCombatOver()) {
+			if (!me.isActive() || combat.checkForCombatOver()) {
 				endTurn();
 				return true;
 			}

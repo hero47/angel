@@ -27,6 +27,7 @@ package angel.common {
 		//(facing 8 == DYING holds the death images)
 		private static const imageColumn:Vector.<int> = Vector.<int>([1, 0, 7, 6, 5, 4, 3, 2, 8]);
 		public static const FACE_DYING:int = 8;
+		public static const STEP_DEAD:int = 2;
 		
 		private var bits:Vector.<Vector.<BitmapData>>;
 		
@@ -62,8 +63,8 @@ package angel.common {
 			bitmapData.dispose();
 		}
 		
-		public function standardImage():BitmapData {
-			return bitsFacing(1);
+		public function standardImage(down:Boolean = false):BitmapData {
+			return down ? bitsFacing(WalkerAnimationData.FACE_DYING, WalkerAnimationData.STEP_DEAD) : bitsFacing(1);
 		}
 		
 		// Facing == rotation/45 if we were in a top-down view.

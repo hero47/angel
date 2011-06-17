@@ -9,6 +9,7 @@ package angel.game {
 	import angel.common.Prop;
 	import angel.common.Tileset;
 	import angel.common.Util;
+	import angel.common.WalkerAnimationData;
 	import angel.common.WeaponResource;
 	import angel.game.brain.CombatBrainNone;
 	import angel.game.brain.IBrain;
@@ -132,6 +133,9 @@ package angel.game {
 			entity.setBrain(true, UtilBrain.exploreBrainClassFromString(charXml.@explore), charXml.@exploreParam);
 			entity.setBrain(false, UtilBrain.combatBrainClassFromString(charXml.@combat), charXml.@combatParam);
 			entity.faction = int(charXml.@faction);
+			if (String(charXml.@down) == "yes") {
+				entity.initHealth(false);
+			}
 			entity.setCommonPropertiesFromXml(charXml);
 			return entity;
 		}
@@ -261,7 +265,7 @@ package angel.game {
 			return (!playerControlled && (combatBrainClass != null) && (currentHealth > 0));
 		}
 		
-		public function isAlive():Boolean {
+		public function isActive():Boolean {
 			return (currentHealth > 0);
 		}
 		
@@ -284,14 +288,16 @@ package angel.game {
 		public function adjustBrainForRoomMode(mode:IRoomMode):void {
 			if (brain != null) {
 				brain.cleanup();
+				brain = null;
+			}
+			if (!isActive()) {
+				return;
 			}
 			
 			if (mode is RoomCombat) {
 				brain = new combatBrainClass(this, mode, combatBrainParam);
 			} else if ((mode is RoomExplore) && (exploreBrainClass != null)) {
 				brain = new exploreBrainClass(this, mode, exploreBrainParam);
-			} else {
-				brain = null;
 			}
 		}
 		
@@ -323,10 +329,16 @@ package angel.game {
 		}
 		
 		// Reset health at start and end of combat.
-		public function initHealth():void {
-			currentHealth = maxHealth;
-			animation.turnToFacing(facing); // stands back up if we were dead
-			solidness = solidnessWhenAlive;
+		public function initHealth(active:Boolean):void {
+			if (active) {
+				currentHealth = maxHealth;
+				animation.turnToFacing(facing); // stands back up if we were dead
+				solidness = solidnessWhenAlive;
+			} else {
+				currentHealth = 0;
+				animation.turnToFacing(WalkerAnimationData.FACE_DYING); // stands back up if we were dead
+				solidness ^= Prop.TALL; // Dead entities are short, by fiat.
+			}
 		}
 		
 		public function setTextOverHead(value:String):void {

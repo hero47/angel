@@ -160,7 +160,11 @@ package angel.roomedit {
 			if (attributes == null) {
 				attributes = new Object();
 			}
-			attributes[attributeName] = newValue;
+			if (newValue == null) {
+				delete attributes[attributeName];
+			} else {
+				attributes[attributeName] = newValue;
+			}
 			if (newValue == "") {
 				if (attributeName == "explore") {
 					attributes["exploreParam"] = "";
