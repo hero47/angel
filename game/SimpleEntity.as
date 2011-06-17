@@ -91,19 +91,20 @@ package angel.game {
 		}
 		
 		public function frobOk(whoFrobbedMe:ComplexEntity):Boolean {
-			var maxDistance:int = (this is ComplexEntity) ? 2 : 1;
-			return Util.chessDistance(whoFrobbedMe.location, myLocation) <= maxDistance;
+			return Util.chessDistance(whoFrobbedMe.location, myLocation) <= 1;
 		}
 		
-		// NOTE: The frob-ee is passed to the script for reference by "*this".
-		public function frob(whoFrobbedMe:ComplexEntity):void {
+		// If frobbing the entity gives choices, return pie slices for those choices.
+		// Otherwise, carry out the frob and return null.
+		// NOTE: The frob-ee is passed to the script for reference by "*it".
+		public function frob(whoFrobbedMe:ComplexEntity):Vector.<PieSlice> {
 			if (!frobOk(whoFrobbedMe)) {
 				//NOTE: currently (5/17/11) shouldn't ever get here -- UI will only call frob if frobOk is true.
 				//We may change that, either frob anyway (and get here), or make clicking on a too-far-away object
 				//cause the player to attempt to walk up to frobbing distance and then frob. (Complicated, user-friendly
 				//for majority cases, but horribly not-what-I-meant!-unfriendly for some cases.)
 				Alert.show("Too far away.");
-				return;
+				return null;
 			}
 			if (hasFrobScript) {
 				Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.FROBBED, whoFrobbedMe));
@@ -114,6 +115,7 @@ package angel.game {
 				}
 				Alert.show(nameOrIt + " ignores you.");
 			}
+			return null
 		}
 		
 		//NOTE: indetermined yet whether it will be meaningful or useful to have an entity "in" a room but not
