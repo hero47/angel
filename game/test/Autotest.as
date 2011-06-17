@@ -203,7 +203,7 @@ package angel.game.test {
 			if (action != null) {
 				action.doAction(context);
 				Autotest.assertEqual(context.hasEndOfScriptActions(), shouldDelayUntilEnd, "Wrong delay status");
-				context.endOfScriptActions();
+				context.finish();
 			}
 			Settings.gameEventQueue.handleEvents();
 			Autotest.assertTrue((testRoom == null) || !testRoom.gameTimeIsPaused(), "Action left room paused");

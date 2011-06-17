@@ -6,6 +6,7 @@ package angel.game {
 	import angel.game.script.TriggerMaster;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.geom.Point;
@@ -14,12 +15,9 @@ package angel.game {
 	
 	
 	// GAME Main class
-	public class Main extends Sprite {
-		private var floor:Floor;
+	public class Main extends Sprite implements IAngelMain {
 		private var room:Room;
-		private var startSpot:String;
 		private var gameEventQueue:EventQueue = new EventQueue();
-		public var currentRoom:Room;
 		
 		public function Main() {
 			stage.scaleMode = "noScale";
@@ -46,12 +44,20 @@ package angel.game {
 			}
 		}
 		
+		public function get currentRoom():Room {
+			return room;
+		}
+		
 		public function startRoom(room:Room):void {
 			if (currentRoom != null) {
 				currentRoom.cleanup();
 			}
-			currentRoom = room;
+			this.room = room;
 			addChildAt(room, 0);
+		}
+		
+		public function get asDisplayObjectContainer():DisplayObjectContainer {
+			return this;
 		}
 		
 	}	// end class Main

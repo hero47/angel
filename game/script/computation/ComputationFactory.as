@@ -9,7 +9,7 @@ package angel.game.script.computation {
 	public class ComputationFactory {
 		
 		private static const computationNameToClass:Object = {
-			"alive":AliveComputation,
+			"active":ActiveComputation,
 			"distance":DistanceComputation,
 			"health":HealthComputation,
 			"int":ConstantComputation

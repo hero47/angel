@@ -9,13 +9,13 @@ package angel.game.script.condition {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class AliveCondition implements ICondition {
+	public class ActiveCondition implements ICondition {
 		private var charId:String;
 		private var desiredValue:Boolean;
 		
-		public static const TAG:String = "alive";
+		public static const TAG:String = "active";
 		
-		public function AliveCondition(charId:String, desiredValue:Boolean, script:Script) {
+		public function ActiveCondition(charId:String, desiredValue:Boolean, script:Script) {
 			this.charId = charId;
 			this.desiredValue = desiredValue;
 		}

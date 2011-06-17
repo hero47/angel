@@ -22,13 +22,13 @@ package angel.game {
 		
 		private var saveDataForCurrentGame:SaveGame;
 		
-		private var main:Main;
+		private var main:IAngelMain;
 		private var background:Bitmap;
 		private var startButton:SimplerButton;
 		private var resumeButton:SimplerButton;
 		private var quitButton:SimplerButton;
 		
-		public function GameMenu(main:Main, allowResume:Boolean, newSaveData:SaveGame) {
+		public function GameMenu(main:IAngelMain, allowResume:Boolean, newSaveData:SaveGame) {
 			this.main = main;
 			if (allowResume) {
 				if (newSaveData == null) {
@@ -60,7 +60,7 @@ package angel.game {
 				resumeButton.width = 100;
 				Util.addBelow(resumeButton, quitButton, 30);
 			}
-			main.addChild(this);
+			main.asDisplayObjectContainer.addChild(this);
 		}
 		
 		public function cleanup():void {
@@ -79,12 +79,11 @@ package angel.game {
 			saveDataForCurrentGame = Settings.saveDataForNewGame;
 			resumeGame(event);
 			if (Settings.startScript != null) {
-				Settings.startScript.run(main);
+				Settings.startScript.run(main.asDisplayObjectContainer);
 			}
 		}
 		
 		public function resumeGame(event:Event):void {
-			var main:Main = Main(this.parent);
 			this.cleanup();
 			saveDataForCurrentGame.resumeSavedGame(main);
 		}

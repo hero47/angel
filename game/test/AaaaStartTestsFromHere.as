@@ -3,10 +3,13 @@ package angel.game.test {
 	import angel.common.Util;
 	import angel.game.ComplexEntity;
 	import angel.game.event.EventQueue;
+	import angel.game.IAngelMain;
 	import angel.game.InitGameFromFiles;
+	import angel.game.Room;
 	import angel.game.SaveGame;
 	import angel.game.script.Script;
 	import angel.game.Settings;
+	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.TimerEvent;
@@ -17,7 +20,7 @@ package angel.game.test {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class AaaaStartTestsFromHere extends Sprite {
+	public class AaaaStartTestsFromHere extends Sprite implements IAngelMain {
 		
 		private var initTimer:Timer;
 		private var gameInitialized:Boolean = false;
@@ -95,6 +98,22 @@ package angel.game.test {
 			Alert.show("test");
 			Autotest.assertAlertText("test", "Wrong message");
 			Autotest.clearAlert();
+		}
+		
+		public function get currentRoom():Room {
+			return Autotest.testRoom;
+		}
+		
+		public function startRoom(room:Room):void {
+			if (currentRoom != null) {
+				currentRoom.cleanup();
+			}
+			Autotest.testRoom = room;
+			addChildAt(room, 0);
+		}
+		
+		public function get asDisplayObjectContainer():DisplayObjectContainer {
+			return this;
 		}
 		
 	}

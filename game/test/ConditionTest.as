@@ -2,7 +2,7 @@ package angel.game.test {
 	import angel.common.Util;
 	import angel.game.ComplexEntity;
 	import angel.game.Flags;
-	import angel.game.script.condition.AliveCondition;
+	import angel.game.script.condition.ActiveCondition;
 	import angel.game.script.condition.AndCondition;
 	import angel.game.script.condition.CompareCondition;
 	import angel.game.script.condition.ConditionFactory;
@@ -31,7 +31,7 @@ package angel.game.test {
 			Autotest.setupTestRoom();
 			context = new ScriptContext(Autotest.testRoom, Autotest.testRoom.activePlayer());
 			Autotest.testFunction(testSpotConditions);
-			Autotest.testFunction(testAliveConditions);
+			Autotest.testFunction(testActiveConditions);
 			Autotest.testFunction(testPcConditions);
 			Autotest.cleanupTestRoom();
 		}
@@ -224,36 +224,36 @@ package angel.game.test {
 			Autotest.testRoom.removeSpot("test");
 		}
 		
-		private function testAliveConditions():void {
-			var aliveCondition:XML = <foo><alive param="badId" /></foo>;
-			var notAliveCondition:XML = <foo><notAlive param="badId" /></foo>;
-			var badAlive:ICondition = ConditionFactory.createFromEnclosingXml(aliveCondition, Autotest.script);
-			var badNotAlive:ICondition = ConditionFactory.createFromEnclosingXml(notAliveCondition, Autotest.script);
+		private function testActiveConditions():void {
+			var activeCondition:XML = <foo><active param="badId" /></foo>;
+			var notActiveCondition:XML = <foo><notActive param="badId" /></foo>;
+			var badActive:ICondition = ConditionFactory.createFromEnclosingXml(activeCondition, Autotest.script);
+			var badNotActive:ICondition = ConditionFactory.createFromEnclosingXml(notActiveCondition, Autotest.script);
 			Autotest.assertNoAlert("shouldn't check id on creation");
-			aliveCondition.alive.@param = Autotest.TEST_ROOM_MAIN_PC_ID;
-			notAliveCondition.notAlive.@param = Autotest.TEST_ROOM_MAIN_PC_ID;
-			var alive:ICondition = ConditionFactory.createFromEnclosingXml(aliveCondition, Autotest.script);
-			var notAlive:ICondition = ConditionFactory.createFromEnclosingXml(notAliveCondition, Autotest.script);
+			activeCondition.active.@param = Autotest.TEST_ROOM_MAIN_PC_ID;
+			notActiveCondition.notActive.@param = Autotest.TEST_ROOM_MAIN_PC_ID;
+			var active:ICondition = ConditionFactory.createFromEnclosingXml(activeCondition, Autotest.script);
+			var notActive:ICondition = ConditionFactory.createFromEnclosingXml(notActiveCondition, Autotest.script);
 			
-			Autotest.assertClass(badAlive, AliveCondition, "wrong condition type");
-			Autotest.assertClass(badNotAlive, AliveCondition, "wrong condition type");
-			Autotest.assertClass(alive, AliveCondition, "wrong condition type");
-			Autotest.assertClass(notAlive, AliveCondition, "wrong condition type");
+			Autotest.assertClass(badActive, ActiveCondition, "wrong condition type");
+			Autotest.assertClass(badNotActive, ActiveCondition, "wrong condition type");
+			Autotest.assertClass(active, ActiveCondition, "wrong condition type");
+			Autotest.assertClass(notActive, ActiveCondition, "wrong condition type");
 			
-			Autotest.assertFalse(badAlive.isMet(context), "unknown character is not alive");
-			Autotest.assertContextMessage(context, "Script error in alive: No character 'badId' in current room.");
-			Autotest.assertFalse(badNotAlive.isMet(context), "undefined character is not not-alive, either");
-			Autotest.assertContextMessage(context, "Script error in alive: No character 'badId' in current room.");
+			Autotest.assertFalse(badActive.isMet(context), "unknown character is not active");
+			Autotest.assertContextMessage(context, "Script error in active: No character 'badId' in current room.");
+			Autotest.assertFalse(badNotActive.isMet(context), "undefined character is not not-active, either");
+			Autotest.assertContextMessage(context, "Script error in active: No character 'badId' in current room.");
 			
-			Autotest.assertTrue(alive.isMet(context), "main character is alive");
-			Autotest.assertFalse(notAlive.isMet(context), "main character is not not-alive");
+			Autotest.assertTrue(active.isMet(context), "main character is active");
+			Autotest.assertFalse(notActive.isMet(context), "main character is not not-active");
 			
 			var char:ComplexEntity = ComplexEntity(Autotest.testRoom.entityInRoomWithId(Autotest.TEST_ROOM_MAIN_PC_ID));
 			Autotest.assertNotEqual(char, null, "main entity should be in room");
 			char.currentHealth = 0;
 			
-			Autotest.assertFalse(alive.isMet(context), "main character is not alive");
-			Autotest.assertTrue(notAlive.isMet(context), "main character is not-alive");
+			Autotest.assertFalse(active.isMet(context), "main character is not active");
+			Autotest.assertTrue(notActive.isMet(context), "main character is not-active");
 			
 			char.currentHealth = char.maxHealth;
 		}

@@ -7,13 +7,13 @@ package angel.game.script.computation {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class AliveComputation implements IComputation {
+	public class ActiveComputation implements IComputation {
 		private var all:Boolean;
 		private var faction:int;
 		
-		public static const TAG:String = "alive";
+		public static const TAG:String = "active";
 		
-		public function AliveComputation(param:String, script:Script) {
+		public function ActiveComputation(param:String, script:Script) {
 			if (param == "all") {
 				all = true;
 			} else {
