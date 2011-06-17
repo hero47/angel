@@ -19,6 +19,7 @@ package angel.game {
 		private var room:Room;
 		private var startSpot:String;
 		private var gameEventQueue:EventQueue = new EventQueue();
+		public var currentRoom:Room;
 		
 		public function Main() {
 			stage.scaleMode = "noScale";
@@ -43,6 +44,14 @@ package angel.game {
 			if (Settings.triggerMaster != null) {
 				Settings.triggerMaster.gameEventsFinishedForFrame();
 			}
+		}
+		
+		public function startRoom(room:Room):void {
+			if (currentRoom != null) {
+				currentRoom.cleanup();
+			}
+			currentRoom = room;
+			addChildAt(room, 0);
 		}
 		
 	}	// end class Main

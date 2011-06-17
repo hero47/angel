@@ -12,6 +12,7 @@ package angel.game {
 	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.event.EventQueue;
 	import angel.game.inventory.Inventory;
+	import angel.game.script.Script;
 	import angel.game.script.TriggerMaster;
 
 	
@@ -62,6 +63,7 @@ package angel.game {
 		public static var grenadeDamage:int;
 		
 		public static var saveDataForNewGame:SaveGame;
+		public static var startScript:Script;
 		
 		public function Settings() {
 			
@@ -103,6 +105,12 @@ package angel.game {
 			
 			setBooleanFromXml("showEnemyMoves", false, xml.@showEnemyMoves);
 			setBooleanFromXml("controlEnemies", false, xml.@controlEnemies);
+		}
+		
+		public static function initStartScript(xml:XML):void {
+			if (xml.length() > 0) {
+				startScript = new Script(xml);
+			}
 		}
 		
 		private static function setIntFromXml(propertyName:String, defaultValue:int, xmlValue:String):void {

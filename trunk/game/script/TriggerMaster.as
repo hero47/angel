@@ -60,7 +60,7 @@ package angel.game.script {
 				for each (var runInfo:RunInfo in runningNow) {
 					runInfo.adjustContextAndDoScriptActions(context);
 				}
-				context.endOfScriptActions();
+				context.finish();
 			}
 			context = null;
 		}
@@ -76,7 +76,7 @@ package angel.game.script {
 				var runInfo:RunInfo = new RunInfo(triggeredScript.script, me, entityWhoTriggered);
 				runThese.push(runInfo);
 			}
-			context.endOfScriptActions(); // display any errors
+			context.finish(); // display any errors
 			//CONSIDER: keep context around, updating contents here, display errors at end of frame processing
 		}
 		

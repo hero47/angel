@@ -15,6 +15,7 @@ package angel.game.script {
 	import angel.game.script.action.IfAction;
 	import angel.game.Settings;
 	import angel.game.SimpleEntity;
+	import flash.display.DisplayObjectContainer;
 	import flash.events.Event;
 	/**
 	 * ...
@@ -57,11 +58,11 @@ package angel.game.script {
 			}
 		}
 		
-		public function run(room:Room, triggeredBy:SimpleEntity = null):void {
-			var context:ScriptContext = new ScriptContext(room, (room == null ? null : room.activePlayer()), triggeredBy);
+		public function run(roomOrMain:DisplayObjectContainer, triggeredBy:SimpleEntity = null):void {
+			var context:ScriptContext = new ScriptContext(roomOrMain, (roomOrMain is Room ? Room(roomOrMain).activePlayer() : null), triggeredBy);
 			
 			doActions(context);
-			context.endOfScriptActions();
+			context.finish();
 		}
 		
 		public function addAction(newAction:IAction):void {

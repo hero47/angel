@@ -6,6 +6,7 @@ package angel.game {
 	import angel.common.SimplerButton;
 	import angel.common.SplashResource;
 	import angel.common.Util;
+	import angel.game.script.ScriptContext;
 	import angel.game.script.TriggerMaster;
 	import flash.display.Bitmap;
 	import flash.display.DisplayObjectContainer;
@@ -17,19 +18,17 @@ package angel.game {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class GameMenu implements ICleanup {
+	public class GameMenu extends Sprite implements ICleanup {
 		
-		public static const BUTTON_COLOR:uint = 0xffcccc;
-		
-		private var main:DisplayObjectContainer;
 		private var saveDataForCurrentGame:SaveGame;
 		
+		private var main:Main;
 		private var background:Bitmap;
 		private var startButton:SimplerButton;
 		private var resumeButton:SimplerButton;
 		private var quitButton:SimplerButton;
 		
-		public function GameMenu(main:DisplayObjectContainer, allowResume:Boolean, newSaveData:SaveGame) {
+		public function GameMenu(main:Main, allowResume:Boolean, newSaveData:SaveGame) {
 			this.main = main;
 			if (allowResume) {
 				if (newSaveData == null) {
@@ -44,24 +43,24 @@ package angel.game {
 			
 			var splash:SplashResource = Settings.catalog.retrieveSplashResource(Defaults.GAME_MENU_SPLASH_ID);
 			background = new Bitmap(splash.bitmapData);
-			main.addChild(background);
+			addChild(background);
 			
-			startButton = new SimplerButton("New Game", startNewGame);
+			startButton = new SimplerButton("New Game", startNewGame, SplashScreen.BUTTON_COLOR);
 			startButton.width = 100;
 			startButton.x = (background.width - startButton.width) / 2;
 			startButton.y = 300;
-			main.addChild(startButton);
+			addChild(startButton);
 			
-			quitButton = new SimplerButton("Close Game", quitGame);
+			quitButton = new SimplerButton("Close Game", quitGame, SplashScreen.BUTTON_COLOR);
 			quitButton.width = 100;
 			Util.addBelow(quitButton, startButton, 10);
 			
 			if (this.saveDataForCurrentGame != null) {
-				resumeButton = new SimplerButton("Return", resumeGame);
+				resumeButton = new SimplerButton("Return", resumeGame, SplashScreen.BUTTON_COLOR);
 				resumeButton.width = 100;
 				Util.addBelow(resumeButton, quitButton, 30);
 			}
-			
+			main.addChild(this);
 		}
 		
 		public function cleanup():void {
@@ -70,15 +69,22 @@ package angel.game {
 			if (resumeButton != null) {
 				resumeButton.cleanup();
 			}
-			main.removeChild(background);
+			removeChild(background);
+			if (parent != null) {
+				parent.removeChild(this);
+			}
 		}
 		
 		private function startNewGame(event:Event):void {
 			saveDataForCurrentGame = Settings.saveDataForNewGame;
 			resumeGame(event);
+			if (Settings.startScript != null) {
+				Settings.startScript.run(main);
+			}
 		}
 		
 		public function resumeGame(event:Event):void {
+			var main:Main = Main(this.parent);
 			this.cleanup();
 			saveDataForCurrentGame.resumeSavedGame(main);
 		}

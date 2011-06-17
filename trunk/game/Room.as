@@ -52,8 +52,8 @@ package angel.game {
 		private var spots:Object = new Object(); // associative array mapping from spotId to location
 
 		public var activeUi:IRoomUi;
-		private var disabledUi:IRoomUi;
-		private var lastUiPlayer:ComplexEntity;
+		private var suspendedUi:IRoomUi;
+		private var suspendedUiPlayer:ComplexEntity;
 		private var dragging:Boolean = false;
 		
 		private var conversationInProgress:ConversationInterface;
@@ -97,7 +97,7 @@ package angel.game {
 			quitButton = new SimplerButton("Exit Game", clickedQuit);
 			quitButton.x = 5;
 			quitButton.y = stage.stageHeight - quitButton.height - 5;
-			parent.addChild(quitButton);
+			parent.addChildAt(quitButton, parent.getChildIndex(this)+1);
 			
 			Settings.gameEventQueue.dispatch(new QEvent(this, ROOM_INIT));
 		}
@@ -222,9 +222,9 @@ package angel.game {
 			}
 		}
 		
-		public function endConversation(converse:ConversationInterface):void {
+		public function endConversation(converse:ConversationInterface, originalRoom:Room):void {
 			conversationInProgress = null;
-			restoreUiAfterSuspend(converse);
+			restoreUiAfterSuspend(converse, originalRoom);
 			quitButton.visible = true;
 		}
 		
@@ -239,7 +239,6 @@ package angel.game {
 		// call this when player-controlled part of the turn begins, to allow player to enter move
 		public function enableUi(newUi:IRoomUi, player:ComplexEntity):void {
 			activeUi = newUi;
-			lastUiPlayer = player;
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 			stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
 			addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
@@ -262,23 +261,33 @@ package angel.game {
 			stopDrag();
 			
 			if (activeUi != null) {
-				disabledUi = activeUi;
 				activeUi.disable();
 				activeUi = null;
 			}
 		}
 			
 		//UNDONE
-		public function restoreUiAfterSuspend(suspender:Object):void {
-			Assert.assertTrue(lastUiPlayer.room == this, "Active player was removed from room. This WILL break things.");
+		public function restoreUiAfterSuspend(suspender:Object, suspendedRoom:Room):void {
+			if (suspendedRoom != this) {
+				return;
+			}
 			unpauseFromLastIndefinitePause(suspender);
-			enableUi(disabledUi, lastUiPlayer);
-			disabledUi = null;
+			if (suspendedUi != null) {
+				Assert.assertTrue(suspendedUiPlayer.room == this, "Active player was removed from room. This WILL break things.");
+				enableUi(suspendedUi, suspendedUiPlayer);
+				suspendedUi = null;
+				suspendedUiPlayer = null;
+			}
 		}
 		
 		public function suspendUi(suspender:Object):void {
+			Assert.assertTrue(suspendedUi == null, "Double suspend, we will lose original ui");
 			pauseGameTimeIndefinitely(suspender);
-			disableUi();
+			if (activeUi != null) {
+				suspendedUi = activeUi;
+				suspendedUiPlayer = activeUi.currentPlayer;
+				disableUi();
+			}
 		}
 		
 		

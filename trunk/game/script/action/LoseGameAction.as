@@ -23,8 +23,7 @@ package angel.game.script.action {
 		/* INTERFACE angel.game.script.action.IAction */
 		
 		public function doAction(context:ScriptContext):Object {
-			context.pauseAndAddMessage(text == "" ? DEFAULT_MESSAGE : text);
-			context.gameIsOver(true);
+			context.gameIsOver(true, text == "" ? DEFAULT_MESSAGE : text);
 			return null;
 		}
 		

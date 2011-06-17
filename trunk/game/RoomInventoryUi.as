@@ -29,7 +29,7 @@ package angel.game {
 		
 		override public function cleanup():void {
 			super.cleanup();
-			room.restoreUiAfterSuspend(this);
+			room.restoreUiAfterSuspend(this, room);
 			room = null;
 		}
 		
