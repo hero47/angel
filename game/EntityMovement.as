@@ -307,7 +307,7 @@ package angel.game {
 		//When animation to reach the tile we're currently moving onto finishes, if that wasn't the last tile in
 		//the path, stop there and send MOVE_INTERRUPTED instead of FINISHED_MOVING.
 		public function interruptMovementAfterTileFinished():void {
-			if (path != null) {
+			if ((path != null) && (path.length > 0)) {
 				if (movingTo == null) {
 					finishedMoving(true);
 				} else {
