@@ -33,6 +33,16 @@ package angel.game.brain {
 			}
 			return combatBrain[brainName];
 		}
+
+		public static function brainNameFromClass(forExplore:Boolean, brainClass:Class):String {
+			var brainList:Object = (forExplore ? exploreBrain : combatBrain);
+			for (var brainName:String in brainList) {
+				if (brainList[brainName] == brainClass) {
+					return brainName;
+				}
+			}
+			return null
+		}
 		
 		
 		public static function pointsFromCommaSeparatedSpots(room:Room, spots:String, errorMessageTail:String = ""):Vector.<Point> {

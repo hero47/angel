@@ -46,15 +46,10 @@ package angel.game {
 			super.cleanup();
 		}
 		
-		public static function createFromRoomContentsXml(propXml:XML, version:int, catalog:Catalog):SimpleEntity {
+		public static function createFromRoomContentsXml(propXml:XML, catalog:Catalog):SimpleEntity {
 			var id:String;
 			
-			//Delete older version support eventually
-			if (version < 1) {
-				id = propXml;
-			} else {
-				id = propXml.@id
-			}
+			id = propXml.@id;
 			
 			var resource:PropResource = catalog.retrievePropResource(id);
 			var simpleEntity:SimpleEntity = new SimpleEntity(new Bitmap(resource.standardImage()), resource.solidness, id);
@@ -76,6 +71,21 @@ package angel.game {
 					triggers = new EntityTriggers(this, scriptFile);
 				}
 			}
+		}
+		
+		public function addCommonPropertiesToXml(xml:XML):void {
+			xml.@id = id;
+			xml.@x = myLocation.x;
+			xml.@y = myLocation.y;
+			if (triggers != null) {
+				xml.@scriptFile = triggers.scriptFile;
+			}
+		}
+		
+		public function appendXMLSaveInfo(contentsXml:XML):void {
+			var xml:XML = <prop />;
+			addCommonPropertiesToXml(xml);
+			contentsXml.appendChild(xml);
 		}
 		
 		public function get displayName():String {

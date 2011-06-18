@@ -35,8 +35,7 @@ package angel.game.script.action {
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(context:ScriptContext):Object {
-			var entity:ComplexEntity = ComplexEntity.createFromRoomContentsXml(walkerXml, CONTENTS_VERSION, Settings.catalog,
-										context.messages);
+			var entity:ComplexEntity = ComplexEntity.createFromRoomContentsXml(walkerXml, Settings.catalog,	context.messages);
 			if (entity == null) {
 				// don't show another error, catalog will already have displayed error
 				return null;

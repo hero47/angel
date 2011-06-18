@@ -11,10 +11,11 @@ package angel.game.script {
 	 * @author Beth Moursund
 	 */
 	public class EntityTriggers extends TriggerBase implements ICleanup {
-		
+		public var scriptFile:String; // cache so savegame can grab it
 		
 		public function EntityTriggers(me:SimpleEntity, filename:String) {
 			super(me);
+			scriptFile = filename;
 			if (!Util.nullOrEmpty(filename)) {
 				LoaderWithErrorCatching.LoadFile(filename, entityScriptXmlLoaded);
 			}

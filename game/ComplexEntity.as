@@ -115,15 +115,10 @@ package angel.game {
 			animation = new resource.animationData.animationClass(resource.animationData, this.imageBitmap);
 		}
 		
-		public static function createFromRoomContentsXml(charXml:XML, version:int, catalog:Catalog, errors:MessageCollector = null):ComplexEntity {
+		public static function createFromRoomContentsXml(charXml:XML, catalog:Catalog, errors:MessageCollector = null):ComplexEntity {
 			var id:String;
 			
-			//Delete older version support eventually
-			if (version < 1) {
-				id = charXml;
-			} else {
-				id = charXml.@id
-			}
+			id = charXml.@id;
 			
 			var resource:CharResource = catalog.retrieveCharacterResource(id, errors);
 			if (resource == null) { // Catalog had something with this id that's not a character resource
@@ -139,6 +134,24 @@ package angel.game {
 			}
 			entity.setCommonPropertiesFromXml(charXml);
 			return entity;
+		}
+		
+		override public function appendXMLSaveInfo(contentsXml:XML):void {
+			var xml:XML = <char />;
+			addCommonPropertiesToXml(xml);
+			if (exploreBrainClass != null) {
+				xml.@explore = UtilBrain.brainNameFromClass(true, exploreBrainClass);
+				xml.@exploreParam = exploreBrainParam;
+			}
+			if (combatBrainClass != null) {
+				xml.@combat = UtilBrain.brainNameFromClass(false, combatBrainClass);
+				xml.@combatParam = combatBrainParam;
+			}
+			xml.@faction = faction;
+			if (!isActive()) {
+				xml.@down = "yes";
+			}
+			contentsXml.appendChild(xml);
 		}
 		
 		override public function cleanup():void {
@@ -194,8 +207,7 @@ package angel.game {
 				return super.frob(whoFrobbedMe);
 			} else {
 				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
-				slices.push(new PieSlice(Icon.bitmapData(Icon.TestIconBitmap), "Revive", 
-						function():void { initHealth(true) }  ));
+				slices.push(new PieSlice(Icon.bitmapData(Icon.TestIconBitmap), "Revive", revive));
 				return slices;
 			}
 		}
@@ -366,6 +378,11 @@ package angel.game {
 				animation.turnToFacing(WalkerAnimationData.FACE_DYING); // stands back up if we were dead
 				solidness ^= Prop.TALL; // Dead entities are short, by fiat.
 			}
+		}
+		
+		public function revive():void {
+			initHealth(true);
+			Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.REVIVE));
 		}
 		
 		public function setTextOverHead(value:String):void {

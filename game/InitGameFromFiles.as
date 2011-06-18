@@ -60,7 +60,7 @@ package angel.game {
 				if (initXml.startScript.length() > 0) {
 					Settings.initStartScript(initXml.startScript[0]);
 				}
-				var save:SaveGame = new SaveGame();
+				var save:SaveGame = new SaveGame(true);
 				save.initStartRoomFromXml(initXml.room);
 				save.initPlayerInfoFromXml(initXml.player, Settings.catalog);
 				Flags.initFlagsFromXml(initXml.setFlag);
