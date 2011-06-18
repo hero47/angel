@@ -14,6 +14,7 @@ package angel.game.event {
 		public static const FINISHED_MOVING:String = "entityFinishedMoving";
 		public static const MOVE_INTERRUPTED:String = "entityMoveInterrupted"; // sent instead of FINISHED_MOVING if interrupted
 		public static const DEATH:String = "entityDied";
+		public static const REVIVE:String = "entityRevived";
 		public static const HEALTH_CHANGE:String = "entityHealthChange";
 		public static const ADDED_TO_ROOM:String = "entityAddedToRoom";
 		public static const REMOVED_FROM_ROOM:String = "entityRemovedFromRoom";

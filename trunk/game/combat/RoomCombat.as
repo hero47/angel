@@ -43,6 +43,7 @@ package angel.game.combat {
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.END_TURN, endTurnListener);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.FINISHED_ONE_TILE_OF_MOVE, checkForOpportunityFire);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.DEATH, deathListener);
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.REVIVE, reviveListener);
 			
 			augmentedReality = new AugmentedReality(this);
 			
@@ -134,17 +135,23 @@ package angel.game.combat {
 			fighters.splice(0, 0, room.mainPlayerCharacter);
 		}
 		
-		private function initEntityForCombat(entity:ComplexEntity):void {
+		private function initEntityForCombat(entity:ComplexEntity, revived:Boolean = false):void {
 			entity.actionsRemaining = 0;
-			if (entity.inventory.mainWeapon() != null) {
-				entity.inventory.mainWeapon().resetCooldown();
-			}
-			if (entity.inventory.offWeapon() != null) {
-				entity.inventory.offWeapon().resetCooldown();
+			if (!revived) {
+				if (entity.inventory.mainWeapon() != null) {
+					entity.inventory.mainWeapon().resetCooldown();
+				}
+				if (entity.inventory.offWeapon() != null) {
+					entity.inventory.offWeapon().resetCooldown();
+				}
 			}
 			entity.adjustBrainForRoomMode(this);
 			if (entity.isActive()) {
-				fighters.push(entity);
+				if (revived) {
+					fighters.splice(currentFighter() + 1, 0, entity);
+				} else {
+					fighters.push(entity);
+				}
 			}
 		}
 		
@@ -266,6 +273,12 @@ package angel.game.combat {
 					augmentedReality.adjustAllNonPlayerVisibility();
 				}
 			}
+		}
+		
+		private function reviveListener(event:EntityQEvent):void {
+			var entity:ComplexEntity = event.complexEntity;
+			initEntityForCombat(entity);
+			augmentedReality.addFighter(entity);
 		}
 
 		/*********** Turn-structure related **************/

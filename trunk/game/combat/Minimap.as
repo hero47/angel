@@ -106,7 +106,8 @@ package angel.game.combat {
 			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.LOCATION_CHANGED_DIRECTLY, someoneMoved);
 			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.START_TURN, someoneStartedTurn);
 			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.REMOVED_FROM_ROOM, someoneLeftRoom);
-			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.DEATH, someoneDied);
+			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.DEATH, someoneDiedOrRevived);
+			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.REVIVE, someoneDiedOrRevived);
 			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.CHANGED_FACTION, someoneChangedFaction);
 			Settings.gameEventQueue.addListener(this, combat.room, EntityQEvent.JOINED_COMBAT, someoneJoinedCombat);
 			Settings.gameEventQueue.addListener(this, combat.room, Room.ROOM_ENTER_FRAME, scrollRoomSpriteToMatchRealRoom);
@@ -261,7 +262,7 @@ package angel.game.combat {
 			adjustActiveEntityMarker();
 		}
 		
-		private function someoneDied(event:EntityQEvent):void {
+		private function someoneDiedOrRevived(event:EntityQEvent):void {
 			var icon:Bitmap = entityToMapIcon[event.complexEntity];
 			if (icon != null) {
 				adjustIconImageAndPosition(event.complexEntity);

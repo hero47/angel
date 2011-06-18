@@ -29,8 +29,11 @@ package angel.game {
 		public var startSpot:String;
 		private var pcInitXml:XML;
 		private var flags:String;
+		private var contents:XML;
+		private var newGame:Boolean;
 		
-		public function SaveGame() {
+		public function SaveGame(isNewGame:Boolean = false) {
+			newGame = isNewGame;
 		}
 		
 		public static function getSharedObject():SharedObject {
@@ -54,6 +57,7 @@ package angel.game {
 			saveData.startX = startLocation.x;
 			saveData.startY = startLocation.y;
 			saveData.players = pcInitXml.toXMLString();
+			saveData.contents = contents.toXMLString();
 			saveData.flags = flags;
 			shared.data.save1 = saveData;
 			shared.flush();
@@ -75,6 +79,7 @@ package angel.game {
 			save.startRoomFile = saveData.startRoomFile;
 			save.pcInitXml = new XML(saveData.players);
 			save.flags = saveData.flags;
+			save.contents = new XML(saveData.contents);
 			
 			shared.close();
 			return save;
@@ -100,8 +105,14 @@ package angel.game {
 			if (xml == null) {
 				return;
 			}
-			var room:Room = Room.createFromXml(xml, this, filename);
+			
+			var room:Room = (newGame ? Room.createFromXml(xml, this, filename) : Room.createFromXmlExceptContents(xml, filename));
 			if (room != null) {
+				if (!newGame) {
+					room.resumedFromSave = true;
+					room.initContentsFromXml(Settings.catalog, contents);
+					addPlayerCharactersToRoom(room);
+				}
 				setFlags();
 				main.startRoom(room);
 				room.changeModeTo(RoomExplore);
@@ -239,6 +250,7 @@ package angel.game {
 			room.forEachComplexEntity(storePlayerInfo, function(entity:ComplexEntity):Boolean {
 					return ((entity != room.mainPlayerCharacter) && entity.isReallyPlayer) } );
 			flags = Flags.toText();
+			contents = room.createContentsXml();
 		}
 		
 		private function storePlayerInfo(entity:ComplexEntity):void {

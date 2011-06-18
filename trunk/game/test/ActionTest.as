@@ -463,7 +463,7 @@ package angel.game.test {
 			Autotest.assertTrue(gotEvent, "should have processed faction change listener");
 			
 			var fooXml:XML = <prop id="foo" x="6" y="5"/>
-			var foo:SimpleEntity = SimpleEntity.createFromRoomContentsXml(fooXml, 1, Settings.catalog);
+			var foo:SimpleEntity = SimpleEntity.createFromRoomContentsXml(fooXml, Settings.catalog);
 			Autotest.clearAlert();
 			Autotest.assertNotEqual(foo, null, "couldn't create prop foo");
 			testRoom.addEntityUsingItsLocation(foo);

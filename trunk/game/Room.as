@@ -64,6 +64,7 @@ package angel.game {
 		private var tileWithHilight:FloorTile;
 		private var scrollingTo:Point = null;
 		public var preCombatSave:SaveGame;
+		public var resumedFromSave:Boolean;
 				
 		public function Room(floor:Floor) {
 			this.floor = floor;
@@ -99,7 +100,9 @@ package angel.game {
 			quitButton.y = stage.stageHeight - quitButton.height - 5;
 			parent.addChildAt(quitButton, parent.getChildIndex(this)+1);
 			
-			Settings.gameEventQueue.dispatch(new QEvent(this, ROOM_INIT));
+			if (!resumedFromSave) {
+				Settings.gameEventQueue.dispatch(new QEvent(this, ROOM_INIT));
+			}
 		}
 		
 		public function cleanup():void {
@@ -307,7 +310,7 @@ package angel.game {
 					Settings.gameEventQueue.debugTraceListeners(null, "Game event listeners");
 				break;
 				case Util.KEYBOARD_R:
-					forEachComplexEntity(function(entity:ComplexEntity):void { entity.initHealth(true); } );
+					forEachComplexEntity(function(entity:ComplexEntity):void { entity.revive(); } );
 				break;
 				
 				default:
@@ -473,6 +476,18 @@ package angel.game {
 			return null;
 		}
 		
+		public function forEachEntity(callWithEntity:Function, filter:Function = null):void {
+			for (var i:int = 0; i < size.x; i++) {
+				for (var j:int = 0; j < size.y; j++) {
+					for each (var prop:Prop in cells[i][j].contents) {
+						if ((prop is SimpleEntity) && ((filter == null) || (filter(prop)))) {
+							callWithEntity(prop);
+						}
+					}
+				}
+			}
+		}
+		
 		public function forEachComplexEntity(callWithEntity:Function, filter:Function = null):void {
 			for (var i:int = 0; i < size.x; i++) {
 				for (var j:int = 0; j < size.y; j++) {
@@ -603,7 +618,7 @@ package angel.game {
 							 Settings.STAGE_HEIGHT / 2 - desiredTileCenter.y - Floor.FLOOR_TILE_Y / 2 );
 		}
 		
-		public static function createFromXml(xml:XML, save:SaveGame, filename:String = ""):Room {
+		public static function createFromXmlExceptContents(xml:XML, filename:String = ""):Room {
 			if (xml.floor.length() == 0) {
 				Alert.show("Invalid room file " + filename);
 				return null;
@@ -615,15 +630,21 @@ package angel.game {
 			var room:Room = new Room(floor);
 			room.filename = filename;
 			
-			if (xml.contents.length() > 0) {
-				room.initContentsFromXml(Settings.catalog, xml.contents[0]);
-			}
 			if (xml.spots.length() > 0) {
 				room.initSpotsFromXml(xml.spots[0]);
 			}
 			
 			room.triggers = new RoomTriggers(room, xml, filename);
 			Settings.triggerMaster.changeRoom(room);
+			
+			return room;
+		}
+		
+		public static function createFromXml(xml:XML, save:SaveGame, filename:String = ""):Room {
+			var room:Room = createFromXmlExceptContents(xml, filename);
+			if (xml.contents.length() > 0) {
+				room.initContentsFromXml(Settings.catalog, xml.contents[0]);
+			}
 			save.addPlayerCharactersToRoom(room);
 			
 			return room;
@@ -635,19 +656,18 @@ package angel.game {
 		// To save headaches, I'll attempt to make most changes be additions with reasonable
 		// defaults, so most changes won't require a new version.
 		public function initContentsFromXml(catalog:Catalog, contentsXml: XML):void {
-			var version:int = int(contentsXml.@version);
 			
 			for each (var propXml: XML in contentsXml.prop) {
-				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXml(propXml, version, catalog));
+				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXml(propXml, catalog));
 			}
 			
 			//UNDONE For backwards compatibility; remove this eventually
 			for each (var walkerXml: XML in contentsXml.walker) {
-				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(walkerXml, version, catalog));
+				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(walkerXml, catalog));
 			}
 			
 			for each (var charXml: XML in contentsXml.char) {
-				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(charXml, version, catalog));
+				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(charXml, catalog));
 			}
 		}
 
@@ -662,6 +682,17 @@ package angel.game {
 			}
 		}
 		
+		public function createContentsXml():XML {
+			var xml:XML = <contents />;
+			forEachEntity( function(entity:SimpleEntity):void { entity.appendXMLSaveInfo(xml); }, notPlayer );
+			return xml;
+		}
+		
+		private function notPlayer(entity:SimpleEntity):Boolean {
+			var complex:ComplexEntity = entity as ComplexEntity;
+			return ((complex == null) || (!complex.isReallyPlayer));
+		}
+		
 		private function clickedQuit(event:Event):void {
 			if (preCombatSave != null) {
 				var options:Object = { buttons:["Yes", "No"], callback:combatQuitCallback };
@@ -671,7 +702,6 @@ package angel.game {
 			var save:SaveGame = new SaveGame();
 			save.collectGameInfo(this);
 			new GameMenu(Main(this.parent), true, save);
-			this.cleanup();
 		}
 		
 		private function combatQuitCallback(buttonName:String):void {
@@ -679,7 +709,6 @@ package angel.game {
 				return;
 			}
 			new GameMenu(Main(this.parent), true, preCombatSave);
-			this.cleanup();
 		}
 		
 		public function revertToPreCombatSave():void {
