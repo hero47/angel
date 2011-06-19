@@ -3,8 +3,6 @@ package angel.game.inventory {
 	import angel.common.Assert;
 	import angel.common.MessageCollector;
 	import angel.common.Util;
-	import angel.common.WeaponResource;
-	import angel.game.combat.Grenade;
 	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.Settings;
 	import flash.utils.Dictionary;
@@ -218,6 +216,16 @@ package angel.game.inventory {
 			return null;
 		}
 		
+		public function findAllMatchingInPileOfStuff(classToFind:Class):Vector.<CanBeInInventory> {
+			var pile:Vector.<CanBeInInventory> = new Vector.<CanBeInInventory>();
+			for (var item:Object in pileOfStuff) {
+				if (item is classToFind) {
+					pile.push(item);
+				}
+			}
+			return pile;
+		}
+		
 		public function countSpecificItemInPileOfStuff(specificItem:Object):int {
 			return pileOfStuff[specificItem];
 		}
@@ -241,17 +249,8 @@ package angel.game.inventory {
 		}
 		
 		public static function makeOne(id:String, errors:MessageCollector = null):CanBeInInventory {
-			//NOTE: once we have more types of things that can be in inventory, this will need to retrieve
-			//catalog entry, determine the appropriate resource type, and then create the item using that.
-			//UNDONE: grenades don't have a weapon resource yet
-			var item:CanBeInInventory;
-			if (id == "grenade") {
-				item = Grenade.getCopy();
-			} else {
-				var gunResource:WeaponResource = Settings.catalog.retrieveWeaponResource(id, errors);
-				item = new SingleTargetWeapon(gunResource, id);
-			}
-			return item;
+			var resource:IInventoryResource = Settings.catalog.retrieveInventoryResource(id, errors);
+			return (resource == null ? null : resource.makeOne());
 		}
 		
 		public function addToPileFromText(text:String, errors:MessageCollector = null):void {

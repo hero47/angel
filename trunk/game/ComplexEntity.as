@@ -15,10 +15,10 @@ package angel.game {
 	import angel.game.brain.CombatBrainNone;
 	import angel.game.brain.IBrain;
 	import angel.game.brain.UtilBrain;
-	import angel.game.combat.Grenade;
 	import angel.game.combat.IWeapon;
 	import angel.game.combat.RoomCombat;
 	import angel.game.combat.SingleTargetWeapon;
+	import angel.game.combat.ThrownWeapon;
 	import angel.game.event.EntityQEvent;
 	import angel.game.inventory.Inventory;
 	import angel.game.script.TriggerMaster;
@@ -103,10 +103,6 @@ package angel.game {
 			}
 			if (characterStats.inventory != "") {
 				inventory.addToPileFromText(characterStats.inventory);
-			}
-			//UNDONE: get rid of this once files are converted
-			if (characterStats.grenades > 0) {
-				inventory.addToPileOfStuff(Inventory.makeOne("grenade"), characterStats.grenades);
 			}
 			
 			solidness = solidnessWhenAlive = resource.solidness;
@@ -458,12 +454,12 @@ package angel.game {
 		
 		public function hasAUsableWeapon():Boolean {
 			return (hasAUsableEquippedWeapon() ||
-					 (inventory.findFirstMatchingInPileOfStuff(Grenade) != null));
+					 (inventory.findFirstMatchingInPileOfStuff(ThrownWeapon) != null));
 		}
 		
 		public function hasAUsableWeaponAndEnoughActions():Boolean {
 			return ((hasAUsableEquippedWeapon() && (actionsRemaining > 0)) ||
-					 ((inventory.findFirstMatchingInPileOfStuff(Grenade) != null) && (actionsRemaining > 1)));
+					 ((inventory.findFirstMatchingInPileOfStuff(ThrownWeapon) != null) && (actionsRemaining > 1)));
 		}
 		
 	} // end class ComplexEntity

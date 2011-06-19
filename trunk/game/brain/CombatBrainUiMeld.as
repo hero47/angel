@@ -1,7 +1,6 @@
 package angel.game.brain {
 	import angel.common.Assert;
 	import angel.common.Util;
-	import angel.game.combat.Grenade;
 	import angel.game.combat.IWeapon;
 	import angel.game.combat.RoomCombat;
 	import angel.game.combat.SingleTargetWeapon;

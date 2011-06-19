@@ -184,15 +184,6 @@ package angel.game {
 				delete xml.@inventory;
 			}
 			
-			//UNDONE: get rid of this once files are converted
-			if (xml.@grenades.length() > 0) {
-				var grenades:int = xml.@grenades;
-				if (grenades > 0) {
-					inventory.addToPileOfStuff(Inventory.makeOne("grenade"), grenades);
-				}
-				delete xml.@grenades;
-			}
-			
 			xml.@inv = inventory.toText();
 		}
 		

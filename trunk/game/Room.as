@@ -549,7 +549,7 @@ package angel.game {
 			return (solidness(x,y) & Prop.TALL) != 0;
 		}
 		
-		public function blocksGrenade(x:int, y:int):Boolean {
+		public function blocksThrown(x:int, y:int):Boolean {
 			return (solidness(x,y) & Prop.FILLS_TILE) != 0;
 		}
 		

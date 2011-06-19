@@ -1,4 +1,5 @@
 package angel.common {
+	import angel.game.inventory.IInventoryResource;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.events.Event;
@@ -93,6 +94,15 @@ package angel.common {
 
 		public function retrieveTileset(tilesetId:String, errors:MessageCollector = null):Tileset {
 			return loadOrRetrieveCatalogEntry(tilesetId, Tileset, errors) as Tileset;
+		}
+		
+		public function retrieveInventoryResource(id:String, errors:MessageCollector = null):IInventoryResource {
+			var entry:CatalogEntry = entry(id);
+			if (entry == null) {
+				MessageCollector.collectOrShowMessage(errors, "Unknown inventory item " + id);
+				return null;
+			}
+			return loadOrRetrieveCatalogEntry(id, entry.type, errors) as IInventoryResource;
 		}
 		
 		// finishEntry takes CatalogEntry with data set to bitmapData (and xml if appropriate),
