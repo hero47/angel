@@ -6,6 +6,7 @@ package angel.game.combat {
 	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.ComplexEntity;
 	import angel.game.Icon;
+	import angel.game.inventory.CanBeInInventory;
 	import angel.game.IRoomUi;
 	import angel.game.PieSlice;
 	import angel.game.Room;
@@ -171,7 +172,7 @@ package angel.game.combat {
 			
 			slices.push(new PieSlice(Icon.bitmapData(Icon.CombatPass), "Pass/Reserve Fire", 
 						function():void { doPlayerAttack(null, null); }  ));
-			addGrenadePieSliceIfLegal(slices, location);
+			addThrowPieSlices(slices, location);
 			if (hilightedEnemy != null) {
 				Assert.assertTrue(hilightedEnemy.location.equals(location), "Hilighted enemy not on menu tile");
 				addFirePieSliceIfLegal(slices, location, player.inventory.mainWeapon(), Icon.CombatFireFirstGun);
@@ -192,18 +193,18 @@ package angel.game.combat {
 			}
 		}
 		
-		private function addGrenadePieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point):void {
-			var weapon:Grenade = player.inventory.findFirstMatchingInPileOfStuff(Grenade);
-			if ( (weapon != null) &&
-						player.inventory.hasFreeHand() &&
+		private function addThrowPieSlices(slices:Vector.<PieSlice>, targetLocation:Point):void {
+			var throwables:Vector.<CanBeInInventory> = player.inventory.findAllMatchingInPileOfStuff(ThrownWeapon);
+			for each (var weapon:ThrownWeapon in throwables) {
+				if (player.inventory.hasFreeHand() &&
 						((player.actionsPerTurn == 1) || (player.actionsRemaining >= 2)) &&
-						!room.blocksGrenade(targetLocation.x, targetLocation.y) &&
+						!room.blocksThrown(targetLocation.x, targetLocation.y) &&
 						Util.entityHasLineOfSight(player, targetLocation)) {
-				var count:int = player.inventory.countSpecificItemInPileOfStuff(weapon);
-				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatGrenade),
-					"Throw " + weapon.displayName + " [" + count + " in inventory] at this square",
-					function():void { doPlayerAttack(weapon, targetLocation); }
-				));
+					var count:int = player.inventory.countSpecificItemInPileOfStuff(weapon);
+					slices.push(new PieSlice(Icon.bitmapData(weapon.iconClass),
+						"Throw " + weapon.displayName + " [" + count + " in inventory] at this square",
+						function():void { doPlayerAttack(weapon, targetLocation); }	));
+				}
 			}
 		}
 		

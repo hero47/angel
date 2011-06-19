@@ -156,14 +156,6 @@ package angel.roomedit {
 			
 			var characterStats:CharacterStats = resource.characterStats;
 			
-			//UNDONE remove this when files have been updated
-			if (characterStats.grenades > 0) {
-				catalog.deleteXmlAttribute(charId, "grenades");
-				characterStats.inventory = String(characterStats.grenades) + " grenade";
-				catalog.changeXmlAttribute(charId, "inventory", characterStats.inventory);
-				characterStats.grenades = 0;
-			}
-			
 			nameTextField.text = characterStats.displayName;
 			healthTextField.text = String(characterStats.health);
 			mainGunCombo.selectedItem = Util.itemWithLabelInComboBox(mainGunCombo, characterStats.mainGun);

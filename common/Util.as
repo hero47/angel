@@ -156,6 +156,18 @@ package angel.common {
 			return combo;
 		}
 		
+		public static function createChooserFromStringList(choices:Vector.<String>, width:int, changeListener:Function = null):ComboBox {
+			var combo:ComboBox = new ComboBox();
+			combo.width = width;
+			for (var i:int = 0; i < choices.length; i++) {
+				combo.addItem( { label:choices[i] } );
+			}
+			if (changeListener != null) {
+				combo.addEventListener(Event.CHANGE, changeListener);
+			}
+			return combo;
+		}
+		
 		public static const DEFAULT_TEXT_WIDTH:int = 100;
 		public static const DEFAULT_TEXT_HEIGHT:int = 20;
 		public static function textBox(text:String, width:int = DEFAULT_TEXT_WIDTH, height:int = DEFAULT_TEXT_HEIGHT, align:String = TextFormatAlign.LEFT,

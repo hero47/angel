@@ -19,7 +19,6 @@ package angel.common {
 		public var mainGun:String = Defaults.MAIN_WEAPON_ID;
 		public var offGun:String = Defaults.OFF_WEAPON_ID;
 		public var inventory:String = "";
-		public var grenades:int = Defaults.GRENADES; // UNDONE: get rid of this once files are converted
 		
 		public function CharacterStats() {
 			
@@ -36,8 +35,6 @@ package angel.common {
 			Util.setTextFromXml(this, "mainGun", xml, "mainGun");
 			Util.setTextFromXml(this, "offGun", xml, "offGun");
 			Util.setTextFromXml(this, "inventory", xml, "inventory");
-			// UNDONE: get rid of this once files are converted
-			Util.setIntFromXml(this, "grenades", xml, "grenades");
 		}
 		
 	}

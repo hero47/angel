@@ -1,4 +1,9 @@
 package angel.common {
+	import angel.game.combat.IWeapon;
+	import angel.game.combat.SingleTargetWeapon;
+	import angel.game.combat.ThrownWeapon;
+	import angel.game.inventory.IInventoryResource;
+	import angel.game.Settings;
 	import flash.display.BitmapData;
 	import angel.common.CatalogEntry;
 	/**
@@ -8,9 +13,15 @@ package angel.common {
 	
 	// Currently this is the only type of inventory item we have.
 	// Later this may expand into a general class for inventory items, or it may become a subclass of such a class.
-	public class WeaponResource implements ICatalogedResource {
+	public class WeaponResource implements IInventoryResource {
+		
+		private static const typeToClass:Object = { "hand":SingleTargetWeapon, "thrown":ThrownWeapon };
+		
 		private var entry:CatalogEntry;
 		
+		public var id:String;
+		public var type:String;
+		public var weaponClass:Class;
 		public var displayName:String = Defaults.GUN_DISPLAY_NAME;
 		public var damage:int = Defaults.GUN_DAMAGE;
 		public var range:int = Defaults.WEAPON_RANGE;
@@ -32,7 +43,17 @@ package angel.common {
 		
 		public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry, errors:MessageCollector):void {
 			// We don't have graphics for weapons yet, so this is the only version there is
+			this.id = id;
 			this.entry = entry;
+			type = entry.xml.@type;
+			if (type == "") {
+				type = Defaults.WEAPON_TYPE;
+			}
+			weaponClass = typeToClass[type];
+			if (weaponClass == null) {
+				MessageCollector.collectOrShowMessage(errors, "Unknown weapon type " + type);
+			}
+			
 			Util.setTextFromXml(this, "displayName", entry.xml, "displayName");
 			Util.setIntFromXml(this, "damage", entry.xml, "damage");
 			Util.setIntFromXml(this, "range", entry.xml, "range");
@@ -45,7 +66,10 @@ package angel.common {
 		public function dataFinishedLoading(bitmapData:BitmapData, param:Object = null):void {
 			// We don't have graphics for weapons yet, so this is irrelevant
 			Assert.fail("Weapon should never load data from file");
-			
+		}
+		
+		public function makeOne():IWeapon {
+			return new weaponClass(this, id);
 		}
 		
 	}

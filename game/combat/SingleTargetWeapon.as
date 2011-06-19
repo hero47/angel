@@ -16,10 +16,7 @@ package angel.game.combat {
 	 */
 	
 	 // This may become an interface once we have more types of guns, or the others may extend it
-	public class SingleTargetWeapon implements IWeapon {
-		private var myId:String;
-		public var name:String;
-		public var baseDamage:int;
+	public class SingleTargetWeapon extends WeaponBase implements IWeapon {
 		public var range:int;
 		public var cooldown:int;
 		public var turnsSinceLastFired:int;
@@ -27,9 +24,7 @@ package angel.game.combat {
 		public var ignoreTargetGait:Boolean;
 		
 		public function SingleTargetWeapon(resource:WeaponResource, id:String) {
-			this.myId = id;
-			this.baseDamage = resource.damage;
-			this.name = resource.displayName;
+			super(resource, id);
 			this.range = resource.range;
 			this.cooldown = resource.cooldown;
 			this.ignoreUserGait = resource.ignoreUserGait;
@@ -39,14 +34,6 @@ package angel.game.combat {
 		
 		public function toString():String {
 			return "[SingleTargetWeapon displayName=" + name + ", baseDamage=" + baseDamage + "]";
-		}
-		
-		public function get id():String {
-			return myId;
-		}
-		
-		public function get displayName():String {
-			return name;
 		}
 		
 		public function get iconClass():Class {

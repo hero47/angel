@@ -18,6 +18,9 @@ package angel.roomedit {
 	 * @author Beth Moursund
 	 */
 	public class NpcPalette extends ContentPaletteCommonCode {
+			
+		private static const COMBO_WIDTH:int = EditorSettings.PALETTE_XSIZE - 10;
+			
 		private var locationText:TextField;
 		private var exploreCombo:ComboBox;
 		private var combatCombo:ComboBox;
@@ -107,22 +110,18 @@ package angel.roomedit {
 			
 			var exploreLabel:TextField = Util.textBox("Explore mode behavior:", EditorSettings.PALETTE_XSIZE-20);
 			holder.addChild(exploreLabel);
-			exploreCombo = createChooserFromStringList(exploreChoices);
+			exploreCombo = Util.createChooserFromStringList(exploreChoices, COMBO_WIDTH,
+							function(event:Event):void { changeAttribute("explore", exploreCombo.selectedLabel); } );
 			Util.addBelow(exploreCombo, exploreLabel);
-			exploreCombo.addEventListener(Event.CHANGE, function(event:Event):void {
-				changeAttribute("explore", exploreCombo.selectedLabel);
-			});
 			exploreParameters = Util.createTextEditControlBelow(exploreCombo, null, 0, EditorSettings.PALETTE_XSIZE-10, function(event:Event):void {
 				changeAttribute("exploreParam", exploreParameters.text);
 			});
 			
 			var combatLabel:TextField = Util.textBox("Combat mode behavior:", EditorSettings.PALETTE_XSIZE-20);
 			Util.addBelow(combatLabel, exploreParameters, 5);
-			combatCombo = createChooserFromStringList(combatChoices);
+			combatCombo = Util.createChooserFromStringList(combatChoices, COMBO_WIDTH,
+							function(event:Event):void { changeAttribute("combat", combatCombo.selectedLabel); } );
 			Util.addBelow(combatCombo, combatLabel);
-			combatCombo.addEventListener(Event.CHANGE, function(event:Event):void {
-				changeAttribute("combat", combatCombo.selectedLabel);
-			});
 			combatParameters = Util.createTextEditControlBelow(combatCombo, null, 0, EditorSettings.PALETTE_XSIZE-10, function(event:Event):void {
 				changeAttribute("combatParam", combatParameters.text);
 			});
@@ -133,11 +132,9 @@ package angel.roomedit {
 				changeAttribute("script", scriptFile.text);
 			});
 			
-			factionCombo = createChooserFromStringList(factionChoices);
+			factionCombo = Util.createChooserFromStringList(factionChoices, COMBO_WIDTH,
+							function(event:Event):void { changeAttribute("faction", String(factionCombo.selectedIndex)); } );
 			Util.addBelow(factionCombo, scriptFile);
-			factionCombo.addEventListener(Event.CHANGE, function(event:Event):void {
-				changeAttribute("faction", String(factionCombo.selectedIndex));
-			});
 			
 			downCheckbox = Util.createCheckboxEditControlBelow(factionCombo, "Down", EditorSettings.PALETTE_XSIZE, changeDown);
 			
@@ -173,15 +170,6 @@ package angel.roomedit {
 		private function adjustParamVisibilities():void {
 			exploreParameters.visible = (exploreCombo.selectedIndex != 0);
 			combatParameters.visible = (combatCombo.selectedIndex != 0);
-		}
-		
-		private function createChooserFromStringList(choices:Vector.<String>):ComboBox {
-			var combo:ComboBox = new ComboBox();
-			combo.width = EditorSettings.PALETTE_XSIZE - 10;
-			for (var i:int = 0; i < choices.length; i++) {
-				combo.addItem( { label:choices[i] } );
-			}
-			return combo;
 		}
 		
 		private function changeDown(event:Event):void {

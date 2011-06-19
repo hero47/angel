@@ -3,6 +3,7 @@ package angel.game.combat {
 	import angel.common.Floor;
 	import angel.common.Prop;
 	import angel.common.Util;
+	import angel.common.WeaponResource;
 	import angel.game.ComplexEntity;
 	import angel.game.Icon;
 	import angel.game.Room;
@@ -17,11 +18,7 @@ package angel.game.combat {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	
-	 // This may become an interface once we have more types of area weapons, or the others may extend it
-	public class Grenade implements IWeapon {
-		
-		private static const singleton:Grenade = new Grenade();
+	public class ThrownWeapon extends WeaponBase implements IWeapon {
 		
 		private static const grenadeInner:Vector.<Point> = Vector.<Point>([
 				new Point(0,0),
@@ -36,21 +33,12 @@ package angel.game.combat {
 				new Point(2,-2), new Point(2,-1), new Point(2,0), new Point(2,1), new Point(2,2)
 			]);
 		
-		public function Grenade() {
-			Assert.assertTrue(singleton == null, "Singleton -- need to use getCopy");
+		public function ThrownWeapon(resource:WeaponResource, id:String) {
+			super(resource, id);
+			
 		}
 		
-		public static function getCopy():Grenade {
-			return singleton;
-		}
-		
-		public function get id():String {
-			return "grenade";
-		}
-		
-		public function get displayName():String {
-			return "Grenade, standard";
-		}
+		/* INTERFACE angel.game.combat.IWeapon */
 		
 		public function get iconClass():Class {
 			return Icon.CombatGrenade;
@@ -76,8 +64,8 @@ package angel.game.combat {
 			var temporaryGrenadeExplosionGraphic:TimedSprite = new TimedSprite(Settings.FRAMES_PER_SECOND);	
 			
 			// Process all of outer ring first, so things in inner ring will provide blast shadow even if they are destroyed
-			applyGrenadeToOffsets(shooter.room, targetLocation, grenadeOuter, Settings.grenadeDamage / 2, temporaryGrenadeExplosionGraphic);
-			applyGrenadeToOffsets(shooter.room, targetLocation, grenadeInner, Settings.grenadeDamage, temporaryGrenadeExplosionGraphic);
+			applyGrenadeToOffsets(shooter.room, targetLocation, grenadeOuter, baseDamage / 2, temporaryGrenadeExplosionGraphic);
+			applyGrenadeToOffsets(shooter.room, targetLocation, grenadeInner, baseDamage, temporaryGrenadeExplosionGraphic);
 			shooter.room.addChild(temporaryGrenadeExplosionGraphic);
 			
 			shooter.room.snapToCenter(targetLocation);
@@ -93,7 +81,7 @@ package angel.game.combat {
 			if ((location.x < 0) || (location.x >= room.size.x) || (location.y < 0) || (location.y >= room.size.y)) {
 				return;
 			}
-			if ((Util.chessDistance(center, location) > 1) && !Util.lineUnblocked(room.blocksGrenade, center, location)) {
+			if ((Util.chessDistance(center, location) > 1) && !Util.lineUnblocked(room.blocksThrown, center, location)) {
 				// CONSIDER: replace this with just "return" if we don't want graphic on shadowed squares
 				damagePoints = 0;
 			}

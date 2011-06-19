@@ -16,6 +16,7 @@ package angel.roomedit {
 	 */
 	public class WeaponEditUI extends Sprite {
 		private var catalog:CatalogEdit;
+		private var typeCombo:ComboBox;
 		private var weaponCombo:ComboBox;
 		private var nameTextField:TextField;
 		private var damageTextField:TextField;
@@ -26,6 +27,7 @@ package angel.roomedit {
 		private var deleteFromCatalogButton:SimplerButton;
 		
 		private static const WIDTH:int = 220;
+		private static const weaponTypes:Vector.<String> = Vector.<String>(["hand", "thrown"]);
 		
 		public function WeaponEditUI(catalog:CatalogEdit, startId:String = null) {
 			this.catalog = catalog;
@@ -34,9 +36,12 @@ package angel.roomedit {
 			weaponCombo.addEventListener(Event.CHANGE, changeWeapon);
 			addChild(weaponCombo);
 			
-			var weaponType:TextField = Util.textBox("Type: Single Target", WIDTH); // This will probably be a chooser, someday
-			Util.addBelow(weaponType, weaponCombo);
-			nameTextField = Util.createTextEditControlBelow(weaponType, "Display Name", 85, WIDTH-85,
+			var typeLabel:TextField = Util.textBox("Type:", 40);
+			Util.addBelow(typeLabel, weaponCombo, 10);
+			typeCombo = Util.createChooserFromStringList(weaponTypes, WIDTH-40, typeChangeListener);
+			Util.addBeside(typeCombo, typeLabel);
+			
+			nameTextField = Util.createTextEditControlBelow(typeCombo, "Display Name", 85, WIDTH-85,
 					function(event:Event):void { changeWeaponProperty(event.target.text, "displayName", Defaults.GUN_DISPLAY_NAME) }, 0);
 			damageTextField = Util.createTextEditControlBelow(nameTextField, "Damage", 85, 40,
 					function(event:Event):void { changeWeaponProperty(int(event.target.text), "damage", Defaults.GUN_DAMAGE) }, 0);
@@ -73,6 +78,26 @@ package angel.roomedit {
 			cooldownTextField.text = String(resource.cooldown);
 			ignoreUserGait.selected = resource.ignoreUserGait;
 			ignoreTargetGait.selected = resource.ignoreTargetGait;
+			
+			typeCombo.selectedItem = Util.itemWithLabelInComboBox(typeCombo, resource.type);
+			hideOrShowControlsForType(resource.type);
+		}
+		
+		private function typeChangeListener(event:Event):void {
+			var type:String = typeCombo.selectedLabel;
+			changeWeaponProperty(type, "type", Defaults.WEAPON_TYPE);
+			
+			//This will become increasingly clunky as the number of parameters grows, so we may switch to subclassing later
+			changeWeaponProperty(Defaults.WEAPON_RANGE, "range", Defaults.WEAPON_RANGE);
+			changeWeaponProperty(Defaults.WEAPON_COOLDOWN, "cooldown", Defaults.WEAPON_COOLDOWN);
+			changeWeaponProperty(false, "ignoreUserGait", false);
+			changeWeaponProperty(false, "ignoreTargetGait", false);
+			hideOrShowControlsForType(type);
+		}
+		
+		private function hideOrShowControlsForType(type:String):void {
+			var isHand:Boolean = (type == "hand");
+			rangeTextField.visible = cooldownTextField.visible = ignoreUserGait.enabled = ignoreTargetGait.enabled = isHand;
 		}
 		
 		private function changeWeaponProperty(newValue:*, propertyName:String, defaultValue:* = null):void {
