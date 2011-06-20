@@ -120,7 +120,7 @@ package angel.roomedit {
 			offGunCombo = createWeaponChooserBelow(mainGunCombo, "Off Gun", 65, COLUMN_WIDTH-65,
 					function(event:Event):void { changeCharacterProperty(offGunCombo.selectedLabel, "offGun", "") }, 0);
 			inventoryTextField = Util.createTextEditControlBelow(offGunCombo, "Inv.", 30, COLUMN_WIDTH-30,
-				function(event:Event):void { changeCharacterProperty(int(event.target.text), "inventory", "") }, 0 );
+				function(event:Event):void { changeCharacterProperty(event.target.text, "inventory", "") }, 0 );
 				
 			portraitFileControl = new FilenameControl(true, "Portrait", COLUMN_WIDTH, 0);
 			portraitFileControl.x = COLUMN2_X;
