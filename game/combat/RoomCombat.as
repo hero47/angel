@@ -5,6 +5,7 @@ package angel.game.combat {
 	import angel.game.brain.CombatBrainUiMeld;
 	import angel.game.ComplexEntity;
 	import angel.game.event.EntityQEvent;
+	import angel.game.inventory.Inventory;
 	import angel.game.IRoomMode;
 	import angel.game.Room;
 	import angel.game.RoomExplore;
@@ -27,6 +28,7 @@ package angel.game.combat {
 		
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
 		public var fighters:Vector.<ComplexEntity>;
+		public var combatTurn:int;
 		
 		public static const PAUSE_TO_VIEW_MOVE_SECONDS:Number = 1;
 		public static const PAUSE_TO_VIEW_FIRE_SECONDS:Number = 1;
@@ -87,6 +89,18 @@ package angel.game.combat {
 			for each (var fighter:ComplexEntity in fighters) {
 				fighter.adjustBrainForRoomMode(null);
 			}
+			combatTurn = int.MAX_VALUE;
+			room.forEachComplexEntity(standardizeWeaponsForInventory);
+			
+			room = null;
+		}
+		
+		public function standardizeWeaponsForInventory(entity:ComplexEntity):void {
+			entity.inventory.forAllSingleTargetWeapons(standardizeOneWeapon);
+		}
+		
+		private function standardizeOneWeapon(weapon:SingleTargetWeapon):void {
+			weapon.standardizeCooldown(this);
 		}
 		
 		public function activePlayer():ComplexEntity {
@@ -137,18 +151,10 @@ package angel.game.combat {
 		
 		private function initEntityForCombat(entity:ComplexEntity, revived:Boolean = false):void {
 			entity.actionsRemaining = 0;
-			if (!revived) {
-				if (entity.inventory.mainWeapon() != null) {
-					entity.inventory.mainWeapon().resetCooldown();
-				}
-				if (entity.inventory.offWeapon() != null) {
-					entity.inventory.offWeapon().resetCooldown();
-				}
-			}
 			entity.adjustBrainForRoomMode(this);
 			if (entity.isActive()) {
 				if (revived) {
-					fighters.splice(currentFighter() + 1, 0, entity);
+					fighters.splice(iFighterTurnInProgress++, 0, entity);
 				} else {
 					fighters.push(entity);
 				}
@@ -230,7 +236,7 @@ package angel.game.combat {
 		}
 		
 		private function fireIfLegal(shooter:ComplexEntity, target:ComplexEntity, weapon:SingleTargetWeapon):Boolean {
-			if ((weapon != null) && (weapon.readyToFire()) &&
+			if ((weapon != null) && (weapon.readyToFire(this)) &&
 						(weapon.expectedDamage(shooter, target) >= Settings.minForOpportunity) &&
 						weapon.inRange(shooter, target.location) &&
 						Util.entityHasLineOfSight(shooter, target.location)) {
@@ -315,6 +321,7 @@ package angel.game.combat {
 			if (iFighterTurnInProgress >= fighters.length) {
 				trace("All turns have been processed, go back to first player");
 				iFighterTurnInProgress = 0;
+				++combatTurn;
 			}
 		}
 		

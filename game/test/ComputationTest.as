@@ -18,7 +18,7 @@ package angel.game.test {
 			Autotest.testFunction(testConstantComputation);
 			
 			Autotest.setupTestRoom();
-			context = new ScriptContext(Autotest.testRoom, Autotest.testRoom.activePlayer());
+			context = new ScriptContext(Autotest.testRoom, Autotest.testRoom.activePlayer(), null, null);
 			Autotest.testFunction(testHealthComputation);
 			Autotest.testFunction(testDistanceComputation);
 			Autotest.testFunction(testActiveComputation);

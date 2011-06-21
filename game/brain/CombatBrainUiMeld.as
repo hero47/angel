@@ -84,12 +84,6 @@ package angel.game.brain {
 			Settings.gameEventQueue.addListener(this, me.room, EntityQEvent.BECAME_VISIBLE, invisibleEntityBecameVisible);
 			//CONSIDER: figure out how to skip move entirely if entity can't move, and go straight to fire phase.
 			me.movement.initForCombatMove();
-			if (me.inventory.mainWeapon() != null) {
-				me.inventory.mainWeapon().doCooldown();
-			}
-			if (me.inventory.offWeapon() != null) {
-				me.inventory.offWeapon().doCooldown();
-			}
 			//UNDONE: cooldown for unequipped weapons
 			doMoveBody();
 		}

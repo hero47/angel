@@ -238,17 +238,17 @@ package angel.game.test {
 			Flags.setValue("xxTest", true);
 			Flags.setValue("yyTest", false);
 			Autotest.clearAlert();
-			script.run(testRoom);
+			script.run(testRoom, null, null);
 			Autotest.assertAlertText("xx");
 			
 			Flags.setValue("xxTest", false);
 			Flags.setValue("yyTest", false);
-			script.run(testRoom);
+			script.run(testRoom, null, null);
 			Autotest.assertAlertText("neither");
 			
 			Flags.setValue("xxTest", false);
 			Flags.setValue("yyTest", true);
-			script.run(testRoom);
+			script.run(testRoom, null, null);
 			Autotest.assertAlertText("yy and not xx");
 		}
 		

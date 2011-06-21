@@ -81,7 +81,7 @@ package angel.game {
 			saveDataForCurrentGame = Settings.saveDataForNewGame;
 			resumeGame(event);
 			if (Settings.startScript != null) {
-				Settings.startScript.run(main.asDisplayObjectContainer);
+				Settings.startScript.run(main.asDisplayObjectContainer, null, null);
 			}
 		}
 		

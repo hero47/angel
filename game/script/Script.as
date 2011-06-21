@@ -25,10 +25,14 @@ package angel.game.script {
 		private var actions:Vector.<IAction>;
 		private var lastActionAddedIfItWasAnIf:IfAction;
 		private var errors:MessageCollector; // used to accumulate parse errors for display at end of script creation
-		
+		/*
 		public static const TRIGGERING_ENTITY_ID:String = "*it";
 		public static const ACTIVE_PLAYER_ID:String = "*pc";
 		public static const SELF_ID:String = "*me";
+		*/
+		public static const TRIGGERING_ENTITY:String = "it";
+		public static const ACTIVE_PLAYER:String = "pc";
+		public static const SELF:String = "me";
 		
 //UNDONE: check if initializeFromXml and loadEntityScriptFromXmlFile should be static functions
 		public function Script(xml:XML = null, rootScript:Script = null) {
@@ -58,8 +62,9 @@ package angel.game.script {
 			}
 		}
 		
-		public function run(roomOrMain:DisplayObjectContainer, triggeredBy:SimpleEntity = null):void {
-			var context:ScriptContext = new ScriptContext(roomOrMain, (roomOrMain is Room ? Room(roomOrMain).activePlayer() : null), triggeredBy);
+		public function run(roomOrMain:DisplayObjectContainer, scriptOwner:SimpleEntity, triggeredBy:SimpleEntity):void {
+			var context:ScriptContext = new ScriptContext(roomOrMain, (roomOrMain is Room ? Room(roomOrMain).activePlayer() : null),
+					scriptOwner, triggeredBy);
 			
 			doActions(context);
 			context.finish();

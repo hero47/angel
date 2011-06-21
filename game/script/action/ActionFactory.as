@@ -19,6 +19,7 @@ package angel.game.script.action {
 			"changeToNpc":ChangeToNpcAction,
 			"changeToPc":ChangeToPcAction,
 			"conversation":ConversationAction,
+			"detonate":DetonateAction,
 			"else":ElseAction,
 			"elseif":ElseIfAction,
 			"elseIf":ElseIfAction,

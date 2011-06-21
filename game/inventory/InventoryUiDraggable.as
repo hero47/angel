@@ -16,7 +16,7 @@ package angel.game.inventory {
 	public class InventoryUiDraggable extends Sprite implements ICleanup {
 		
 		private var parentUi:InventoryUi;
-		private var item:CanBeInInventory;
+		public var inventoryItem:CanBeInInventory;
 		private var count:int;
 		public var currentSlot:InventoryUiSlot;
 		private var countText:TextField;
@@ -27,7 +27,7 @@ package angel.game.inventory {
 		
 		public function InventoryUiDraggable(parentUi:InventoryUi, item:CanBeInInventory, count:int, currentSlot:InventoryUiSlot) {
 			this.parentUi = parentUi;
-			this.item = item;
+			this.inventoryItem = item;
 			this.count = count;
 			this.currentSlot = currentSlot;
 			graphics.lineStyle(1, 0x0, 1);
@@ -67,10 +67,6 @@ package angel.game.inventory {
 			}
 		}
 		
-		public function get inventoryItem():CanBeInInventory {
-			return item;
-		}
-		
 		private function mouseDownListener(event:MouseEvent):void {
 			xHome = this.x;
 			yHome = this.y;
@@ -90,7 +86,7 @@ package angel.game.inventory {
 				legalSlotCurrentlyHoveredOver = null;
 			}
 			if (mouseSlot != null) {
-				legalSlotCurrentlyHoveredOver = mouseSlot.dragOver(item);
+				legalSlotCurrentlyHoveredOver = mouseSlot.dragOver(inventoryItem);
 			}
 		}
 		

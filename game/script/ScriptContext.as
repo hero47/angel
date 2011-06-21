@@ -29,8 +29,13 @@ package angel.game.script {
 		
 		public var catalog:Catalog;
 		
-		public function ScriptContext(roomOrMain:DisplayObjectContainer, player:ComplexEntity, triggeringEntity:SimpleEntity = null) {
-			scriptIds = { "it":triggeringEntity, "pc":player };
+		public static const SPECIAL_ID_FIRST_CHARACTER:String = "*";
+		public static function SpecialId(which:String):String {
+			return SPECIAL_ID_FIRST_CHARACTER + which;
+		}
+		
+		public function ScriptContext(roomOrMain:DisplayObjectContainer, player:ComplexEntity, scriptOwner:Object, triggeringEntity:SimpleEntity) {
+			scriptIds = { "it":triggeringEntity, "pc":player , "me":scriptOwner};
 			if (roomOrMain is Room) {
 				this.scriptRoom = Room(roomOrMain);
 				mainWindow = IAngelMain(room.parent);
@@ -39,6 +44,15 @@ package angel.game.script {
 			}
 			this.catalog = Settings.catalog;
 			this.messages = new MessageCollector();
+		}
+		
+		public function cloneSettings():ScriptContext {
+			var newContext:ScriptContext = new ScriptContext(scriptRoom == null ? mainWindow.asDisplayObjectContainer : scriptRoom,
+					null, null, null);
+			for (var id:String in scriptIds) {
+				newContext.scriptIds[id] = this.scriptIds[id];
+			}
+			return newContext;
 		}
 		
 		public function get player():ComplexEntity {
@@ -97,12 +111,8 @@ package angel.game.script {
 			scriptRoom = newRoom;
 		}
 		
-		public function setMe(newMe:Object):void {
-			scriptIds["me"] = newMe;
-		}
-		
-		public function setIt(newIt:Object):void {
-			scriptIds["it"] = newIt;
+		public function setSpecialId(idMinusFirstCharacter:String, value:Object):void {
+			scriptIds[idMinusFirstCharacter] = value;
 		}
 		
 		public function entityWithSpecialId(idMinusFirstCharacter:String):SimpleEntity {

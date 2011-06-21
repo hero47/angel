@@ -1,6 +1,6 @@
 package angel.game.test {
 	import angel.common.WeaponResource;
-	import angel.game.combat.Grenade;
+	import angel.game.combat.ThrownWeapon;
 	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.inventory.CanBeInInventory;
 	import angel.game.inventory.Inventory;
@@ -21,8 +21,8 @@ package angel.game.test {
 			var gun1:SingleTargetWeapon = new SingleTargetWeapon(dummyWeaponResource, "xxGun1");
 			var gun2:SingleTargetWeapon = new SingleTargetWeapon(dummyWeaponResource, "xxGun2");
 			var someGun:SingleTargetWeapon;
-			var grenade1:Grenade = Grenade(Inventory.makeOne("grenade"));
-			var grenade2:Grenade = Grenade(Inventory.makeOne("grenade"));
+			var grenade1:ThrownWeapon = new ThrownWeapon(dummyWeaponResource, "xxGrenade");
+			var grenade2:ThrownWeapon = new ThrownWeapon(dummyWeaponResource, "xxGrenade");
 			
 			Autotest.assertNotEqual(gun1, gun2, "Argh");
 			
@@ -88,13 +88,13 @@ package angel.game.test {
 			inventory.addToPileOfStuff(grenade1);
 			Autotest.assertEqual(inventory.entriesInPileOfStuff(), 2);
 			Autotest.assertEqual(inventory.countInPileOfStuff(SingleTargetWeapon), 1);
-			Autotest.assertEqual(inventory.countInPileOfStuff(Grenade), 1);
+			Autotest.assertEqual(inventory.countInPileOfStuff(ThrownWeapon), 1);
 			inventory.addToPileOfStuff(grenade2);
-			Autotest.assertEqual(inventory.entriesInPileOfStuff(), 2, "Grenade is a singleton, shouldn't be able to take additional slots");
+			Autotest.assertEqual(inventory.entriesInPileOfStuff(), 2, "Grenades should stack");
 			Autotest.assertEqual(inventory.countInPileOfStuff(SingleTargetWeapon), 1);
-			Autotest.assertEqual(inventory.countInPileOfStuff(Grenade), 2);
+			Autotest.assertEqual(inventory.countInPileOfStuff(ThrownWeapon), 2);
 			inventory.addToPileOfStuff(grenade1, 3);
-			Autotest.assertEqual(inventory.countInPileOfStuff(Grenade), 5);
+			Autotest.assertEqual(inventory.countInPileOfStuff(ThrownWeapon), 5);
 			
 			Autotest.assertNoAlert()
 			inventory.addToPileOfStuff(grenade1, -1);
@@ -112,7 +112,7 @@ package angel.game.test {
 			var dummyWeaponResource:WeaponResource = new WeaponResource();
 			var gun1:SingleTargetWeapon = new SingleTargetWeapon(dummyWeaponResource, "xxGun1");
 			var gun2:SingleTargetWeapon = new SingleTargetWeapon(dummyWeaponResource, "xxGun2");
-			var grenade1:Grenade = Grenade(Inventory.makeOne("grenade"));
+			var grenade1:ThrownWeapon = new ThrownWeapon(dummyWeaponResource, "xxGrenade");
 			
 			Autotest.assertEqual(inventory.mainWeapon(), null);
 			Autotest.assertEqual(inventory.offWeapon(), null);

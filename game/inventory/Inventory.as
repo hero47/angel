@@ -4,6 +4,7 @@ package angel.game.inventory {
 	import angel.common.MessageCollector;
 	import angel.common.Util;
 	import angel.game.combat.SingleTargetWeapon;
+	import angel.game.ComplexEntity;
 	import angel.game.Settings;
 	import flash.utils.Dictionary;
 	/**
@@ -29,7 +30,8 @@ package angel.game.inventory {
 		}
 		
 		public function clone():Inventory {
-			//This isn't the most efficient implementation, but it's quick and easy.
+			//UNDONE: This was a quick and easy implementation, but it breaks weapon cooldown: rearranging the
+			//inventory in combat resets all cooldowns.
 			var text:String = this.toText();
 			return Inventory.fromText(text);
 		}
@@ -147,8 +149,8 @@ package angel.game.inventory {
 			return pile;
 		}
 				
-		// return new count
-		public function addToPileOfStuff(item:CanBeInInventory, howMany:int = 1, errors:MessageCollector = null):int {
+		// return item; may be different than passed-in one if it was added to a stack
+		public function addToPileOfStuff(item:CanBeInInventory, howMany:int = 1, errors:MessageCollector = null):CanBeInInventory {
 			if (howMany < 1) {
 				var text:String = "Error! Adding " + howMany + " of something to inventory.";
 				if (errors == null) {
@@ -156,21 +158,20 @@ package angel.game.inventory {
 				} else {
 					errors.add(text);
 				}
-				return howMany;
+				return item;
 			}
 			var count:int = pileOfStuff[item];
-			if (count == 0) {
-				for (var storedItem:Object in pileOfStuff) {
-					if (CanBeInInventory(storedItem).id == item.id) {
-						// All items with the same id stack. NOTE: this may change in the future if we damage items!
-						item = CanBeInInventory(storedItem);
-						count = pileOfStuff[item];
-					}
+			// look for another stack that this item can stack with
+			for (var storedItemObject:Object in pileOfStuff) {
+				var storedItem:CanBeInInventory = CanBeInInventory(storedItemObject);
+				if ((storedItem.id == item.id) && storedItem.stacksWith(item)) {
+					//NOTE: if CanBeInInventory becomes an ICleanup, need to cleanup item here!
+					pileOfStuff[storedItem] += howMany;
+					return storedItem;
 				}
 			}
-			count += howMany;
-			pileOfStuff[item] = count;
-			return count;
+			pileOfStuff[item] = howMany;
+			return item;
 		}
 		
 		// return true if successful
@@ -303,7 +304,10 @@ package angel.game.inventory {
 				}
 			}
 			for (var item:Object in pileOfStuff) {
-				if ((CanBeInInventory(item).id == id) && (pileOfStuff[item] >= count)) {
+				if (CanBeInInventory(item).id == id) {
+					count -= pileOfStuff[item];
+				}
+				if (count <= 0) {
 					return true;
 				}
 			}
@@ -311,34 +315,61 @@ package angel.game.inventory {
 		}
 		
 		private function removeFromAnywhere(all:Boolean, count:int, id:String, errors:MessageCollector):void {
+			var removedSome:Boolean = false;
 			for (var i:int = 0; i < NUMBER_OF_EQUIPPED_LOCATIONS; ++i) {
 				if ((equipmentSlots[i] != null) && (equipmentSlots[i].id == id)) {
+					removedSome = true;
 					equipmentSlots[i] = null;
 					if (!all && (--count == 0)) {
 						return;
 					}
 				}
 			}
+			
 			for (var item:Object in pileOfStuff) {
 				if (CanBeInInventory(item).id == id) {
 					var numberRemaining:int = pileOfStuff[item];
 					if (all) {
 						numberRemaining = 0;
 					} else {
-						numberRemaining -= count;
+						var numberToRemove:int = (count <= numberRemaining ? count : numberRemaining);
+						numberRemaining -= numberToRemove;
+						count -= numberToRemove;
 					}
 					if (numberRemaining > 0) {
 						pileOfStuff[item] = numberRemaining;
 					} else {
 						delete pileOfStuff[item];
-						if (numberRemaining < 0) {
-							errors.add("Remove from inventory: not enough " + id + ".");
-						}
 					}
-					return;
+					removedSome = true;
+					if (count <= 0) {
+						return;
+					}
 				}
 			}
-			errors.add("Remove from inventory: " + id + " not found.");
+			if (all) {
+				return;
+			} else if (removedSome) {
+				errors.add("Remove from inventory: not enough " + id + ".");
+			} else {
+				errors.add("Remove from inventory: " + id + " not found.");
+			}
+		}
+		
+		public function forAllSingleTargetWeapons(callWithWeapon:Function):void {
+			var weapon:SingleTargetWeapon;
+			for (var i:int = 0; i < NUMBER_OF_EQUIPPED_LOCATIONS; ++i) {
+				weapon = equipmentSlots[i] as SingleTargetWeapon;
+				if (weapon != null) {
+					callWithWeapon(weapon);
+				}
+			}
+			for (var item:Object in pileOfStuff) {
+				weapon = item as SingleTargetWeapon;
+				if (weapon != null) {
+					callWithWeapon(weapon);
+				}
+			}			
 		}
 		
 		public function debugListContents(header:String = null):void {

@@ -47,10 +47,11 @@ package angel.game.script {
 		//UNDONE: investigate: merge this with script's?
 		public var context:ScriptContext;
 		
-		public function ConversationInterface(player:ComplexEntity, target:SimpleEntity, conversationData:ConversationData) {
-			this.player = player;
-			this.target = target;
-			this.room = target.room;
+		public function ConversationInterface(context:ScriptContext, conversationData:ConversationData) {
+			this.context = context;
+			this.player = context.player;
+			this.target = context.entityWithSpecialId(Script.TRIGGERING_ENTITY);
+			this.room = player.room;
 			this.conversationData = conversationData;
 			playerBitmap = portraitBitmap(player);
 			targetBitmap = portraitBitmap(target);
@@ -63,7 +64,6 @@ package angel.game.script {
 		private function addedToStageListener(event:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, addedToStageListener);
 			room.suspendUi(this);
-			context = new ScriptContext(room, player, target);
 			conversationData.runConversation(this);
 		}
 		

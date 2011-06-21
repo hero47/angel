@@ -41,7 +41,7 @@ package angel.game.test {
 		}
 		
 		private function doTest():void {
-			frobScript.run(room, room.mainPlayerCharacter);
+			frobScript.run(room, room.mainPlayerCharacter,room.mainPlayerCharacter);
 		}
 		
 	}

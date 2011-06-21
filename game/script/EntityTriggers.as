@@ -34,7 +34,7 @@ package angel.game.script {
 						<onFrob>
 						</onFrob>
 					</script>;
-					xml.@id = Script.SELF_ID;
+					xml.@id = ScriptContext.SpecialId(Script.SELF);
 					newXml.onFrob.appendChild(xml);
 					xml = newXml;
 				}
