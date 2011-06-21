@@ -54,7 +54,7 @@ package angel.game.script {
 		
 		private function runTriggeredEvents():void {
 			while (runThese.length > 0) {
-				context = new ScriptContext(room, room.activePlayer());
+				context = new ScriptContext(room, room.activePlayer(), room, null);
 				var runningNow:Vector.<RunInfo> = runThese;
 				runThese = new Vector.<RunInfo>();
 				for each (var runInfo:RunInfo in runningNow) {
@@ -66,8 +66,7 @@ package angel.game.script {
 		}
 		
 		public function addToRunListIfPassesFilter(triggeredScript:TriggeredScript, me:Object, entityWhoTriggered:SimpleEntity):void {
-			var context:ScriptContext = new ScriptContext(room, room.activePlayer(), entityWhoTriggered);
-			context.setMe(me);
+			var context:ScriptContext = new ScriptContext(room, room.activePlayer(), me, entityWhoTriggered);
 			var spotsThisEntityIsOn:Vector.<String>;
 			if (triggeredScript.spotIds != null) {
 				spotsThisEntityIsOn = room.spotsMatchingLocation(entityWhoTriggered.location);
@@ -98,8 +97,8 @@ internal class RunInfo {
 	}
 	
 	public function adjustContextAndDoScriptActions(context:ScriptContext):void {
-		context.setMe(me);
-		context.setIt(entityWhoTriggered);
+		context.setSpecialId(Script.SELF, me);
+		context.setSpecialId(Script.TRIGGERING_ENTITY, entityWhoTriggered);
 		script.doActions(context);
 	}
 	

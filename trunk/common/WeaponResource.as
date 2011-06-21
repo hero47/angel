@@ -45,8 +45,10 @@ package angel.common {
 			// We don't have graphics for weapons yet, so this is the only version there is
 			this.id = id;
 			this.entry = entry;
-			type = entry.xml.@type;
-			if (type == "") {
+			if (entry.xml != null) {
+				type = entry.xml.@type;
+			}
+			if (Util.nullOrEmpty(type)) {
 				type = Defaults.WEAPON_TYPE;
 			}
 			weaponClass = typeToClass[type];

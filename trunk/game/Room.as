@@ -13,6 +13,7 @@ package angel.game {
 	import angel.game.script.ConversationData;
 	import angel.game.script.ConversationInterface;
 	import angel.game.script.RoomTriggers;
+	import angel.game.script.ScriptContext;
 	import angel.game.script.TriggerMaster;
 	import angel.game.test.ConversationNonAutoTest;
 	import flash.display.Sprite;
@@ -215,12 +216,12 @@ package angel.game {
 			}			
 		}
 		
-		public function startConversation(player:ComplexEntity, targetEntity:SimpleEntity, conversationData:ConversationData):void {
+		public function startConversation(context:ScriptContext, conversationData:ConversationData):void {
 			if (conversationInProgress != null) {
 				Alert.show("Error! Cannot start a conversation inside another conversation.");
 			} else {
 				quitButton.visible = false;
-				conversationInProgress = new ConversationInterface(player, targetEntity, conversationData);
+				conversationInProgress = new ConversationInterface(context, conversationData);
 				stage.addChild(conversationInProgress); // Conversation takes over ui when added to stage, removes itself & restores when finished
 			}
 		}

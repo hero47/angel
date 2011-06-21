@@ -1,6 +1,6 @@
 package angel.game.test {
-	import angel.game.combat.Grenade;
 	import angel.game.combat.SingleTargetWeapon;
+	import angel.game.combat.ThrownWeapon;
 	import angel.game.inventory.Inventory;
 	import angel.game.Settings;
 	/**
@@ -20,7 +20,7 @@ package angel.game.test {
 			inventory = Inventory.fromText(invString);
 			Autotest.assertEqual(inventory.mainWeapon().id, "xxGun1");
 			Autotest.assertEqual(inventory.offWeapon().id, "xxGun2");
-			Autotest.assertEqual(inventory.countInPileOfStuff(Grenade), 5);
+			Autotest.assertEqual(inventory.countInPileOfStuff(ThrownWeapon), 5);
 			Autotest.assertEqual(inventory.toText(), invString);
 			
 			Autotest.assertTrue(inventory.hasByText("xxGun1"));
@@ -33,7 +33,7 @@ package angel.game.test {
 			Autotest.assertFalse(inventory.hasByText("4 xxGun1"));
 			inventory.removeFromAnywhereByText("2 grenade");
 			Autotest.assertNoAlert();
-			Autotest.assertEqual(inventory.countInPileOfStuff(Grenade), 3);
+			Autotest.assertEqual(inventory.countInPileOfStuff(ThrownWeapon), 3);
 			inventory.removeFromAnywhereByText("2 xxGun1");
 			Autotest.assertNoAlert();
 			Autotest.assertEqual(inventory.mainWeapon(), null);
@@ -48,7 +48,7 @@ package angel.game.test {
 			Autotest.assertEqual(inventory.toText(), "99 1 grenade");
 			
 			inventory.addToPileFromText("grenade,2 grenade,2 xxGun2");
-			Autotest.assertEqual(inventory.countInPileOfStuff(Grenade), 4);
+			Autotest.assertEqual(inventory.countInPileOfStuff(ThrownWeapon), 4);
 			var weapon:SingleTargetWeapon = inventory.findFirstMatchingInPileOfStuff(SingleTargetWeapon);
 			Autotest.assertEqual(weapon.id, "xxGun2");
 			Autotest.assertEqual(inventory.countSpecificItemInPileOfStuff(weapon), 2);

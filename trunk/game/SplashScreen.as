@@ -66,7 +66,7 @@ package angel.game {
 			// If any of the button script produces messages, we want that to happen and wait for player ok before
 			// closing down the splash.  So instead of just telling the script to run, we'll micromanage it and
 			// add our own close at the end of the list of "do at end" stuff before it processes those.
-			var context:ScriptContext = new ScriptContext(main.currentRoom, activePlayer, scriptTriggeredBy);
+			var context:ScriptContext = new ScriptContext(main.currentRoom, activePlayer, null, scriptTriggeredBy);
 			scripts[i].doActions(context);
 			context.doThisAtEnd(closeMeDown);
 			context.finish();

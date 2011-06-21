@@ -60,7 +60,7 @@ package angel.game.brain {
 		}
 		
 		public static function getFirstAvailableTarget(me:ComplexEntity, weapon:SingleTargetWeapon, combat:RoomCombat):ComplexEntity {
-			if ((weapon == null) || !weapon.readyToFire()) {
+			if ((weapon == null) || !weapon.readyToFire(combat)) {
 				return null;
 			}
 			for (var i:int = 0; i < combat.fighters.length; i++) {

@@ -194,7 +194,9 @@ package angel.game.combat {
 		}
 		
 		private function initializeDisplayElementsForFighter(entity:ComplexEntity):void {
-			entity.setTextOverHead(String(entity.currentHealth));
+			if (!entity.controllingOwnText) {
+				entity.setTextOverHead(String(entity.currentHealth));
+			}
 			var factionColor:uint = factionColor(entity);
 			createCombatFootprintForEntity(entity, factionColor);
 			if (!entity.isPlayerControlled) {

@@ -81,6 +81,7 @@ package angel.game {
 		
 		public var footprint:DisplayObject; // if non-null, drawn on decorations layer centered directly under me
 		private var textOverHead:TextField;
+		public var controllingOwnText:Boolean; // if true, other things shouldn't monkey with text
 		protected var facing:int;
 		private var solidnessWhenAlive:uint;
 		
@@ -353,11 +354,16 @@ package angel.game {
 			}
 			currentHealth -= baseDamage;
 			trace(aaId, "damaged for", baseDamage, ", health now", currentHealth);
-			setTextOverHead(String(currentHealth));
+			if (!controllingOwnText) {
+				setTextOverHead(String(currentHealth));
+			}
 			if (currentHealth > 0) {
 				Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.HEALTH_CHANGE));
 			} else {
 				solidness ^= Prop.TALL; // Dead entities are short, by fiat.
+				if (!controllingOwnText) {
+					setTextOverHead(null);
+				}
 				startDeathAnimation();
 				Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.DEATH));
 			}
@@ -381,7 +387,7 @@ package angel.game {
 			Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.REVIVE));
 		}
 		
-		public function setTextOverHead(value:String):void {
+		public function setTextOverHead(value:String, color:uint = 0xffffff):void {
 			if ((value == null) && (textOverHead != null)) {
 				textOverHead.visible = false;
 			} else if (value != null) {
@@ -394,6 +400,7 @@ package angel.game {
 				}
 				textOverHead.visible = true;
 				textOverHead.text = value;
+				textOverHead.backgroundColor = color;
 			}
 		}
 				
@@ -448,8 +455,12 @@ package angel.game {
 		}
 		
 		private function hasAUsableEquippedWeapon():Boolean {
-			return ( ((inventory.mainWeapon() != null) && (inventory.mainWeapon().readyToFire())) ||
-					 ((inventory.offWeapon() != null)  && (inventory.offWeapon().readyToFire())) );
+			var combat:RoomCombat = room.mode as RoomCombat;
+			if (combat == null) {
+				return false;
+			}
+			return ( ((inventory.mainWeapon() != null) && (inventory.mainWeapon().readyToFire(combat))) ||
+					 ((inventory.offWeapon() != null)  && (inventory.offWeapon().readyToFire(combat))) );
 		}
 		
 		public function hasAUsableWeapon():Boolean {

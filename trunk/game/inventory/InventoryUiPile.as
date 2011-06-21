@@ -47,15 +47,18 @@ package angel.game.inventory {
 			var item:CanBeInInventory = draggedItem.inventoryItem;
 			Assert.assertTrue(Inventory.isItemLegalInSlot(item, slotNum), "Drop in illegal slot");
 			
-			var count:int = parentUi.inventory.addToPileOfStuff(item, 1);
-			if (count == 1) {
+			var newItem:CanBeInInventory = parentUi.inventory.addToPileOfStuff(item, 1);
+			if (newItem != item) {
+				draggedItem.inventoryItem = newItem;
+			}
+			if (parentUi.inventory.countSpecificItemInPileOfStuff(newItem) == 1) {
 				draggedItem.x = right;
 				draggedItem.y = this.y;
 				draggedItem.currentSlot = this;
 				contents.push(draggedItem);
 				right += InventoryUi.uiImageX;
 			} else {
-				adjustCountFor(item);
+				adjustCountFor(newItem);
 				draggedItem.cleanup();
 			}
 		}
@@ -87,7 +90,7 @@ package angel.game.inventory {
 		
 		private function adjustCountFor(item:CanBeInInventory):void {
 			for each (var draggable:InventoryUiDraggable in contents) {
-				if (draggable.inventoryItem == item) {
+				if (draggable.inventoryItem.stacksWith(item)) {
 					var count:int = parentUi.inventory.countSpecificItemInPileOfStuff(item);
 					draggable.adjustCount(count);
 				}

@@ -9,6 +9,7 @@ package angel.game.inventory {
 		function get id():String;
 		function get displayName():String;
 		function get iconClass():Class;
+		function stacksWith(other:CanBeInInventory):Boolean;
 	}
 	
 	// Inventory singletons should implement static getCopy

@@ -69,7 +69,7 @@ package angel.game.combat {
 			}
 			this.player = player;
 			quickFireWeapon = player.inventory.mainWeapon();
-			if ((quickFireWeapon == null) || !quickFireWeapon.readyToFire()) {
+			if ((quickFireWeapon == null) || !quickFireWeapon.readyToFire(combat)) {
 				quickFireWeapon = player.inventory.offWeapon();
 			}
 			quickFireWeaponRange = (quickFireWeapon == null ? 0 : quickFireWeapon.range);
@@ -186,7 +186,7 @@ package angel.game.combat {
 		/************ Private ****************/
 		
 		private function addFirePieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point, weapon:SingleTargetWeapon, iconClass:Class):void {
-			if ((weapon != null) && (weapon.readyToFire()) && (weapon.inRange(player, targetLocation))) {
+			if ((weapon != null) && (weapon.readyToFire(combat)) && (weapon.inRange(player, targetLocation))) {
 				slices.push(new PieSlice(Icon.bitmapData(iconClass), "Fire " + weapon.displayName, function():void {
 					doPlayerAttack(weapon, hilightedEnemy);
 				} ));

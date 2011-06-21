@@ -4,6 +4,7 @@ package angel.game.combat {
 	import angel.common.WeaponResource;
 	import angel.game.ComplexEntity;
 	import angel.game.Icon;
+	import angel.game.inventory.CanBeInInventory;
 	import angel.game.Settings;
 	import angel.game.TimedSprite;
 	import flash.display.Bitmap;
@@ -19,7 +20,7 @@ package angel.game.combat {
 	public class SingleTargetWeapon extends WeaponBase implements IWeapon {
 		public var range:int;
 		public var cooldown:int;
-		public var turnsSinceLastFired:int;
+		private var combatTurnLastFired:int = -99;
 		public var ignoreUserGait:Boolean;
 		public var ignoreTargetGait:Boolean;
 		
@@ -29,7 +30,6 @@ package angel.game.combat {
 			this.cooldown = resource.cooldown;
 			this.ignoreUserGait = resource.ignoreUserGait;
 			this.ignoreTargetGait = resource.ignoreTargetGait;
-			resetCooldown();
 		}
 		
 		public function toString():String {
@@ -38,6 +38,11 @@ package angel.game.combat {
 		
 		public function get iconClass():Class {
 			return Icon.CombatFireFirstGun;
+		}
+		
+		public function stacksWith(other:CanBeInInventory):Boolean {
+			var otherWeapon:SingleTargetWeapon = other as SingleTargetWeapon;
+			return ((otherWeapon != null) && (otherWeapon.id == id) && (otherWeapon.combatTurnLastFired == combatTurnLastFired));
 		}
 		
 		public function attack(user:ComplexEntity, target:Object):void {
@@ -52,29 +57,32 @@ package angel.game.combat {
 			return (Util.chessDistance(shooter.location, targetLocation) <= range);
 		}
 		
-		public function readyToFire():Boolean {
-			return (turnsSinceLastFired >= cooldown);
+		public function readyToFire(combat:RoomCombat):Boolean {
+			if (combat == null) {
+				return true;
+			}
+			return (combatTurnLastFired + cooldown <= combat.combatTurn);
 		}
 		
-		public function doCooldown():void {
-			++turnsSinceLastFired;
-		}
-		
-		public function resetCooldown():void {
-			turnsSinceLastFired = cooldown;
+		// Used to set all ready-to-fire weapons to the same cooldown so they'll stack in inventory
+		public function standardizeCooldown(combat:RoomCombat):void {
+			if (readyToFire(combat)) {
+				combatTurnLastFired = -99;
+			}
 		}
 		
 		//NOTE: "fire" is currently the generic term for "attack target" even if the weapon happens to be melee
 		public function fire(shooter:ComplexEntity, target:ComplexEntity, coverDamageReductionPercent:int = 0):void {
+			var combat:RoomCombat = RoomCombat(shooter.room.mode);
 			shooter.turnToFaceTile(target.location);
 			--shooter.actionsRemaining;
 			
-			if (!readyToFire() || !inRange(shooter, target.location)) {
+			if (!readyToFire(combat) || !inRange(shooter, target.location)) {
 				Assert.fail("Trying to fire weapon illegally");
 				return;
 			}
 			
-			turnsSinceLastFired = 0;
+			combatTurnLastFired = combat.combatTurn;
 			var damage:int = baseDamage;
 			if (!ignoreUserGait) {
 				damage *= shooter.damageDealtSpeedPercent() / 100;
@@ -82,8 +90,8 @@ package angel.game.combat {
 			target.takeDamage(damage, !ignoreTargetGait, coverDamageReductionPercent);
 			
 			if (shooter.isPlayerControlled || target.isPlayerControlled ||
-							RoomCombat(shooter.room.mode).anyPlayerCanSeeLocation(target.location) ||
-							RoomCombat(target.room.mode).anyPlayerCanSeeLocation(shooter.location) ) {				
+							combat.anyPlayerCanSeeLocation(target.location) ||
+							combat.anyPlayerCanSeeLocation(shooter.location) ) {				
 				var uglyFireLineThatViolates3D:TimedSprite = new TimedSprite(Settings.FRAMES_PER_SECOND);
 				uglyFireLineThatViolates3D.graphics.lineStyle(2, (shooter.isPlayerControlled ? 0xff0000 : 0xffa500));
 				uglyFireLineThatViolates3D.graphics.moveTo(shooter.centerOfImage().x, shooter.centerOfImage().y);
