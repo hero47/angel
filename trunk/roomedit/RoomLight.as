@@ -281,24 +281,8 @@ package angel.roomedit {
 			// release and continue development, support the release version plus future. ;)
 			// To save headaches, I'll attempt to make most changes be additions with reasonable
 			// defaults, so most changes won't require a new version.
-			if (version < 1) {
-				initContentsFromXmlVersion0(contentsXml);
-			} else {
-				initContentsFromXmlVersion1(contentsXml);
-			}
-		}
 			
-		//Remove this eventually
-		public function initContentsFromXmlVersion0(contentsXml:XML):void {
-			var id:String;
-			for each (var propXml:XML in contentsXml.prop) {
-				id = propXml;
-				addContentItemByName(CatalogEntry.PROP, id, new Point(propXml.@x, propXml.@y), propXml);
-			}
-			for each (var walkerXml:XML in contentsXml.walker) {
-				id = walkerXml;
-				addContentItemByName(CatalogEntry.CHARACTER, id, new Point(walkerXml.@x, walkerXml.@y), walkerXml);
-			}
+			initContentsFromXmlVersion1(contentsXml);
 		}
 
 		public function initContentsFromXmlVersion1(contentsXml:XML):void {
@@ -306,12 +290,6 @@ package angel.roomedit {
 			for each (var propXml:XML in contentsXml.prop) {
 				id = propXml.@id;
 				addContentItemByName(CatalogEntry.PROP, id, new Point(propXml.@x, propXml.@y), propXml);
-			}
-			
-			//UNDONE For backwards compatibility; remove this eventually
-			for each (var walkerXml:XML in contentsXml.walker) {
-				id = walkerXml.@id;
-				addContentItemByName(CatalogEntry.CHARACTER, id, new Point(walkerXml.@x, walkerXml.@y), walkerXml);
 			}
 			
 			for each (var charXml:XML in contentsXml.char) {

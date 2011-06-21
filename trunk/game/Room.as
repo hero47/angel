@@ -480,7 +480,11 @@ package angel.game {
 		public function forEachEntity(callWithEntity:Function, filter:Function = null):void {
 			for (var i:int = 0; i < size.x; i++) {
 				for (var j:int = 0; j < size.y; j++) {
-					for each (var prop:Prop in cells[i][j].contents) {
+					if (cells[i][j].contents == null) {
+						continue;
+					}
+					var contents:Vector.<Prop> = cells[i][j].contents.concat(); // clone in case callback deletes something
+					for each (var prop:Prop in contents) {
 						if ((prop is SimpleEntity) && ((filter == null) || (filter(prop)))) {
 							callWithEntity(prop);
 						}
@@ -490,15 +494,9 @@ package angel.game {
 		}
 		
 		public function forEachComplexEntity(callWithEntity:Function, filter:Function = null):void {
-			for (var i:int = 0; i < size.x; i++) {
-				for (var j:int = 0; j < size.y; j++) {
-					for each (var prop:Prop in cells[i][j].contents) {
-						if ((prop is ComplexEntity) && ((filter == null) || (filter(prop)))) {
-							callWithEntity(prop);
-						}
-					}
-				}
-			}
+			forEachEntity(callWithEntity, function(entity:SimpleEntity):Boolean {
+				return ((entity is ComplexEntity) && ((filter == null) || (filter(entity))));
+			} );
 		}
 		
 		public function forEachEntityIn(location:Point, callWithEntity:Function, filter:Function = null):void {
@@ -660,11 +658,6 @@ package angel.game {
 			
 			for each (var propXml: XML in contentsXml.prop) {
 				addEntityUsingItsLocation(SimpleEntity.createFromRoomContentsXml(propXml, catalog));
-			}
-			
-			//UNDONE For backwards compatibility; remove this eventually
-			for each (var walkerXml: XML in contentsXml.walker) {
-				addEntityUsingItsLocation(ComplexEntity.createFromRoomContentsXml(walkerXml, catalog));
 			}
 			
 			for each (var charXml: XML in contentsXml.char) {

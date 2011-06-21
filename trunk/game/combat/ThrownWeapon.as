@@ -66,7 +66,11 @@ package angel.game.combat {
 			
 			shooter.inventory.removeFromPileOfStuff(this, 1);
 			//UNDONE animate grenade moving through air?
-			explodeAt(shooter.room, targetLocation, baseDamage);
+			deliverPayloadAt(shooter.room, targetLocation, baseDamage);
+		}
+		
+		protected function deliverPayloadAt(room:Room, location:Point, baseDamage:int):void {
+			explodeAt(room, location, baseDamage);
 		}
 		
 		public static function explodeAt(room:Room, location:Point, baseDamage:int):void {

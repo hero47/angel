@@ -46,11 +46,6 @@ package angel.common {
 				
 				var animationName:String = (xml == null ? "" : xml.@animate);
 				
-				//UNDONE For backwards compatibility; remove this once old catalogs have been rewritten
-				if ((xml != null) && (xml.name() == "walker")) {
-					animationName = "walker";
-				}
-				
 				var animationDataClass:Class;
 				if (animationName != "") {
 					animationDataClass = animationNameToDataClass[animationName];

@@ -50,7 +50,11 @@ package angel.game {
 		}
 		
 		public function forEachEntity(callWithEntity:Function, filter:Function = null):void {
-			for each (var prop:Prop in contents) {
+			if (contents == null) {
+				return;
+			}
+			var contentsCopy:Vector.<Prop> = contents.concat(); // clone in case callback deletes something
+			for each (var prop:Prop in contentsCopy) {
 				if ((prop is SimpleEntity) && ((filter == null) || filter(prop))) {
 					callWithEntity(prop);
 				}

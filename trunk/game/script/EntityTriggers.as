@@ -24,29 +24,33 @@ package angel.game.script {
 		private function entityScriptXmlLoaded(event:Event, param:Object, filename:String):void {
 			var xml:XML = Util.parseXml(event.target.data, filename);
 			if (xml != null) {
-				var rootScriptForErrors:Script = new Script();
-				rootScriptForErrors.initErrorList();
-			
-				if (xml.name() == "conversation") {
-					// As a shorthand/convenience, if a script file has the enclosing topic "conversation" we turn its contents
-					// into an onFrob trigger conversation action with the frobbed entity
-					var newXml:XML = <script>
-						<onFrob>
-						</onFrob>
-					</script>;
-					xml.@id = ScriptContext.SpecialId(Script.SELF);
-					newXml.onFrob.appendChild(xml);
-					xml = newXml;
-				}
-				
-				me.hasFrobScript = (xml.onFrob.length() > 0);
-				
-				createTriggeredScripts(me, xml, TriggerMaster.ON_DEATH, false, rootScriptForErrors);
-				createTriggeredScripts(me, xml, TriggerMaster.ON_FROB, true, rootScriptForErrors);
-				createTriggeredScripts(me, xml, TriggerMaster.ON_MOVE, true, rootScriptForErrors);
-			
-				rootScriptForErrors.displayAndClearParseErrors("Script errors in file " + filename);
+				initFromXml(xml, filename);
 			}
+		}
+			
+		public function initFromXml(xml:XML, filename:String):void {
+			var rootScriptForErrors:Script = new Script();
+			rootScriptForErrors.initErrorList();
+		
+			if (xml.name() == "conversation") {
+				// As a shorthand/convenience, if a script file has the enclosing topic "conversation" we turn its contents
+				// into an onFrob trigger conversation action with the frobbed entity
+				var newXml:XML = <script>
+					<onFrob>
+					</onFrob>
+				</script>;
+				xml.@id = ScriptContext.SpecialId(Script.SELF);
+				newXml.onFrob.appendChild(xml);
+				xml = newXml;
+			}
+			
+			me.hasFrobScript = (xml.onFrob.length() > 0);
+			
+			createTriggeredScripts(me, xml, TriggerMaster.ON_DEATH, false, rootScriptForErrors);
+			createTriggeredScripts(me, xml, TriggerMaster.ON_FROB, true, rootScriptForErrors);
+			createTriggeredScripts(me, xml, TriggerMaster.ON_MOVE, true, rootScriptForErrors);
+		
+			rootScriptForErrors.displayAndClearParseErrors("Script errors in file " + filename);
 		}
 		
 		private function createTriggeredScripts(me:Object, scriptXML:XML, triggerName:String,

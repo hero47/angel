@@ -58,8 +58,6 @@ package angel.game.brain {
 		
 		// return true if actually moved, false if not
 		public function chooseMoveAndDrawDots():Boolean {
-			//override
-			Assert.fail("Should be overridden");
 			return false;
 		}
 		

@@ -18,12 +18,13 @@ package angel.roomedit {
 		private var catalog:CatalogEdit;
 		private var typeCombo:ComboBox;
 		private var weaponCombo:ComboBox;
-		private var nameTextField:TextField;
-		private var damageTextField:TextField;
-		private var rangeTextField:TextField;
-		private var cooldownTextField:TextField;
+		private var nameField:LabeledTextField;
+		private var damageField:LabeledTextField;
+		private var rangeField:LabeledTextField;
+		private var cooldownField:LabeledTextField;
 		private var ignoreUserGait:CheckBox;
 		private var ignoreTargetGait:CheckBox;
+		private var delayField:LabeledTextField;
 		private var deleteFromCatalogButton:SimplerButton;
 		
 		private static const WIDTH:int = 220;
@@ -41,19 +42,23 @@ package angel.roomedit {
 			typeCombo = Util.createChooserFromStringList(weaponTypes, WIDTH-40, typeChangeListener);
 			Util.addBeside(typeCombo, typeLabel);
 			
-			nameTextField = Util.createTextEditControlBelow(typeCombo, "Display Name", 85, WIDTH-85,
-					function(event:Event):void { changeWeaponProperty(event.target.text, "displayName", Defaults.GUN_DISPLAY_NAME) }, 0);
-			damageTextField = Util.createTextEditControlBelow(nameTextField, "Damage", 85, 40,
-					function(event:Event):void { changeWeaponProperty(int(event.target.text), "damage", Defaults.GUN_DAMAGE) }, 0);
-			rangeTextField = Util.createTextEditControlBelow(damageTextField, "Range", 85, 40,
-					function(event:Event):void { changeWeaponProperty(int(event.target.text), "range", Defaults.WEAPON_RANGE) }, 0);
-			cooldownTextField = Util.createTextEditControlBelow(rangeTextField, "Cooldown", 85, 40,
-					function(event:Event):void { changeWeaponProperty(int(event.target.text), "cooldown", Defaults.WEAPON_COOLDOWN) }, 0);
-			ignoreUserGait = Util.createCheckboxEditControlBelow(cooldownTextField, "Ignore User Gait", 120,
-					function(event:Event):void { changeWeaponProperty( (event.target.selected ? true : false), "ignoreUserGait", false) }, 0 );
+			nameField = LabeledTextField.createBelow(typeCombo, "Display Name", 85, WIDTH-85,
+					function(event:Event):void { changeWeaponProperty(event.target.text, "displayName", Defaults.GUN_DISPLAY_NAME) }, 0 );
+			damageField = LabeledTextField.createBelow(nameField, "Damage", 85, 40,
+					function(event:Event):void { changeWeaponProperty(int(event.target.text), "damage", Defaults.GUN_DAMAGE) } );
+			rangeField = LabeledTextField.createBelow(damageField, "Range", 85, 40,
+					function(event:Event):void { changeWeaponProperty(int(event.target.text), "range", Defaults.WEAPON_RANGE) } );
+			cooldownField = LabeledTextField.createBelow(rangeField, "Cooldown", 85, 40,
+					function(event:Event):void { changeWeaponProperty(int(event.target.text), "cooldown", Defaults.WEAPON_COOLDOWN) } );
+			ignoreUserGait = Util.createCheckboxEditControlBelow(cooldownField, "Ignore User Gait", 120,
+					function(event:Event):void { changeWeaponProperty( (event.target.selected ? true : false), "ignoreUserGait", false) } );
 			ignoreTargetGait = Util.createCheckboxEditControlBelow(ignoreUserGait, "Ignore Target Gait", 120,
-					function(event:Event):void { changeWeaponProperty( (event.target.selected ? true : false), "ignoreTargetGait", false) }, 0 );
+					function(event:Event):void { changeWeaponProperty( (event.target.selected ? true : false), "ignoreTargetGait", false) } );
 			
+			delayField = LabeledTextField.createBelow(damageField, "Delay", 85, 40,
+					function(event:Event):void { changeWeaponProperty(int(event.target.text), "delay", 0) } );
+					
+					
 			deleteFromCatalogButton = new SimplerButton("Delete from catalog", clickedDelete, 0xff0000);
 			deleteFromCatalogButton.width = WIDTH;
 			Util.addBelow(deleteFromCatalogButton, ignoreTargetGait, 50);
@@ -72,12 +77,13 @@ package angel.roomedit {
 			var weaponId:String = weaponCombo.selectedLabel;
 
 			var resource:WeaponResource = catalog.retrieveWeaponResource(weaponId);
-			nameTextField.text = resource.displayName;
-			damageTextField.text = String(resource.damage);
-			rangeTextField.text = String(resource.range);
-			cooldownTextField.text = String(resource.cooldown);
+			nameField.text = resource.displayName;
+			damageField.text = String(resource.damage);
+			rangeField.text = String(resource.range);
+			cooldownField.text = String(resource.cooldown);
 			ignoreUserGait.selected = resource.ignoreUserGait;
 			ignoreTargetGait.selected = resource.ignoreTargetGait;
+			delayField.text = String(resource.delay);
 			
 			typeCombo.selectedItem = Util.itemWithLabelInComboBox(typeCombo, resource.type);
 			hideOrShowControlsForType(resource.type);
@@ -92,12 +98,19 @@ package angel.roomedit {
 			changeWeaponProperty(Defaults.WEAPON_COOLDOWN, "cooldown", Defaults.WEAPON_COOLDOWN);
 			changeWeaponProperty(false, "ignoreUserGait", false);
 			changeWeaponProperty(false, "ignoreTargetGait", false);
+			changeWeaponProperty(0, "delay", 0);
+			rangeField.text = String(Defaults.WEAPON_RANGE);
+			cooldownField.text = String(Defaults.WEAPON_COOLDOWN);
+			ignoreUserGait.selected = false;
+			ignoreTargetGait.selected = false;
+			delayField.text = String(0);
 			hideOrShowControlsForType(type);
 		}
 		
 		private function hideOrShowControlsForType(type:String):void {
 			var isHand:Boolean = (type == "hand");
-			rangeTextField.visible = cooldownTextField.visible = ignoreUserGait.enabled = ignoreTargetGait.enabled = isHand;
+			rangeField.visible = cooldownField.visible = ignoreUserGait.visible = ignoreTargetGait.visible = isHand;
+			delayField.visible = !isHand;
 		}
 		
 		private function changeWeaponProperty(newValue:*, propertyName:String, defaultValue:* = null):void {

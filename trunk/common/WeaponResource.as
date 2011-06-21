@@ -2,6 +2,7 @@ package angel.common {
 	import angel.game.combat.IWeapon;
 	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.combat.ThrownWeapon;
+	import angel.game.combat.TimeDelayGrenade;
 	import angel.game.inventory.IInventoryResource;
 	import angel.game.Settings;
 	import flash.display.BitmapData;
@@ -28,6 +29,7 @@ package angel.common {
 		public var cooldown:int = Defaults.WEAPON_COOLDOWN;
 		public var ignoreUserGait:Boolean = false;
 		public var ignoreTargetGait:Boolean = false;
+		public var delay:int = 0;
 		
 		public static const TAG:String = "weapon";
 		
@@ -54,6 +56,7 @@ package angel.common {
 			weaponClass = typeToClass[type];
 			if (weaponClass == null) {
 				MessageCollector.collectOrShowMessage(errors, "Unknown weapon type " + type);
+				weaponClass = SingleTargetWeapon;
 			}
 			
 			Util.setTextFromXml(this, "displayName", entry.xml, "displayName");
@@ -62,7 +65,12 @@ package angel.common {
 			Util.setIntFromXml(this, "cooldown", entry.xml, "cooldown");
 			Util.setBoolFromXml(this, "ignoreUserGait", entry.xml, "ignoreUserGait");
 			Util.setBoolFromXml(this, "ignoreTargetGait", entry.xml, "ignoreTargetGait");
+			Util.setIntFromXml(this, "delay", entry.xml, "delay");
 			entry.xml = null;
+			
+			if ((weaponClass == ThrownWeapon) && (delay > 0)) {
+				weaponClass = TimeDelayGrenade;
+			}
 		}
 		
 		public function dataFinishedLoading(bitmapData:BitmapData, param:Object = null):void {
