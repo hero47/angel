@@ -33,7 +33,7 @@ package angel.game.combat {
 			delay = resource.delay;
 		}
 		
-		override protected function deliverPayloadAt(room:Room, location:Point, baseDamage:int):void {
+		override protected function deliverPayloadAt(room:Room, location:Point):void {
 			var charResource:CharResource = Settings.catalog.retrieveCharacterResource("__grenade");
 			charResource.unusedPixelsAtTopOfCell = Prop.HEIGHT - Tileset.TILE_HEIGHT;
 			var entity:ComplexEntity = new ComplexEntity(charResource, "__grenade");
