@@ -175,8 +175,8 @@ package angel.game.combat {
 			addThrowPieSlices(slices, location);
 			if (hilightedEnemy != null) {
 				Assert.assertTrue(hilightedEnemy.location.equals(location), "Hilighted enemy not on menu tile");
-				addFirePieSliceIfLegal(slices, location, player.inventory.mainWeapon(), Icon.CombatFireFirstGun);
-				addFirePieSliceIfLegal(slices, location, player.inventory.offWeapon(), Icon.CombatFireSecondGun);
+				addFirePieSliceIfLegal(slices, hilightedEnemy, player.inventory.mainWeapon());
+				addFirePieSliceIfLegal(slices, hilightedEnemy, player.inventory.offWeapon());
 			}
 			
 			return slices;
@@ -185,11 +185,11 @@ package angel.game.combat {
 		
 		/************ Private ****************/
 		
-		private function addFirePieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point, weapon:SingleTargetWeapon, iconClass:Class):void {
-			if ((weapon != null) && (weapon.readyToFire(combat)) && (weapon.inRange(player, targetLocation))) {
-				slices.push(new PieSlice(Icon.bitmapData(iconClass), "Fire " + weapon.displayName, function():void {
-					doPlayerAttack(weapon, hilightedEnemy);
-				} ));
+		private function addFirePieSliceIfLegal(slices:Vector.<PieSlice>, target:ComplexEntity, weapon:SingleTargetWeapon):void {
+			if ((weapon != null) && (weapon.readyToFire(combat)) && (weapon.inRange(player, target.location))) {
+				slices.push(new PieSlice(weapon.iconData,
+						"Fire " + weapon.displayName + " at " + target.displayName,
+						function():void { doPlayerAttack(weapon, target); } ));
 			}
 		}
 		
@@ -206,7 +206,7 @@ package angel.game.combat {
 					!room.blocksThrown(targetLocation.x, targetLocation.y) &&
 					Util.entityHasLineOfSight(player, targetLocation)) {
 				var count:int = player.inventory.countSpecificItemInPileOfStuff(weapon);
-				slices.push(new PieSlice(Icon.bitmapData(weapon.iconClass),
+				slices.push(new PieSlice(weapon.iconData,
 					"Throw " + weapon.displayName + " [" + count + " in inventory] at this square",
 					function():void { doPlayerAttack(weapon, targetLocation); }	));
 			}

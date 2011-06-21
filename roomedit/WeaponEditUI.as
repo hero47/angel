@@ -1,13 +1,17 @@
 package angel.roomedit {
 	import angel.common.CatalogEntry;
 	import angel.common.Defaults;
+	import angel.common.LoaderWithErrorCatching;
 	import angel.common.SimplerButton;
 	import angel.common.Util;
 	import angel.common.WeaponResource;
 	import fl.controls.CheckBox;
 	import fl.controls.ComboBox;
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.geom.Point;
 	import flash.text.TextField;
 	
 	/**
@@ -16,10 +20,12 @@ package angel.roomedit {
 	 */
 	public class WeaponEditUI extends Sprite {
 		private var catalog:CatalogEdit;
+		private var iconBitmap:Bitmap;
 		private var typeCombo:ComboBox;
 		private var weaponCombo:ComboBox;
 		private var nameField:LabeledTextField;
 		private var damageField:LabeledTextField;
+		private var changeImageControl:FilenameControl;
 		private var rangeField:LabeledTextField;
 		private var cooldownField:LabeledTextField;
 		private var ignoreUserGait:CheckBox;
@@ -30,11 +36,18 @@ package angel.roomedit {
 		private static const WIDTH:int = 220;
 		private static const weaponTypes:Vector.<String> = Vector.<String>(["hand", "thrown"]);
 		
+		public static const STANDARD_ICON_SIZE:int = 28;
+		
 		public function WeaponEditUI(catalog:CatalogEdit, startId:String = null) {
 			this.catalog = catalog;
 			
+			iconBitmap = new Bitmap(new BitmapData(STANDARD_ICON_SIZE, STANDARD_ICON_SIZE));
+			iconBitmap.x = (WIDTH - STANDARD_ICON_SIZE) / 2;
+			addChild(iconBitmap);
+			
 			weaponCombo = catalog.createChooser(CatalogEntry.WEAPON, WIDTH);
 			weaponCombo.addEventListener(Event.CHANGE, changeWeapon);
+			weaponCombo.y = iconBitmap.y + iconBitmap.height + 10;
 			addChild(weaponCombo);
 			
 			var typeLabel:TextField = Util.textBox("Type:", 40);
@@ -46,7 +59,8 @@ package angel.roomedit {
 					function(event:Event):void { changeWeaponProperty(event.target.text, "displayName", Defaults.GUN_DISPLAY_NAME) }, 0 );
 			damageField = LabeledTextField.createBelow(nameField, "Damage", 85, 40,
 					function(event:Event):void { changeWeaponProperty(int(event.target.text), "damage", Defaults.GUN_DAMAGE) } );
-			rangeField = LabeledTextField.createBelow(damageField, "Range", 85, 40,
+			changeImageControl = FilenameControl.createBelow(damageField, true, "Icon", 0, 220, changeFilename, 0);
+			rangeField = LabeledTextField.createBelow(changeImageControl, "Range", 85, 40,
 					function(event:Event):void { changeWeaponProperty(int(event.target.text), "range", Defaults.WEAPON_RANGE) } );
 			cooldownField = LabeledTextField.createBelow(rangeField, "Cooldown", 85, 40,
 					function(event:Event):void { changeWeaponProperty(int(event.target.text), "cooldown", Defaults.WEAPON_COOLDOWN) } );
@@ -55,7 +69,7 @@ package angel.roomedit {
 			ignoreTargetGait = Util.createCheckboxEditControlBelow(ignoreUserGait, "Ignore Target Gait", 120,
 					function(event:Event):void { changeWeaponProperty( (event.target.selected ? true : false), "ignoreTargetGait", false) } );
 			
-			delayField = LabeledTextField.createBelow(damageField, "Delay", 85, 40,
+			delayField = LabeledTextField.createBelow(changeImageControl, "Delay", 85, 40,
 					function(event:Event):void { changeWeaponProperty(int(event.target.text), "delay", 0) } );
 					
 					
@@ -77,6 +91,8 @@ package angel.roomedit {
 			var weaponId:String = weaponCombo.selectedLabel;
 
 			var resource:WeaponResource = catalog.retrieveWeaponResource(weaponId);
+			iconBitmap.bitmapData = resource.iconBitmapData;
+			changeImageControl.text = catalog.getFilenameFromId(weaponId);
 			nameField.text = resource.displayName;
 			damageField.text = String(resource.damage);
 			rangeField.text = String(resource.range);
@@ -144,6 +160,23 @@ package angel.roomedit {
 			weaponCombo.selectedIndex = 0;
 			changeWeapon(null);
 			CatalogEditUI.warnSaveCatalogAndRestart();
+		}
+		
+		private function changeFilename(event:Event):void {
+			var weaponId:String = weaponCombo.selectedLabel;
+			var newFilename:String = changeImageControl.text;
+			if (newFilename == "") {
+				catalog.changeFilename(weaponId, newFilename);
+				changeWeapon(null);
+			} else {
+				LoaderWithErrorCatching.LoadBytesFromFile(newFilename, updateToNewFilename, weaponId);
+			}
+		}
+		
+		private function updateToNewFilename(event:Event, param:Object, filename:String):void {
+			var weaponId:String = String(param);
+			iconBitmap.bitmapData = Bitmap(event.target.content).bitmapData;
+			catalog.changeFilename(weaponId, filename);
 		}
 		
 	}
