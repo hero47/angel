@@ -196,15 +196,19 @@ package angel.game.combat {
 		private function addThrowPieSlices(slices:Vector.<PieSlice>, targetLocation:Point):void {
 			var throwables:Vector.<CanBeInInventory> = player.inventory.findAllMatchingInPileOfStuff(ThrownWeapon);
 			for each (var weapon:ThrownWeapon in throwables) {
-				if (player.inventory.hasFreeHand() &&
-						((player.actionsPerTurn == 1) || (player.actionsRemaining >= 2)) &&
-						!room.blocksThrown(targetLocation.x, targetLocation.y) &&
-						Util.entityHasLineOfSight(player, targetLocation)) {
-					var count:int = player.inventory.countSpecificItemInPileOfStuff(weapon);
-					slices.push(new PieSlice(Icon.bitmapData(weapon.iconClass),
-						"Throw " + weapon.displayName + " [" + count + " in inventory] at this square",
-						function():void { doPlayerAttack(weapon, targetLocation); }	));
-				}
+				addThrowPieSliceIfLegal(slices, targetLocation, weapon);
+			}
+		}
+		
+		private function addThrowPieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point, weapon:ThrownWeapon):void {
+			if (player.inventory.hasFreeHand() &&
+					((player.actionsPerTurn == 1) || (player.actionsRemaining >= 2)) &&
+					!room.blocksThrown(targetLocation.x, targetLocation.y) &&
+					Util.entityHasLineOfSight(player, targetLocation)) {
+				var count:int = player.inventory.countSpecificItemInPileOfStuff(weapon);
+				slices.push(new PieSlice(Icon.bitmapData(weapon.iconClass),
+					"Throw " + weapon.displayName + " [" + count + " in inventory] at this square",
+					function():void { doPlayerAttack(weapon, targetLocation); }	));
 			}
 		}
 		
