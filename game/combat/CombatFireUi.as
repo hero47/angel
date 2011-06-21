@@ -236,7 +236,9 @@ package angel.game.combat {
 		
 		private function adjustActionsRemainingDisplay(show:Boolean = true):void {
 			//UNDONE: upgrade stat display to remove this abomination
-			combat.augmentedReality.statDisplay.adjustActionsRemainingDisplay(show ? player.actionsRemaining : -1);
+			if (combat.augmentedReality != null) {
+				combat.augmentedReality.statDisplay.adjustActionsRemainingDisplay(show ? player.actionsRemaining : -1);
+			}
 		}
 	
 	} // end class CombatFireUi

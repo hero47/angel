@@ -79,6 +79,7 @@ package angel.game.combat {
 			room.unpauseAndDeleteAllOwnedBy(this);
 			
 			augmentedReality.cleanup();
+			augmentedReality = null;
 			
 			mover.clearPathAndReturnMarker();
 			room.stage.removeChild(modeLabel);
@@ -90,9 +91,17 @@ package angel.game.combat {
 				fighter.adjustBrainForRoomMode(null);
 			}
 			combatTurn = int.MAX_VALUE;
-			room.forEachComplexEntity(standardizeWeaponsForInventory);
+			room.forEachComplexEntity(cleanupEntityFromCombat);
 			
 			room = null;
+		}
+		
+		private function cleanupEntityFromCombat(entity:ComplexEntity):void {
+			if (entity.id.substr(0, 2) == "__") {
+				room.removeEntity(entity);
+			} else {
+				standardizeWeaponsForInventory(entity);
+			}
 		}
 		
 		public function standardizeWeaponsForInventory(entity:ComplexEntity):void {
@@ -175,7 +184,9 @@ package angel.game.combat {
 				}
 			}
 			
-			augmentedReality.removeFighter(deadFighter); // do this after it's out of list so the dead one won't "see" stuff
+			if (augmentedReality != null) {
+				augmentedReality.removeFighter(deadFighter); // do this after it's out of list so the dead one won't "see" stuff
+			}
 		}
 		
 		/****************** public “api” for combat brains/ui *******************/
@@ -314,6 +325,11 @@ package angel.game.combat {
 				return fighters[0];
 			}
 			return fighters[iFighterTurnInProgress];
+		}
+		
+		public function changeEntityTurnToJustBeforeCurrent(entity:ComplexEntity):void {
+			fighters.splice(fighters.indexOf(entity), 1);
+			fighters.splice(iFighterTurnInProgress++, 0, entity);
 		}
 		
 		private function goToNextFighter():void {

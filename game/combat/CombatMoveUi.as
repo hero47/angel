@@ -189,7 +189,9 @@ package angel.game.combat {
 		
 		private function adjustMovePointsDisplay(show:Boolean = true):void {
 			//UNDONE: upgrade stat display to remove this abomination
-			combat.augmentedReality.statDisplay.adjustMovePointsDisplay(show ? combat.mover.unusedMovePoints(player) : -1);
+			if (combat.augmentedReality != null) {
+				combat.augmentedReality.statDisplay.adjustMovePointsDisplay(show ? combat.mover.unusedMovePoints(player) : -1);
+			}
 		}
 		
 	} // end class CombatMoveUi

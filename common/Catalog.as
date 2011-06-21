@@ -11,6 +11,11 @@ package angel.common {
 	// Initially, this will permanently cache each BitmapData created from the files.
 	// Later, we'll want some sort of resource management to count usage and unload when no longer needed.
 	public class Catalog extends EventDispatcher {
+		private var presetXml:XML =
+		<catalog>
+			<char file="prp_grenade_landed.png" id="__grenade" health="1" top="96" />
+		</catalog>
+		
 		public var loaded:Boolean = false;
 		
 		protected var lookup:Object = new Object(); // associative array mapping name to CatalogEntry
@@ -34,6 +39,9 @@ package angel.common {
 			if (xml == null) {
 				return;
 			}
+			
+			xml.appendChild(presetXml.children());
+			
 			var entry:CatalogEntry;
 			for each (var propXml:XML in xml.prop) {
 				entry = addCatalogEntry(propXml.@id, propXml.@file, propXml, CatalogEntry.PROP, errors);
@@ -47,11 +55,6 @@ package angel.common {
 			}
 			for each (var splashXml:XML in xml.splash) {
 				entry = addCatalogEntry(splashXml.@id, splashXml.@file, splashXml, CatalogEntry.SPLASH, errors);
-			}
-			
-			//UNDONE For backwards compatibility; remove this once old catalogs have been rewritten
-			for each (var walkerXml:XML in xml.walker) {
-				entry = addCatalogEntry(walkerXml.@id, walkerXml.@file, walkerXml, CatalogEntry.CHARACTER, errors);
 			}
 			
 			for each (var tilesetXml:XML in xml.tileset) {

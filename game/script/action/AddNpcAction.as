@@ -16,13 +16,13 @@ package angel.game.script.action {
 	// As we start developing content we may find that may too limiting, and may need to figure out some way to vary it.
 	
 	public class AddNpcAction implements IAction {
-		private var walkerXml:XML;
+		private var charXml:XML;
 		private static const CONTENTS_VERSION:int = 1;
 		
 		public static const TAG:String = "addNpc";
 		
-		public function AddNpcAction(walkerXml:XML) {
-			this.walkerXml = walkerXml;
+		public function AddNpcAction(charXml:XML) {
+			this.charXml = charXml;
 		}
 		
 		public static function createFromXml(actionXml:XML, script:Script):IAction {
@@ -35,12 +35,12 @@ package angel.game.script.action {
 		/* INTERFACE angel.game.action.IAction */
 		
 		public function doAction(context:ScriptContext):Object {
-			var entity:ComplexEntity = ComplexEntity.createFromRoomContentsXml(walkerXml, Settings.catalog,	context.messages);
+			var entity:ComplexEntity = ComplexEntity.createFromRoomContentsXml(charXml, Settings.catalog, context.messages);
 			if (entity == null) {
 				// don't show another error, catalog will already have displayed error
 				return null;
 			}
-			var spotId:String = walkerXml.@spot;
+			var spotId:String = charXml.@spot;
 			var location:Point;
 			if (spotId != "") {
 				location = context.locationWithSpotId(spotId, TAG);

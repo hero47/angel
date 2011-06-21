@@ -34,12 +34,6 @@ package angel.roomedit {
 				return;
 			}
 			super.catalogXmlLoaded(event, param, filename);
-						
-			//UNDONE For backwards compatibility; remove this once old catalogs have been rewritten
-			for each (var walkerXml:XML in catalogXml.walker) {
-				walkerXml.setName("char");
-				walkerXml.@animate = "walker";
-			}
 		}
 		
 		public function retrieveRoomContentResource(id:String, type:Class, errors:MessageCollector = null):RoomContentResource {
