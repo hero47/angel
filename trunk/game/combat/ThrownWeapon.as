@@ -43,10 +43,6 @@ package angel.game.combat {
 		
 		/* INTERFACE angel.game.combat.IWeapon */
 		
-		public function get iconClass():Class {
-			return Icon.CombatGrenade;
-		}
-		
 		public function stacksWith(other:CanBeInInventory):Boolean {
 			var otherWeapon:ThrownWeapon = other as ThrownWeapon;
 			return ((otherWeapon != null) && (otherWeapon.id == id));

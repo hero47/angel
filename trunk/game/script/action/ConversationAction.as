@@ -37,14 +37,18 @@ package angel.game.script.action {
 		}
 		
 		private function startConversation(context:ScriptContext):void {
-			var targetEntity:SimpleEntity;
-			var playerEntity:ComplexEntity;
 			var conversationContext:ScriptContext = context.cloneSettings();
 			if (!Util.nullOrEmpty(playerId)) {
-				conversationContext.setSpecialId(Script.TRIGGERING_ENTITY, targetEntity);
+				var playerEntity:ComplexEntity = context.entityWithScriptId(playerId, TAG) as ComplexEntity;
+				if (playerEntity == null) {
+					context.scriptError(playerId + " is not a character", TAG);
+				} else {
+					conversationContext.setSpecialId(Script.ACTIVE_PLAYER, playerEntity);
+				}
 			}
 			if (!Util.nullOrEmpty(targetId)) {
-				conversationContext.setSpecialId(Script.ACTIVE_PLAYER, targetEntity);
+				var targetEntity:SimpleEntity = context.entityWithScriptId(targetId, TAG);
+				conversationContext.setSpecialId(Script.TRIGGERING_ENTITY, targetEntity);
 			}
 			context.room.startConversation(conversationContext, conversationData);
 		}

@@ -34,7 +34,7 @@ package angel.game.inventory {
 			graphics.beginFill(0xffffff, 1);
 			graphics.drawRect(0, 0, InventoryUi.uiImageX, InventoryUi.uiImageY);
 			
-			var bitmap:Bitmap = new Bitmap(Icon.bitmapData(item.iconClass));
+			var bitmap:Bitmap = new Bitmap(item.iconData);
 			bitmap.x = (InventoryUi.uiImageX - bitmap.width) / 2;
 			bitmap.y = (InventoryUi.uiImageY - bitmap.height) / 2;
 			bitmap.alpha = 0.5;

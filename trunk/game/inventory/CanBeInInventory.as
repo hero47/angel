@@ -1,4 +1,5 @@
 package angel.game.inventory {
+	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	
 	/**
@@ -8,7 +9,7 @@ package angel.game.inventory {
 	public interface CanBeInInventory {
 		function get id():String;
 		function get displayName():String;
-		function get iconClass():Class;
+		function get iconData():BitmapData;
 		function stacksWith(other:CanBeInInventory):Boolean;
 	}
 	

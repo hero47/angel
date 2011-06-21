@@ -50,13 +50,11 @@ package angel.common {
 				entry = addCatalogEntry(charXml.@id, charXml.@file, charXml, CatalogEntry.CHARACTER, errors);
 			}
 			for each (var weaponXml:XML in xml.weapon) {
-				//NOTE: weapons have no image yet; pass null for filename so we won't look for a file.
-				entry = addCatalogEntry(weaponXml.@id, null, weaponXml, CatalogEntry.WEAPON, errors);
+				entry = addCatalogEntry(weaponXml.@id, weaponXml.@file, weaponXml, CatalogEntry.WEAPON, errors);
 			}
 			for each (var splashXml:XML in xml.splash) {
 				entry = addCatalogEntry(splashXml.@id, splashXml.@file, splashXml, CatalogEntry.SPLASH, errors);
 			}
-			
 			for each (var tilesetXml:XML in xml.tileset) {
 				entry = addCatalogEntry(tilesetXml.@id, tilesetXml.@file, tilesetXml, CatalogEntry.TILESET, errors);
 			}

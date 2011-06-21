@@ -51,7 +51,6 @@ package angel.game {
 		}
 		
 		public function addButton(text:String, location:Point, script:Script):void {
-			trace("Splash adding button", text, location);
 			var button:SimplerButton = new SimplerButton(text, clickListener, BUTTON_COLOR);
 			button.resizeToFitText(SimplerButton.WIDTH);
 			addChild(button);

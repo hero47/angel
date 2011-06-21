@@ -8,6 +8,7 @@ package angel.game.combat {
 	import angel.game.Settings;
 	import angel.game.TimedSprite;
 	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.geom.Point;
 	import flash.text.TextField;
@@ -34,10 +35,6 @@ package angel.game.combat {
 		
 		public function toString():String {
 			return "[SingleTargetWeapon displayName=" + name + ", baseDamage=" + baseDamage + "]";
-		}
-		
-		public function get iconClass():Class {
-			return Icon.CombatFireFirstGun;
 		}
 		
 		public function stacksWith(other:CanBeInInventory):Boolean {
