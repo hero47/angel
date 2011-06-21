@@ -41,7 +41,7 @@ package angel.game {
 		// Later, when we have modes where they'll be picking targets, we can set its mouseChildren to true
 		// and detect clicks on entities.
 
-		private var contentsLayer:Sprite;
+		public var contentsLayer:Sprite;
 		
 		public var filename:String;
 		private var quitButton:SimplerButton;

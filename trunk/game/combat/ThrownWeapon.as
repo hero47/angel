@@ -10,7 +10,9 @@ package angel.game.combat {
 	import angel.game.Room;
 	import angel.game.Settings;
 	import angel.game.TimedSprite;
+	import flash.display.Bitmap;
 	import flash.display.Sprite;
+	import flash.events.Event;
 	import flash.geom.Point;
 	import flash.text.TextField;
 	import flash.text.TextFieldAutoSize;
@@ -60,16 +62,16 @@ package angel.game.combat {
 		
 		// per Wm: uses two actions, but someone with only one action can still throw;
 		// the UI/brain will need to enforce this.
-		public function throwAt(shooter:ComplexEntity, targetLocation:Point):void {
+		private function throwAt(shooter:ComplexEntity, targetLocation:Point):void {
 			shooter.turnToFaceTile(targetLocation);
 			shooter.actionsRemaining -= 2;
 			
 			shooter.inventory.removeFromPileOfStuff(this, 1);
-			//UNDONE animate grenade moving through air?
-			deliverPayloadAt(shooter.room, targetLocation, baseDamage);
+			new ThrowAnimation(shooter.room, shooter.location, targetLocation, deliverPayloadAt);
+			//deliverPayloadAt(shooter.room, targetLocation);
 		}
 		
-		protected function deliverPayloadAt(room:Room, location:Point, baseDamage:int):void {
+		protected function deliverPayloadAt(room:Room, location:Point):void {
 			explodeAt(room, location, baseDamage);
 		}
 		
