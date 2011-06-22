@@ -16,13 +16,15 @@ package angel.game.script {
 		public static const ON_FROB:String = "onFrob";
 		public static const ON_INIT:String = "onInit";
 		public static const ON_MOVE:String = "onMove";
+		public static const ON_REVIVE_FROB:String = "onReviveFrob";
 		
 		//can't use the constants to init the left side of, it doesn't translate them to strings
 		public static const TRIGGER_NAME_TO_GAME_EVENT:Object = {
 			"onDeath":EntityQEvent.DEATH,
 			"onFrob":EntityQEvent.FROBBED,
 			"onInit":Room.ROOM_INIT,
-			"onMove":EntityQEvent.FINISHED_ONE_TILE_OF_MOVE
+			"onMove":EntityQEvent.FINISHED_ONE_TILE_OF_MOVE,
+			"onReviveFrob":EntityQEvent.REVIVE_FROB
 		}
 		
 		private var context:ScriptContext;

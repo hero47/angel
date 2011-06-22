@@ -20,13 +20,14 @@ package angel.game.script.action {
 		}
 		
 		public static function createFromXml(actionXml:XML, script:Script):IAction {
-			return new DetonateAction(actionXml.@id, actionXml.@damage);
+			var id:String = actionXml.@id;
+			return new DetonateAction((id == "" ? ScriptContext.SpecialId(Script.SELF) : id), actionXml.@damage);
 		}
 		
 		/* INTERFACE angel.game.script.action.IAction */
 		
 		public function doAction(context:ScriptContext):Object {
-			var entity:SimpleEntity = (id == "" ? context.entityWithSpecialId(Script.SELF) : context.entityWithScriptId(id, TAG));
+			var entity:SimpleEntity = context.entityWithScriptId(id, TAG);
 			if (entity == null) {
 				return null;
 			} else if (entity == context.room.mainPlayerCharacter) {

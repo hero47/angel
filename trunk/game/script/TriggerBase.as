@@ -71,6 +71,10 @@ package angel.game.script {
 			}
 		}
 		
+		public function hasScriptFor(triggerName:String):Boolean {
+			return (triggers[triggerName] != null);
+		}
+		
 	}
 
 }

@@ -46,26 +46,29 @@ package angel.game.script {
 			
 			me.hasFrobScript = (xml.onFrob.length() > 0);
 			
-			createTriggeredScripts(me, xml, TriggerMaster.ON_DEATH, false, rootScriptForErrors);
-			createTriggeredScripts(me, xml, TriggerMaster.ON_FROB, true, rootScriptForErrors);
-			createTriggeredScripts(me, xml, TriggerMaster.ON_MOVE, true, rootScriptForErrors);
+			createTriggeredScripts(me, xml, TriggerMaster.ON_DEATH, false, rootScriptForErrors, true);
+			createTriggeredScripts(me, xml, TriggerMaster.ON_FROB, true, rootScriptForErrors, true);
+			createTriggeredScripts(me, xml, TriggerMaster.ON_MOVE, true, rootScriptForErrors, true);
+			createTriggeredScripts(me, xml, TriggerMaster.ON_REVIVE_FROB, true, rootScriptForErrors, false);
 		
 			rootScriptForErrors.displayAndClearParseErrors("Script errors in file " + filename);
 		}
 		
 		private function createTriggeredScripts(me:Object, scriptXML:XML, triggerName:String,
-								canFilterOnSpot:Boolean, rootScript:Script):void {
+								canFilterOnSpot:Boolean, rootScript:Script, supportsAny:Boolean):void {
 			var scriptsForThisTrigger:XMLList = scriptXML.children().(name() == triggerName);
 			if (scriptsForThisTrigger.length() > 0) {
 				addTriggeredScriptsFromXmlList(me, me, scriptsForThisTrigger, triggerName, triggerName,
 					false, canFilterOnSpot, rootScript);
 			}
 			
-			scriptsForThisTrigger = scriptXML.children().(name() == triggerName+"Any");
-			if (scriptsForThisTrigger.length() > 0) {
-				addTriggeredScriptsFromXmlList(me, me.room, scriptsForThisTrigger, triggerName, triggerName+"Any",
-					true, canFilterOnSpot, rootScript);
-			}					
+			if (supportsAny) {
+				scriptsForThisTrigger = scriptXML.children().(name() == triggerName+"Any");
+				if (scriptsForThisTrigger.length() > 0) {
+					addTriggeredScriptsFromXmlList(me, me.room, scriptsForThisTrigger, triggerName, triggerName+"Any",
+						true, canFilterOnSpot, rootScript);
+				}
+			}
 		}
 		
 	}

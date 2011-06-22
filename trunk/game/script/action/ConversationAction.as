@@ -39,7 +39,7 @@ package angel.game.script.action {
 		private function startConversation(context:ScriptContext):void {
 			var conversationContext:ScriptContext = context.cloneSettings();
 			if (!Util.nullOrEmpty(playerId)) {
-				var playerEntity:ComplexEntity = context.entityWithScriptId(playerId, TAG) as ComplexEntity;
+				var playerEntity:ComplexEntity = context.charWithScriptId(playerId, TAG);
 				if (playerEntity == null) {
 					context.scriptError(playerId + " is not a character", TAG);
 				} else {
