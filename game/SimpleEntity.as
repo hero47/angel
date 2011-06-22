@@ -78,7 +78,7 @@ package angel.game {
 			xml.@x = myLocation.x;
 			xml.@y = myLocation.y;
 			if (triggers != null) {
-				xml.@scriptFile = triggers.scriptFile;
+				xml.@script = triggers.scriptFile;
 			}
 		}
 		

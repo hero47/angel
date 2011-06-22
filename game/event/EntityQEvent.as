@@ -23,6 +23,7 @@ package angel.game.event {
 		public static const BECAME_VISIBLE:String = "entityBecameVisible";
 		public static const BECAME_MAIN_PC:String = "entityBecameMainPc"; // param = old main pc
 		public static const FROBBED:String = "entityFrobbed";
+		public static const REVIVE_FROB:String = "entityReviveFrobbed";
 		
 		public function EntityQEvent(source:SimpleEntity, eventId:String, param:Object = null) {
 			super(source, eventId, param);

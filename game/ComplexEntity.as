@@ -204,7 +204,7 @@ package angel.game {
 				return super.frob(whoFrobbedMe);
 			} else {
 				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
-				slices.push(new PieSlice(Icon.bitmapData(Icon.TestIconBitmap), "Revive", revive));
+				slices.push(new PieSlice(Icon.bitmapData(Icon.TestIconBitmap), "Revive", reviveFrob));
 				return slices;
 			}
 		}
@@ -383,8 +383,20 @@ package angel.game {
 		}
 		
 		public function revive():void {
+			var wasActive:Boolean = isActive();
 			initHealth(true);
+			if (!wasActive) {
+				adjustBrainForRoomMode(room.mode);
+			}
 			Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.REVIVE));
+		}
+		
+		public function reviveFrob():void {
+			if ((triggers != null) && triggers.hasScriptFor(TriggerMaster.ON_REVIVE_FROB)) {
+				Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.REVIVE_FROB));
+			} else {
+				revive();
+			}
 		}
 		
 		public function setTextOverHead(value:String, color:uint = 0xffffff):void {
