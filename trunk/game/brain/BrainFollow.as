@@ -1,6 +1,7 @@
 package angel.game.brain {
 	import angel.common.Alert;
 	import angel.common.Assert;
+	import angel.common.Util;
 	import angel.game.ComplexEntity;
 	import angel.game.RoomExplore;
 	import angel.game.SimpleEntity;
@@ -19,13 +20,13 @@ package angel.game.brain {
 		private var me:ComplexEntity;
 		private var friendId:String;
 		
-		private static const INTERVAL:int = 2;
+		protected var interval:int = 2;
 		
 		public function BrainFollow(entity:ComplexEntity, roomExplore:RoomExplore, param:String) {
 			me = entity;
 			friendId = param;
 			if (me.canMove()) {
-				roomExplore.addTimedEvent(Math.random() * INTERVAL, twitchOpportunity);
+				roomExplore.addTimedEvent(0, firstMove);
 			}
 		}
 		
@@ -34,17 +35,28 @@ package angel.game.brain {
 			RoomExplore(me.room.mode).removeTimedEvent(twitchOpportunity);
 			me = null;
 		}
+		
+		//First move is at a random fraction of the interval to de-synchronize everyone
+		//This is done on the first callback instead of in constructor so subclass can monkey with interval
+		private function firstMove(roomExplore:RoomExplore):void {
+			roomExplore.addTimedEvent(Math.random() * interval, twitchOpportunity);
+		}
 
 		private function twitchOpportunity(roomExplore:RoomExplore):void {
 			var friend:SimpleEntity = me.room.entityInRoomWithId(friendId);
 			if ((friend != null) && !me.moving()) {
-				var path:Vector.<Point> = me.movement.findPathTo(friend.location);
+				var path:Vector.<Point>;
+				if (Util.chessDistance(me.location, friend.location) > 1) {
+					path = me.movement.findPathTo(friend.location);
+				}
 				if ((path != null) && (path.length > 1)) {
 					path.length = path.length - 1;
 					me.movement.startMovingAlongPath(path);
+				} else {
+					me.turnToFaceTile(friend.location);
 				}
 			}
-			roomExplore.addTimedEvent(INTERVAL, twitchOpportunity);
+			roomExplore.addTimedEvent(interval, twitchOpportunity);
 		}
 		
 		
