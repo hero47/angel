@@ -24,7 +24,13 @@ package angel.game.brain {
 		
 		public function BrainFollow(entity:ComplexEntity, roomExplore:RoomExplore, param:String) {
 			me = entity;
-			friendId = param;
+			var splitParam:Array = param.split(":");
+			if (splitParam.length == 1) {
+				friendId = param;
+			} else {
+				interval = Number(splitParam[0]);
+				friendId = splitParam[1];
+			}
 			if (me.canMove()) {
 				roomExplore.addTimedEvent(0, firstMove);
 			}
