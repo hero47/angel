@@ -50,6 +50,8 @@ package angel.game {
 		public static const DefaultThrownWeaponIcon:Class;
 		[Embed(source = '../EmbeddedAssets/combat_icon_pass.png')]
 		public static const CombatPass:Class;
+		[Embed(source='../EmbeddedAssets/combat_icon_items.png')]
+		public static const CombatOpenItemMenu:Class;
 		
 		// Combat cursor
 		[Embed(source = '../EmbeddedAssets/combat_cursor_active.png')]

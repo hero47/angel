@@ -29,6 +29,7 @@ package angel.game {
 		private var pie:Sprite;
 		private var facingFirstSliceEdge:int;
 		private var sliceDegrees:int;
+		private var parentPie:PieMenu;
 		
 		private var overIcon:Bitmap;
 		
@@ -72,6 +73,10 @@ package angel.game {
 			pie.removeEventListener(MouseEvent.MOUSE_MOVE, mouseOverPie);
 		}
 		
+		private function attachToParent(parentPie:PieMenu):void {
+			this.parentPie = parentPie;
+		}
+		
 		private function createPie():void {
 			pie = new Sprite();
 			pie.graphics.lineStyle(1, PIE_BORDER_COLOR, PIE_ALPHA);
@@ -98,8 +103,11 @@ package angel.game {
 			}
 		}
 		
-		private function dismiss():void {
+		private function dismiss(dismissParents:Boolean = false):void {
 			cleanup();
+			if (dismissParents && (parentPie != null)) {
+				parentPie.dismiss(true);
+			}
 			if (callbackAfterClose != null) {
 				callbackAfterClose();
 			}
@@ -122,12 +130,14 @@ package angel.game {
 		
 		private function clickedPie(event:MouseEvent):void {
 			var sliceIndex:int = sliceIndexFromMouseEvent(event);
-			if (slices[sliceIndex].callback != null) {
+			if (slices[sliceIndex].subPieSlices != null) {
+				var nextPie:PieMenu = new PieMenu(event.stageX, event.stageY, slices[sliceIndex].subPieSlices);
+				nextPie.attachToParent(this);
+				stage.addChild(nextPie);
+			} else if (slices[sliceIndex].callback != null) {
 				slices[sliceIndex].callback();
-				dismiss();
+				dismiss(true);
 			}
-			// Wm wants to put "informational" pie slices that have no callback and don't dismiss the menu
-			// if clicked.  I think not dismissing is a bad design choice, but doing it under protest.
 		}
 		
 		private function mouseOverPie(event:MouseEvent):void {
@@ -172,6 +182,10 @@ package angel.game {
 			var clickFacing:int = Util.findRotFacingVector(new Point(event.localX, event.localY));
 			var offsetFromFirstEdge:int = (clickFacing - facingFirstSliceEdge + 360) % 360;
 			return offsetFromFirstEdge / sliceDegrees;
+		}
+		
+		private function openSubPie(stageX:Number, stageY:Number, subPieSlices:Vector.<PieSlice>):void {
+			
 		}
 		
 	}
