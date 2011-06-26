@@ -195,8 +195,14 @@ package angel.game.combat {
 		
 		private function addThrowPieSlices(slices:Vector.<PieSlice>, targetLocation:Point):void {
 			var throwables:Vector.<CanBeInInventory> = player.inventory.findAllMatchingInPileOfStuff(ThrownWeapon);
-			for each (var weapon:ThrownWeapon in throwables) {
-				addThrowPieSliceIfLegal(slices, targetLocation, weapon);
+			if (throwables.length > 0) {
+				var level2slices:Vector.<PieSlice> = new Vector.<PieSlice>();
+				for each (var weapon:ThrownWeapon in throwables) {
+					addThrowPieSliceIfLegal(level2slices, targetLocation, weapon);
+				}
+				if (level2slices.length > 0) {
+					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatOpenItemMenu), "Use item", null, level2slices));
+				}
 			}
 		}
 		
@@ -210,11 +216,6 @@ package angel.game.combat {
 					"Throw " + weapon.displayName + " [" + count + " in inventory] at this square",
 					function():void { doPlayerAttack(weapon, targetLocation); }	));
 			}
-		}
-		
-		private function constructPieMenu():Vector.<PieSlice> {
-			var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
-			return slices;
 		}
 		
 		private function doPlayerAttack(weapon:IWeapon, target:Object):void {
