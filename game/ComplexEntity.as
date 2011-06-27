@@ -25,6 +25,7 @@ package angel.game {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
+	import flash.geom.ColorTransform;
 	import flash.geom.Point;
 	import flash.text.TextField;
 	import flash.text.TextFieldAutoSize;
@@ -79,7 +80,7 @@ package angel.game {
 		private var playerControlled:Boolean;
 		public var faction:int;
 		
-		public var footprint:DisplayObject; // if non-null, drawn on decorations layer centered directly under me
+		private var footprint:DisplayObject; // if non-null, drawn on decorations layer centered directly under me
 		private var textOverHead:TextField;
 		public var controllingOwnText:Boolean; // if true, other things shouldn't monkey with text
 		protected var facing:int;
@@ -175,6 +176,13 @@ package angel.game {
 			}
 		}
 		
+		override public function set visible(value:Boolean):void {
+			super.visible = value;
+			if (footprint != null) {
+				footprint.visible = value;
+			}
+		}
+		
 		override public function get displayName():String {
 			return myDisplayName;
 		}
@@ -258,6 +266,13 @@ package angel.game {
 				room.decorationsLayer.removeChild(footprint);
 				footprint = null;
 			}
+		}
+		
+		// returns old ColorTransform
+		public function setFootprintColorTransform(transform:ColorTransform):ColorTransform {
+			var oldTransform:ColorTransform = footprint.transform.colorTransform;
+			footprint.transform.colorTransform = transform;
+			return oldTransform;
 		}
 		
 		public function changeFaction(newFaction:int):void {

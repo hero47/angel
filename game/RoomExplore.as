@@ -95,7 +95,10 @@ package angel.game {
 		
 		// callback takes pointer to this, which it can use to set another timer
 		public function addTimedEvent(secondsFromNow:Number, callback:Function):void {
-			var timedEvent:TimedEvent = new TimedEvent(time + secondsFromNow * Settings.FRAMES_PER_SECOND, callback);
+			if (secondsFromNow <= 0) {
+				secondsFromNow = 0.01;
+			}
+			var timedEvent:TimedEvent = new TimedEvent(Math.ceil(time + secondsFromNow * Settings.FRAMES_PER_SECOND), callback);
 			timeQueue.push(timedEvent);
 			queueNeedsSort = true;
 		}

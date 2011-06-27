@@ -2,6 +2,7 @@ package angel.common {
 	import angel.common.*;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.geom.ColorTransform;
 	import flash.geom.Point;
 	
 	// (0,0) of floor is the top corner of tile (0,0)'s bounding box, which is at top center almost
@@ -107,6 +108,17 @@ package angel.common {
 			dispatchEvent(new Event(Event.INIT));
 		}
 		
+		private static const UNSEEN_COLOR_TRANSFORM:ColorTransform = new ColorTransform(0.3, 0.3, 0.3, 1);
+		private static const DEFAULT_COLOR_TRANSFORM:ColorTransform = new ColorTransform();
+		
+		//returns previous value of visible
+		public function hideOrShow(tileX:int, tileY:int, visible:Boolean):Boolean {
+			//WARNING: checking if the colorTransform equals UNSEEN_COLOR_TRANSFORM always returns false -- even though
+			//it's a static constant, it's somehow assigning different values each time!
+			var wasVisible:Boolean = floorGrid[tileX][tileY].transform.colorTransform.redMultiplier == 1;
+			floorGrid[tileX][tileY].transform.colorTransform = (visible ? DEFAULT_COLOR_TRANSFORM : UNSEEN_COLOR_TRANSFORM);
+			return wasVisible;
+		}
 		
 		
 	} //end class Floor

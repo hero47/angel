@@ -1,12 +1,16 @@
 package angel.game.combat {
 	import angel.common.Assert;
 	import angel.common.Floor;
+	import angel.common.Prop;
 	import angel.game.ComplexEntity;
 	import angel.game.event.EntityQEvent;
+	import angel.game.Icon;
 	import angel.game.Room;
 	import angel.game.Settings;
+	import angel.game.SimpleEntity;
 	import flash.display.Graphics;
 	import flash.display.Shape;
+	import flash.geom.ColorTransform;
 	import flash.geom.Point;
 	import flash.utils.Dictionary;
 	/**
@@ -21,6 +25,9 @@ package angel.game.combat {
 		private static const FRIEND_FOOTPRINT_COLOR:uint = 0xffff00;
 		private static const CIVILIAN_FOOTPRINT_COLOR:uint = 0xc0c0c0;
 		private static const GRID_COLOR:uint = 0xff0000;
+		
+		private static const UNSEEN_COLOR_TRANSFORM:ColorTransform = new ColorTransform(0.3, 0.3, 0.3, 1);
+		private static const DEFAULT_COLOR_TRANSFORM:ColorTransform = new ColorTransform();
 		
 		private var combat:RoomCombat;
 		// Meowse query: Extricated from combat for convenient referencing, but isn't every use
@@ -62,17 +69,16 @@ package angel.game.combat {
 			room.stage.removeChild(statDisplay);						
 			removeAllFighterDisplayElements();
 			minimap.cleanup();
+			cleanupFog();
 		}
 		
 		public function addFighter(entity:ComplexEntity):void {
 			initializeDisplayElementsForFighter(entity);
-			if (entity.isPlayerControlled) {
-				adjustAllNonPlayerVisibility();
-			}
+			adjustVisibilityForEachTile();
 		}
 		
 		public function removeFighter(entity:ComplexEntity):void {
-			adjustAllNonPlayerVisibility();
+			adjustVisibilityForEachTile();
 			removeDisplayElementsForFighter(entity);
 		}
 		
@@ -111,17 +117,20 @@ package angel.game.combat {
 		private function someoneWalkedToNewSquare(event:EntityQEvent):void {
 			Assert.assertTrue(event.complexEntity == combat.currentFighter(), "Wrong entity moving");
 			combat.mover.adjustDisplayAsEntityLeavesATile(); //CONSIDER: should mover listen and do this for itself?
-			//NOTE: need to adjust all even when an enemy or prop moves, since it might have been
-			//blocking line of sight to another enemy!
-			adjustAllNonPlayerVisibility();
+			adjustVisibilityForMove(event.complexEntity);
 		}
 		
 		// Called by event listener each time an entity is moved directly (i.e. by a script action) rather than walking
 		// (entity's location will have already changed)
 		private function someoneMovedToNewSquare(event:EntityQEvent):void {
+			adjustVisibilityForMove(event.simpleEntity);
+		}
+		
+		private function adjustVisibilityForMove(entity:SimpleEntity):void {
 			//NOTE: need to adjust all even when an enemy or prop moves, since it might have been
 			//blocking line of sight to another enemy!
-			adjustAllNonPlayerVisibility();
+			adjustEntityVisibility(entity, combat.anyPlayerCanSeeLocation(entity.location));
+			adjustVisibilityForEachTile();
 		}
 		
 		//UNDONE: upgrade stat display to track its own entity and do its own listening
@@ -155,27 +164,51 @@ package angel.game.combat {
 			}
 		}
 		
-		public function adjustAllNonPlayerVisibility():void {
-			for each (var fighter:ComplexEntity in combat.fighters) {
-				if (!fighter.isPlayerControlled) {
-					adjustVisibilityOfNonPlayer(fighter);
+		//Note: assumes that the contents of each tile have the same visibility as the tile itself.
+		//When something moves, need to call adjustEntityVisibility on it individually in addition to this.
+		public function adjustVisibilityForEachTile():void {
+			var roomSize:Point = room.floor.size;
+			for (var x:int = 0; x < roomSize.x; ++x) {
+				for (var y:int = 0; y < roomSize.y; ++y) {
+					if ((x == 8) && (y == 5)) {
+						var foo = 1;
+					}
+					var location:Point = new Point(x, y);
+					var shouldBeVisible:Boolean = combat.anyPlayerCanSeeLocation(location);
+					var wasVisible:Boolean = room.floor.hideOrShow(x, y, shouldBeVisible);
+					if (wasVisible != shouldBeVisible) {
+						//room.hideOrShowContents(x, y, visible);
+						room.forEachEntityIn(location, function(entity:SimpleEntity):void {
+							adjustEntityVisibility(entity, shouldBeVisible);
+						});
+					}
 				}
 			}
 		}
 		
-		private function adjustVisibilityOfNonPlayer(entity:ComplexEntity):void {
-			var entityWasVisible:Boolean = entity.visible;
-			entity.visible = entity.footprint.visible = combat.anyPlayerCanSeeLocation(entity.location);
-			updateLastSeenLocation(entity);
-			if (!entityWasVisible && entity.visible) {
-				Settings.gameEventQueue.dispatch(new EntityQEvent(entity, EntityQEvent.BECAME_VISIBLE));
+		private function adjustEntityVisibility(entity:SimpleEntity, shouldBeVisible:Boolean):void {
+			if (entity is ComplexEntity) {
+				var char:ComplexEntity = ComplexEntity(entity);
+				if (char.isPlayerControlled) {
+					return;
+				}
+				var wasVisible:Boolean = char.visible;
+				trace(entity.aaId, "wasVisible", wasVisible, "becoming", shouldBeVisible, entity.location);
+				char.visible = shouldBeVisible;
+				updateLastSeenLocation(char);
+				if (!wasVisible && char.visible) {
+					Settings.gameEventQueue.dispatch(new EntityQEvent(char, EntityQEvent.BECAME_VISIBLE));
+				}
+			} else {
+				entity.transform.colorTransform = (shouldBeVisible ? DEFAULT_COLOR_TRANSFORM : UNSEEN_COLOR_TRANSFORM);
 			}
 		}
 		
 		private function initialiseAllFighterDisplayElements():void {
 			for each (var fighter:ComplexEntity in combat.fighters) {
 				initializeDisplayElementsForFighter(fighter);
-			}			
+			}
+			adjustVisibilityForEachTile();
 		}
 		
 		private function factionColor(entity:ComplexEntity):uint {
@@ -200,9 +233,10 @@ package angel.game.combat {
 			var factionColor:uint = factionColor(entity);
 			createCombatFootprintForEntity(entity, factionColor);
 			if (!entity.isPlayerControlled) {
-				createLastSeenMarker(entity, factionColor);
-				adjustVisibilityOfNonPlayer(entity);
-			}			
+				var visibleOnInit:Boolean = combat.anyPlayerCanSeeLocation(entity.location);
+				createLastSeenMarker(entity, factionColor, visibleOnInit);
+				//adjustEntityVisibility(entity, shouldBeSeen);
+			}		
 		}
 		
 		private function removeAllFighterDisplayElements():void {
@@ -218,14 +252,16 @@ package angel.game.combat {
 			deleteLastSeenLocation(entity);
 		}
 		
-		private function createLastSeenMarker(entity:ComplexEntity, color:uint):void {
+		private function createLastSeenMarker(entity:ComplexEntity, color:uint, visibleOnInit:Boolean):void {
 			// I think this should be visible for out-of-sight enemies when first entering combat from explore,
 			// but Wm disagrees.  To change that, just remove the line setting age to LAST_SEEN_MARKER_TURNS.
 			var lastSeen:LastSeen = new LastSeen(color);
 			room.decorationsLayer.addChild(lastSeen);
 			lastSeenMarkers[entity] = lastSeen;
 			updateLastSeenLocation(entity);
-			lastSeen.age = LAST_SEEN_MARKER_TURNS;
+			if (!visibleOnInit) {
+				lastSeen.age = LAST_SEEN_MARKER_TURNS;
+			}
 		}
 		
 		private function updateLastSeenLocation(entity:ComplexEntity):void {
@@ -266,6 +302,18 @@ package angel.game.combat {
 			footprint.scaleY = 0.5;
 			
 			entity.attachFootprint(footprint);
+		}
+		
+		private function cleanupFog():void {
+			var roomSize:Point = room.floor.size;
+			for (var x:int = 0; x < roomSize.x; ++x) {
+				for (var y:int = 0; y < roomSize.y; ++y) {
+					room.floor.hideOrShow(x, y, true);
+					room.forEachEntityIn(new Point(x,y), function(entity:SimpleEntity):void {
+						adjustEntityVisibility(entity, true);
+					});
+				}
+			}
 		}
 
 	} // end class AugmentedReality
