@@ -287,7 +287,7 @@ package angel.game.combat {
 				removeFighterFromCombat(entity);
 				checkForCombatOver();
 				if (combatOver) {
-					augmentedReality.adjustAllNonPlayerVisibility();
+					augmentedReality.adjustVisibilityForEachTile();
 				}
 			}
 		}

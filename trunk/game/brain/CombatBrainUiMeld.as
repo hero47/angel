@@ -201,7 +201,7 @@ package angel.game.brain {
 			}
 			if (returnHereAfterFire != null) {
 				combat.room.changeEntityLocation(me, me.location, returnHereAfterFire);
-				combat.augmentedReality.adjustAllNonPlayerVisibility();
+				combat.augmentedReality.adjustVisibilityForEachTile();
 				returnHereAfterFire = null;
 				combat.mover.removeReturnMarker();
 			}

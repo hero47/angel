@@ -73,8 +73,7 @@ package angel.game.combat {
 				quickFireWeapon = player.inventory.offWeapon();
 			}
 			quickFireWeaponRange = (quickFireWeapon == null ? 0 : quickFireWeapon.range);
-			oldFootprintColorTransform = player.footprint.transform.colorTransform;
-			player.footprint.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
+			oldFootprintColorTransform = player.setFootprintColorTransform(new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0));
 			clickThisEnemyAgainForQuickFire = null;
 			Mouse.hide();
 			room.stage.addChild(aimCursor);
@@ -86,7 +85,7 @@ package angel.game.combat {
 		public function disable():void {
 			if (player != null) {
 				trace("ending player fire phase for", player.aaId);
-				player.footprint.transform.colorTransform = oldFootprintColorTransform;
+				player.setFootprintColorTransform(oldFootprintColorTransform);
 				player = null;
 			}
 			room.moveHilight(null, 0);

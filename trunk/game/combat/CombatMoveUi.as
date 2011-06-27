@@ -40,15 +40,14 @@ package angel.game.combat {
 		public function enable(player:ComplexEntity):void {
 			trace("enable player ui for", player.aaId);
 			this.player = player;
-			oldFootprintColorTransform = player.footprint.transform.colorTransform;
-			player.footprint.transform.colorTransform = new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0);
+			oldFootprintColorTransform = player.setFootprintColorTransform(new ColorTransform(0, 0, 0, 1, 0, 255, 0, 0));
 			adjustMovePointsDisplay();
 		}
 		
 		public function disable():void {
 			if (player != null) {
 				trace("disable player ui for", player.aaId);
-				player.footprint.transform.colorTransform = oldFootprintColorTransform;
+				player.setFootprintColorTransform(oldFootprintColorTransform);
 				player = null;
 			}
 			adjustMovePointsDisplay(false);
