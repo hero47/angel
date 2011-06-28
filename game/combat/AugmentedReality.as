@@ -184,8 +184,8 @@ package angel.game.combat {
 		}
 		
 		private function adjustEntityVisibility(entity:SimpleEntity, shouldBeVisible:Boolean):void {
-			if (entity is ComplexEntity) {
-				var char:ComplexEntity = ComplexEntity(entity);
+			var char:ComplexEntity = entity as ComplexEntity;
+			if ((char != null) && (char.isActive())) {
 				if (char.isPlayerControlled) {
 					return;
 				}

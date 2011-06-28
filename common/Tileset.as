@@ -1,5 +1,6 @@
 package angel.common {
 	import flash.display.BitmapData;
+	import flash.display.Graphics;
 	import flash.display.Shape;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
@@ -33,21 +34,23 @@ package angel.common {
 				defaultTileData = new BitmapData(TILE_WIDTH, TILE_HEIGHT, true, 0); // fully transparent
 				
 				var blankTileImage:Shape = new Shape();
-				
 				blankTileImage.graphics.lineStyle(0, 0xffffff);
 				blankTileImage.graphics.beginFill(0x000000, 1);
-				blankTileImage.graphics.moveTo(TILE_WIDTH/2, 0);
-				blankTileImage.graphics.lineTo(TILE_WIDTH, TILE_HEIGHT / 2);
-				blankTileImage.graphics.lineTo(TILE_WIDTH / 2, TILE_HEIGHT);
-				blankTileImage.graphics.lineTo(0, TILE_HEIGHT / 2);
-				blankTileImage.graphics.lineTo(TILE_WIDTH/2, 0);
-				
+				drawTileOutline(blankTileImage.graphics);
 				blankTileImage.graphics.beginFill(0xffffff, 1);
 				blankTileImage.graphics.drawCircle(TILE_WIDTH / 2, TILE_HEIGHT / 2, 2);
 				
 				defaultTileData.draw(blankTileImage);
 			}
 			return defaultTileData;
+		}
+		
+		public static function drawTileOutline(graphics:Graphics):void {
+			graphics.moveTo(TILE_WIDTH/2, 0);
+			graphics.lineTo(TILE_WIDTH, TILE_HEIGHT / 2);
+			graphics.lineTo(TILE_WIDTH / 2, TILE_HEIGHT);
+			graphics.lineTo(0, TILE_HEIGHT / 2);
+			graphics.lineTo(TILE_WIDTH/2, 0);			
 		}
 		
 		override public function prepareTemporaryVersionForUse(id:String, entry:CatalogEntry, errors:MessageCollector):void {
