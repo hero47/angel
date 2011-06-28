@@ -1,4 +1,5 @@
 package angel.game.test {
+	import angel.common.WeaponResource;
 	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.combat.ThrownWeapon;
 	import angel.game.inventory.Inventory;
@@ -14,6 +15,11 @@ package angel.game.test {
 			Settings.catalog.retrieveWeaponResource("xxGun1");
 			Settings.catalog.retrieveWeaponResource("xxGun2");
 			Settings.catalog.retrieveWeaponResource("xxGun3");
+			if (Settings.catalog.entry("grenade") == null) {
+				var resource:WeaponResource = Settings.catalog.retrieveWeaponResource("grenade");
+				resource.type = "thrown";
+				resource.weaponClass = ThrownWeapon;
+			}
 			Autotest.clearAlert();
 			
 			var invString:String = "0 1 xxGun1,1 1 xxGun2,99 5 grenade";

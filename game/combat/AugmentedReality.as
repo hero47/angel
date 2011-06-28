@@ -190,7 +190,6 @@ package angel.game.combat {
 					return;
 				}
 				var wasVisible:Boolean = char.visible;
-				trace(entity.aaId, "wasVisible", wasVisible, "becoming", shouldBeVisible, entity.location);
 				char.visible = shouldBeVisible;
 				updateLastSeenLocation(char);
 				if (!wasVisible && char.visible) {

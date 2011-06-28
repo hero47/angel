@@ -1,5 +1,6 @@
 package angel.game.test {
 	import angel.common.CatalogEntry;
+	import angel.common.CharResource;
 	import angel.common.Floor;
 	import angel.game.brain.BrainFidget;
 	import angel.game.brain.BrainFollow;
@@ -261,6 +262,10 @@ package angel.game.test {
 		// Can't test adding with script because that loads from file, which is a delayed callback
 		
 		private function testAddRemoveCharacterActions():void {
+			if (Settings.catalog.entry("nei") == null) {
+				var resource:CharResource = Settings.catalog.retrieveCharacterResource("nei");
+				Autotest.clearAlert();
+			}
 			var entry:CatalogEntry = Settings.catalog.entry("nei");
 			var neiOK:Boolean = (entry != null) && (entry.type == CatalogEntry.CHARACTER);
 			Autotest.assertTrue(neiOK, "This test requires nei character in catalog.");
