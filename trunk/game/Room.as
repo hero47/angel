@@ -6,6 +6,7 @@ package angel.game {
 	import angel.common.FloorTile;
 	import angel.common.Prop;
 	import angel.common.SimplerButton;
+	import angel.common.Tileset;
 	import angel.common.Util;
 	import angel.game.combat.RoomCombat;
 	import angel.game.event.EntityQEvent;
@@ -16,6 +17,7 @@ package angel.game {
 	import angel.game.script.ScriptContext;
 	import angel.game.script.TriggerMaster;
 	import angel.game.test.ConversationNonAutoTest;
+	import flash.display.Shape;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
@@ -63,6 +65,7 @@ package angel.game {
 		private var gamePauseStack:Vector.<PauseInfo> = new Vector.<PauseInfo>(); // LIFO stack with exceptions
 		
 		private var tileWithHilight:FloorTile;
+		private var tileHilight:Shape;
 		private var scrollingTo:Point = null;
 		public var preCombatSave:SaveGame;
 		public var resumedFromSave:Boolean;
@@ -88,6 +91,13 @@ package angel.game {
 					cells[i][j] = new Cell();
 				}
 			}
+			
+			tileHilight = new Shape();
+			tileHilight.graphics.lineStyle(1, 0xffffff);
+			tileHilight.graphics.beginFill(0x000000, 1);
+			Tileset.drawTileOutline(tileHilight.graphics);
+			decorationsLayer.addChild(tileHilight);
+			tileHilight.visible = false;
 			
 			addEventListener(Event.ADDED_TO_STAGE, finishInit);
 		}
@@ -403,6 +413,17 @@ package angel.game {
 		/********************* end general ui **********************/
 		
 		public function moveHilight(tile:FloorTile, color:uint):void {
+			tileWithHilight = tile;
+			if (tileWithHilight != null) {
+				var glow:GlowFilter = new GlowFilter(color, 1, 15, 15, 10, 1, true, true);
+				tileHilight.filters = [ glow ];
+				tileHilight.visible = true;
+				tileHilight.x = tile.x;
+				tileHilight.y = tile.y;
+			}
+		}
+		/*
+		public function moveHilight(tile:FloorTile, color:uint):void {
 			if (tileWithHilight != null) {
 				tileWithHilight.filters = [];
 			}
@@ -412,6 +433,7 @@ package angel.game {
 				tileWithHilight.filters = [ glow ];
 			}
 		}
+		*/
 		
 		public function updateToolTip(location:Point):void {
 			var character:ComplexEntity = firstComplexEntityIn(location);
