@@ -170,9 +170,6 @@ package angel.game.combat {
 			var roomSize:Point = room.floor.size;
 			for (var x:int = 0; x < roomSize.x; ++x) {
 				for (var y:int = 0; y < roomSize.y; ++y) {
-					if ((x == 8) && (y == 5)) {
-						var foo = 1;
-					}
 					var location:Point = new Point(x, y);
 					var shouldBeVisible:Boolean = combat.anyPlayerCanSeeLocation(location);
 					var wasVisible:Boolean = room.floor.hideOrShow(x, y, shouldBeVisible);
