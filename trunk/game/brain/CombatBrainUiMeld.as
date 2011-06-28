@@ -1,5 +1,7 @@
 package angel.game.brain {
 	import angel.common.Assert;
+	import angel.common.Floor;
+	import angel.common.Tileset;
 	import angel.common.Util;
 	import angel.game.combat.IWeapon;
 	import angel.game.combat.RoomCombat;
@@ -122,6 +124,7 @@ package angel.game.brain {
 			if (me.isReallyPlayer && event.complexEntity.isEnemyOf(me)) {
 				trace(event.complexEntity.id, "became visible");
 				//CONSIDER: center room or hilight the enemy who just became visible?
+				drawTempRingAround(event.complexEntity);
 				me.movement.interruptMovementAfterTileFinished();
 			}
 		}
@@ -254,6 +257,18 @@ package angel.game.brain {
 			tempSprite.x = actor.x;
 			tempSprite.y = actor.y - tempSprite.height;
 			actor.room.addChild(tempSprite);
+		}
+		
+		private function drawTempRingAround(entity:ComplexEntity):void {
+			var tempSprite:TimedSprite = new TimedSprite(entity.stage.frameRate * 2);
+			var coords:Point = Floor.centerOf(entity.location);
+			tempSprite.x = coords.x;
+			tempSprite.y = coords.y;
+			tempSprite.graphics.lineStyle(5, 0xffff00);
+			tempSprite.graphics.beginFill(0xffff00, 0.5);
+			tempSprite.graphics.drawCircle(0, 0, Tileset.TILE_WIDTH);
+			tempSprite.scaleY = 0.5;
+			entity.room.decorationsLayer.addChild(tempSprite);
 		}
 		
 	}
