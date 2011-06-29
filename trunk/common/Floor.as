@@ -10,6 +10,14 @@ package angel.common {
 		public static const FLOOR_TILE_X:int = (Tileset.TILE_WIDTH / 2);
 		public static const FLOOR_TILE_Y:int = (Tileset.TILE_HEIGHT / 2);
 		
+		public static const SEEN:int = 0;
+		public static const SEEN_BY_OTHER:int = 1;
+		public static const UNSEEN:int = 2;
+		private static const TRANSFORMS:Vector.<ColorTransform> = Vector.<ColorTransform>([
+			new ColorTransform(),
+			new ColorTransform(0.4, 0.4, 0.4, 1),
+			new ColorTransform(0.2, 0.2, 0.2, 1)
+		]);
 
 		protected var xy:Point = new Point();
 
@@ -108,16 +116,20 @@ package angel.common {
 			dispatchEvent(new Event(Event.INIT));
 		}
 		
-		private static const UNSEEN_COLOR_TRANSFORM:ColorTransform = new ColorTransform(0.3, 0.3, 0.3, 1);
-		private static const DEFAULT_COLOR_TRANSFORM:ColorTransform = new ColorTransform();
-		
-		//returns previous value of visible
-		public function hideOrShow(tileX:int, tileY:int, visible:Boolean):Boolean {
+		//returns previous value of seenState
+		public function hideOrShow(tileX:int, tileY:int, desiredVisibility:int):int {
 			//WARNING: checking if the colorTransform equals UNSEEN_COLOR_TRANSFORM always returns false -- even though
-			//it's a static constant, it's somehow assigning different values each time!
-			var wasVisible:Boolean = floorGrid[tileX][tileY].transform.colorTransform.redMultiplier == 1;
-			floorGrid[tileX][tileY].transform.colorTransform = (visible ? DEFAULT_COLOR_TRANSFORM : UNSEEN_COLOR_TRANSFORM);
-			return wasVisible;
+			//it's a static constant, it's somehow assigning different values each time!  And checking if redMultiplier
+			//equals the redMultiplier of UNSEEN_COLOR_TRANSFORM fails, because the recalculated one is slightly off!
+			//I had to give up and store a visibility constant with each tile.
+			var oldVisibility:int = floorGrid[tileX][tileY].visibility;
+			floorGrid[tileX][tileY].visibility = desiredVisibility;
+			floorGrid[tileX][tileY].transform.colorTransform = TRANSFORMS[desiredVisibility];
+			return oldVisibility;
+		}
+		
+		public static function colorTransformFor(seenState:int):ColorTransform {
+			return TRANSFORMS[seenState];
 		}
 		
 		

@@ -1,6 +1,7 @@
 package angel.game.combat {
 	import angel.common.Alert;
 	import angel.common.Assert;
+	import angel.common.Floor;
 	import angel.common.Util;
 	import angel.game.brain.CombatBrainUiMeld;
 	import angel.game.ComplexEntity;
@@ -275,6 +276,22 @@ package angel.game.combat {
 				}
 			}
 			return false;
+		}
+		
+		public function visibilityForLocation(target:Point, viewpointEntity:ComplexEntity):int {
+			if (combatOver) {
+				// When combat ends, player gets omniscient vision.
+				return Floor.SEEN;
+			}
+			if (Util.entityHasLineOfSight(viewpointEntity, target)) {
+				return Floor.SEEN;
+			}
+			for each (var fighter:ComplexEntity in fighters) {
+				if ((fighter != viewpointEntity) && fighter.isPlayerControlled && Util.entityHasLineOfSight(fighter, target)) {
+					return Floor.SEEN_BY_OTHER;
+				}
+			}
+			return Floor.UNSEEN;
 		}
 		
 		public function isFighter(entity:ComplexEntity):Boolean {
