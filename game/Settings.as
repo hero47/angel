@@ -37,6 +37,7 @@ package angel.game {
 		// options that we've decided not to make use of).  Some of them will probably remain variables
 		// even after the game is released.
 		public static var testExploreScroll:int;
+		public static var mouseScroll:int;
 		public static var showEnemyMoves:Boolean;
 		public static var walkPercent:int;
 		public static var runPercent:int;
@@ -77,6 +78,7 @@ package angel.game {
 			}
 			
 			Settings.testExploreScroll = (xml.@testExploreScroll);
+			Settings.mouseScroll = (xml.@mouseScroll);
 			
 			walkPercent = int(xml.@walkPercent);
 			runPercent = int(xml.@runPercent);
