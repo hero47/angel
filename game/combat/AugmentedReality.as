@@ -26,9 +26,6 @@ package angel.game.combat {
 		private static const CIVILIAN_FOOTPRINT_COLOR:uint = 0xc0c0c0;
 		private static const GRID_COLOR:uint = 0xff0000;
 		
-		private static const UNSEEN_COLOR_TRANSFORM:ColorTransform = new ColorTransform(0.3, 0.3, 0.3, 1);
-		private static const DEFAULT_COLOR_TRANSFORM:ColorTransform = new ColorTransform();
-		
 		private var combat:RoomCombat;
 		// Meowse query: Extricated from combat for convenient referencing, but isn't every use
 		// just as much a violation of the Law of Demeter as if I said combat.room.foo ?
@@ -40,12 +37,15 @@ package angel.game.combat {
 		private var lastSeenMarkers:Dictionary = new Dictionary(); // map from entity to LastSeen
 		private static const LAST_SEEN_MARKER_TURNS:int = 4; // markers remain visible this long after sighting
 		
+		private var lastActivePlayer:ComplexEntity;
+		
 		private var minimap:Minimap;
 		public var statDisplay:CombatStatDisplay;
 		
 		public function AugmentedReality(combat:RoomCombat) {
 			this.combat = combat;
 			this.room = combat.room;
+			lastActivePlayer = room.mainPlayerCharacter;
 			
 			drawCombatGrid(room.decorationsLayer.graphics);
 			
@@ -129,7 +129,7 @@ package angel.game.combat {
 		private function adjustVisibilityForMove(entity:SimpleEntity):void {
 			//NOTE: need to adjust all even when an enemy or prop moves, since it might have been
 			//blocking line of sight to another enemy!
-			adjustEntityVisibility(entity, combat.anyPlayerCanSeeLocation(entity.location));
+			adjustEntityVisibility(entity, combat.visibilityForLocation(entity.location, lastActivePlayer));
 			adjustVisibilityForEachTile();
 		}
 		
@@ -146,6 +146,8 @@ package angel.game.combat {
 			var fighter:ComplexEntity = event.complexEntity;
 			if (fighter.isPlayerControlled) {
 				statDisplay.adjustCombatStatDisplay(fighter);
+				lastActivePlayer = fighter;
+				adjustVisibilityForEachTile();
 			} else {
 				statDisplay.adjustCombatStatDisplay(null);
 				++lastSeenMarkers[fighter].age;
@@ -170,34 +172,37 @@ package angel.game.combat {
 			var roomSize:Point = room.floor.size;
 			for (var x:int = 0; x < roomSize.x; ++x) {
 				for (var y:int = 0; y < roomSize.y; ++y) {
+					if ((x == 3) && (y == 5)) {
+						var foo = 2;
+					}
 					var location:Point = new Point(x, y);
-					var shouldBeVisible:Boolean = combat.anyPlayerCanSeeLocation(location);
-					var wasVisible:Boolean = room.floor.hideOrShow(x, y, shouldBeVisible);
-					if (wasVisible != shouldBeVisible) {
+					var tileVisibility:int = combat.visibilityForLocation(location, lastActivePlayer);
+					var oldTileVisibility:int = room.floor.hideOrShow(x, y, tileVisibility);
+					if (tileVisibility != oldTileVisibility) {
 						//room.hideOrShowContents(x, y, visible);
 						room.forEachEntityIn(location, function(entity:SimpleEntity):void {
-							adjustEntityVisibility(entity, shouldBeVisible);
+							adjustEntityVisibility(entity, tileVisibility);
 						});
 					}
 				}
 			}
 		}
 		
-		private function adjustEntityVisibility(entity:SimpleEntity, shouldBeVisible:Boolean):void {
+		private function adjustEntityVisibility(entity:SimpleEntity, desiredVisibility:int):void {
 			var char:ComplexEntity = entity as ComplexEntity;
 			if ((char != null) && (char.isActive())) {
 				if (char.isPlayerControlled) {
 					return;
 				}
 				var wasVisible:Boolean = char.visible;
-				char.visible = shouldBeVisible;
+				char.visible = (desiredVisibility == Floor.UNSEEN ? false : true);
+				trace(entity.aaId, "wasVisible", wasVisible, "desiredVisibility", desiredVisibility, "set visible to", entity.visible);
 				updateLastSeenLocation(char);
 				if (!wasVisible && char.visible) {
 					Settings.gameEventQueue.dispatch(new EntityQEvent(char, EntityQEvent.BECAME_VISIBLE));
 				}
-			} else {
-				entity.transform.colorTransform = (shouldBeVisible ? DEFAULT_COLOR_TRANSFORM : UNSEEN_COLOR_TRANSFORM);
 			}
+			entity.transform.colorTransform = Floor.colorTransformFor(desiredVisibility);
 		}
 		
 		private function initialiseAllFighterDisplayElements():void {
@@ -231,7 +236,6 @@ package angel.game.combat {
 			if (!entity.isPlayerControlled) {
 				var visibleOnInit:Boolean = combat.anyPlayerCanSeeLocation(entity.location);
 				createLastSeenMarker(entity, factionColor, visibleOnInit);
-				//adjustEntityVisibility(entity, shouldBeSeen);
 			}		
 		}
 		
@@ -304,9 +308,9 @@ package angel.game.combat {
 			var roomSize:Point = room.floor.size;
 			for (var x:int = 0; x < roomSize.x; ++x) {
 				for (var y:int = 0; y < roomSize.y; ++y) {
-					room.floor.hideOrShow(x, y, true);
+					room.floor.hideOrShow(x, y, Floor.SEEN);
 					room.forEachEntityIn(new Point(x,y), function(entity:SimpleEntity):void {
-						adjustEntityVisibility(entity, true);
+						adjustEntityVisibility(entity, Floor.SEEN);
 					});
 				}
 			}

@@ -8,6 +8,7 @@ package angel.common {
 	public class FloorTile extends Sprite {
 		private var image:Bitmap;
 		private var roomLoc:Point = null;
+		public var visibility:int; // one of the visibility constants from Floor
 		
 		// location is cached in the tile for the convenience of users; it's not actually used
 		// by the tile itself.
