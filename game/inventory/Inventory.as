@@ -30,10 +30,16 @@ package angel.game.inventory {
 		}
 		
 		public function clone():Inventory {
-			//UNDONE: This was a quick and easy implementation, but it breaks weapon cooldown: rearranging the
-			//inventory in combat resets all cooldowns.
-			var text:String = this.toText();
-			return Inventory.fromText(text);
+			var copy:Inventory = new Inventory();
+			for (var i:int = 0; i < NUMBER_OF_EQUIPPED_LOCATIONS; ++i) {
+				if (equipmentSlots[i] != null) {
+					copy.equipmentSlots[i] = equipmentSlots[i].clone();
+				}
+			}
+			for (var item:Object in pileOfStuff) {
+				copy.pileOfStuff[item] = pileOfStuff[item];
+			}
+			return copy;
 		}
 		
 		public function toText():String {

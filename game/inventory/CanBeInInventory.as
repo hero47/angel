@@ -10,6 +10,7 @@ package angel.game.inventory {
 		function get id():String;
 		function get displayName():String;
 		function get iconData():BitmapData;
+		function clone():CanBeInInventory;
 		function stacksWith(other:CanBeInInventory):Boolean;
 	}
 	

@@ -1,5 +1,7 @@
 package angel.game.combat {
 	import angel.common.WeaponResource;
+	import angel.game.inventory.CanBeInInventory;
+	import angel.game.Settings;
 	import flash.display.BitmapData;
 	/**
 	 * ...
@@ -28,6 +30,19 @@ package angel.game.combat {
 		
 		public function get iconData():BitmapData {
 			return iconBitmapData;
+		}
+		
+		public function clone():CanBeInInventory {
+			var resource:WeaponResource = Settings.catalog.retrieveWeaponResource(id);
+			var copy:CanBeInInventory = new resource.weaponClass(resource, id);
+			return copy;
+		}
+		
+		public function copyBaseTo(copy:WeaponBase):void {
+			copy.myId = this.myId;
+			copy.baseDamage = this.baseDamage;
+			copy.name = this.name;
+			copy.iconBitmapData = this.iconBitmapData;
 		}
 		
 	}
