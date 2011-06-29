@@ -632,12 +632,12 @@ package angel.game {
 				if (global.x < Settings.mouseScroll) {
 					this.x += Settings.exploreSpeed;
 				} else if (global.x > Settings.STAGE_WIDTH - Settings.mouseScroll) {
-					this.x -= Settings.exploreSpeed;
+					this.x -= Settings.runSpeed;
 				}
 				if (global.y < Settings.mouseScroll) {
 					this.y += Settings.exploreSpeed;
 				} else if (global.y > Settings.STAGE_HEIGHT - Settings.mouseScroll) {
-					this.y -= Settings.exploreSpeed;
+					this.y -= Settings.runSpeed;
 				}
 			}
 		}

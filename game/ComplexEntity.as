@@ -212,7 +212,7 @@ package angel.game {
 				return super.frob(whoFrobbedMe);
 			} else {
 				var slices:Vector.<PieSlice> = new Vector.<PieSlice>();
-				slices.push(new PieSlice(Icon.bitmapData(Icon.TestIconBitmap), "Revive", reviveFrob));
+				slices.push(new PieSlice(Icon.bitmapData(Icon.Revive), "Revive", reviveFrob));
 				return slices;
 			}
 		}
