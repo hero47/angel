@@ -53,6 +53,13 @@ package angel.game {
 		[Embed(source='../EmbeddedAssets/combat_icon_items.png')]
 		public static const CombatOpenItemMenu:Class;
 		
+		[Embed(source = '../EmbeddedAssets/combat_icon_newpoint.png')]
+		public static const CombatAddWaypoint:Class;
+		
+		// Explore pie menu
+		[Embed(source = '../EmbeddedAssets/combat_icon_revive.png')]
+		public static const Revive:Class;
+		
 		// Combat cursor
 		[Embed(source = '../EmbeddedAssets/combat_cursor_active.png')]
 		public static const CombatCursorActive:Class;

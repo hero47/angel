@@ -115,7 +115,7 @@ package angel.game.combat {
 				slices.push(new PieSlice(Icon.bitmapData(Icon.TestIconBitmap), "Remove last waypoint", removeLastPathSegment));
 			}
 			if (combat.mover.isLegalPathExtension(player, tile.location)) {
-				slices.push(new PieSlice(Icon.bitmapData(Icon.TestIconBitmap), "Add waypoint", function():void {
+				slices.push(new PieSlice(Icon.bitmapData(Icon.CombatAddWaypoint), "Add waypoint", function():void {
 					combat.mover.extendPathIfLegalMove(player, tile.location);
 					adjustMovePointsDisplay();
 				} ));
