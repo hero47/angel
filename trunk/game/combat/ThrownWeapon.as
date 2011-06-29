@@ -37,8 +37,9 @@ package angel.game.combat {
 			]);
 		
 		public function ThrownWeapon(resource:WeaponResource, id:String) {
-			super(resource, id);
-			
+			if (resource != null) { // called with null when cloning
+				super(resource, id);
+			}
 		}
 		
 		/* INTERFACE angel.game.combat.IWeapon */

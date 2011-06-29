@@ -42,6 +42,12 @@ package angel.game.combat {
 			return ((otherWeapon != null) && (otherWeapon.id == id) && (otherWeapon.combatTurnLastFired == combatTurnLastFired));
 		}
 		
+		override public function clone():CanBeInInventory {
+			var copy:SingleTargetWeapon = SingleTargetWeapon(super.clone());
+			copy.combatTurnLastFired = this.combatTurnLastFired;
+			return copy;
+		}
+		
 		public function attack(user:ComplexEntity, target:Object):void {
 			if (target is ComplexEntity) {
 				fire(user, ComplexEntity(target));

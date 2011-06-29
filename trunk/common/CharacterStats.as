@@ -27,7 +27,7 @@ package angel.common {
 		public function setFromCatalogXml(xml:XML):void {
 			Util.setIntFromXml(this, "health", xml, "health");
 			Util.setIntFromXml(this, "movePoints", xml, "movePoints");
-			Util.setIntFromXml(this, "actions", xml, "actions");
+			Util.setIntFromXml(this, "actionsPerTurn", xml, "actions");
 			Util.setTextFromXml(this, "displayName", xml, "displayName");
 			Util.setIntFromXml(this, "maxGait", xml, "maxGait");
 			Util.setTextFromXml(this, "portraitFile", xml, "portrait");
