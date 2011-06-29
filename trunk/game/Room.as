@@ -24,6 +24,7 @@ package angel.game {
 	import flash.events.MouseEvent;
 	import flash.filters.GlowFilter;
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	import flash.ui.Keyboard;
 	import flash.utils.getTimer;
 
@@ -35,7 +36,6 @@ package angel.game {
 		static public const ROOM_ENTER_UNPAUSED_FRAME:String = "unpausedEnterFrame"; // only triggers when not paused
 		static public const ROOM_INIT:String = "roomInit";
 		
-		static private const SCROLL_SPEED:Number = 3;
 		
 		public var floor:Floor;
 		public var decorationsLayer:Sprite;	// for things painted over the floor, such as movement dots
@@ -55,6 +55,7 @@ package angel.game {
 		private var spots:Object = new Object(); // associative array mapping from spotId to location
 
 		public var activeUi:IRoomUi;
+		private var mouseOnStage:Boolean;
 		private var suspendedUi:IRoomUi;
 		private var suspendedUiPlayer:ComplexEntity;
 		private var dragging:Boolean = false;
@@ -255,6 +256,7 @@ package angel.game {
 			activeUi = newUi;
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 			stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
+			stage.addEventListener(Event.MOUSE_LEAVE, mouseLeaveListener);
 			addEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
 			addEventListener(MouseEvent.CLICK, mouseClickListener);
 			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
@@ -267,6 +269,7 @@ package angel.game {
 		public function disableUi():void {
 			stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 			stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
+			stage.removeEventListener(Event.MOUSE_LEAVE, mouseLeaveListener);
 			removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownListener);
 			removeEventListener(MouseEvent.CLICK, mouseClickListener);
 			//removeEventListener(MouseEvent.RIGHT_CLICK, rightClickListener);
@@ -330,7 +333,12 @@ package angel.game {
 			}
 		}
 		
+		private function mouseLeaveListener(event:Event):void {
+			mouseOnStage = false;
+		}
+		
 		private function mouseMoveListener(event:MouseEvent):void {
+			mouseOnStage = true;
 			if (activeUi == null) {
 				return;
 			}
@@ -610,14 +618,26 @@ package angel.game {
 		private function handleScrolling():void {
 			if (scrollingTo != null) {
 				var vector:Point = new Point(scrollingTo.x - this.x, scrollingTo.y - this.y);
-				if (vector.length <= SCROLL_SPEED) {
+				if (vector.length <= Settings.exploreSpeed) {
 					this.x = scrollingTo.x;
 					this.y = scrollingTo.y;
 					scrollingTo = null;
 				} else {
-					vector.normalize(SCROLL_SPEED);
+					vector.normalize(Settings.exploreSpeed);
 					this.x += vector.x;
 					this.y += vector.y;
+				}
+			} else if (mouseOnStage) {
+				var global:Point = localToGlobal(new Point(mouseX, mouseY));
+				if (global.x < Settings.mouseScroll) {
+					this.x += Settings.exploreSpeed;
+				} else if (global.x > Settings.STAGE_WIDTH - Settings.mouseScroll) {
+					this.x -= Settings.exploreSpeed;
+				}
+				if (global.y < Settings.mouseScroll) {
+					this.y += Settings.exploreSpeed;
+				} else if (global.y > Settings.STAGE_HEIGHT - Settings.mouseScroll) {
+					this.y -= Settings.exploreSpeed;
 				}
 			}
 		}
