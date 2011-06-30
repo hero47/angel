@@ -172,9 +172,6 @@ package angel.game.combat {
 			var roomSize:Point = room.floor.size;
 			for (var x:int = 0; x < roomSize.x; ++x) {
 				for (var y:int = 0; y < roomSize.y; ++y) {
-					if ((x == 3) && (y == 5)) {
-						var foo = 2;
-					}
 					var location:Point = new Point(x, y);
 					var tileVisibility:int = combat.visibilityForLocation(location, lastActivePlayer);
 					var oldTileVisibility:int = room.floor.hideOrShow(x, y, tileVisibility);

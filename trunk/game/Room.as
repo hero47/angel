@@ -629,16 +629,31 @@ package angel.game {
 				}
 			} else if (mouseOnStage) {
 				var global:Point = localToGlobal(new Point(mouseX, mouseY));
-				if (global.x < Settings.mouseScroll) {
-					this.x += Settings.exploreSpeed;
-				} else if (global.x > Settings.STAGE_WIDTH - Settings.mouseScroll) {
+				var floorPixelRect:Rectangle = floor.pixelRect;
+				
+				if ((global.x < Settings.mouseScroll) && (floorPixelRect.left + this.x < Settings.STAGE_WIDTH - Tileset.TILE_WIDTH)) {
+					this.x += Settings.runSpeed;
+				} else if ((global.x > Settings.STAGE_WIDTH - Settings.mouseScroll) && (this.x + floorPixelRect.width + floorPixelRect.x > Tileset.TILE_WIDTH)) {
 					this.x -= Settings.runSpeed;
 				}
-				if (global.y < Settings.mouseScroll) {
-					this.y += Settings.exploreSpeed;
-				} else if (global.y > Settings.STAGE_HEIGHT - Settings.mouseScroll) {
+				if ((global.y < Settings.mouseScroll) && (floorPixelRect.top + this.y < Settings.STAGE_HEIGHT - Tileset.TILE_HEIGHT)) {
+					this.y += Settings.runSpeed;
+				} else if ((global.y > Settings.STAGE_HEIGHT - Settings.mouseScroll) && (this.y + floorPixelRect.height + floorPixelRect.y > Tileset.TILE_HEIGHT)) {
 					this.y -= Settings.runSpeed;
 				}
+				
+				/*
+				if ((global.x < Settings.mouseScroll) && (this.x + floorPixelRect.width + floorPixelRect.x < Settings.STAGE_WIDTH)) {
+					this.x += Settings.runSpeed;
+				} else if ((global.x > Settings.STAGE_WIDTH - Settings.mouseScroll) && (floorPixelRect.left + this.x > 0)) {
+					this.x -= Settings.runSpeed;
+				}
+				if ((global.y < Settings.mouseScroll) && (this.y + floorPixelRect.height + floorPixelRect.y < Settings.STAGE_HEIGHT)) {
+					this.y += Settings.runSpeed;
+				} else if ((global.y > Settings.STAGE_HEIGHT - Settings.mouseScroll) && (floorPixelRect.top + this.y > 0)) {
+					this.y -= Settings.runSpeed;
+				}
+				*/
 			}
 		}
 		
