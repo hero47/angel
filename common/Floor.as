@@ -4,6 +4,7 @@ package angel.common {
 	import flash.events.Event;
 	import flash.geom.ColorTransform;
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	
 	// (0,0) of floor is the top corner of tile (0,0)'s bounding box, which is at top center almost
 	public class Floor extends Sprite {
@@ -58,6 +59,13 @@ package angel.common {
 			return xy;
 		}
 		
+		public function get pixelRect():Rectangle {
+			var left:Number = tileBoxCornerOf(new Point(0, xy.y - 1)).x;
+			var width:Number = tileBoxCornerOf(new Point(xy.x + 1, 0)).x - left;
+			var height:Number = tileBoxCornerOf(new Point(xy.x, xy.y)).y;
+			return new Rectangle(left, 0, width, height);
+		}
+		
 		public function addTileAt(tile:FloorTile, x:int, y:int):void {
 			floorGrid[x][y] = tile;
 			tile.x = (x - y) * FLOOR_TILE_X;
@@ -106,7 +114,6 @@ package angel.common {
 		
 		public function loadFromXml(catalog:Catalog, floorXml:XML):void {
 			createFloorGrid(floorXml.@x, floorXml.@y);
-
 			var floorRows:XMLList = floorXml.floorTiles;
 			for each (var floorRowXml:XML in floorRows) {
 				initFloorRowFromXml(catalog, floorRowXml)
