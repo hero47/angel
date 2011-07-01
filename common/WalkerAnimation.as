@@ -72,6 +72,10 @@ package angel.common {
 			}
 		}
 		
+		public function startHuddleAnimation():void {
+			imageBitmap.bitmapData = animationData.bitsFacing(WalkerAnimationData.FACE_HUDDLE);
+		}
+		
 	} // end class Walker
 
 }

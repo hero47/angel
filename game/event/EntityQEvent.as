@@ -21,6 +21,7 @@ package angel.game.event {
 		public static const JOINED_COMBAT:String = "entityJoinedCombat";
 		public static const CHANGED_FACTION:String = "entityChangedFaction"; // changed faction or player-ness
 		public static const BECAME_VISIBLE:String = "entityBecameVisible";
+		public static const CHANGED_SOLIDNESS:String = "entityChangedSolidness";
 		public static const BECAME_MAIN_PC:String = "entityBecameMainPc"; // param = old main pc
 		public static const FROBBED:String = "entityFrobbed";
 		public static const REVIVE_FROB:String = "entityReviveFrobbed";

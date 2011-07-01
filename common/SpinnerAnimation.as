@@ -38,6 +38,10 @@ package angel.common {
 			imageBitmap.bitmapData = animationData.bitsFacing(SpinnerAnimationData.FACE_DYING);
 		}
 		
+		public function startHuddleAnimation():void {
+			
+		}
+		
 	}
 
 }

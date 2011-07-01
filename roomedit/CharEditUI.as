@@ -257,7 +257,7 @@ package angel.roomedit {
 		private function setAnimationTypeFromImageSize(charId:String, width:int, height:int, filename:String):void {
 			var animationName:String;
 			
-			if ((width == Prop.WIDTH * 9) && (height == Prop.HEIGHT * 3)) {
+			if ((width == Prop.WIDTH * 10) && (height == Prop.HEIGHT * 3)) {
 				animationName = "walker";
 			} else if ((width == Prop.WIDTH * 9) && (height == Prop.HEIGHT)) {
 				animationName = "spinner";

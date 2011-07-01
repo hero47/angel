@@ -57,6 +57,7 @@ package angel.game.combat {
 			
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.LOCATION_CHANGED_IN_MOVE, someoneWalkedToNewSquare);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.LOCATION_CHANGED_DIRECTLY, someoneMovedToNewSquare);
+			Settings.gameEventQueue.addListener(this, room, EntityQEvent.CHANGED_SOLIDNESS, someoneForcesVisibilityRecalc);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.HEALTH_CHANGE, someonesHealthChanged);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.START_TURN, someoneStartedTurn);
 			Settings.gameEventQueue.addListener(this, room, EntityQEvent.CHANGED_FACTION, someoneChangedFaction);
@@ -124,6 +125,9 @@ package angel.game.combat {
 		// (entity's location will have already changed)
 		private function someoneMovedToNewSquare(event:EntityQEvent):void {
 			adjustVisibilityForMove(event.simpleEntity);
+		}
+		private function someoneForcesVisibilityRecalc(event:EntityQEvent):void {
+			adjustVisibilityForEachTile();
 		}
 		
 		private function adjustVisibilityForMove(entity:SimpleEntity):void {
