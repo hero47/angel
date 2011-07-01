@@ -20,14 +20,16 @@ package angel.common {
 		
 		private var paddingAtTop:int = Defaults.TOP;
 		
-		[Embed(source = '../EmbeddedAssets/temp_default_walker.png')]
+		[Embed(source = '../EmbeddedAssets/default_walker.png')]
 		private static const DefaultWalkerBitmap:Class;
 		
 		//mapping from facing to position on image sheet
-		//(facing 8 == DYING holds the death images)
-		private static const imageColumn:Vector.<int> = Vector.<int>([1, 0, 7, 6, 5, 4, 3, 2, 8]);
 		public static const FACE_DYING:int = 8;
+		public static const FACE_HUDDLE:int = 9;
+		private static const NUMBER_OF_COLUMNS:int = 10;
+		private static const imageColumn:Vector.<int> = Vector.<int>([1, 0, 7, 6, 5, 4, 3, 2, 8, 9]);
 		public static const STEP_DEAD:int = 2;
+		private static const NUMBER_OF_ROWS:int = 3;
 		
 		private var bits:Vector.<Vector.<BitmapData>>;
 		
@@ -48,15 +50,15 @@ package angel.common {
 			
 			var label:TextField = new TextField();
 			label.text = labelForTemporaryVersion;
-			for (var facing:int = 0; facing < 9; facing++) {
-				for (var foot:int = 0; foot < 3; foot++) {
+			for (var facing:int = 0; facing < NUMBER_OF_COLUMNS; facing++) {
+				for (var foot:int = 0; foot < NUMBER_OF_ROWS; foot++) {
 					bits[facing][foot].draw(label);
 				}
 			}
 		}
 		
 		public function dataFinishedLoading(bitmapData:BitmapData, entry:CatalogEntry):void {
-			if ((bitmapData.width != Prop.WIDTH * 9) || (bitmapData.height != Prop.HEIGHT * 3)) {
+			if ((bitmapData.width != Prop.WIDTH * NUMBER_OF_COLUMNS) || (bitmapData.height != Prop.HEIGHT * NUMBER_OF_ROWS)) {
 				Alert.show("Warning: expected " + entry.filename + " to be a walker animation, but image size is wrong.");
 			}
 			copyBitsFromImagePane(bitmapData);
@@ -78,20 +80,20 @@ package angel.common {
 			
 			var textField:TextField = new TextField();
 			textField.text = id;
-			for (var facing:int = 0; facing < 9; facing++) {
-				for (var foot:int = 0; foot < 3; foot++) {
+			for (var facing:int = 0; facing < NUMBER_OF_COLUMNS; facing++) {
+				for (var foot:int = 0; foot < NUMBER_OF_ROWS; foot++) {
 					bits[facing][foot].draw(textField);
 				}
 			}
 		}
 		
 		private function createBlankBits():void {
-			bits = new Vector.<Vector.<BitmapData>>(9);
+			bits = new Vector.<Vector.<BitmapData>>(NUMBER_OF_COLUMNS);
 			bits.fixed = true;
-			for (var facing:int = 0; facing < 9; facing++) {
-				bits[facing] = new Vector.<BitmapData>(3);
+			for (var facing:int = 0; facing < NUMBER_OF_COLUMNS; facing++) {
+				bits[facing] = new Vector.<BitmapData>(NUMBER_OF_ROWS);
 				bits[facing].fixed = true;
-				for (var foot:int = 0; foot < 3; foot++) {
+				for (var foot:int = 0; foot < NUMBER_OF_ROWS; foot++) {
 					bits[facing][foot] = new BitmapData(Prop.WIDTH, Prop.HEIGHT - paddingAtTop);
 				}
 			}
@@ -104,8 +106,8 @@ package angel.common {
 			
 			var zerozero:Point = new Point(0, 0);
 			var sourceRect:Rectangle = new Rectangle(0, paddingAtTop, Prop.WIDTH, Prop.HEIGHT - paddingAtTop); // x,y will change as we loop
-			for (var facing:int = 0; facing < 9; facing++) {
-				for (var foot:int = 0; foot < 3; foot++) {
+			for (var facing:int = 0; facing < NUMBER_OF_COLUMNS; facing++) {
+				for (var foot:int = 0; foot < NUMBER_OF_ROWS; foot++) {
 					if (useFullWidth) {
 						sourceRect.x = imageColumn[facing] * Prop.WIDTH;
 					}
@@ -123,8 +125,8 @@ package angel.common {
 			var zerozero:Point = new Point(0, 0);
 			var sourceRect:Rectangle = new Rectangle(0, additionalTop, Prop.WIDTH, Prop.HEIGHT - paddingAtTop);
 			var clearRect:Rectangle = new Rectangle(0, bits[0][0].rect.height - additionalTop, Prop.WIDTH, additionalTop);
-			for (var facing:int = 0; facing < 9; facing++) {
-				for (var foot:int = 0; foot < 3; foot++) {
+			for (var facing:int = 0; facing < NUMBER_OF_COLUMNS; facing++) {
+				for (var foot:int = 0; foot < NUMBER_OF_ROWS; foot++) {
 					bits[facing][foot].copyPixels(bits[facing][foot], sourceRect, zerozero);
 					bits[facing][foot].fillRect(clearRect, 0xffffffff);
 				}

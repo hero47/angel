@@ -30,31 +30,27 @@ package angel.game {
 		public static const TestIconBitmap:Class;
 		
 		// Combat move pie menu icons
-		[Embed(source = '../EmbeddedAssets/IconCancelMove.png')]
+		[Embed(source = '../EmbeddedAssets/combat_icon_cancel_path.png')]
 		public static const CancelMove:Class;
-		[Embed(source = '../EmbeddedAssets/IconStay.png')]
+		[Embed(source = '../EmbeddedAssets/combat_move_stay.png')]
 		public static const Stay:Class;
-		[Embed(source = '../EmbeddedAssets/IconWalk.png')]
+		[Embed(source = '../EmbeddedAssets/combat_move_walk.png')]
 		public static const Walk:Class;
-		[Embed(source = '../EmbeddedAssets/IconRun.png')]
+		[Embed(source = '../EmbeddedAssets/combat_move_run.png')]
 		public static const Run:Class;
-		[Embed(source = '../EmbeddedAssets/IconSprint.png')]
+		[Embed(source = '../EmbeddedAssets/combat_move_sprint.png')]
 		public static const Sprint:Class;
 		[Embed(source='../EmbeddedAssets/combat_icon_cover.png')]
 		public static const CombatFireFromCover:Class;
+		[Embed(source = '../EmbeddedAssets/combat_icon_newpoint.png')]
+		public static const CombatAddWaypoint:Class;
 		
 		// Combat fire pie menu icons
-		[Embed(source = '../EmbeddedAssets/combat_icon_fire.png')]
-		public static const DefaultHandWeaponIcon:Class;
-		[Embed(source='../EmbeddedAssets/combat_icon_grenade.png')]
-		public static const DefaultThrownWeaponIcon:Class;
 		[Embed(source = '../EmbeddedAssets/combat_icon_pass.png')]
 		public static const CombatPass:Class;
 		[Embed(source='../EmbeddedAssets/combat_icon_items.png')]
 		public static const CombatOpenItemMenu:Class;
 		
-		[Embed(source = '../EmbeddedAssets/combat_icon_newpoint.png')]
-		public static const CombatAddWaypoint:Class;
 		
 		// Explore pie menu
 		[Embed(source = '../EmbeddedAssets/combat_icon_revive.png')]

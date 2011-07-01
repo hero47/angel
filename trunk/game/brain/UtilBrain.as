@@ -17,7 +17,7 @@ package angel.game.brain {
 		}
 
 		private static const exploreBrain:Object = { fidget:BrainFidget, follow:BrainFollow, patrol:BrainPatrol, wander:BrainWander };
-		private static const combatBrain:Object = { patrol:CombatBrainPatrol, patrolNoStops:CombatBrainPatrolNoStops,
+		private static const combatBrain:Object = { huddle:CombatBrainHuddle, patrol:CombatBrainPatrol, patrolNoStops:CombatBrainPatrolNoStops,
 		wander:CombatBrainWander };
 
 		public static function exploreBrainClassFromString(brainName:String):Class {

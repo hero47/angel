@@ -388,13 +388,25 @@ package angel.game {
 		public function initHealth(active:Boolean):void {
 			if (active) {
 				currentHealth = maxHealth;
-				animation.turnToFacing(facing); // stands back up if we were dead
-				solidness = solidnessWhenAlive;
+				standUp();
 			} else {
 				currentHealth = 0;
 				animation.turnToFacing(WalkerAnimationData.FACE_DYING); // stands back up if we were dead
 				solidness ^= Prop.TALL; // Dead entities are short, by fiat.
+				Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.CHANGED_SOLIDNESS));
 			}
+		}
+		
+		public function huddle():void {
+			solidness ^= Prop.TALL;
+			Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.CHANGED_SOLIDNESS));
+			animation.startHuddleAnimation();
+		}
+		
+		public function standUp():void {
+			animation.turnToFacing(facing); // stands back up if we were down
+			solidness = solidnessWhenAlive;
+			Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.CHANGED_SOLIDNESS));
 		}
 		
 		public function revive():void {

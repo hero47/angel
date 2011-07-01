@@ -35,6 +35,10 @@ package angel.common {
 			
 		}
 		
+		public function startHuddleAnimation():void {
+			
+		}
+		
 	}
 
 }

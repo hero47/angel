@@ -16,7 +16,12 @@ package angel.common {
 	
 	// Currently this is the only type of inventory item we have.
 	// Later this may expand into a general class for inventory items, or it may become a subclass of such a class.
-	public class WeaponResource extends ImageResourceBase implements IInventoryResource {
+	public class WeaponResource extends ImageResourceBase implements IInventoryResource {		
+		
+		[Embed(source = '../EmbeddedAssets/default_hand.png')]
+		public static const DEFAULT_HAND_ICON:Class;
+		[Embed(source='../EmbeddedAssets/default_thrown.png')]
+		public static const DEFAULT_THROWN_ICON:Class;
 		
 		private static const typeToClass:Object = { "hand":SingleTargetWeapon, "thrown":ThrownWeapon };
 		
@@ -78,7 +83,7 @@ package angel.common {
 		
 		private function defaultBitmapData():BitmapData {
 			var bitmapData:BitmapData = new BitmapData(Icon.STANDARD_ICON_SIZE, Icon.STANDARD_ICON_SIZE);
-			Icon.copyIconData(type == "hand" ? Icon.DefaultHandWeaponIcon : Icon.DefaultThrownWeaponIcon, bitmapData);
+			Icon.copyIconData(type == "hand" ? DEFAULT_HAND_ICON : DEFAULT_THROWN_ICON, bitmapData);
 			return bitmapData;
 		}
 		

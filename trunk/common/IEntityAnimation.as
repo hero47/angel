@@ -10,7 +10,7 @@ package angel.common {
 		function adjustImageForMove(facing:int, frameOfMove:int, totalFramesInMove:int):void;
 		function turnToFacing(newFacing:int):void;
 		function startDeathAnimation():void;
-		
+		function startHuddleAnimation():void;
 	}
 	
 }

@@ -37,8 +37,7 @@ package angel.common {
 		public function Prop(bitmap:Bitmap = null) {
 			imageBitmap = bitmap;
 			if (imageBitmap != null) {
-				 // for convenience, make 0,0 of prop be the same location as 0,0 of the tile it's standing on
-				imageBitmap.y = -imageBitmap.height + Tileset.TILE_HEIGHT;
+				fixHeightOffset(imageBitmap.height);
 				addChild(imageBitmap);
 			}
 			location = new Point(0, 0);
@@ -56,6 +55,12 @@ package angel.common {
 		
 		public function changeImage(bitmapData:BitmapData):void {
 			imageBitmap.bitmapData = bitmapData;
+			fixHeightOffset(imageBitmap.height);
+		}
+		
+		// We keep 0,0 of prop the same location as 0,0 of the tile it's standing on, regardless of image height
+		private function fixHeightOffset(imageHeight:int):void {
+			imageBitmap.y = -imageHeight + Tileset.TILE_HEIGHT;			
 		}
 		
 
