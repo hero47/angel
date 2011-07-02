@@ -630,28 +630,51 @@ package angel.game {
 			} else if (mouseOnStage) {
 				var global:Point = localToGlobal(new Point(mouseX, mouseY));
 				var floorPixelRect:Rectangle = floor.pixelRect;
+				var leftEdge:int = floorPixelRect.left + this.x;
+				var rightEdge:int = this.x + floorPixelRect.width + floorPixelRect.x;
+				var topEdge:int = floorPixelRect.top + this.y - Prop.HEIGHT + Tileset.TILE_HEIGHT;
+				var bottomEdge:int = this.y + floorPixelRect.height + floorPixelRect.y;
 				
-				if ((global.x < Settings.mouseScroll) && (floorPixelRect.left + this.x < Settings.STAGE_WIDTH - Tileset.TILE_WIDTH)) {
-					this.x += Settings.runSpeed;
-				} else if ((global.x > Settings.STAGE_WIDTH - Settings.mouseScroll) && (this.x + floorPixelRect.width + floorPixelRect.x > Tileset.TILE_WIDTH)) {
-					this.x -= Settings.runSpeed;
+				if (floorPixelRect.width < Settings.STAGE_WIDTH) {
+					// Whole room fits left-right, so don't allow scrolling either edge off screen
+					if ((global.x < Settings.mouseScroll) && (rightEdge < Settings.STAGE_WIDTH)) {
+						this.x += Settings.runSpeed; // move the room right
+					} else if ((global.x > Settings.STAGE_WIDTH - Settings.mouseScroll) && (leftEdge > 0)) {
+						this.x -= Settings.runSpeed; // move the room left
+					}					
+				} else {
+					// Some part will always be off left or right edge, so just keep each edge from coming too far onstage
+					if ((global.x < Settings.mouseScroll) && (leftEdge < 0)) {
+						this.x += Settings.runSpeed; // move the room right
+					} else if ((global.x > Settings.STAGE_WIDTH - Settings.mouseScroll) && (rightEdge > Settings.STAGE_WIDTH)) {
+						this.x -= Settings.runSpeed; // move the room left
+					}					
 				}
-				if ((global.y < Settings.mouseScroll) && (floorPixelRect.top + this.y < Settings.STAGE_HEIGHT - Tileset.TILE_HEIGHT)) {
-					this.y += Settings.runSpeed;
-				} else if ((global.y > Settings.STAGE_HEIGHT - Settings.mouseScroll) && (this.y + floorPixelRect.height + floorPixelRect.y > Tileset.TILE_HEIGHT)) {
-					this.y -= Settings.runSpeed;
+				
+				if (floorPixelRect.height < Settings.STAGE_HEIGHT) {
+					if ((global.y < Settings.mouseScroll) && (bottomEdge < Settings.STAGE_HEIGHT)) {
+						this.y += Settings.runSpeed;
+					} else if ((global.y > Settings.STAGE_HEIGHT - Settings.mouseScroll) && (topEdge > 0)) {
+						this.y -= Settings.runSpeed;
+					}
+				} else {
+					if ((global.y < Settings.mouseScroll) && (topEdge < 0)) {
+						this.y += Settings.runSpeed; // scroll down
+					} else if ((global.y > Settings.STAGE_HEIGHT - Settings.mouseScroll) && (bottomEdge > Settings.STAGE_HEIGHT)) {
+						this.y -= Settings.runSpeed; // scroll up
+					}					
 				}
 				
 				/*
-				if ((global.x < Settings.mouseScroll) && (this.x + floorPixelRect.width + floorPixelRect.x < Settings.STAGE_WIDTH)) {
-					this.x += Settings.runSpeed;
-				} else if ((global.x > Settings.STAGE_WIDTH - Settings.mouseScroll) && (floorPixelRect.left + this.x > 0)) {
-					this.x -= Settings.runSpeed;
+				if ((global.x < Settings.mouseScroll) && (leftEdge < Settings.STAGE_WIDTH - Tileset.TILE_WIDTH)) {
+					this.x += Settings.runSpeed; // scroll right
+				} else if ((global.x > Settings.STAGE_WIDTH - Settings.mouseScroll) && (rightEdge > Tileset.TILE_WIDTH)) {
+					this.x -= Settings.runSpeed; // scroll left
 				}
-				if ((global.y < Settings.mouseScroll) && (this.y + floorPixelRect.height + floorPixelRect.y < Settings.STAGE_HEIGHT)) {
-					this.y += Settings.runSpeed;
-				} else if ((global.y > Settings.STAGE_HEIGHT - Settings.mouseScroll) && (floorPixelRect.top + this.y > 0)) {
-					this.y -= Settings.runSpeed;
+				if ((global.y < Settings.mouseScroll) && (topEdge < Settings.STAGE_HEIGHT - Tileset.TILE_HEIGHT)) {
+					this.y += Settings.runSpeed; // scroll down
+				} else if ((global.y > Settings.STAGE_HEIGHT - Settings.mouseScroll) && (bottomEdge > Tileset.TILE_HEIGHT)) {
+					this.y -= Settings.runSpeed; // scroll up
 				}
 				*/
 			}
