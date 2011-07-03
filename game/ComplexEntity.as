@@ -392,13 +392,13 @@ package angel.game {
 			} else {
 				currentHealth = 0;
 				animation.turnToFacing(WalkerAnimationData.FACE_DYING); // stands back up if we were dead
-				solidness ^= Prop.TALL; // Dead entities are short, by fiat.
+				solidness = solidness & (~Prop.TALL); // Dead entities are short, by fiat.
 				Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.CHANGED_SOLIDNESS));
 			}
 		}
 		
 		public function huddle():void {
-			solidness ^= Prop.TALL;
+			solidness = solidness & (~Prop.TALL); 
 			Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.CHANGED_SOLIDNESS));
 			animation.startHuddleAnimation();
 		}
