@@ -90,6 +90,7 @@ package angel.game.combat {
 			}
 			room.moveHilight(null, 0);
 			moveTargetHilight(null);
+			room.handleFading(null);
 			if (aimCursor.parent != null) {
 				room.stage.removeChild(aimCursor);
 			}
@@ -150,6 +151,8 @@ package angel.game.combat {
 			aimCursor.x = global.x;
 			aimCursor.y = global.y;
 			room.stage.addChild(aimCursor); // keep putting it back on top in case something got added
+			
+			room.handleFading(tile);
 		}
 		
 		public function mouseClick(tile:FloorTile):void {

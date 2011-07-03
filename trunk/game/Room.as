@@ -67,6 +67,7 @@ package angel.game {
 		
 		private var tileWithHilight:FloorTile;
 		private var tileHilight:Shape;
+		private var faded:Vector.<SimpleEntity> = new Vector.<SimpleEntity>();
 		private var scrollingTo:Point = null;
 		public var preCombatSave:SaveGame;
 		public var resumedFromSave:Boolean;
@@ -420,6 +421,7 @@ package angel.game {
 		
 		/********************* end general ui **********************/
 		
+		
 		public function moveHilight(tile:FloorTile, color:uint):void {
 			tileWithHilight = tile;
 			if (tileWithHilight != null) {
@@ -428,20 +430,39 @@ package angel.game {
 				tileHilight.visible = true;
 				tileHilight.x = tile.x;
 				tileHilight.y = tile.y;
+			} else {
+				tileHilight.visible = false;
 			}
 		}
-		/*
-		public function moveHilight(tile:FloorTile, color:uint):void {
-			if (tileWithHilight != null) {
-				tileWithHilight.filters = [];
+		
+		public function handleFading(tile:FloorTile):void {
+			if (faded.length > 0) {
+				for each (var entity:SimpleEntity in faded) {
+					entity.alpha = 1;
+				}
+				faded.length = 0;
 			}
-			tileWithHilight = tile;
-			if (tileWithHilight != null) {
-				var glow:GlowFilter = new GlowFilter(color, 1, 15, 15, 10, 1, true, false);
-				tileWithHilight.filters = [ glow ];
+			if (tile != null) {
+				forEachEntitySecondRing(tile.location, fade75)
+				forEachEntityNeighboring(tile.location, fade60);
+				forEachEntityIn(tile.location, fade50);
 			}
 		}
-		*/
+		
+		private function fade75(entity:SimpleEntity):void {
+			entity.alpha = 0.75;
+			faded.push(entity);
+		}
+		
+		private function fade60(entity:SimpleEntity):void {
+			entity.alpha = 0.6;
+			faded.push(entity);
+		}
+		
+		private function fade50(entity:SimpleEntity):void {
+			entity.alpha = 0.5;
+			faded.push(entity);
+		}
 		
 		public function updateToolTip(location:Point):void {
 			var character:ComplexEntity = firstComplexEntityIn(location);
@@ -531,6 +552,34 @@ package angel.game {
 		
 		public function forEachEntityIn(location:Point, callWithEntity:Function, filter:Function = null):void {
 			cells[location.x][location.y].forEachEntity(callWithEntity, filter);
+		}
+		
+		public function forEachEntityInCheckBounds(x:int, y:int, callWithEntity:Function, filter:Function = null):void {
+			if ((x >= 0) && (x < size.x) && (y >= 0) && (y < size.y)) {
+				cells[x][y].forEachEntity(callWithEntity, filter);
+			}
+		}
+		
+		public function forEachEntityNeighboring(location:Point, callWithEntity:Function, filter:Function = null):void {
+			for (var x:int = location.x-1; x <= location.x+1; ++x) {
+				for (var y:int = location.y - 1; y <= location.y + 1; ++y) {
+					if ((x != 0) || (y != 0)) {
+						forEachEntityInCheckBounds(x, y, callWithEntity, filter);
+					}
+				}
+			}
+		}
+		
+		public function forEachEntitySecondRing(location:Point, callWithEntity:Function, filter:Function = null):void {
+			for (var x:int = location.x-2; x <= location.x+2; ++x) {
+				forEachEntityInCheckBounds(x, location.y-2, callWithEntity, filter);
+				forEachEntityInCheckBounds(x, location.y+2, callWithEntity, filter);
+			}
+			for (var y:int = location.y - 1; y <= location.y + 1; ++y) {
+				forEachEntityInCheckBounds(location.x-2, y, callWithEntity, filter);
+				forEachEntityInCheckBounds(location.x+2, y, callWithEntity, filter);
+				
+			}
 		}
 		
 		public function firstEntityIn(location:Point, filter:Function = null):SimpleEntity {
