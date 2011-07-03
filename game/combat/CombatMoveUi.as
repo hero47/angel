@@ -52,6 +52,7 @@ package angel.game.combat {
 			}
 			adjustMovePointsDisplay(false);
 			room.moveHilight(null, 0);
+			room.handleFading(null);
 		}
 		
 		public function get currentPlayer():ComplexEntity {
@@ -97,6 +98,7 @@ package angel.game.combat {
 					ToolTip.removeToolTip();
 				}
 			}
+			room.handleFading(tile);
 		}
 		
 		public function mouseClick(tile:FloorTile):void {
