@@ -24,7 +24,7 @@ package angel.game {
 		
 		private static const MOVE_COLOR:uint = 0xffffff;
 		private static const NO_MOVE_COLOR:uint = 0x888888;
-		private static const FROB_COLOR:uint = 0x0000ff;
+		private static const FROB_COLOR:uint = 0x00ffff;
 		
 		public function ExploreUi(room:Room, explore:RoomExplore) {
 			this.explore = explore;
