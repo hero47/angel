@@ -12,7 +12,6 @@ package angel.game {
 	 */
 	public class InitGameFromFiles {
 		private var initFinishedCallback:Function;
-		private var flagsLoaded:Boolean = false;
 		private var initXml:XML = null;
 		
 		// Calls back with a SaveGame as parameter
@@ -24,21 +23,12 @@ package angel.game {
 			catalog.addEventListener(Event.INIT, catalogLoadedListener);
 			catalog.loadFromXmlFile("AngelCatalog.xml");
 			
-			Settings.gameEventQueue.addListener(this, Flags.flagLoader, QEvent.INIT, flagsLoadedListener);
-			Flags.loadFlagListFromXmlFile();
-			
 			LoaderWithErrorCatching.LoadFile("AngelInit.xml", xmlLoadedForInit);
 		}
 		
 		private function catalogLoadedListener(event:Event):void {
 			event.target.removeEventListener(Event.INIT, catalogLoadedListener);
 			Settings.catalog = Catalog(event.target);
-			finishInitIfAllDataLoaded();
-		}
-		
-		private function flagsLoadedListener(event:QEvent):void {
-			Settings.gameEventQueue.removeListener(Flags.flagLoader, QEvent.INIT, flagsLoadedListener);
-			flagsLoaded = true;
 			finishInitIfAllDataLoaded();
 		}
 
@@ -55,7 +45,7 @@ package angel.game {
 		}
 			
 		private function finishInitIfAllDataLoaded():void {
-			if ((Settings.catalog != null) && flagsLoaded && (initXml != null)) {
+			if ((Settings.catalog != null) && (initXml != null)) {
 				Settings.initFromXml(initXml.settings);
 				if (initXml.startScript.length() > 0) {
 					Settings.initStartScript(initXml.startScript[0]);

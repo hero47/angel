@@ -5,6 +5,7 @@ package angel.game.script {
 	import angel.common.MessageCollector;
 	import angel.common.Util;
 	import angel.game.ComplexEntity;
+	import angel.game.Flags;
 	import angel.game.GameMenu;
 	import angel.game.IAngelMain;
 	import angel.game.Main;
@@ -116,6 +117,9 @@ package angel.game.script {
 		}
 		
 		public function entityWithSpecialId(idMinusFirstCharacter:String):SimpleEntity {
+			if (scriptIds[idMinusFirstCharacter] is Room) {
+				Alert.show(SPECIAL_ID_FIRST_CHARACTER + idMinusFirstCharacter + " is a room, but it's used somewhere that expects an entity");
+			}
 			return scriptIds[idMinusFirstCharacter];
 		}
 		
@@ -187,6 +191,25 @@ package angel.game.script {
 		
 		public function hasEndOfScriptActions():Boolean {
 			return (doAtEnd.length > 0);
+		}
+		
+		private function translateScriptIdInFlagIdIfNeeded(flagId:String):String {
+			var special:int = flagId.indexOf(SPECIAL_ID_FIRST_CHARACTER);
+			if (special >= 0) {
+				var prefix:String = flagId.substr(0, special);
+				//UNDONE: Rooms don't have catalog ids, so this will fail if a room uses flag@*me in its script!
+				var entity:SimpleEntity = entityWithSpecialId(flagId.substr(special + 1));
+				return (entity == null ? prefix : prefix + entity.id);
+			}
+			return flagId;
+		}
+		
+		public function getFlagValue(flagId:String):Boolean {
+			return Flags.getValue(translateScriptIdInFlagIdIfNeeded(flagId));
+		}
+		
+		public function setFlagValue(flagId:String, value:Boolean):void {
+			return Flags.setValue(translateScriptIdInFlagIdIfNeeded(flagId), value);
 		}
 		
 	}

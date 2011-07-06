@@ -49,6 +49,7 @@ package angel.game.script {
 			}
 		}
 		
+		//UNDONE: allow context-sensitive flags in "need" list
 		private function findValidTopic():Topic {
 			var max:int = -1;
 			var topicIdWithMax:String = null;
