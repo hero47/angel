@@ -35,6 +35,7 @@ package angel.game.combat {
 		private var oldFootprintColorTransform:ColorTransform;
 		private var aimCursor:Sprite;
 		private var aimCursorBitmap:Bitmap;
+		private var suspendedPlayer:ComplexEntity; // track this separately so we'll bomb if we get called when disabled
 		
 		private var hilightedEnemy:ComplexEntity;
 		
@@ -96,6 +97,16 @@ package angel.game.combat {
 			}
 			Mouse.show();
 			adjustActionsRemainingDisplay(false);
+		}
+		
+		public function suspend():void {
+			suspendedPlayer = player;
+			disable();
+		}
+		
+		public function resume():void {
+			enable(suspendedPlayer);
+			suspendedPlayer = null;
 		}
 		
 		public function get currentPlayer():ComplexEntity {

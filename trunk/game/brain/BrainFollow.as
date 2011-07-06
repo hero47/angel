@@ -20,7 +20,7 @@ package angel.game.brain {
 		private var me:ComplexEntity;
 		private var friendId:String;
 		
-		protected var interval:int = 2;
+		private var interval:int = 2;
 		
 		public function BrainFollow(entity:ComplexEntity, roomExplore:RoomExplore, param:String) {
 			me = entity;
@@ -32,7 +32,8 @@ package angel.game.brain {
 				friendId = splitParam[1];
 			}
 			if (me.canMove()) {
-				roomExplore.addTimedEvent(0, firstMove);
+				//First move is at a random fraction of the interval to de-synchronize everyone
+				roomExplore.addTimedEvent(Math.random() * interval, twitchOpportunity);
 			}
 		}
 		
@@ -40,12 +41,6 @@ package angel.game.brain {
 			Assert.assertTrue(me.room.mode is RoomExplore, "Explore brain not in explore mode");
 			RoomExplore(me.room.mode).removeTimedEvent(twitchOpportunity);
 			me = null;
-		}
-		
-		//First move is at a random fraction of the interval to de-synchronize everyone
-		//This is done on the first callback instead of in constructor so subclass can monkey with interval
-		private function firstMove(roomExplore:RoomExplore):void {
-			roomExplore.addTimedEvent(Math.random() * interval, twitchOpportunity);
 		}
 
 		private function twitchOpportunity(roomExplore:RoomExplore):void {
