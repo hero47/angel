@@ -29,6 +29,7 @@ package angel.game.combat {
 		private var room:Room;
 		private var player:ComplexEntity;
 		private var oldFootprintColorTransform:ColorTransform;
+		private var suspendedPlayer:ComplexEntity; // track this separately so we'll bomb if we get called when disabled
 		
 		public function CombatMoveUi(room:Room, combat:RoomCombat) {
 			this.combat = combat;
@@ -53,6 +54,16 @@ package angel.game.combat {
 			adjustMovePointsDisplay(false);
 			room.moveHilight(null, 0);
 			room.handleFading(null);
+		}
+		
+		public function suspend():void {
+			suspendedPlayer = player;
+			disable();
+		}
+		
+		public function resume():void {
+			enable(suspendedPlayer);
+			suspendedPlayer = null;
 		}
 		
 		public function get currentPlayer():ComplexEntity {

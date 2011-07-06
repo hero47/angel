@@ -11,6 +11,8 @@ package angel.game {
 		// bits unique to this particular UI
 		function enable(player:ComplexEntity):void;
 		function disable():void;
+		function suspend():void;
+		function resume():void;
 		function get currentPlayer():ComplexEntity;
 		
 		// Generic keys are handled by caller; this is just for the ones unique to this mode

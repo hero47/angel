@@ -108,6 +108,7 @@ package angel.game {
 				if (timeQueue[i].callback == callback) {
 					timeQueue.splice(i, 1);
 					--i;
+					return;
 				}
 			}
 		}

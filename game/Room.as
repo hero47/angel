@@ -57,7 +57,6 @@ package angel.game {
 		public var activeUi:IRoomUi;
 		private var mouseOnStage:Boolean;
 		private var suspendedUi:IRoomUi;
-		private var suspendedUiPlayer:ComplexEntity;
 		private var dragging:Boolean = false;
 		
 		private var conversationInProgress:ConversationInterface;
@@ -251,10 +250,7 @@ package angel.game {
 		// then go on to process the UI event.  To avoid this, all of these UI listeners are going to check for
 		// null ui.  Yuck.
 		
-		
-		// call this when player-controlled part of the turn begins, to allow player to enter move
-		public function enableUi(newUi:IRoomUi, player:ComplexEntity):void {
-			activeUi = newUi;
+		private function addUiListeners():void {
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 			stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
 			stage.addEventListener(Event.MOUSE_LEAVE, mouseLeaveListener);
@@ -263,11 +259,9 @@ package angel.game {
 			//Right-button mouse events are only supported in AIR.  For now, while we're using Flash Projector,
 			//we're substituting ctrl-click.
 			//addEventListener(MouseEvent.RIGHT_CLICK, rightClickListener);
-			
-			newUi.enable(player);
 		}
 		
-		public function disableUi():void {
+		private function removeUiListeners():void {
 			stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 			stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveListener);
 			stage.removeEventListener(Event.MOUSE_LEAVE, mouseLeaveListener);
@@ -277,24 +271,22 @@ package angel.game {
 			
 			removeEventListener(MouseEvent.MOUSE_UP, mouseUpListener);
 			stopDrag();
+		}
+		
+		// call this when player-controlled part of the turn begins, to allow player to enter move
+		public function enableUi(newUi:IRoomUi, player:ComplexEntity):void {
+			activeUi = newUi;
+			addUiListeners();
+			newUi.enable(player);
+		}
+		
+		
+		public function disableUi():void {
+			removeUiListeners();
 			
 			if (activeUi != null) {
 				activeUi.disable();
 				activeUi = null;
-			}
-		}
-			
-		//UNDONE
-		public function restoreUiAfterSuspend(suspender:Object, suspendedRoom:Room):void {
-			if (suspendedRoom != this) {
-				return;
-			}
-			unpauseFromLastIndefinitePause(suspender);
-			if (suspendedUi != null) {
-				Assert.assertTrue(suspendedUiPlayer.room == this, "Active player was removed from room. This WILL break things.");
-				enableUi(suspendedUi, suspendedUiPlayer);
-				suspendedUi = null;
-				suspendedUiPlayer = null;
 			}
 		}
 		
@@ -303,8 +295,22 @@ package angel.game {
 			pauseGameTimeIndefinitely(suspender);
 			if (activeUi != null) {
 				suspendedUi = activeUi;
-				suspendedUiPlayer = activeUi.currentPlayer;
-				disableUi();
+				suspendedUi.suspend();
+				removeUiListeners();
+				activeUi = null;
+			}
+		}
+		
+		public function restoreUiAfterSuspend(suspender:Object, suspendedRoom:Room):void {
+			if (suspendedRoom != this) {
+				return;
+			}
+			unpauseFromLastIndefinitePause(suspender);
+			if (suspendedUi != null) {
+				addUiListeners();
+				suspendedUi.resume();
+				activeUi = suspendedUi;
+				suspendedUi = null;
 			}
 		}
 		

@@ -34,6 +34,7 @@ package angel.game {
 		/* INTERFACE angel.game.IRoomUi */
 		
 		public function enable(player:ComplexEntity):void {
+			Assert.assertTrue(player == room.mainPlayerCharacter, "Explore ui expects to always control main pc");
 			this.player = player;
 		}
 		
@@ -42,6 +43,14 @@ package angel.game {
 			moveFrobHilight(null);
 			Settings.gameEventQueue.removeAllListenersOwnedBy(this);
 			this.player = null;
+		}
+		
+		public function suspend():void {
+			disable();
+		}
+		
+		public function resume():void {
+			enable(room.mainPlayerCharacter);
 		}
 		
 		public function get currentPlayer():ComplexEntity {
