@@ -21,15 +21,13 @@ package angel.game.test {
 		private var context:ScriptContext;
 		
 		public function ConditionTest() {
-			// If any of these conditions try to make use of context, we'll die with a null.
+			Autotest.setupTestRoom();
+			context = new ScriptContext(Autotest.testRoom, Autotest.testRoom.activePlayer(), null, null);
 			Autotest.testFunction(testFlagCondition);
 			Autotest.testFunction(testMultipleCondition);
 			Autotest.testFunction(testAllOfCondition);
 			Autotest.testFunction(testAnyOfCondition);
 			Autotest.testFunction(testCompareCondition);
-			
-			Autotest.setupTestRoom();
-			context = new ScriptContext(Autotest.testRoom, Autotest.testRoom.activePlayer(), null, null);
 			Autotest.testFunction(testSpotConditions);
 			Autotest.testFunction(testActiveConditions);
 			Autotest.testFunction(testPcConditions);

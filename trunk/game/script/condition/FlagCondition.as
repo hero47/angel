@@ -17,8 +17,6 @@ package angel.game.script.condition {
 		public function FlagCondition(flagId:String, desiredValue:Boolean, script:Script) {
 			this.flagId = flagId;
 			this.desiredFlagValue = desiredValue;
-			
-			Flags.getValue(flagId); // if flag is undefined, force an error now rather than waiting for script execution
 		}
 		
 		public static function isSimpleCondition():Boolean {
@@ -26,7 +24,7 @@ package angel.game.script.condition {
 		}
 		
 		public function isMet(context:ScriptContext):Boolean {
-			return (Flags.getValue(flagId) == desiredFlagValue);
+			return (context.getFlagValue(flagId) == desiredFlagValue);
 		}
 		
 		public function reverseMeaning():void {
