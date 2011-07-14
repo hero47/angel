@@ -64,11 +64,10 @@ package angel.game.combat {
 			shooter.actionsRemaining -= 2;
 			
 			shooter.inventory.removeFromPileOfStuff(this, 1);
-			new ThrowAnimation(shooter.room, shooter.location, targetLocation, deliverPayloadAt);
-			//deliverPayloadAt(shooter.room, targetLocation);
+			new ThrowAnimation(shooter.room, shooter, targetLocation, deliverPayloadAt);
 		}
 		
-		protected function deliverPayloadAt(room:Room, location:Point):void {
+		protected function deliverPayloadAt(room:Room, shooter:ComplexEntity, location:Point):void {
 			explodeAt(room, location, baseDamage);
 		}
 		

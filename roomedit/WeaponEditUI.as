@@ -31,6 +31,7 @@ package angel.roomedit {
 		private var ignoreUserGait:CheckBox;
 		private var ignoreTargetGait:CheckBox;
 		private var delayField:LabeledTextField;
+		private var providesSight:CheckBox;
 		private var deleteFromCatalogButton:SimplerButton;
 		
 		private static const WIDTH:int = 220;
@@ -71,6 +72,8 @@ package angel.roomedit {
 			
 			delayField = LabeledTextField.createBelow(changeImageControl, "Delay", 85, 40,
 					function(event:Event):void { changeWeaponProperty(int(event.target.text), "delay", 0) } );
+			providesSight = Util.createCheckboxEditControlBelow(delayField, "Provides Sight", 120,
+					function(event:Event):void { changeWeaponProperty(event.target.selected ? true : false, "view", false) } );
 					
 					
 			deleteFromCatalogButton = new SimplerButton("Delete from catalog", clickedDelete, 0xff0000);
@@ -100,6 +103,7 @@ package angel.roomedit {
 			ignoreUserGait.selected = resource.ignoreUserGait;
 			ignoreTargetGait.selected = resource.ignoreTargetGait;
 			delayField.text = String(resource.delay);
+			providesSight.selected = resource.view;
 			
 			typeCombo.selectedItem = Util.itemWithLabelInComboBox(typeCombo, resource.type);
 			hideOrShowControlsForType(resource.type);
@@ -120,13 +124,14 @@ package angel.roomedit {
 			ignoreUserGait.selected = false;
 			ignoreTargetGait.selected = false;
 			delayField.text = String(0);
+			providesSight.selected = false;
 			hideOrShowControlsForType(type);
 		}
 		
 		private function hideOrShowControlsForType(type:String):void {
 			var isHand:Boolean = (type == "hand");
 			rangeField.visible = cooldownField.visible = ignoreUserGait.visible = ignoreTargetGait.visible = isHand;
-			delayField.visible = !isHand;
+			delayField.visible = providesSight.visible = !isHand;
 		}
 		
 		private function changeWeaponProperty(newValue:*, propertyName:String, defaultValue:* = null):void {

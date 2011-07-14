@@ -26,6 +26,7 @@ package angel.common {
 		public var ignoreUserGait:Boolean = false;
 		public var ignoreTargetGait:Boolean = false;
 		public var delay:int = 0;
+		public var view:Boolean = false;
 		
 		public static const TAG:String = "weapon";
 		
@@ -55,6 +56,7 @@ package angel.common {
 			Util.setBoolFromXml(this, "ignoreUserGait", entry.xml, "ignoreUserGait");
 			Util.setBoolFromXml(this, "ignoreTargetGait", entry.xml, "ignoreTargetGait");
 			Util.setIntFromXml(this, "delay", entry.xml, "delay");
+			Util.setBoolFromXml(this, "view", entry.xml, "view");
 			entry.xml = null;
 			
 			if ((itemClass == ThrownWeapon) && (delay > 0)) {

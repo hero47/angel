@@ -86,6 +86,7 @@ package angel.game {
 		public var controllingOwnText:Boolean; // if true, other things shouldn't monkey with text
 		protected var facing:int;
 		private var solidnessWhenAlive:uint;
+		public var targetable:Boolean = true;
 		
 		public var movement:EntityMovement;
 		private var animation:IEntityAnimation;

@@ -149,8 +149,10 @@ package angel.game.combat {
 		private function someoneStartedTurn(event:EntityQEvent):void {
 			var fighter:ComplexEntity = event.complexEntity;
 			if (fighter.isPlayerControlled) {
-				statDisplay.adjustCombatStatDisplay(fighter);
-				lastActivePlayer = fighter;
+				if (fighter.targetable) {
+					statDisplay.adjustCombatStatDisplay(fighter);
+					lastActivePlayer = fighter;
+				}
 				adjustVisibilityForEachTile();
 			} else {
 				statDisplay.adjustCombatStatDisplay(null);
@@ -247,7 +249,9 @@ package angel.game.combat {
 		}
 		
 		private function removeDisplayElementsForFighter(entity:ComplexEntity):void {
-			entity.setTextOverHead(null);
+			if (!entity.controllingOwnText) {
+				entity.setTextOverHead(null);
+			}
 			entity.visible = true;
 			entity.removeFootprint();
 			deleteLastSeenLocation(entity);

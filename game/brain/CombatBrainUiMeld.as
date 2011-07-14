@@ -188,7 +188,7 @@ package angel.game.brain {
 		
 		// return true if should pause, false if not
 		public function showNoGunOrReserveFire():Boolean {
-			if (me.isPlayerControlled) {
+			if (me.isPlayerControlled && me.targetable) {
 				displayActionFloater(me, (me.hasAUsableItem() ? Icon.ReserveFireFloater : Icon.NoGunFloater));
 				return true;
 			} 
