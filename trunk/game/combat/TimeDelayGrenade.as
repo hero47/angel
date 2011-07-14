@@ -27,21 +27,27 @@ package angel.game.combat {
 		</script>;
 		
 		private var delay:int;
+		private var view:Boolean;
 		
 		public function TimeDelayGrenade(resource:WeaponResource, id:String) {
 			super(resource, id);
 			delay = resource.delay;
+			view = resource.view;
 		}
 		
-		override protected function deliverPayloadAt(room:Room, location:Point):void {
+		override protected function deliverPayloadAt(room:Room, shooter:ComplexEntity, location:Point):void {
 			var charResource:CharResource = Settings.catalog.retrieveCharacterResource("__grenade");
 			charResource.unusedPixelsAtTopOfCell = Prop.HEIGHT - Tileset.TILE_HEIGHT;
 			var entity:ComplexEntity = new ComplexEntity(charResource, "__grenade");
 			entity.solidness = 0x0;
-			entity.faction = ComplexEntity.FACTION_NONE;
+			entity.faction = (view ? shooter.faction : ComplexEntity.FACTION_NONE);
+			entity.targetable = false;
 			entity.combatBrainClass = CombatBrainBomb;
 			entity.combatBrainParam = String(baseDamage) + ":" + String(delay);
 			room.addEntity(entity, location);
+			if (view && shooter.isPlayerControlled) {
+				entity.changePlayerControl(true, shooter.faction);
+			}
 			var combat:RoomCombat = RoomCombat(room.mode);
 			combat.changeEntityTurnToJustBeforeCurrent(entity);
 			

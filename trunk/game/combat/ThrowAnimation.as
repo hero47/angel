@@ -2,6 +2,7 @@ package angel.game.combat {
 	import angel.common.Floor;
 	import angel.common.Prop;
 	import angel.common.Tileset;
+	import angel.game.ComplexEntity;
 	import angel.game.Room;
 	import angel.game.Settings;
 	import flash.events.Event;
@@ -16,6 +17,7 @@ package angel.game.combat {
 		public static const FlyingGrenade:Class;
 		
 		private var room:Room;
+		private var thrower:ComplexEntity;
 		private var payloadFunction:Function;
 		private var flying:Prop;
 		private var dx:Number;
@@ -28,14 +30,15 @@ package angel.game.combat {
 		private var vertPosition:int;
 		private var vertVelocity:int;
 		
-		public function ThrowAnimation(room:Room, start:Point, end:Point, payloadFunction:Function) {
+		public function ThrowAnimation(room:Room, thrower:ComplexEntity, end:Point, payloadFunction:Function) {
 			this.room = room;
+			this.thrower = thrower;
 			this.payloadFunction = payloadFunction;
 			flyingTargetLocation = end;
 			flying = new Prop(new FlyingGrenade());
 			room.contentsLayer.addChild(flying);
-			flying.location = start;
-			var startCoord:Point = Floor.tileBoxCornerOf(start);
+			flying.location = thrower.location;
+			var startCoord:Point = Floor.tileBoxCornerOf(thrower.location);
 			var endCoord:Point = Floor.tileBoxCornerOf(end);
 			
 			movesLeft = Settings.FRAMES_PER_SECOND;
@@ -59,7 +62,6 @@ package angel.game.combat {
 				flying.x += dx;
 				flying.y += dy;
 				flying.depth += dDepth;
-				trace(flying.depth);
 				flying.adjustDrawOrder();
 				
 				vertVelocity--;
@@ -70,7 +72,7 @@ package angel.game.combat {
 				room.unpauseFromLastIndefinitePause(this);
 				flying.parent.removeChild(flying);
 				flying = null;
-				payloadFunction(room, flyingTargetLocation);
+				payloadFunction(room, thrower, flyingTargetLocation);
 			}
 		}
 		

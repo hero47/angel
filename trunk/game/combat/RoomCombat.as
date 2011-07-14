@@ -372,7 +372,7 @@ package angel.game.combat {
 			var enemyAlive:Boolean = false;
 			
 			for (var i:int = 0; i < fighters.length; i++) {
-				if (fighters[i].isPlayerControlled) {
+				if (fighters[i].isPlayerControlled && fighters[i].targetable) {
 					playerAlive = true;
 				} else if ((fighters[i].faction == ComplexEntity.FACTION_ENEMY) || (fighters[i].faction == ComplexEntity.FACTION_ENEMY2)) {
 					enemyAlive = true;

@@ -251,7 +251,7 @@ package angel.game.combat {
 		}
 		
 		private function filterIsEnemy(entity:ComplexEntity):Boolean {
-			return entity.isEnemyOf(player);
+			return (entity.targetable && entity.isEnemyOf(player));
 		}
 		
 		private function moveTargetHilight(target:ComplexEntity):void {

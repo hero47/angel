@@ -65,7 +65,7 @@ package angel.game.brain {
 			}
 			for (var i:int = 0; i < combat.fighters.length; i++) {
 				var fighter:ComplexEntity = combat.fighters[i];
-				if (fighter.isEnemyOf(me) && weapon.inRange(me, fighter.location) && Util.entityHasLineOfSight(me, fighter.location)) {
+				if (fighter.targetable && fighter.isEnemyOf(me) && weapon.inRange(me, fighter.location) && Util.entityHasLineOfSight(me, fighter.location)) {
 					return fighter;
 				}
 			}
