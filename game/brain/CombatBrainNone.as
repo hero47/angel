@@ -14,7 +14,7 @@ package angel.game.brain {
 		/* INTERFACE angel.game.brain.ICombatBrain */
 		
 		override public function doFire():void {
-			carryOutAttack(null, null);
+			useCombatItemOnTarget(null, null);
 		}
 		
 	}

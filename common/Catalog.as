@@ -52,6 +52,9 @@ package angel.common {
 			for each (var weaponXml:XML in xml.weapon) {
 				entry = addCatalogEntry(weaponXml.@id, weaponXml.@file, weaponXml, CatalogEntry.WEAPON, errors);
 			}
+			for each (var gizmoXml:XML in xml.gizmo) {
+				entry = addCatalogEntry(gizmoXml.@id, gizmoXml.@file, gizmoXml, CatalogEntry.GIZMO, errors);
+			}
 			for each (var splashXml:XML in xml.splash) {
 				entry = addCatalogEntry(splashXml.@id, splashXml.@file, splashXml, CatalogEntry.SPLASH, errors);
 			}

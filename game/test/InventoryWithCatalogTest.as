@@ -18,7 +18,7 @@ package angel.game.test {
 			if (Settings.catalog.entry("grenade") == null) {
 				var resource:WeaponResource = Settings.catalog.retrieveWeaponResource("grenade");
 				resource.type = "thrown";
-				resource.weaponClass = ThrownWeapon;
+				resource.itemClass = ThrownWeapon;
 			}
 			Autotest.clearAlert();
 			

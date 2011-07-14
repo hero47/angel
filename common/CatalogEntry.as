@@ -23,6 +23,7 @@ import flash.display.BitmapData;
 		public static const CHARACTER:Class = CharResource;
 		public static const TILESET:Class = Tileset;
 		public static const WEAPON:Class = WeaponResource;
+		public static const GIZMO:Class = GizmoResource;
 		public static const SPLASH:Class = SplashResource;
 		
 		public var filename:String;

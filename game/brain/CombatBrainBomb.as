@@ -36,7 +36,7 @@ package angel.game.brain {
 			} else {
 				me.setTextOverHead(String(turnsLeft), TimeDelayGrenade.COUNTDOWN_COLOR);
 			}
-			carryOutAttack(null, null);
+			useCombatItemOnTarget(null, null);
 		}
 		
 	}

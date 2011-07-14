@@ -3,7 +3,7 @@ package angel.game.brain {
 	import angel.common.Floor;
 	import angel.common.Tileset;
 	import angel.common.Util;
-	import angel.game.combat.IWeapon;
+	import angel.game.combat.ICombatUsable;
 	import angel.game.combat.RoomCombat;
 	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.ComplexEntity;
@@ -72,7 +72,7 @@ package angel.game.brain {
 				weapon = me.inventory.offWeapon();
 				target = (weapon == null ? null : UtilBrain.getFirstAvailableTarget(me, weapon, combat));
 			}
-			carryOutAttack(weapon, target);
+			useCombatItemOnTarget(weapon, target);
 		}
 		
 		public function startTurn():void {
@@ -163,14 +163,14 @@ package angel.game.brain {
 			doFire();
 		}
 		
-		public function carryOutAttack(weapon:IWeapon, target:Object):void {
+		public function useCombatItemOnTarget(usable:ICombatUsable, target:Object):void {
 			var giveAnotherFirePhase:Boolean = false;
 			var pauseToViewFireGraphic:Boolean;
-			if ((weapon == null) || (target == null)) {
+			if (usable == null) {
 				pauseToViewFireGraphic = showNoGunOrReserveFire();
 			} else {
-				weapon.attack(me, target);
-				giveAnotherFirePhase = me.hasAUsableWeaponAndEnoughActions();
+				usable.useOn(me, target);
+				giveAnotherFirePhase = me.hasAUsableItemAndEnoughActions();
 				pauseToViewFireGraphic = true;
 			}
 			if (me.isPlayerControlled || Settings.showEnemyMoves) {
@@ -189,7 +189,7 @@ package angel.game.brain {
 		// return true if should pause, false if not
 		public function showNoGunOrReserveFire():Boolean {
 			if (me.isPlayerControlled) {
-				displayActionFloater(me, (me.hasAUsableWeapon() ? Icon.ReserveFireFloater : Icon.NoGunFloater));
+				displayActionFloater(me, (me.hasAUsableItem() ? Icon.ReserveFireFloater : Icon.NoGunFloater));
 				return true;
 			} 
 			// No reserve fire notice now for NPCs

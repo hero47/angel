@@ -18,7 +18,7 @@ package angel.game.combat {
 	 */
 	
 	 // This may become an interface once we have more types of guns, or the others may extend it
-	public class SingleTargetWeapon extends WeaponBase implements IWeapon {
+	public class SingleTargetWeapon extends WeaponBase implements IHandWeapon {
 		public var range:int;
 		public var cooldown:int;
 		private var combatTurnLastFired:int = -99;
@@ -48,7 +48,7 @@ package angel.game.combat {
 			return copy;
 		}
 		
-		public function attack(user:ComplexEntity, target:Object):void {
+		public function useOn(user:ComplexEntity, target:Object):void {
 			if (target is ComplexEntity) {
 				fire(user, ComplexEntity(target));
 			} else {

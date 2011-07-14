@@ -77,6 +77,17 @@ package angel.roomedit {
 			bottomButton.width = topButton.width;
 			Util.addBelow(bottomButton, topButton, 5);
 			
+			topButton = new SimplerButton("Add Gizmo", clickedAddGizmo);
+			topButton.x = left;
+			topButton.y = 5;
+			topButton.width = 100;
+			addChild(topButton);
+			left += topButton.width + 20;
+			
+			bottomButton = new SimplerButton("Edit Gizmos", clickedEditGizmo);
+			bottomButton.width = topButton.width;
+			Util.addBelow(bottomButton, topButton, 5);
+			
 			topButton = new SimplerButton("Add Splash", clickedAddSplash);
 			topButton.x = left;
 			topButton.y = 5;
@@ -144,6 +155,11 @@ package angel.roomedit {
 		private function clickedAddWeapon(event:Event):void {
 			newFilename = "";
 			launchIdDialog("weapon", userEnteredNameForNewWeapon);
+		}
+		
+		private function clickedAddGizmo(event:Event):void {
+			newFilename = "";
+			launchIdDialog("gizmo", userEnteredNameForNewGizmo);
 		}
 		
 		private function clickedAddSplash(event:Event):void {
@@ -260,6 +276,27 @@ package angel.roomedit {
 			showEditWeaponDialog(id);
 		}
 		
+		private function userEnteredNameForNewGizmo(buttonClicked:String, values:Array):void {
+			if (buttonClicked != "OK") {
+				return;
+			}
+			
+			var id:String = values[0];
+			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.GIZMO, new MessageCollector());
+			
+			if (entry == null) {
+				launchIdDialog("gizmo", userEnteredNameForNewGizmo, "Error -- id '" + id + "' already in use.");
+				return;
+			}
+			
+			var xml:XML = <gizmo/>;
+			xml.@id = id;
+			catalog.appendXml(xml);
+			entry.xml = xml;
+			
+			showEditGizmoDialog(id);
+		}
+		
 		private function userEnteredNameForNewSplash(buttonClicked:String, values:Array):void {
 			if (buttonClicked != "OK") {
 				return;
@@ -345,6 +382,16 @@ package angel.roomedit {
 		private function showEditWeaponDialog(id:String = null):void {
 			var options:Object = { buttons:["Done"], inputs:[], customControl:new WeaponEditUI(catalog, id) };
 			var text:String = "Edit Weapon";
+			KludgeDialogBox.show(text, options);
+		}
+		
+		private function clickedEditGizmo(event:Event):void {
+			showEditGizmoDialog();
+		}
+		
+		private function showEditGizmoDialog(id:String = null):void {
+			var options:Object = { buttons:["Done"], inputs:[], customControl:new GizmoEditUI(catalog, id) };
+			var text:String = "Edit Gizmo";
 			KludgeDialogBox.show(text, options);
 		}
 		
