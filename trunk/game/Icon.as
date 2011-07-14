@@ -72,9 +72,10 @@ package angel.game {
 		[Embed(source = '../EmbeddedAssets/inventory_background.png')]
 		public static const InventoryBackground:Class;
 		[Embed(source = '../EmbeddedAssets/inventory_main_hand.png')]
-		public static const InventoryMainHand:Class;
+		public static const InventoryMainHand:Class; // main hand slot box
 		[Embed(source='../EmbeddedAssets/inventory_off_hand.png')]
-		public static const InventoryOffHand:Class;
+		public static const InventoryOffHand:Class; // off hand slot box
+		
 	}
 
 }

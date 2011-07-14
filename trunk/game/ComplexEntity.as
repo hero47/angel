@@ -15,7 +15,8 @@ package angel.game {
 	import angel.game.brain.CombatBrainNone;
 	import angel.game.brain.IBrain;
 	import angel.game.brain.UtilBrain;
-	import angel.game.combat.IWeapon;
+	import angel.game.combat.ICombatUsable;
+	import angel.game.combat.ICombatUseFromPile;
 	import angel.game.combat.RoomCombat;
 	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.combat.ThrownWeapon;
@@ -360,6 +361,7 @@ package angel.game {
 			return 100 - (movement == null ? 0 : Settings.speedDefenses[movement.mostRecentGait]);
 		}
 		
+		//NOTE: also used for healing by passing negative damage
 		public function takeDamage(baseDamage:int, speedReducesDamage:Boolean, coverDamageReductionPercent:int = 0):void {
 			if (speedReducesDamage) {
 				baseDamage = baseDamage * damageTakenSpeedPercent() / 100;
@@ -368,6 +370,9 @@ package angel.game {
 				baseDamage = baseDamage * (100 - coverDamageReductionPercent) / 100;
 			}
 			currentHealth -= baseDamage;
+			if (currentHealth > maxHealth) {
+				currentHealth = maxHealth;
+			}
 			trace(aaId, "damaged for", baseDamage, ", health now", currentHealth);
 			if (!controllingOwnText) {
 				setTextOverHead(String(currentHealth));
@@ -502,14 +507,15 @@ package angel.game {
 					 ((inventory.offWeapon() != null)  && (inventory.offWeapon().readyToFire(combat))) );
 		}
 		
-		public function hasAUsableWeapon():Boolean {
+		//CONSIDER: maybe we shouldn't even check this -- even if they have no usable they could still manipulate inventory?
+		public function hasAUsableItem():Boolean {
 			return (hasAUsableEquippedWeapon() ||
-					 (inventory.findFirstMatchingInPileOfStuff(ThrownWeapon) != null));
+					 (inventory.findFirstMatchingInPileOfStuff(ICombatUseFromPile) != null));
 		}
 		
-		public function hasAUsableWeaponAndEnoughActions():Boolean {
+		public function hasAUsableItemAndEnoughActions():Boolean {
 			return ((hasAUsableEquippedWeapon() && (actionsRemaining > 0)) ||
-					 ((inventory.findFirstMatchingInPileOfStuff(ThrownWeapon) != null) && (actionsRemaining > 1)));
+					 ((inventory.findFirstMatchingInPileOfStuff(ICombatUseFromPile) != null) && (actionsRemaining > 1)));
 		}
 		
 	} // end class ComplexEntity

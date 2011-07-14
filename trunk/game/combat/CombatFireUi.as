@@ -129,9 +129,9 @@ package angel.game.combat {
 				
 				case Keyboard.ENTER:
 					if (clickThisEnemyAgainForQuickFire != null) {
-						doPlayerAttack(quickFireWeapon, clickThisEnemyAgainForQuickFire);
+						playerUseCombatItem(quickFireWeapon, clickThisEnemyAgainForQuickFire);
 					} else {
-						doPlayerAttack(null, null);
+						playerUseCombatItem(null, null);
 					}
 				break;
 				
@@ -168,7 +168,7 @@ package angel.game.combat {
 		
 		public function mouseClick(tile:FloorTile):void {
 			if ((clickThisEnemyAgainForQuickFire != null) && (tile.location.equals(clickThisEnemyAgainForQuickFire.location))) {
-				doPlayerAttack(quickFireWeapon, clickThisEnemyAgainForQuickFire);
+				playerUseCombatItem(quickFireWeapon, clickThisEnemyAgainForQuickFire);
 			} else if ((quickFireWeaponRange > 0) &&
 						(Util.chessDistance(player.location, tile.location) <= quickFireWeaponRange) &&
 						Util.entityHasLineOfSight(player, tile.location)) {
@@ -184,8 +184,8 @@ package angel.game.combat {
 			var lineOfSight:Boolean = Util.entityHasLineOfSight(player, location);
 			
 			slices.push(new PieSlice(Icon.bitmapData(Icon.CombatPass), "Pass/Reserve Fire", 
-						function():void { doPlayerAttack(null, null); }  ));
-			addThrowPieSlices(slices, location);
+						function():void { playerUseCombatItem(null, null); }  ));
+			addUsePieSlices(slices, location);
 			if (hilightedEnemy != null) {
 				Assert.assertTrue(hilightedEnemy.location.equals(location), "Hilighted enemy not on menu tile");
 				addFirePieSliceIfLegal(slices, hilightedEnemy, player.inventory.mainWeapon());
@@ -202,16 +202,24 @@ package angel.game.combat {
 			if ((weapon != null) && (weapon.readyToFire(combat)) && (weapon.inRange(player, target.location))) {
 				slices.push(new PieSlice(weapon.iconData,
 						"Fire " + weapon.displayName + " at " + target.displayName,
-						function():void { doPlayerAttack(weapon, target); } ));
+						function():void { playerUseCombatItem(weapon, target); } ));
 			}
 		}
 		
-		private function addThrowPieSlices(slices:Vector.<PieSlice>, targetLocation:Point):void {
-			var throwables:Vector.<CanBeInInventory> = player.inventory.findAllMatchingInPileOfStuff(ThrownWeapon);
-			if (throwables.length > 0) {
+		private function addUsePieSlices(slices:Vector.<PieSlice>, targetLocation:Point):void {
+			if (!player.inventory.hasFreeHand() ||
+					((player.actionsPerTurn > 1) && (player.actionsRemaining < 2))) {
+				return;		
+			}
+			var usables:Vector.<CanBeInInventory> = player.inventory.findAllMatchingInPileOfStuff(ICombatUseFromPile);
+			if (usables.length > 0) {
 				var level2slices:Vector.<PieSlice> = new Vector.<PieSlice>();
-				for each (var weapon:ThrownWeapon in throwables) {
-					addThrowPieSliceIfLegal(level2slices, targetLocation, weapon);
+				for each (var item:ICombatUseFromPile in usables) {
+					if (item is ThrownWeapon) {
+						addThrowPieSliceIfLegal(level2slices, targetLocation, item);
+					} else {
+						addUsePieSlice(level2slices, item); // currently only medpack so target is ignored
+					}
 				}
 				if (level2slices.length > 0) {
 					slices.push(new PieSlice(Icon.bitmapData(Icon.CombatOpenItemMenu), "Use item", null, level2slices));
@@ -219,22 +227,27 @@ package angel.game.combat {
 			}
 		}
 		
-		private function addThrowPieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point, weapon:ThrownWeapon):void {
-			if (player.inventory.hasFreeHand() &&
-					((player.actionsPerTurn == 1) || (player.actionsRemaining >= 2)) &&
-					!room.blocksThrown(targetLocation.x, targetLocation.y) &&
-					Util.entityHasLineOfSight(player, targetLocation)) {
+		private function addThrowPieSliceIfLegal(slices:Vector.<PieSlice>, targetLocation:Point, weapon:ICombatUseFromPile):void {
+			if (!room.blocksThrown(targetLocation.x, targetLocation.y) && Util.entityHasLineOfSight(player, targetLocation)) {
 				var count:int = player.inventory.countSpecificItemInPileOfStuff(weapon);
 				slices.push(new PieSlice(weapon.iconData,
 					"Throw " + weapon.displayName + " [" + count + " in inventory] at this square",
-					function():void { doPlayerAttack(weapon, targetLocation); }	));
+					function():void { playerUseCombatItem(weapon, targetLocation); }	));
 			}
 		}
 		
-		private function doPlayerAttack(weapon:IWeapon, target:Object):void {
+		private function addUsePieSlice(slices:Vector.<PieSlice>, item:ICombatUseFromPile):void {
+			var count:int = player.inventory.countSpecificItemInPileOfStuff(item);
+				slices.push(new PieSlice(item.iconData,
+					"Use " + item.displayName + " [" + count + " in inventory]",
+					function():void { playerUseCombatItem(item, null); }	));
+			
+		}
+		
+		private function playerUseCombatItem(item:ICombatUsable, target:Object):void {
 			var playerFiring:ComplexEntity = player;
 			room.disableUi();
-			CombatBrainUiMeld(playerFiring.brain).carryOutAttack(weapon, target);
+			CombatBrainUiMeld(playerFiring.brain).useCombatItemOnTarget(item, target);
 		}
 		
 		private function filterIsEnemy(entity:ComplexEntity):Boolean {

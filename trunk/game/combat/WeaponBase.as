@@ -7,42 +7,12 @@ package angel.game.combat {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class WeaponBase {
-		protected var myId:String;
-		public var name:String;
+	public class WeaponBase extends CombatUsableBase {
 		public var baseDamage:int;
-		private var iconBitmapData:BitmapData;
 		
-		public function WeaponBase(resource:WeaponResource, id:String) {
-			this.myId = id;
+		public function WeaponBase(resource:WeaponResource, id:String){
+			super(resource, id);
 			this.baseDamage = resource.damage;
-			this.name = resource.displayName;
-			this.iconBitmapData = resource.iconBitmapData;
-		}
-		
-		public function get id():String {
-			return myId;
-		}
-		
-		public function get displayName():String {
-			return name;
-		}
-		
-		public function get iconData():BitmapData {
-			return iconBitmapData;
-		}
-		
-		public function clone():CanBeInInventory {
-			var resource:WeaponResource = Settings.catalog.retrieveWeaponResource(id);
-			var copy:CanBeInInventory = new resource.weaponClass(resource, id);
-			return copy;
-		}
-		
-		public function copyBaseTo(copy:WeaponBase):void {
-			copy.myId = this.myId;
-			copy.baseDamage = this.baseDamage;
-			copy.name = this.name;
-			copy.iconBitmapData = this.iconBitmapData;
 		}
 		
 	}

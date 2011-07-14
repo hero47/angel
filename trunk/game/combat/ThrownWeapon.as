@@ -21,7 +21,7 @@ package angel.game.combat {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class ThrownWeapon extends WeaponBase implements IWeapon {
+	public class ThrownWeapon extends WeaponBase implements ICombatUseFromPile {
 		
 		private static const grenadeInner:Vector.<Point> = Vector.<Point>([
 				new Point(0,0),
@@ -49,7 +49,7 @@ package angel.game.combat {
 			return ((otherWeapon != null) && (otherWeapon.id == id));
 		}
 		
-		public function attack(user:ComplexEntity, target:Object):void {
+		public function useOn(user:ComplexEntity, target:Object):void {
 			if (target is Point) {
 				throwAt(user, Point(target));
 			} else {

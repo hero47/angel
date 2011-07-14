@@ -27,6 +27,7 @@ package angel.common {
 		public static const FIRE_FROM_COVER_DAMAGE_REDUCTION:int = 25;
 		public static const MAX_GAIT:int = 3;
 		public static const WEAPON_TYPE:String = "hand";
+		public static const GIZMO_TYPE:String = "medpack"; //CONSIDER default type should probably be MacGuffin once we have those
 		
 		public static const GAME_MENU_SPLASH_ID:String = "openmenu";
 		

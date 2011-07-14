@@ -6,9 +6,9 @@ package angel.game.combat {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public interface IWeapon extends CanBeInInventory {
+	public interface ICombatUsable extends CanBeInInventory {
 		
-		function attack(user:ComplexEntity, target:Object):void; // target type differs -- either an entity or a location
+		function useOn(user:ComplexEntity, target:Object):void; // target type differs -- either an entity or a location
 		
 	}
 	
