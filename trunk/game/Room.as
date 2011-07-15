@@ -405,7 +405,7 @@ package angel.game {
 		
 		// Separating this out into a public function because Wm has specced bringing up pie menu on something
 		// other than right-click in certain cases.  This is probably bad ui, but we'll see how it works out.
-		public function launchPieMenu(tile:FloorTile, slices:Vector.<PieSlice>):void {			
+		public function launchPieMenu(tile:FloorTile, slices:Vector.<PieSlice>):void {
 			if (slices != null && slices.length > 0) {
 				var tileCenterOnStage:Point = floor.localToGlobal(Floor.centerOf(tile.location));
 				stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);

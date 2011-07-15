@@ -135,6 +135,10 @@ package angel.common {
 			return oldVisibility;
 		}
 		
+		public function visibility(tileX:int, tileY:int):int {
+			return floorGrid[tileX][tileY].visibility;
+		}
+		
 		public static function colorTransformFor(seenState:int):ColorTransform {
 			return TRANSFORMS[seenState];
 		}
