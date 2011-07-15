@@ -8,12 +8,14 @@ package angel.game.brain {
 	import angel.game.event.EntityQEvent;
 	import angel.game.IRoomUi;
 	import angel.game.Settings;
+	import flash.geom.Point;
 	/**
 	 * ...
 	 * @author Beth Moursund
 	 */
 	public class CombatBrainUiMeldPlayer extends CombatBrainUiMeld {
 		private var ui:IRoomUi;
+		private var incompletePath:Vector.<Point>;
 		
 		public function CombatBrainUiMeldPlayer(entity:ComplexEntity, combat:RoomCombat, param:String) {
 			super(entity, combat);
@@ -38,15 +40,31 @@ package angel.game.brain {
 			this.gait = gait;
 		}
 		
+		//NOTE: currently (May 2011) AI brains have full access to map data, regardless of line-of-sight.
+		//Player-controlled characters are always visible.
+		//The BECAME_VISIBLE event specifically means that someone became visible to the player, not vice versa
+		//(but the event can occur due to either player or non-player movement)
+		override protected function invisibleEntityBecameVisible(event:EntityQEvent):void {
+			if (event.complexEntity.isEnemyOf(me)) {
+				trace(event.complexEntity.id, "became visible");
+				drawTempRingAround(event.complexEntity);
+				incompletePath = me.movement.interruptMovementAfterTileFinished();
+			}
+		}
+		
 		override protected function moveInterruptedListener(event:EntityQEvent):void {
 			Assert.assertTrue(returnHereAfterFire == null, "fire from cover can't be interrupted because it's a one-square move");
-			combat.mover.clearPath();
 			trace(event.simpleEntity.aaId, "move interrupted");
 			if (endTurnIfDeadOrCombatOver()) {
+				combat.mover.clearPath();
 				return;
 			}
 			
 			me.movement.restrictGaitUntilMoveFinished(me.movement.mostRecentGait);
+			if (incompletePath.length > 0) {
+				combat.mover.setPathAfterInterruption(me, incompletePath);
+			}
+			incompletePath = null;
 			Assert.assertTrue(ui is CombatMoveUi, "Wrong ui type");
 			combat.room.enableUi(ui, me);
 		}

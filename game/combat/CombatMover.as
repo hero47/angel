@@ -136,9 +136,14 @@ package angel.game.combat {
 				path = path.concat(pathFromCurrentEndToNewEnd);
 				endIndexes.push(path.length - 1);
 			}
+			var gait:int = entity.movement.minGaitForDistance(path.length);
+			makeDotsForCurrentPath(entity, gait);
+			return gait;
+		}
+		
+		private function makeDotsForCurrentPath(entity:ComplexEntity, gait:int):void {
 			dots.length = path.length;
 			var endIndexIndex:int = 0;
-			var gait:int = entity.movement.minGaitForDistance(path.length);
 			for (var i:int = 0; i < path.length; i++) {
 				var isEnd:Boolean = (i == endIndexes[endIndexIndex]);
 				if (path.length == 1 && shootFromCoverValidForCurrentLocationAndPath(entity)) {
@@ -150,12 +155,11 @@ package angel.game.combat {
 				if (isEnd) {
 					++endIndexIndex;
 				}
-				if (!entity.isPlayerControlled && !combat.anyPlayerCanSeeLocation(path[i])) {
+				if (!entity.isPlayerControlled && !combat.augmentedReality.tileIsVisible(path[i])) {
 					// This makes me wince.  It works, but this whole movement dot thing is getting messier and uglier.
 					dots[i].visible = false;
 				}
 			}
-			return gait;
 		}
 		
 		public function extendPathIfLegalMove(entity:ComplexEntity, location:Point):void {
@@ -163,6 +167,22 @@ package angel.game.combat {
 			if (nextSegment != null) {
 				extendPath(entity, nextSegment);
 			}
+		}
+		
+		public function setPathAfterInterruption(entity:ComplexEntity, remainingPath:Vector.<Point>):void {
+			clearPath();
+			for (var i:int = 0; i < remainingPath.length; ++i) {
+				if (entity.movement.tileBlocked(remainingPath[i], true)) {
+					if (i == 0) {
+						return;
+					}
+					remainingPath.length = i;
+					break;
+				}
+			}
+			path = remainingPath;
+			endIndexes.push(path.length - 1);
+			makeDotsForCurrentPath(entity, entity.movement.mostRecentGait);
 		}
 		
 		private function getNextSegmentIfLegalExtension(entity:ComplexEntity, location:Point):Vector.<Point> {

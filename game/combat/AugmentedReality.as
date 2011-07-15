@@ -320,6 +320,10 @@ package angel.game.combat {
 				}
 			}
 		}
+		
+		public function tileIsVisible(location:Point):Boolean {
+			return (room.floor.visibility(location.x, location.y) != Floor.UNSEEN);
+		}
 
 	} // end class AugmentedReality
 

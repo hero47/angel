@@ -120,13 +120,8 @@ package angel.game.brain {
 		//Player-controlled characters are always visible.
 		//The BECAME_VISIBLE event specifically means that someone became visible to the player, not vice versa
 		//(but the event can occur due to either player or non-player movement)
-		private function invisibleEntityBecameVisible(event:EntityQEvent):void {
-			if (me.isReallyPlayer && event.complexEntity.isEnemyOf(me)) {
-				trace(event.complexEntity.id, "became visible");
-				//CONSIDER: center room or hilight the enemy who just became visible?
-				drawTempRingAround(event.complexEntity);
-				me.movement.interruptMovementAfterTileFinished();
-			}
+		protected function invisibleEntityBecameVisible(event:EntityQEvent):void {
+			//Do nothing; player overrides
 		}
 		
 		protected function moveInterruptedListener(event:EntityQEvent):void {
@@ -259,7 +254,7 @@ package angel.game.brain {
 			actor.room.addChild(tempSprite);
 		}
 		
-		private function drawTempRingAround(entity:ComplexEntity):void {
+		protected function drawTempRingAround(entity:ComplexEntity):void {
 			var tempSprite:TimedSprite = new TimedSprite(entity.stage.frameRate * 2);
 			var coords:Point = Floor.centerOf(entity.location);
 			tempSprite.x = coords.x;
