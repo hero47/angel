@@ -13,6 +13,7 @@ package angel.game {
 	import angel.common.WalkerAnimationData;
 	import angel.common.WeaponResource;
 	import angel.game.brain.CombatBrainNone;
+	import angel.game.brain.CombatBrainUiMeldPlayer;
 	import angel.game.brain.IBrain;
 	import angel.game.brain.UtilBrain;
 	import angel.game.combat.ICombatUsable;
@@ -330,7 +331,12 @@ package angel.game {
 					adjustBrainForRoomMode(room.mode);
 				}
 			} else {
-				combatBrainClass = (newBrainClass == null ? CombatBrainNone : newBrainClass);
+				if (Settings.controlEnemies && targetable) {
+					// I hope this doesn't break anything...
+					combatBrainClass = CombatBrainUiMeldPlayer;
+				} else {
+					combatBrainClass = (newBrainClass == null ? CombatBrainNone : newBrainClass);
+				}
 				combatBrainParam = (newBrainClass == null ? null : newParam);
 				if ((room != null) && (room.mode is RoomCombat)) {
 					adjustBrainForRoomMode(room.mode);

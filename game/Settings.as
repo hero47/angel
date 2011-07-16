@@ -1,16 +1,8 @@
 package angel.game {
 	import angel.common.Alert;
-	import angel.common.Assert;
 	import angel.common.Catalog;
-	import angel.common.CatalogEntry;
 	import angel.common.Defaults;
-	import angel.common.RoomContentResource;
-	import angel.common.WeaponResource;
-	import angel.game.brain.BrainFollow;
-	import angel.game.brain.CombatBrainUiMeldPlayer;
-	import angel.game.combat.SingleTargetWeapon;
 	import angel.game.event.EventQueue;
-	import angel.game.inventory.Inventory;
 	import angel.game.script.Script;
 	import angel.game.script.TriggerMaster;
 
