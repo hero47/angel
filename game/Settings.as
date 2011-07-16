@@ -30,7 +30,6 @@ package angel.game {
 		// even after the game is released.
 		public static var testExploreScroll:int;
 		public static var mouseScroll:int;
-		public static var showEnemyMoves:Boolean;
 		public static var walkPercent:int;
 		public static var runPercent:int;
 		public static var sprintPercent:int;
@@ -94,7 +93,6 @@ package angel.game {
 			setIntFromXml("fireFromCoverDamageReduction", Defaults.FIRE_FROM_COVER_DAMAGE_REDUCTION, xml.@fireFromCoverDamageReduction);
 			setIntFromXml("minForOpportunity", Defaults.MIN_FOR_OPPORTUNITY, xml.@minForOpportunity);
 			
-			setBooleanFromXml("showEnemyMoves", false, xml.@showEnemyMoves);
 			setBooleanFromXml("controlEnemies", false, xml.@controlEnemies);
 		}
 		

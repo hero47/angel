@@ -250,10 +250,8 @@ package angel.game {
 				if (me.isReallyPlayer && (Settings.testExploreScroll > 0)) {
 					scrollRoomToKeepPlayerWithinBox(Settings.testExploreScroll);
 				}
-			} else {
-				if (me.isReallyPlayer || Settings.showEnemyMoves) {
-					me.centerRoomOnMe();
-				}
+			} else if (me.isReallyPlayer) {
+				me.centerRoomOnMe();
 			}
 			
 			frameOfMove++;
