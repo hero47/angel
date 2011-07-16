@@ -90,11 +90,7 @@ package angel.game.brain {
 		
 		protected function doMoveBody():void {
 			trace("Begin turn for npc (pause timer will start before move calc)", me.aaId);
-			if (Settings.showEnemyMoves) {
-				me.centerRoomOnMe();
-			} else {
-				combat.room.mainPlayerCharacter.centerRoomOnMe();
-			}
+			combat.room.mainPlayerCharacter.centerRoomOnMe();
 			combat.showPhase(phaseLabel(), true);
 			
 			// Give the player some time to gaze at the enemy's move dots before continuing with turn.
@@ -168,7 +164,7 @@ package angel.game.brain {
 				giveAnotherFirePhase = me.hasAUsableItemAndEnoughActions();
 				pauseToViewFireGraphic = true;
 			}
-			if (me.isPlayerControlled || Settings.showEnemyMoves) {
+			if (me.isPlayerControlled) {
 				me.centerRoomOnMe();
 			}
 			
