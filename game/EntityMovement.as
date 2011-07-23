@@ -138,6 +138,17 @@ package angel.game {
 			return false;
 		}
 		
+		//return true if moving, false if goal is unreachable or already there
+		public function startFreeMovementOneSquareToward(goal:Point, gait:int = GAIT_EXPLORE):Boolean {
+			var newPath:Vector.<Point> = findPathTo(goal);
+			if ((newPath != null) && (newPath.length > 1)) {
+				newPath.length = 1;
+				startMovingAlongPath(newPath, gait);
+				return true;
+			}
+			return false;
+		}
+		
 		public function initForCombatMove():void {
 			unusedMovePoints = combatMovePoints;
 		}
@@ -147,13 +158,15 @@ package angel.game {
 		}
 		
 		public function startMovingAlongPath(newPath:Vector.<Point>, gait:int = GAIT_EXPLORE):void {
-			// You'd think we could just call finishedMoving() here, if we're passed a null or empty path.
-			// But if we do that, then the code that's listening for a FINISHED_MOVING event gets called
-			// before we return from here, and it starts the next entity's move calculations before
-			// the cleanup for this one has been done.  It's a terrible mess, because Actionscript's
-			// dispatchEvent does an immediate call rather than putting the event into a queue.
-			// So, we will pretend we have a path even if we don't, forcing that processing to happen
-			// next time we get an ENTER_FRAME which is really asynchronous.
+			// UNDONE: This comment no longer applies now that we're using our own private event queue,
+			// so investigate whether we can take advantage of that to simplify things!
+				// You'd think we could just call finishedMoving() here, if we're passed a null or empty path.
+				// But if we do that, then the code that's listening for a FINISHED_MOVING event gets called
+				// before we return from here, and it starts the next entity's move calculations before
+				// the cleanup for this one has been done.  It's a terrible mess, because Actionscript's
+				// dispatchEvent does an immediate call rather than putting the event into a queue.
+				// So, we will pretend we have a path even if we don't, forcing that processing to happen
+				// next time we get an ENTER_FRAME which is really asynchronous.
 			interruptAfterThisTile = false;
 			path = (newPath == null ? new Vector.<Point> : newPath);
 			moveGoal = (path.length > 0 ? path[path.length - 1] : me.location);

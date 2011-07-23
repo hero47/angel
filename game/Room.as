@@ -400,14 +400,14 @@ package angel.game {
 			activeUi.mouseMove(tile); // It's possible to get here without mousemove, so fake one first.
 			
 			var slices:Vector.<PieSlice> = activeUi.pieMenuForTile(tile);
-			launchPieMenu(tile, slices);
+			launchPieMenu(tile.location, slices);
 		}
 		
 		// Separating this out into a public function because Wm has specced bringing up pie menu on something
 		// other than right-click in certain cases.  This is probably bad ui, but we'll see how it works out.
-		public function launchPieMenu(tile:FloorTile, slices:Vector.<PieSlice>):void {
+		public function launchPieMenu(loc:Point, slices:Vector.<PieSlice>):void {
 			if (slices != null && slices.length > 0) {
-				var tileCenterOnStage:Point = floor.localToGlobal(Floor.centerOf(tile.location));
+				var tileCenterOnStage:Point = floor.localToGlobal(Floor.centerOf(loc));
 				stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownListener);
 				var pie:PieMenu = new PieMenu(tileCenterOnStage.x, tileCenterOnStage.y, slices, pieDismissed);
 				stage.addChild(pie);
