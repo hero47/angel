@@ -21,7 +21,7 @@ package angel.game.combat {
 	public class SingleTargetWeapon extends WeaponBase implements IHandWeapon {
 		public var range:int;
 		public var cooldown:int;
-		private var combatTurnLastFired:int = -99;
+		private var turnsSinceLastFired:int;
 		public var ignoreUserGait:Boolean;
 		public var ignoreTargetGait:Boolean;
 		
@@ -39,12 +39,12 @@ package angel.game.combat {
 		
 		public function stacksWith(other:CanBeInInventory):Boolean {
 			var otherWeapon:SingleTargetWeapon = other as SingleTargetWeapon;
-			return ((otherWeapon != null) && (otherWeapon.id == id) && (otherWeapon.combatTurnLastFired == combatTurnLastFired));
+			return ((otherWeapon != null) && (otherWeapon.id == id) && (otherWeapon.turnsSinceLastFired == turnsSinceLastFired));
 		}
 		
 		override public function clone():CanBeInInventory {
 			var copy:SingleTargetWeapon = SingleTargetWeapon(super.clone());
-			copy.combatTurnLastFired = this.combatTurnLastFired;
+			copy.turnsSinceLastFired = this.turnsSinceLastFired;
 			return copy;
 		}
 		
@@ -64,13 +64,13 @@ package angel.game.combat {
 			if (combat == null) {
 				return true;
 			}
-			return (combatTurnLastFired + cooldown <= combat.combatTurn);
+			return (turnsSinceLastFired >= cooldown);
 		}
 		
-		// Used to set all ready-to-fire weapons to the same cooldown so they'll stack in inventory
-		public function standardizeCooldown(combat:RoomCombat):void {
-			if (readyToFire(combat)) {
-				combatTurnLastFired = -99;
+		public function cool(turns:int = 1):void {
+			turnsSinceLastFired += turns;
+			if (turnsSinceLastFired > cooldown) { // keep all ready-to-fire cooldowns the same so they'll stack in inventory
+				turnsSinceLastFired = cooldown;
 			}
 		}
 		
@@ -85,7 +85,7 @@ package angel.game.combat {
 				return;
 			}
 			
-			combatTurnLastFired = combat.combatTurn;
+			turnsSinceLastFired = 0;
 			var damage:int = baseDamage;
 			if (shooter.inventory.offWeapon() != null) {
 				damage *= ((this == shooter.inventory.mainWeapon()) ? Settings.DUAL_WIELD_PERCENT : Settings.OFF_WIELD_PERCENT) / 100;

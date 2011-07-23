@@ -77,7 +77,6 @@ package angel.game.combat {
 				break;
 				
 				case Util.KEYBOARD_I:
-					combat.standardizeWeaponsForInventory(player);
 					new RoomInventoryUi(room, player, CombatFireUi.COMMIT_INVENTORY_BUTTON_TEXT, 2 );
 				break;
 				

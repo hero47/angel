@@ -29,7 +29,6 @@ package angel.game.combat {
 		
 		// The entities who get combat turns. Everything else is just decoration/obstacles.
 		public var fighters:Vector.<ComplexEntity>;
-		public var combatTurn:int;
 		
 		public static const PAUSE_TO_VIEW_MOVE_SECONDS:Number = 1;
 		public static const PAUSE_TO_VIEW_FIRE_SECONDS:Number = 1;
@@ -91,7 +90,6 @@ package angel.game.combat {
 			for each (var fighter:ComplexEntity in fighters) {
 				fighter.adjustBrainForRoomMode(null);
 			}
-			combatTurn = int.MAX_VALUE;
 			room.forEachComplexEntity(cleanupEntityFromCombat);
 			
 			room = null;
@@ -100,17 +98,7 @@ package angel.game.combat {
 		private function cleanupEntityFromCombat(entity:ComplexEntity):void {
 			if (entity.id.substr(0, 2) == "__") {
 				room.removeEntity(entity);
-			} else {
-				standardizeWeaponsForInventory(entity);
 			}
-		}
-		
-		public function standardizeWeaponsForInventory(entity:ComplexEntity):void {
-			entity.inventory.forAllSingleTargetWeapons(standardizeOneWeapon);
-		}
-		
-		private function standardizeOneWeapon(weapon:SingleTargetWeapon):void {
-			weapon.standardizeCooldown(this);
 		}
 		
 		public function activePlayer():ComplexEntity {
@@ -162,6 +150,7 @@ package angel.game.combat {
 		private function initEntityForCombat(entity:ComplexEntity, revived:Boolean = false):void {
 			entity.actionsRemaining = 0;
 			entity.adjustBrainForRoomMode(this);
+			resetCooldownOnAllWeapons(entity);
 			if (entity.isActive()) {
 				if (revived) {
 					fighters.splice(iFighterTurnInProgress++, 0, entity);
@@ -178,6 +167,7 @@ package angel.game.combat {
 			Assert.assertTrue(indexOfDeadFighter >= 0, "Removing fighter that's already removed: " + deadFighter.aaId);
 			fighters.splice(indexOfDeadFighter, 1);
 			
+			resetCooldownOnAllWeapons(deadFighter);
 			if (indexOfDeadFighter <= iFighterTurnInProgress) {
 				--iFighterTurnInProgress;
 				if (iFighterTurnInProgress < 0) {
@@ -188,6 +178,13 @@ package angel.game.combat {
 			if (augmentedReality != null) {
 				augmentedReality.removeFighter(deadFighter); // do this after it's out of list so the dead one won't "see" stuff
 			}
+		}
+		
+		private function resetCooldownOnAllWeapons(entity:ComplexEntity):void {
+			//CONSIDER: all weapons will become ready if holder killed and then revived.  Is this a bug?
+			entity.inventory.forAllSingleTargetWeapons(function(weapon:SingleTargetWeapon):void {
+				weapon.cool(99);
+			});
 		}
 		
 		/****************** public “api” for combat brains/ui *******************/
@@ -324,6 +321,9 @@ package angel.game.combat {
 		
 		
 		private function beginTurnForCurrentFighter():void {
+			currentFighter().inventory.forAllSingleTargetWeapons(function(weapon:SingleTargetWeapon):void {
+				weapon.cool();
+			});
 			CombatBrainUiMeld(currentFighter().brain).startTurn();
 		}
 		
@@ -354,7 +354,6 @@ package angel.game.combat {
 			if (iFighterTurnInProgress >= fighters.length) {
 				trace("All turns have been processed, go back to first player");
 				iFighterTurnInProgress = 0;
-				++combatTurn;
 			}
 		}
 		
