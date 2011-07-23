@@ -25,6 +25,8 @@ package angel.common {
 		public static const DEFENSE_RUN:int = 30;
 		public static const DEFENSE_SPRINT:int = 40;
 		public static const FIRE_FROM_COVER_DAMAGE_REDUCTION:int = 25;
+		public static const DUAL_WIELD_PERCENT:int = 50;
+		public static const OFF_WIELD_PERCENT:int = 25;
 		public static const MAX_GAIT:int = 3;
 		public static const WEAPON_TYPE:String = "hand";
 		public static const GIZMO_TYPE:String = "medpack"; //CONSIDER default type should probably be MacGuffin once we have those

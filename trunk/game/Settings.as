@@ -51,6 +51,8 @@ package angel.game {
 		public static var speedPenalties:Vector.<int>;
 		public static var speedDefenses:Vector.<int>;
 		public static var fireFromCoverDamageReduction:int;
+		public static var DUAL_WIELD_PERCENT:int;
+		public static var OFF_WIELD_PERCENT:int;
 		
 		public static var saveDataForNewGame:SaveGame;
 		public static var startScript:Script;
@@ -90,7 +92,9 @@ package angel.game {
 			setIntFromXml("defenseRun", Defaults.DEFENSE_RUN, xml.@defenseRun);
 			setIntFromXml("defenseSprint", Defaults.DEFENSE_SPRINT, xml.@defenseSprint);
 			speedDefenses = Vector.<int>([0, defenseWalk, defenseRun, defenseSprint]);
-			setIntFromXml("fireFromCoverDamageReduction", Defaults.FIRE_FROM_COVER_DAMAGE_REDUCTION, xml.@fireFromCoverDamageReduction);
+			setIntFromXml("fireFromCoverDamageReduction", Defaults.FIRE_FROM_COVER_DAMAGE_REDUCTION, xml.@fireFromCoverDamageReduction);		
+			setIntFromXml("DUAL_WIELD_PERCENT", Defaults.DUAL_WIELD_PERCENT, xml.dualWieldPercent);
+			setIntFromXml("OFF_WIELD_PERCENT", Defaults.OFF_WIELD_PERCENT, xml.offWieldPercent);
 			setIntFromXml("minForOpportunity", Defaults.MIN_FOR_OPPORTUNITY, xml.@minForOpportunity);
 			
 			setBooleanFromXml("controlEnemies", false, xml.@controlEnemies);

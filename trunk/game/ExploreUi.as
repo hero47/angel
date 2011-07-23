@@ -19,6 +19,7 @@ package angel.game {
 		private var explore:RoomExplore;
 		private var player:ComplexEntity;
 		private var playerIsMoving:Boolean = false;
+		private var chasing:SimpleEntity;
 		
 		private var hilightedFrobTarget:SimpleEntity;
 		
@@ -114,28 +115,40 @@ package angel.game {
 		public function mouseClick(tile:FloorTile):void {
 			var loc:Point = tile.location;
 			
-			if (player.movement.tileBlocked(tile.location)) {
-				var target:SimpleEntity = room.firstEntityIn(tile.location);
-				if (target != null && target.frobOk(player)) {
-					var slices:Vector.<PieSlice> = target.frob(player);
-					if (slices != null) {
-						room.launchPieMenu(tile, slices);
-					}
-					return;
-				}
+			if (player.movement.tileBlocked(loc)) {
+				handleClickOnBlockedTile(loc);
+			} else if (!loc.equals(player.location)) {
+				playerIsMoving = player.movement.startFreeMovementToward(loc);
 			}
 			
-			if (!loc.equals(player.location) && !player.movement.tileBlocked(loc)) {
-				playerIsMoving = player.movement.startFreeMovementToward(loc);
-				if (playerIsMoving) {
-					Settings.gameEventQueue.addListener(this, player, EntityQEvent.FINISHED_MOVING, playerFinishedMoving);
-					Settings.gameEventQueue.addListener(this, player, EntityQEvent.MOVE_INTERRUPTED, playerFinishedMoving);
-					if (!(Settings.testExploreScroll > 0)) {
-						room.scrollToCenter(loc);
-					}
+			if (playerIsMoving) {
+				Settings.gameEventQueue.addListener(this, player, EntityQEvent.FINISHED_MOVING, playerFinishedMoving);
+				Settings.gameEventQueue.addListener(this, player, EntityQEvent.MOVE_INTERRUPTED, playerFinishedMoving);
+				if (!(Settings.testExploreScroll > 0)) {
+					room.scrollToCenter(loc);
 				}
 			}
 		}
+		
+		private function handleClickOnBlockedTile(loc:Point):void {
+			var target:SimpleEntity = room.firstEntityIn(loc);
+			if (target != null) {
+				if (target.frobOk(player)) {
+					var slices:Vector.<PieSlice> = target.frob(player);
+					if (slices != null) {
+						room.launchPieMenu(loc, slices);
+					}
+					return;
+				} else if (Util.chessDistance(player.location, loc) > 1) {
+					playerIsMoving = player.movement.startFreeMovementOneSquareToward(loc);
+					if (playerIsMoving) {
+						chasing = target;
+					}
+				}
+			}
+		
+		}
+		
 		
 		public function pieMenuForTile(tile:FloorTile):Vector.<PieSlice> {
 			return null;
@@ -146,6 +159,16 @@ package angel.game {
 		
 		private function playerFinishedMoving(event:EntityQEvent):void {
 			Assert.assertTrue((event.complexEntity == player), "Got a playerFinishedMoving event, but with an entity other than our player");
+			if (chasing != null) {
+				if ((chasing.room == room) && (Util.chessDistance(player.location, chasing.location) > 1)) {
+					var stillChasing:Boolean = player.movement.startFreeMovementOneSquareToward(chasing.location);
+					if (stillChasing) {
+						return;
+					}
+				}
+				chasing = null;
+			}
+			
 			playerIsMoving = false;
 			Settings.gameEventQueue.removeListener(player, EntityQEvent.FINISHED_MOVING, playerFinishedMoving);
 			Settings.gameEventQueue.removeListener(player, EntityQEvent.MOVE_INTERRUPTED, playerFinishedMoving);

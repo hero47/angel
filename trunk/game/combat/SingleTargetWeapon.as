@@ -87,6 +87,9 @@ package angel.game.combat {
 			
 			combatTurnLastFired = combat.combatTurn;
 			var damage:int = baseDamage;
+			if (shooter.inventory.offWeapon() != null) {
+				damage *= ((this == shooter.inventory.mainWeapon()) ? Settings.DUAL_WIELD_PERCENT : Settings.OFF_WIELD_PERCENT) / 100;
+			}
 			if (!ignoreUserGait) {
 				damage *= shooter.damageDealtSpeedPercent() / 100;
 			}
