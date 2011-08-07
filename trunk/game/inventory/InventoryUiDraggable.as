@@ -32,17 +32,17 @@ package angel.game.inventory {
 			this.currentSlot = currentSlot;
 			graphics.lineStyle(1, 0x0, 1);
 			graphics.beginFill(0xffffff, 1);
-			graphics.drawRect(0, 0, InventoryUi.uiImageX, InventoryUi.uiImageY);
+			graphics.drawRect(0, 0, InventoryUi.SLOT_IMAGE_WIDTH, InventoryUi.SLOT_IMAGE_HEIGHT);
 			
 			var bitmap:Bitmap = new Bitmap(item.iconData);
-			bitmap.x = (InventoryUi.uiImageX - bitmap.width) / 2;
-			bitmap.y = (InventoryUi.uiImageY - bitmap.height) / 2;
+			bitmap.x = (InventoryUi.SLOT_IMAGE_WIDTH - bitmap.width) / 2;
+			bitmap.y = (InventoryUi.SLOT_IMAGE_HEIGHT - bitmap.height) / 2;
 			bitmap.alpha = 0.5;
 			addChild(bitmap);
 			
-			var text:TextField = Util.textBox(item.displayName, InventoryUi.uiImageX, 20);
+			var text:TextField = Util.textBox(item.displayName, InventoryUi.SLOT_IMAGE_WIDTH, 20);
 			text.wordWrap = true;
-			text.height = InventoryUi.uiImageY;
+			text.height = InventoryUi.SLOT_IMAGE_HEIGHT;
 			addChild(text);
 			
 			if (count != 1) {

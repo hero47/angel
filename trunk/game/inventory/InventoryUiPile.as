@@ -6,20 +6,31 @@ package angel.game.inventory {
 	 * @author Beth Moursund
 	 */
 	
-	// WARNING: currently supports only a single row of items.
+	 //NOTE: No provision for scrolling; if there are too many items they will overflow lower edge.
 	public class InventoryUiPile extends InventoryUiSlot {
 		
 		private var contents:Vector.<InventoryUiDraggable>;
 		private var right:int;
+		private var numberAcross:int;
+		private var nextPositionIndex:int;
 		
-		public function InventoryUiPile(slotNum:int, parentUi:InventoryUi, x:int, y:int, size:Point) {
+		public function InventoryUiPile(slotNum:int, parentUi:InventoryUi, x:int, y:int, width:int, height:int) {
+			numberAcross = width / InventoryUi.SLOT_IMAGE_WIDTH;
+			var numberTall:int = height / InventoryUi.SLOT_IMAGE_HEIGHT;
+			var pileImageWidth:int = InventoryUi.SLOT_IMAGE_WIDTH * numberAcross;
+			var pileImageHeight:int = InventoryUi.SLOT_IMAGE_HEIGHT * numberTall;
+			
 			graphics.lineStyle(1, 0x0, 1);
 			graphics.beginFill(0xffffff, 1);
-			graphics.drawRect(0, 0, size.x, size.y);
+			graphics.drawRect(0, 0, pileImageWidth, pileImageHeight);
 			graphics.lineStyle(1, 0x808080, 0.5);
-			for (var i:int = InventoryUi.uiImageX; i < size.x; i += InventoryUi.uiImageX) {
+			for (var i:int = InventoryUi.SLOT_IMAGE_WIDTH; i < width; i += InventoryUi.SLOT_IMAGE_WIDTH) {
 				graphics.moveTo(i, 0);
-				graphics.lineTo(i, InventoryUi.uiImageY);
+				graphics.lineTo(i, pileImageHeight);
+			}
+			for (i = InventoryUi.SLOT_IMAGE_HEIGHT; i < height; i += InventoryUi.SLOT_IMAGE_HEIGHT) {
+				graphics.moveTo(0, i);
+				graphics.lineTo(pileImageWidth, i);
 			}
 			super(slotNum, parentUi, x, y);
 		}
@@ -29,17 +40,20 @@ package angel.game.inventory {
 			super.cleanup();
 		}
 		
+		private function setItemPositionFromIndex(draggable:InventoryUiDraggable, index:int):void {
+			draggable.x = (index % numberAcross) * InventoryUi.SLOT_IMAGE_WIDTH + this.x;
+			draggable.y = int(index / numberAcross) * InventoryUi.SLOT_IMAGE_HEIGHT + this.y;
+		}
+		
 		public function fillFrom(list:Vector.<CanBeInInventory>):void {
 			contents = new Vector.<InventoryUiDraggable>();
-			right = this.x;
+			nextPositionIndex = 0;
 			for each (var item:CanBeInInventory in list) {
 				var count:int = parentUi.inventory.countSpecificItemInPileOfStuff(item);
 				var draggable:InventoryUiDraggable = new InventoryUiDraggable(parentUi, item, count, this);
-				draggable.x = right;
-				draggable.y = this.y;
+				setItemPositionFromIndex(draggable, nextPositionIndex++);
 				parentUi.addChild(draggable);
 				contents.push(draggable);
-				right += InventoryUi.uiImageX;
 			}
 		}
 		
@@ -52,11 +66,9 @@ package angel.game.inventory {
 				draggedItem.inventoryItem = newItem;
 			}
 			if (parentUi.inventory.countSpecificItemInPileOfStuff(newItem) == 1) {
-				draggedItem.x = right;
-				draggedItem.y = this.y;
+				setItemPositionFromIndex(draggedItem, nextPositionIndex++);
 				draggedItem.currentSlot = this;
 				contents.push(draggedItem);
-				right += InventoryUi.uiImageX;
 			} else {
 				adjustCountFor(newItem);
 				draggedItem.cleanup();
@@ -74,17 +86,17 @@ package angel.game.inventory {
 			var numberRemaining:int = parentUi.inventory.countSpecificItemInPileOfStuff(item);
 			if (numberRemaining > 0) { // split this stack
 				var leftover:InventoryUiDraggable = new InventoryUiDraggable(parentUi, item, numberRemaining, this);
-				leftover.x = this.x + (indexInContents * InventoryUi.uiImageX);
-				leftover.y = this.y;
+				leftover.x = removedItem.x;
+				leftover.y = removedItem.y;
 				parentUi.addChild(leftover);
 				contents[indexInContents] = leftover;
 				removedItem.adjustCount(1);
 			} else { // remove it
 				contents.splice(indexInContents, 1);
-				for (var i:int = indexInContents; i < contents.length; i++ ) {
-					contents[i].x -= InventoryUi.uiImageX; // Move the others over to fill gap
+				for (var i:int = indexInContents; i < contents.length; i++ ) { // Move the others over to fill gap
+					setItemPositionFromIndex(contents[i], indexInContents);
 				}
-				right -= InventoryUi.uiImageX;
+				right -= InventoryUi.SLOT_IMAGE_WIDTH;
 			}
 		}
 		
