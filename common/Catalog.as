@@ -55,6 +55,9 @@ package angel.common {
 			for each (var gizmoXml:XML in xml.gizmo) {
 				entry = addCatalogEntry(gizmoXml.@id, gizmoXml.@file, gizmoXml, CatalogEntry.GIZMO, errors);
 			}
+			for each (var evidenceXml:XML in xml.evidence) {
+				entry = addCatalogEntry(evidenceXml.@id, evidenceXml.@file, evidenceXml, CatalogEntry.EVIDENCE, errors);
+			}
 			for each (var splashXml:XML in xml.splash) {
 				entry = addCatalogEntry(splashXml.@id, splashXml.@file, splashXml, CatalogEntry.SPLASH, errors);
 			}

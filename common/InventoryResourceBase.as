@@ -11,7 +11,7 @@ package angel.common {
 	public class InventoryResourceBase extends ImageResourceBase implements IInventoryResource {		
 		
 		public var id:String;
-		public var itemClass:Class;
+		public var myItemClass:Class;
 		public var displayName:String = "unnamed";
 		public var iconBitmapData:BitmapData;
 		
@@ -24,7 +24,7 @@ package angel.common {
 			
 			this.id = id;
 			Util.setTextFromXml(this, "displayName", entry.xml, "displayName");
-			//NOTE: subclass must set itemClass and iconBitmapData!
+			//NOTE: subclass must set myItemClass and iconBitmapData!
 		}
 		
 		protected function defaultBitmapData(iconClass:Class):BitmapData {
@@ -42,7 +42,11 @@ package angel.common {
 		}
 		
 		public function makeOne():CanBeInInventory {
-			return new itemClass(this, id);
+			return new myItemClass(this, id);
+		}
+		
+		public function get itemClass():Class {
+			return myItemClass;
 		}
 		
 	}

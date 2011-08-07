@@ -18,7 +18,7 @@ package angel.game.combat {
 		
 		public function stacksWith(other:CanBeInInventory):Boolean {
 			var otherPack:MedPack = other as MedPack;
-			return ((otherPack != null) && (otherPack.id == id));
+			return ((otherPack != null) && (otherPack.id == myId));
 		}
 		
 		public function useOn(user:ComplexEntity, target:Object):void {

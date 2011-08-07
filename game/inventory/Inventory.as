@@ -147,10 +147,12 @@ package angel.game.inventory {
 			}
 		}
 		
-		public function everythingInPileOfStuff():Vector.<CanBeInInventory> {
+		public function everythingInPileOfStuff(filterClass:Class = null):Vector.<CanBeInInventory> {
 			var pile:Vector.<CanBeInInventory> = new Vector.<CanBeInInventory>();
 			for (var item:Object in pileOfStuff) {
-				pile.push(item);
+				if ((filterClass == null) || (item is filterClass)) {
+					pile.push(item);
+				}
 			}
 			return pile;
 		}

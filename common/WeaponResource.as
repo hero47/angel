@@ -44,10 +44,10 @@ package angel.common {
 			if (Util.nullOrEmpty(type)) {
 				type = Defaults.WEAPON_TYPE;
 			}
-			itemClass = typeToClass[type];
-			if (itemClass == null) {
+			myItemClass = typeToClass[type];
+			if (myItemClass == null) {
 				MessageCollector.collectOrShowMessage(errors, "Unknown weapon type " + type);
-				itemClass = SingleTargetWeapon;
+				myItemClass = SingleTargetWeapon;
 			}
 			 
 			Util.setIntFromXml(this, "damage", entry.xml, "damage");
@@ -59,8 +59,8 @@ package angel.common {
 			Util.setBoolFromXml(this, "view", entry.xml, "view");
 			entry.xml = null;
 			
-			if ((itemClass == ThrownWeapon) && (delay > 0)) {
-				itemClass = TimeDelayGrenade;
+			if ((myItemClass == ThrownWeapon) && (delay > 0)) {
+				myItemClass = TimeDelayGrenade;
 			}
 			
 			iconBitmapData = defaultBitmapData(type == "hand" ? DEFAULT_HAND_ICON : DEFAULT_THROWN_ICON);

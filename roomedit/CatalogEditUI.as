@@ -26,6 +26,8 @@ package angel.roomedit {
 		private var tilesetId:String;
 		private var propId:String;
 		
+		private static const GAP_BETWEEN_BUTTONS:int = 15;
+		
 		public function CatalogEditUI(catalog:CatalogEdit) {
 			this.catalog = catalog;
 			
@@ -36,9 +38,9 @@ package angel.roomedit {
 			topButton = new SimplerButton("Add tileset", clickedLoadTileset);
 			topButton.x = left;
 			topButton.y = 5;
-			topButton.width = 100;
+			topButton.width = 90;
 			addChild(topButton);
-			left += topButton.width + 20;
+			left += topButton.width + GAP_BETWEEN_BUTTONS;
 			
 			bottomButton = new SimplerButton("Edit tileset", clickedEditTileNames);
 			bottomButton.width = topButton.width;
@@ -47,9 +49,9 @@ package angel.roomedit {
 			topButton = new SimplerButton("Add Prop", clickedAddProp);
 			topButton.x = left;
 			topButton.y = 5;
-			topButton.width = 100;
+			topButton.width = 80;
 			addChild(topButton);
-			left += topButton.width + 20;
+			left += topButton.width + GAP_BETWEEN_BUTTONS;
 			
 			bottomButton = new SimplerButton("Edit props", clickedEditProp);
 			bottomButton.width = topButton.width;
@@ -60,7 +62,7 @@ package angel.roomedit {
 			topButton.y = 5;
 			topButton.width = 110;
 			addChild(topButton);
-			left += topButton.width + 20;
+			left += topButton.width + GAP_BETWEEN_BUTTONS;
 			
 			bottomButton = new SimplerButton("Edit Characters", clickedEditChar);
 			bottomButton.width = topButton.width;
@@ -71,7 +73,7 @@ package angel.roomedit {
 			topButton.y = 5;
 			topButton.width = 100;
 			addChild(topButton);
-			left += topButton.width + 20;
+			left += topButton.width + GAP_BETWEEN_BUTTONS;
 			
 			bottomButton = new SimplerButton("Edit Weapons", clickedEditWeapon);
 			bottomButton.width = topButton.width;
@@ -80,11 +82,22 @@ package angel.roomedit {
 			topButton = new SimplerButton("Add Gizmo", clickedAddGizmo);
 			topButton.x = left;
 			topButton.y = 5;
-			topButton.width = 100;
+			topButton.width = 90;
 			addChild(topButton);
-			left += topButton.width + 20;
+			left += topButton.width + GAP_BETWEEN_BUTTONS;
 			
 			bottomButton = new SimplerButton("Edit Gizmos", clickedEditGizmo);
+			bottomButton.width = topButton.width;
+			Util.addBelow(bottomButton, topButton, 5);
+			
+			topButton = new SimplerButton("Add Evidence", clickedAddEvidence);
+			topButton.x = left;
+			topButton.y = 5;
+			topButton.width = 100;
+			addChild(topButton);
+			left += topButton.width + GAP_BETWEEN_BUTTONS;
+			
+			bottomButton = new SimplerButton("Edit Evidences", clickedEditEvidence);
 			bottomButton.width = topButton.width;
 			Util.addBelow(bottomButton, topButton, 5);
 			
@@ -93,7 +106,7 @@ package angel.roomedit {
 			topButton.y = 5;
 			topButton.width = 100;
 			addChild(topButton);
-			left += topButton.width + 20;
+			left += topButton.width + GAP_BETWEEN_BUTTONS;
 			
 			bottomButton = new SimplerButton("Edit Splashs", clickedEditSplash);
 			bottomButton.width = topButton.width;
@@ -109,7 +122,7 @@ package angel.roomedit {
 			topButton = new SimplerButton("Edit Room", clickedEditRoom);
 			topButton.x = left;
 			topButton.y = 5;
-			topButton.width = 100;
+			topButton.width = 90;
 			addChild(topButton);
 			left += topButton.width + 5;
 			
@@ -160,6 +173,11 @@ package angel.roomedit {
 		private function clickedAddGizmo(event:Event):void {
 			newFilename = "";
 			launchIdDialog("gizmo", userEnteredNameForNewGizmo);
+		}
+		
+		private function clickedAddEvidence(event:Event):void {
+			newFilename = "";
+			launchIdDialog("evidence", userEnteredNameForNewEvidence);
 		}
 		
 		private function clickedAddSplash(event:Event):void {
@@ -297,6 +315,27 @@ package angel.roomedit {
 			showEditGizmoDialog(id);
 		}
 		
+		private function userEnteredNameForNewEvidence(buttonClicked:String, values:Array):void {
+			if (buttonClicked != "OK") {
+				return;
+			}
+			
+			var id:String = values[0];
+			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.EVIDENCE, new MessageCollector());
+			
+			if (entry == null) {
+				launchIdDialog("evidence", userEnteredNameForNewEvidence, "Error -- id '" + id + "' already in use.");
+				return;
+			}
+			
+			var xml:XML = <evidence/>;
+			xml.@id = id;
+			catalog.appendXml(xml);
+			entry.xml = xml;
+			
+			showEditEvidenceDialog(id);
+		}
+		
 		private function userEnteredNameForNewSplash(buttonClicked:String, values:Array):void {
 			if (buttonClicked != "OK") {
 				return;
@@ -392,6 +431,16 @@ package angel.roomedit {
 		private function showEditGizmoDialog(id:String = null):void {
 			var options:Object = { buttons:["Done"], inputs:[], customControl:new GizmoEditUI(catalog, id) };
 			var text:String = "Edit Gizmo";
+			KludgeDialogBox.show(text, options);
+		}
+		
+		private function clickedEditEvidence(event:Event):void {
+			showEditEvidenceDialog();
+		}
+		
+		private function showEditEvidenceDialog(id:String = null):void {
+			var options:Object = { buttons:["Done"], inputs:[], customControl:new EvidenceEditUI(catalog, id) };
+			var text:String = "Edit Evidence";
 			KludgeDialogBox.show(text, options);
 		}
 		

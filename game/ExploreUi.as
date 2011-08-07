@@ -68,6 +68,9 @@ package angel.game {
 					}
 				break;
 				
+				case Util.KEYBOARD_E:
+					new RoomEvidenceUi(room, room.mainPlayerCharacter);
+				break;
 				case Util.KEYBOARD_I:
 					new RoomInventoryUi(room, room.mainPlayerCharacter);
 				break;

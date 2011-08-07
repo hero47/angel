@@ -29,10 +29,10 @@ package angel.common {
 			if (Util.nullOrEmpty(type)) {
 				type = Defaults.GIZMO_TYPE;
 			}
-			itemClass = typeToClass[type];
-			if (itemClass == null) {
+			myItemClass = typeToClass[type];
+			if (myItemClass == null) {
 				MessageCollector.collectOrShowMessage(errors, "Unknown gizmo type " + type);
-				itemClass = MedPack;
+				myItemClass = MedPack;
 				//CONSIDER default type should probably be MacGuffin once we have those
 			}
 			

@@ -32,8 +32,9 @@ package angel.game.combat {
 		}
 		
 		public function clone():CanBeInInventory {
-			var resource:WeaponResource = Settings.catalog.retrieveWeaponResource(id);
-			var copy:CanBeInInventory = new resource.itemClass(resource, id);
+			var resource:WeaponResource = Settings.catalog.retrieveWeaponResource(myId);
+			var itemClass:Class = resource.itemClass;
+			var copy:CanBeInInventory = new itemClass(resource, myId);
 			return copy;
 		}
 		

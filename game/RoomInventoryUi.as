@@ -1,5 +1,8 @@
 package angel.game {
 	import angel.common.SimplerButton;
+	import angel.common.Util;
+	import angel.game.combat.ICombatUsable;
+	import angel.game.combat.RoomCombat;
 	import angel.game.inventory.Inventory;
 	import angel.game.inventory.InventoryUi;
 	import flash.events.Event;
@@ -23,7 +26,7 @@ package angel.game {
 			
 			room.suspendUi(this);
 			inventoryBeingManipulated = entity.inventory.clone();
-			super(room.parent, inventoryBeingManipulated);
+			super(room.parent, inventoryBeingManipulated, (room.mode is RoomCombat ? ICombatUsable : null));
 			
 		}
 		
@@ -38,7 +41,7 @@ package angel.game {
 			var doneButton:SimplerButton = new SimplerButton(commitButtonText, commitAndCloseInventory,
 						enableCommit ? BUTTON_COLOR : 0x808080, enableCommit ? 0x0 : 0x808080);
 			doneButton.resizeToFitText(SimplerButton.WIDTH);
-			doneButton.x = xInventory + WINDOW_X - doneButton.width - 5;
+			doneButton.x = xInventory + inventoryWidth - doneButton.width - 5;
 			doneButton.y = yInventory + 5;
 			addChild(doneButton);
 			if (!enableCommit) {
@@ -47,7 +50,7 @@ package angel.game {
 			}
 			
 			var cancelButton:SimplerButton = new SimplerButton("Cancel", closeInventory, BUTTON_COLOR);
-			cancelButton.x = xInventory + WINDOW_X - cancelButton.width - 5;
+			cancelButton.x = xInventory + inventoryWidth - cancelButton.width - 5;
 			cancelButton.y = doneButton.y + doneButton.height + 5;
 			addChild(cancelButton);
 		}

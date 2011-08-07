@@ -7,6 +7,7 @@ package angel.game.inventory {
 	 */
 	public interface IInventoryResource extends ICatalogedResource {
 		function makeOne():CanBeInInventory;
+		function get itemClass():Class;
 	}
 	
 }
