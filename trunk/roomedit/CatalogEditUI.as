@@ -234,6 +234,7 @@ package angel.roomedit {
 			}
 			
 			var id:String = values[0];
+			id = id.toLowerCase();
 			var entry:CatalogEntry = catalog.addCatalogEntry(id, newFilename, null, CatalogEntry.CHARACTER, new MessageCollector());
 			
 			if (entry == null) {

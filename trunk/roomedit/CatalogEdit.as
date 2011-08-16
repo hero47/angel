@@ -53,6 +53,7 @@ package angel.roomedit {
 		}
 
 		public function changeXml(id:String, newXml:XML):void {
+			id = id.toLowerCase();
 			var entry:CatalogEntry = lookup[id];
 			var tag:String = entry.type.TAG;
 			
@@ -62,6 +63,7 @@ package angel.roomedit {
 		}
 		
 		public function changeXmlAttribute(id:String, attribute:String, newValue:String):void {
+			id = id.toLowerCase();
 			var entry:CatalogEntry = lookup[id];
 			var tag:String = entry.type.TAG;
 			
@@ -70,6 +72,7 @@ package angel.roomedit {
 		}
 		
 		public function deleteXmlAttribute(id:String, attribute:String):void {
+			id = id.toLowerCase();
 			var entry:CatalogEntry = lookup[id];
 			var tag:String = entry.type.TAG;
 			
@@ -80,6 +83,7 @@ package angel.roomedit {
 		}
 		
 		public function deleteCatalogEntry(id:String):void {
+			id = id.toLowerCase();
 			var entry:CatalogEntry = lookup[id];
 			var tag:String = entry.type.TAG;
 			var entryXmlList:XMLList = catalogXml[tag].(@id == id);
@@ -119,6 +123,7 @@ package angel.roomedit {
 		// to match current in-memory catalog xml
 		// NOTE: this is not resource manager, just a quick-and-dirty for editor!  I'm not even looking at possible memory leaks.
 		public function discardCachedData(id:String):void {
+			id = id.toLowerCase();
 			var entry:CatalogEntry = lookup[id];
 			if (entry != null) {
 				entry.data = null;
@@ -131,6 +136,7 @@ package angel.roomedit {
 		
 		// NOTE: this is not resource manager, just a quick-and-dirty for editor!  I'm not even looking at possible memory leaks.
 		public function changeFilename(id:String, newFilename:String):void {
+			id = id.toLowerCase();
 			var entry:CatalogEntry = lookup[id];
 			if (entry != null) {
 				changeXmlAttribute(id, "file", newFilename);
@@ -149,6 +155,7 @@ package angel.roomedit {
 		}
 		
 		public function getFilenameFromId(id:String):String {
+			id = id.toLowerCase();
 			var entry:CatalogEntry = lookup[id];
 			if (entry == null) {
 				return null;
