@@ -18,14 +18,14 @@ package angel.game.test {
 			if (Settings.catalog.entry("grenade") == null) {
 				var resource:WeaponResource = Settings.catalog.retrieveWeaponResource("grenade");
 				resource.type = "thrown";
-				resource.itemClass = ThrownWeapon;
+				resource.myItemClass = ThrownWeapon;
 			}
 			Autotest.clearAlert();
 			
-			var invString:String = "0 1 xxGun1,1 1 xxGun2,99 5 grenade";
+			var invString:String = "0 1 xxgun1,1 1 xxgun2,99 5 grenade";
 			inventory = Inventory.fromText(invString);
-			Autotest.assertEqual(inventory.mainWeapon().id, "xxGun1");
-			Autotest.assertEqual(inventory.offWeapon().id, "xxGun2");
+			Autotest.assertEqual(inventory.mainWeapon().id, "xxgun1");
+			Autotest.assertEqual(inventory.offWeapon().id, "xxgun2");
 			Autotest.assertEqual(inventory.countInPileOfStuff(ThrownWeapon), 5);
 			Autotest.assertEqual(inventory.toText(), invString);
 			
@@ -45,10 +45,10 @@ package angel.game.test {
 			Autotest.assertEqual(inventory.mainWeapon(), null);
 			Autotest.assertEqual(inventory.countInPileOfStuff(SingleTargetWeapon), 1, "Should have one xxGun1 left");
 			inventory.removeFromAnywhereByText("2 xxGun1");
-			Autotest.assertAlertText("Remove from inventory: not enough xxGun1.");
+			Autotest.assertAlertText("Remove from inventory: not enough xxgun1.");
 			Autotest.assertEqual(inventory.countInPileOfStuff(SingleTargetWeapon), 0, "Should have removed as many as possible");
 			
-			Autotest.assertEqual(inventory.toText(), "1 1 xxGun2,99 3 grenade");
+			Autotest.assertEqual(inventory.toText(), "1 1 xxgun2,99 3 grenade");
 			
 			inventory.removeFromAnywhereByText("2 grenade,xxGun2");
 			Autotest.assertEqual(inventory.toText(), "99 1 grenade");
@@ -56,7 +56,7 @@ package angel.game.test {
 			inventory.addToPileFromText("grenade,2 grenade,2 xxGun2");
 			Autotest.assertEqual(inventory.countInPileOfStuff(ThrownWeapon), 4);
 			var weapon:SingleTargetWeapon = inventory.findFirstMatchingInPileOfStuff(SingleTargetWeapon);
-			Autotest.assertEqual(weapon.id, "xxGun2");
+			Autotest.assertEqual(weapon.id, "xxgun2");
 			Autotest.assertEqual(inventory.countSpecificItemInPileOfStuff(weapon), 2);
 			Autotest.assertEqual(inventory.countInPileOfStuff(SingleTargetWeapon), 2, "The 2 xxGun2 should be the only guns");
 			Autotest.assertEqual(inventory.entriesInPileOfStuff(), 2, "Grenades should stack, xxGun2's should stack");

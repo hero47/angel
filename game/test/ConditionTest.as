@@ -38,7 +38,7 @@ package angel.game.test {
 		private static const notFlagCondition:XML = <foo><notFlag param="xxTest" /></foo>;
 		private static const flagMissingParam:XML = <foo><flag /></foo>;
 		private function testFlagCondition():void {
-			Autotest.assertFalse(Flags.getValue("xxTest"));
+			Autotest.assertFalse(Boolean(Flags.getValue("xxTest")));
 			Autotest.clearAlert();
 			
 			var flag:ICondition = ConditionFactory.createFromEnclosingXml(flagCondition, Autotest.script);
@@ -49,9 +49,13 @@ package angel.game.test {
 			Autotest.assertFalse(flag.isMet(context), "flag is false, regular");
 			Autotest.assertTrue(notFlag.isMet(context), "flag is false, invert");
 			
-			Flags.setValue("xxTest", true);
+			Flags.setValue("xxTest", 1);
 			Autotest.assertTrue(flag.isMet(context), "flag is true, regular");
 			Autotest.assertFalse(notFlag.isMet(context), "flag is true, invert");
+			
+			Flags.setValue("xxTest", 2);
+			Autotest.assertTrue(flag.isMet(context), "flag is 2 should count as 'true', regular");
+			Autotest.assertFalse(notFlag.isMet(context), "flag is 2 should count as 'true', invert");
 			
 			Autotest.assertEqual(ConditionFactory.createFromEnclosingXml(flagMissingParam, Autotest.script), null, "should fail to create");
 			Autotest.script.displayAndClearParseErrors();
@@ -59,7 +63,7 @@ package angel.game.test {
 			Autotest.assertAlertText("Script errors:\nflag condition requires param.");
 			
 			
-			Flags.setValue("xxTest", false);
+			Flags.setValue("xxTest", 0);
 		}		
 		
 		private static const multipleCondition:XML = <foo>
@@ -113,84 +117,84 @@ package angel.game.test {
 		private function verifyAnd(andCondition:ICondition, flag1:String, flag2:String, what:String):void {
 			Autotest.assertClass(andCondition, AndCondition, what);
 			
-			Flags.setValue(flag1, false);
-			Flags.setValue(flag2, false);
+			Flags.setValue(flag1, 0);
+			Flags.setValue(flag2, 0);
 			Autotest.clearAlert();
 			Autotest.assertFalse(andCondition.isMet(context), what);
 			
-			Flags.setValue(flag1, true);
-			Flags.setValue(flag2, false);
+			Flags.setValue(flag1, 1);
+			Flags.setValue(flag2, 0);
 			Autotest.assertFalse(andCondition.isMet(context), what);
 			
-			Flags.setValue(flag1, false);
-			Flags.setValue(flag2, true);
+			Flags.setValue(flag1, 0);
+			Flags.setValue(flag2, 1);
 			Autotest.assertFalse(andCondition.isMet(context), what);
 			
-			Flags.setValue(flag1, true);
-			Flags.setValue(flag2, true);
+			Flags.setValue(flag1, 1);
+			Flags.setValue(flag2, 1);
 			Autotest.assertTrue(andCondition.isMet(context), what);
 		}
 		
 		private function verifyNotAnd(andCondition:ICondition, flag1:String, flag2:String, what:String):void {
 			Autotest.assertClass(andCondition, AndCondition, what);
 			
-			Flags.setValue(flag1, false);
-			Flags.setValue(flag2, false);
+			Flags.setValue(flag1, 0);
+			Flags.setValue(flag2, 0);
 			Autotest.clearAlert();
 			Autotest.assertTrue(andCondition.isMet(context), what);
 			
-			Flags.setValue(flag1, true);
-			Flags.setValue(flag2, false);
+			Flags.setValue(flag1, 1);
+			Flags.setValue(flag2, 0);
 			Autotest.assertTrue(andCondition.isMet(context), what);
 			
-			Flags.setValue(flag1, false);
-			Flags.setValue(flag2, true);
+			Flags.setValue(flag1, 0);
+			Flags.setValue(flag2, 1);
 			Autotest.assertTrue(andCondition.isMet(context), what);
 			
-			Flags.setValue(flag1, true);
-			Flags.setValue(flag2, true);
+			Flags.setValue(flag1, 1);
+			Flags.setValue(flag2, 1);
 			Autotest.assertFalse(andCondition.isMet(context), what);
 		}
 		
 		private function verifyOr(orCondition:ICondition, flag1:String, flag2:String, what:String):void {
 			Autotest.assertClass(orCondition, OrCondition, what);
 			
-			Flags.setValue(flag1, false);
-			Flags.setValue(flag2, false);
+			Flags.setValue(flag1, 0);
+			Flags.setValue(flag2, 0);
 			Autotest.clearAlert();
 			Autotest.assertFalse(orCondition.isMet(context), what);
 			
-			Flags.setValue(flag1, true);
-			Flags.setValue(flag2, false);
+			Flags.setValue(flag1, 1);
+			Flags.setValue(flag2, 0);
 			Autotest.assertTrue(orCondition.isMet(context), what);
 			
-			Flags.setValue(flag1, false);
-			Flags.setValue(flag2, true);
+			Flags.setValue(flag1, 0);
+			Flags.setValue(flag2, 1);
 			Autotest.assertTrue(orCondition.isMet(context), what);
 			
-			Flags.setValue(flag1, true);
-			Flags.setValue(flag2, true);
+			Flags.setValue(flag1, 1);
+			Flags.setValue(flag2, 1);
 			Autotest.assertTrue(orCondition.isMet(context), what);
 		}
 		
 		private function verifyNotOr(orCondition:ICondition, flag1:String, flag2:String, what:String):void {
 			Autotest.assertClass(orCondition, OrCondition, what);
 			
-			Flags.setValue(flag1, false);
-			Flags.setValue(flag2, false);
+			Flags.setValue(flag1, 0);
+			Flags.setValue(flag2, 0);
 			Autotest.clearAlert();
 			Autotest.assertTrue(orCondition.isMet(context), what);
 			
-			Flags.setValue(flag1, true);
-			Flags.setValue(flag2, false);
+			Flags.setValue(flag1, 1);
+			Flags.setValue(flag2, 0);
 			Autotest.assertFalse(orCondition.isMet(context), what);
 			
-			Flags.setValue(flag1, false);
-			Flags.setValue(flag2, true);
+			Flags.setValue(flag1, 0);
+			Flags.setValue(flag2, 1);
 			Autotest.assertFalse(orCondition.isMet(context), what);
 			
-			Flags.setValue(flag1, true);
-			Flags.setValue(flag2, true);
+			Flags.setValue(flag1, 1);
+			Flags.setValue(flag2, 1);
 			Autotest.assertFalse(orCondition.isMet(context), what);
 		}
 			

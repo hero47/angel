@@ -1,6 +1,7 @@
 package angel.game.test {
 	import angel.common.Util;
 	import angel.game.ComplexEntity;
+	import angel.game.Flags;
 	import angel.game.script.computation.ComputationFactory;
 	import angel.game.script.computation.IComputation;
 	import angel.game.script.Script;
@@ -22,6 +23,7 @@ package angel.game.test {
 			Autotest.testFunction(testHealthComputation);
 			Autotest.testFunction(testDistanceComputation);
 			Autotest.testFunction(testActiveComputation);
+			Autotest.testFunction(testFlagValueComputation);
 			Autotest.cleanupTestRoom();
 			
 			Autotest.assertNoAlert();
@@ -87,6 +89,24 @@ package angel.game.test {
 			Autotest.assertEqual(active.value(context), 1, "Only 1 character active in room");
 			ComplexEntity(Autotest.testRoom.entityInRoomWithId(Autotest.TEST_ROOM_MAIN_PC_ID)).currentHealth = 1;
 			Autotest.assertEqual(active.value(context), 2, "Now both characters active");
+		}
+		
+		private function testFlagValueComputation():void {
+			var compXml:XML = <left />;
+			compXml.@flagValue = "xxTest";
+			var flagValue:IComputation = ComputationFactory.createFromXml(compXml, Autotest.script);
+			
+			Flags.setValue("xxTest", 0);
+			Autotest.assertEqual(flagValue.value(context), 0);
+			Autotest.assertNoAlert();
+			
+			Flags.setValue("xxTest", 1);
+			Autotest.assertEqual(flagValue.value(context), 1);
+			Autotest.assertNoAlert();
+			
+			Flags.setValue("xxTest", 2);
+			Autotest.assertEqual(flagValue.value(context), 2);
+			Autotest.assertNoAlert();
 		}
 		
 	}

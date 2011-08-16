@@ -32,6 +32,7 @@ package angel.game.test {
 		
 		public function ActionTest() {
 			Autotest.testFunction(testFlagActions);
+			Autotest.testFunction(testNumericFlagActions);
 			Autotest.testFunction(testMessageAction);
 			Autotest.testFunction(testIfAction);
 			Autotest.testFunction(testIfElse);
@@ -74,9 +75,15 @@ package angel.game.test {
 		private const removeTestFlag:XML = <remove flag="xxTest" />;
 		private function testFlagActions():void {
 			Autotest.testActionFromXml(addTestFlag);
-			Autotest.assertTrue(Flags.getValue("xxTest"));
+			Autotest.assertTrue(Boolean(Flags.getValue("xxTest")));
 			Autotest.testActionFromXml(removeTestFlag);
-			Autotest.assertFalse(Flags.getValue("xxTest"));
+			Autotest.assertFalse(Boolean(Flags.getValue("xxTest")));
+		}
+		
+		private const addTestFlag2:XML = <add flag="xxTest2" int="16" />;
+		private function testNumericFlagActions():void {
+			Autotest.testActionFromXml(addTestFlag2);
+			Autotest.assertEqual(Flags.getValue("xxTest2"), 16, "Set flag to constant failed");
 		}
 		
 		private static const doubleMessage:XML =  <if notFlag="xxTest">
@@ -88,7 +95,7 @@ package angel.game.test {
 			Autotest.testActionFromXml(messageActionXml);
 			Autotest.assertAlertText("Hello, world!");
 			
-			Autotest.assertFalse(Flags.getValue("xxTest"));
+			Autotest.assertFalse(Boolean(Flags.getValue("xxTest")));
 			Autotest.clearAlert(); // in case flag wasn't initialized yet
 			Autotest.testActionFromXml(doubleMessage);
 			Autotest.assertAlertText("first\nsecond", "Should have combined both messages into one alert with linefeed between them");
@@ -138,8 +145,8 @@ package angel.game.test {
 			</script>
 		</if>;
 		private function testIfAction():void {
-			Autotest.assertFalse(Flags.getValue("xxTest"));
-			Autotest.assertFalse(Flags.getValue("yyTest"));
+			Autotest.assertFalse(Boolean(Flags.getValue("xxTest")));
+			Autotest.assertFalse(Boolean(Flags.getValue("yyTest")));
 			Autotest.clearAlert(); // in case flag wasn't initialized yet
 			
 			Autotest.testActionFromXml(ifTestShortcutXml);
@@ -147,7 +154,7 @@ package angel.game.test {
 			Autotest.testActionFromXml(ifNotTestShortcutXml);
 			Autotest.assertAlertText("no");
 			
-			Flags.setValue("xxTest", true);
+			Flags.setValue("xxTest", 1);
 			
 			Autotest.testActionFromXml(ifTestShortcutXml);
 			Autotest.assertAlertText("yes");
@@ -155,14 +162,14 @@ package angel.game.test {
 			Autotest.assertNoAlert();
 			
 			
-			Flags.setValue("xxTest", false);
+			Flags.setValue("xxTest", 0);
 			
 			Autotest.testActionFromXml(ifTestXml);
 			Autotest.assertNoAlert();
 			Autotest.testActionFromXml(ifNotTestXml);
 			Autotest.assertAlertText("no");
 			
-			Flags.setValue("xxTest", true);
+			Flags.setValue("xxTest", 1);
 			
 			Autotest.testActionFromXml(ifTestXml);
 			Autotest.assertAlertText("yes");
@@ -177,45 +184,45 @@ package angel.game.test {
 		}
 		
 		private function testXxAndYy(xml:XML, what:String):void {
-			Flags.setValue("xxTest", false);
-			Flags.setValue("yyTest", false);
+			Flags.setValue("xxTest", 0);
+			Flags.setValue("yyTest", 0);
 			Autotest.testActionFromXml(xml);
 			Autotest.assertNoAlert(what);
 			
-			Flags.setValue("xxTest", true);
-			Flags.setValue("yyTest", false);
+			Flags.setValue("xxTest", 1);
+			Flags.setValue("yyTest", 0);
 			Autotest.testActionFromXml(xml);
 			Autotest.assertNoAlert(what);
 			
-			Flags.setValue("xxTest", false);
-			Flags.setValue("yyTest", true);
+			Flags.setValue("xxTest", 0);
+			Flags.setValue("yyTest", 1);
 			Autotest.testActionFromXml(xml);
 			Autotest.assertNoAlert(what);
 			
-			Flags.setValue("xxTest", true);
-			Flags.setValue("yyTest", true);
+			Flags.setValue("xxTest", 1);
+			Flags.setValue("yyTest", 1);
 			Autotest.testActionFromXml(xml);
 			Autotest.assertAlertText("yes", what);
 		}
 		
 		private function testXxOrYy(xml:XML, what:String):void {
-			Flags.setValue("xxTest", false);
-			Flags.setValue("yyTest", false);
+			Flags.setValue("xxTest", 0);
+			Flags.setValue("yyTest", 0);
 			Autotest.testActionFromXml(xml);
 			Autotest.assertNoAlert(what);
 			
-			Flags.setValue("xxTest", true);
-			Flags.setValue("yyTest", false);
+			Flags.setValue("xxTest", 1);
+			Flags.setValue("yyTest", 0);
 			Autotest.testActionFromXml(xml);
 			Autotest.assertAlertText("yes", what);
 			
-			Flags.setValue("xxTest", false);
-			Flags.setValue("yyTest", true);
+			Flags.setValue("xxTest", 0);
+			Flags.setValue("yyTest", 1);
 			Autotest.testActionFromXml(xml);
 			Autotest.assertAlertText("yes", what);
 			
-			Flags.setValue("xxTest", true);
-			Flags.setValue("yyTest", true);
+			Flags.setValue("xxTest", 1);
+			Flags.setValue("yyTest", 1);
 			Autotest.testActionFromXml(xml);
 			Autotest.assertAlertText("yes", what);
 		}
@@ -236,19 +243,19 @@ package angel.game.test {
 			var script:Script = new Script(ifElseScript, Autotest.script);
 			Autotest.assertNoAlert("ifElse script parsing failed");
 			
-			Flags.setValue("xxTest", true);
-			Flags.setValue("yyTest", false);
+			Flags.setValue("xxTest", 1);
+			Flags.setValue("yyTest", 0);
 			Autotest.clearAlert();
 			script.run(testRoom, null, null);
 			Autotest.assertAlertText("xx");
 			
-			Flags.setValue("xxTest", false);
-			Flags.setValue("yyTest", false);
+			Flags.setValue("xxTest", 0);
+			Flags.setValue("yyTest", 0);
 			script.run(testRoom, null, null);
 			Autotest.assertAlertText("neither");
 			
-			Flags.setValue("xxTest", false);
-			Flags.setValue("yyTest", true);
+			Flags.setValue("xxTest", 0);
+			Flags.setValue("yyTest", 1);
 			script.run(testRoom, null, null);
 			Autotest.assertAlertText("yy and not xx");
 		}
@@ -532,14 +539,14 @@ package angel.game.test {
 			Autotest.assertNoAlert();
 			
 			Autotest.testActionFromXml(removeGun);
-			Autotest.assertAlertText("Remove from inventory: xxGun not found.");
+			Autotest.assertAlertText("Remove from inventory: xxgun not found.");
 			
 			Autotest.testActionFromXml(addGun);
 			Autotest.assertNoAlert();
 			Autotest.assertEqual(nei.inventory.entriesInPileOfStuff(), 1, "Something got added");
 			
 			Autotest.testActionFromXml(checkGun);
-			Autotest.assertAlertText("yes", "If action found gun");
+			Autotest.assertAlertText("yes", "Says yes if gun found in inventory");
 			
 			Autotest.testActionFromXml(removeGun);
 			Autotest.assertNoAlert();

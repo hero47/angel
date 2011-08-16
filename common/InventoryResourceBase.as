@@ -11,7 +11,7 @@ package angel.common {
 	public class InventoryResourceBase extends ImageResourceBase implements IInventoryResource {		
 		
 		public var id:String;
-		public var myItemClass:Class;
+		public var myItemClass:Class; // public so test can set it
 		public var displayName:String = "unnamed";
 		public var iconBitmapData:BitmapData;
 		

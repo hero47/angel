@@ -24,7 +24,7 @@ package angel.game.script.action {
 		}
 		
 		public function doAction(context:ScriptContext):Object {
-			context.setFlagValue(flag, false);
+			context.setFlagValue(flag, 0);
 			return null;
 		}
 		
