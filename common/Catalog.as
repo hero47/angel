@@ -24,6 +24,7 @@ package angel.common {
 		}
 
 		public function entry(id:String):CatalogEntry {
+			id = id.toLowerCase();
 			return lookup[id];
 		}
 		
@@ -73,6 +74,7 @@ package angel.common {
 		
 		// add the specified entry. If it's a duplicate, add to errors for reporting & return null
 		public function addCatalogEntry(id:String, filename:String, xml:XML, type:Class, errors:MessageCollector = null):CatalogEntry {
+			id = id.toLowerCase();
 			if (lookup[id] != undefined) {
 				MessageCollector.collectOrShowMessage(errors, id);
 				return null;
@@ -115,6 +117,7 @@ package angel.common {
 		// finishEntry takes CatalogEntry with data set to bitmapData (and xml if appropriate),
 		// and replaces data with the finished object to cache
 		private function loadOrRetrieveCatalogEntry(id:String, type:Class, errors:MessageCollector = null):ICatalogedResource {
+			id = id.toLowerCase();
 			var entry:CatalogEntry = lookup[id];
 		
 			if (entry == null) {
