@@ -11,6 +11,7 @@ package angel.game.script.computation {
 		private static const computationNameToClass:Object = {
 			"active":ActiveComputation,
 			"distance":DistanceComputation,
+			"flagValue":FlagValueComputation,
 			"health":HealthComputation,
 			"int":ConstantComputation
 		}
@@ -20,13 +21,15 @@ package angel.game.script.computation {
 		}
 		
 		public static function createFromXml(xml:XML, script:Script):IComputation {
-			if (xml.attributes().length() != 1) {
+			if (xml.attributes().length() < 1) {
 				script.addError("computation requires attribute");
 				return null;
 			}
 			
 			var attribute:XML = xml.attributes()[0];
 			var attributeName:String = attribute.name();
+			
+			for (var i:int = 0; i < xml.attributes().length(); ++i)
 			var computationClass:Class = computationNameToClass[attributeName];
 			
 			if (computationClass == null) {

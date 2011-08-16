@@ -204,11 +204,11 @@ package angel.game.script {
 			return flagId;
 		}
 		
-		public function getFlagValue(flagId:String):Boolean {
+		public function getFlagValue(flagId:String):int {
 			return Flags.getValue(translateScriptIdInFlagIdIfNeeded(flagId));
 		}
 		
-		public function setFlagValue(flagId:String, value:Boolean):void {
+		public function setFlagValue(flagId:String, value:int):void {
 			return Flags.setValue(translateScriptIdInFlagIdIfNeeded(flagId), value);
 		}
 		

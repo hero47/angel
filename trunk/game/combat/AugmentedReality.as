@@ -199,7 +199,6 @@ package angel.game.combat {
 				}
 				var wasVisible:Boolean = char.visible;
 				char.visible = (desiredVisibility == Floor.UNSEEN ? false : true);
-				trace(entity.aaId, "wasVisible", wasVisible, "desiredVisibility", desiredVisibility, "set visible to", entity.visible);
 				updateLastSeenLocation(char);
 				if (!wasVisible && char.visible) {
 					Settings.gameEventQueue.dispatch(new EntityQEvent(char, EntityQEvent.BECAME_VISIBLE));

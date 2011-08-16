@@ -263,6 +263,7 @@ package angel.game.inventory {
 		}
 		
 		public function addToPileFromText(text:String, errors:MessageCollector = null):void {
+			text = text.toLowerCase();
 			var list:Array = text.split(",");
 			for each (var entry:String in list) {
 				var splitEntry:Array = entry.split(" ");
@@ -276,6 +277,7 @@ package angel.game.inventory {
 		}
 		
 		public function removeFromAnywhereByText(text:String, errors:MessageCollector = null):void {
+			text = text.toLowerCase();
 			var myErrors:MessageCollector = (errors == null ? new MessageCollector : errors);
 			var list:Array = text.split(",");
 			for each (var entry:String in list) {
@@ -291,6 +293,7 @@ package angel.game.inventory {
 		}
 		
 		public function hasByText(text:String, errors:MessageCollector = null):Boolean {
+			text = text.toLowerCase();
 			var list:Array = text.split(",");
 			for each (var entry:String in list) {
 				var countAndId:Array = entry.split(" ");

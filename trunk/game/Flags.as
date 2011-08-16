@@ -14,10 +14,11 @@ package angel.game {
 	// we could switch to a two-level lookup.)  When used in scripts, catalogId can also be a special scriptId, for
 	// example myFlag@*me would be translated to myFlag@foo if found in a script on entity with id foo.
 	public class Flags {
-		private static const FLAG_FILENAME:String = "AngelFlags.xml";
 		
-		//NOTE: Currently flags are boolean, but we may decide later to make them integers
-		private static var flags:Object = new Object(); // mapping from flag to boolean
+		//NOTE: As of 8/16/11 flags are integers instead of boolean; any non-zero counts as 'true'
+		private static var flags:Object = new Object(); // mapping from flag to integer
+		
+		private static const initFlagTrue:int = 1;
 		
 		public function Flags() {
 			
@@ -25,7 +26,7 @@ package angel.game {
 		
 		public static function initFlagsFromXml(setFlags:XMLList):void {
 			for each (var flagToSet:XML in setFlags) {
-				flags[String(flagToSet.@id)] = true;
+				flags[String(flagToSet.@id)] = initFlagTrue;
 			}
 		}
 		
@@ -45,17 +46,17 @@ package angel.game {
 			return true;
 		}
 		
-		public static function setValue(id:String, value:Boolean):void {
+		public static function setValue(id:String, value:int):void {
 			if (isValidFlagId(id)) {
 				flags[id] = value;
 			}
 		}
 		
-		public static function getValue(id:String):Boolean {
+		public static function getValue(id:String):int {
 			if (isValidFlagId(id)) {
 				return flags[id];
 			} else {
-				return false;
+				return 0;
 			}
 		}
 		
@@ -74,25 +75,26 @@ package angel.game {
 		public static function toText():String {
 			var text:String = "";
 			for (var flagId:String in flags) {
-				if (getValue(flagId)) {
-					text += flagId + ",";
+				var value:int = getValue(flagId);
+				if (value) {
+					text += flagId +"=" + value + ",";
 				}
 			}
-			return text.substr(0, text.length-1); // eliminate extra comma
+			return text.substr(0, text.length-1); // eliminate extra trailing comma
 		}
 		
 		public static function setFlagsFromText(text:String):void {
-			var flagId:String;
-			for (flagId in flags) {
-				setValue(flagId, false);
+			for (var flagId:String in flags) {
+				setValue(flagId, 0);
 			}
 			
 			if (Util.nullOrEmpty(text)) {
 				return;
 			}
 			var flagList:Array = text.split(",");
-			for each (flagId in flagList) {
-				setValue(flagId, true);
+			for each (var element:String in flagList) {
+				var nameAndValue:Array = element.split("=");
+				setValue(nameAndValue[0], int(nameAndValue[1]));
 			}
 		}
 		

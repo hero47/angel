@@ -24,7 +24,7 @@ package angel.game.script.condition {
 		}
 		
 		public function isMet(context:ScriptContext):Boolean {
-			return (context.getFlagValue(flagId) == desiredFlagValue);
+			return (Boolean(context.getFlagValue(flagId)) == desiredFlagValue);
 		}
 		
 		public function reverseMeaning():void {
