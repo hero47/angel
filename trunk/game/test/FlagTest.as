@@ -11,6 +11,7 @@ package angel.game.test {
 		public function FlagTest() {
 			basicFlagTest();
 			numericFlagTest();
+			comparisonFlagTest();
 			
 			var testRoom:Room = Autotest.setupTestRoom();			
 			entityFlagTest();		
@@ -47,6 +48,19 @@ package angel.game.test {
 			Autotest.assertEqual(Flags.getValue("xxTest2"), 2, "Set to 2, so should return 2 now");
 			Flags.setValue("xxTest2", 0);
 			Autotest.assertEqual(Flags.getValue("xxTest2"), 0, "Set to 0, so should return 0 now");
+		}
+		
+		private function comparisonFlagTest():void {
+			Flags.setValue("xxTest3", 2);
+			Autotest.assertEqual(Flags.getValue("xxTest3<3"), 1);
+			Autotest.assertEqual(Flags.getValue("xxTest3<2"), 0);
+			Autotest.assertEqual(Flags.getValue("xxTest3<1"), 0);
+			
+			Autotest.assertEqual(Flags.getValue("xxTest3<=2"), 1);
+			Autotest.assertEqual(Flags.getValue("xxTest3>1"), 1);
+			Autotest.assertEqual(Flags.getValue("xxTest3>=2"), 1);
+			Autotest.assertEqual(Flags.getValue("xxTest3=2"), 1);
+			Autotest.assertEqual(Flags.getValue("xxTest3!=1"), 1);
 		}
 		
 		private function entityFlagTest():void {
