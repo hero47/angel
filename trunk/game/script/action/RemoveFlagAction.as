@@ -6,6 +6,8 @@ package angel.game.script.action {
 	 * ...
 	 * @author Beth Moursund
 	 */
+	
+	//NOTE: This is now redundant, as SetFlagAction setting to 0 does the same thing.
 	public class RemoveFlagAction implements IAction {
 		private var flag:String;
 		

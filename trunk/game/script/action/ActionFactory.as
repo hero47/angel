@@ -12,6 +12,7 @@ package angel.game.script.action {
 		private static const actionNameToClass:Object = {
 			"addNpc":AddNpcAction,
 			"addToInventory":AddToInventoryAction,
+			"adjust":AdjustFlagAction,
 			"change":ChangeAction,
 			"changeMainPc":ChangeMainPcAction,
 			"changeRoom":ChangeRoomAction,

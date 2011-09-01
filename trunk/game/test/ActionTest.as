@@ -84,6 +84,18 @@ package angel.game.test {
 		private function testNumericFlagActions():void {
 			Autotest.testActionFromXml(addTestFlag2);
 			Autotest.assertEqual(Flags.getValue("xxTest2"), 16, "Set flag to constant failed");
+			
+			var adjustFlag:XML = <adjust flag="xxTest2" />;
+			Autotest.testActionFromXml(adjustFlag);
+			Autotest.assertEqual(Flags.getValue("xxTest2"), 17, "Adjust with no add parameter should add 1");
+			
+			adjustFlag.@add = "2";
+			Autotest.testActionFromXml(adjustFlag);
+			Autotest.assertEqual(Flags.getValue("xxTest2"), 19, "17 + 2");
+			
+			adjustFlag.@add = "-3";
+			Autotest.testActionFromXml(adjustFlag);
+			Autotest.assertEqual(Flags.getValue("xxTest2"), 16, "19 - 3");
 		}
 		
 		private static const doubleMessage:XML =  <if notFlag="xxTest">
