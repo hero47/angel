@@ -52,12 +52,42 @@ package angel.game {
 			}
 		}
 		
+		private static const ops:Vector.<String> = Vector.<String>(["<=", "<", ">=", ">", "!=", "="]); // Order matters, beware substring matches!
+		// Any place we get the value of a flag id, it can now also be a flag id + comparison operator + integer (not recursively!)
 		public static function getValue(id:String):int {
+			for (var opIndex:int = 0; opIndex < ops.length; opIndex++) {
+				var op:String = ops[opIndex];
+				var i:int = id.indexOf(op);
+				if (i > 0) {
+					return ( evaluateComparisonFlag(id.substr(0, i), op, int(id.substr(i + op.length))) ? 1 : 0);
+				}
+			}
 			if (isValidFlagId(id)) {
 				return flags[id];
 			} else {
 				return 0;
 			}
+		}
+		
+		private static function evaluateComparisonFlag(flagId:String, op:String, value:int):Boolean {
+			if (isValidFlagId(flagId)) {
+				var flagValue:int = flags[flagId];
+				switch (op) {
+					case "<":
+						return (flagValue < value);
+					case "<=":
+						return (flagValue <= value);
+					case ">":
+						return (flagValue > value);
+					case ">=":
+						return (flagValue >= value);
+					case "=":
+						return (flagValue == value);
+					case "!=":
+						return (flagValue != value);
+				}
+			}
+			return false;
 		}
 		
 		public static function haveAllFlagsIn(list:Vector.<String>):Boolean {

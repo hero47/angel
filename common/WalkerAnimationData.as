@@ -130,10 +130,6 @@ package angel.common {
 			var singleColumn:Boolean = (bitmapData.width <= Prop.WIDTH);
 			var hasGaitRows:Boolean = (bitmapData.height > Prop.HEIGHT * 3);
 			
-			if (hasGaitRows) {
-				trace("Found some gait rows");
-			}
-			
 			var zerozero:Point = new Point(0, 0);
 			var sourceRect:Rectangle = new Rectangle(0, paddingAtTop, Prop.WIDTH, Prop.HEIGHT - paddingAtTop); // x,y will change as we loop
 			var rawColumn:int;
