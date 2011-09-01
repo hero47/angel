@@ -172,6 +172,7 @@ package angel.game {
 			moveGoal = (path.length > 0 ? path[path.length - 1] : me.location);
 			mostRecentGait = (path.length == 0 ? GAIT_NO_MOVE : Math.min(gait, maxGait));
 			moveSpeed = gaitSpeeds[mostRecentGait];
+			me.adjustImageForMove(0, 0, mostRecentGait);
 			Settings.gameEventQueue.addListener(this, me.room, Room.ROOM_ENTER_UNPAUSED_FRAME, moveOneFrameAlongPath);
 		}
 		
@@ -202,7 +203,7 @@ package angel.game {
 		// This is a horrid name but I haven't been able to think of a better one or a better refactoring
 		private function calculateStuffForMovementFrames():void {
 			var tileMoveVector:Point = movingTo.subtract(me.location);
-			me.turnToFacing(neighborToFacing[tileMoveVector.x + 1][tileMoveVector.y + 1]);
+			me.turnToFacing(neighborToFacing[tileMoveVector.x + 1][tileMoveVector.y + 1], mostRecentGait);
 			
 			var totalPixels:int;
 			if ((tileMoveVector.x == 0) || (tileMoveVector.y == 0)) {
@@ -253,7 +254,7 @@ package angel.game {
 				// halfway through the move circumvents a whole host of problems!
 				changeLocationAsPartOfMove();
 			}
-			me.adjustImageForMove(frameOfMove, coordsForEachFrameOfMove.length);
+			me.adjustImageForMove(frameOfMove, coordsForEachFrameOfMove.length, mostRecentGait);
 			me.x = coordsForEachFrameOfMove[frameOfMove].x;
 			me.y = coordsForEachFrameOfMove[frameOfMove].y;
 			me.depth += depthChangePerFrame;
@@ -276,7 +277,7 @@ package angel.game {
 		private function finishOneTileOfMove():void {
 			movingTo = null;
 			coordsForEachFrameOfMove = null;
-			me.adjustImageForMove(0, 0); // make sure we end up in "standing" posture even if move was ultra-fast
+			me.adjustImageForMove(0, 0, mostRecentGait); // make sure we end up in "standing" posture even if move was ultra-fast
 			Settings.gameEventQueue.dispatch(new EntityQEvent(me, EntityQEvent.FINISHED_ONE_TILE_OF_MOVE));
 			if (interruptAfterThisTile) {
 				finishedMoving(true);

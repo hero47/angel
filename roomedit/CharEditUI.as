@@ -258,7 +258,9 @@ package angel.roomedit {
 			var animationName:String;
 			
 			if ((width == Prop.WIDTH * 10) && (height == Prop.HEIGHT * 3)) {
-				animationName = "walker";
+				animationName = "walker"; // small sheet
+			} else if ((width == Prop.WIDTH * 10) && (height == Prop.HEIGHT * 12)) {
+				animationName = "walker"; // large sheet
 			} else if ((width == Prop.WIDTH * 9) && (height == Prop.HEIGHT)) {
 				animationName = "spinner";
 			} else if ((width == Prop.WIDTH) && (height == Prop.HEIGHT)) {

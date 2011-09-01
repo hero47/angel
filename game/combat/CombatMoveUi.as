@@ -185,7 +185,7 @@ package angel.game.combat {
 		
 		private function doPlayerFireFromCover():void {
 			CombatBrainUiMeldPlayer(player.brain).setupFireFromCoverMove();
-			doPlayerMove(EntityMovement.GAIT_RUN);
+			doPlayerMove(EntityMovement.GAIT_SPRINT);
 		}
 		
 		private function removePath():void {
