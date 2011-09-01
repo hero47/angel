@@ -23,11 +23,11 @@ package angel.common {
 			
 		}
 		
-		public function adjustImageForMove(facing:int, frameOfMove:int, totalFramesInMove:int):void {
+		public function adjustImageForMove(facing:int, frameOfMove:int, totalFramesInMove:int, gait:int):void {
 			
 		}
 		
-		public function turnToFacing(newFacing:int):void {
+		public function turnToFacing(newFacing:int, newGait:int):void {
 			
 		}
 		

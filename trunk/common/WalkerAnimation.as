@@ -27,7 +27,7 @@ package angel.common {
 			stopDeathAnimation();
 		}
 		
-		public function adjustImageForMove(facing:int, frameOfMove:int, totalFramesInMove:int):void {
+		public function adjustImageForMove(facing:int, frameOfMove:int, totalFramesInMove:int, gait:int):void {
 			stopDeathAnimation();
 			var step:int;
 			if ((totalFramesInMove == 0) || (frameOfMove >= totalFramesInMove)) {
@@ -36,14 +36,15 @@ package angel.common {
 				var foot:int = frameOfMove * WALK_FRAMES.length / totalFramesInMove;
 				step = WALK_FRAMES[foot];
 			}
-			imageBitmap.bitmapData = animationData.bitsFacing(facing, step);
+			imageBitmap.bitmapData = animationData.bitsFacing(facing, step, gait);
 		}
 		
 		// Facing == rotation/45 if we were in a top-down view, or 8 for dead/down
-		public function turnToFacing(newFacing:int):void {
+		public function turnToFacing(newFacing:int, newGait:int):void {
 			stopDeathAnimation();
 			imageBitmap.bitmapData = animationData.bitsFacing(newFacing,
-					(newFacing == WalkerAnimationData.FACE_DYING ? WalkerAnimationData.STEP_DEAD : WalkerAnimationData.STAND));
+					(newFacing == WalkerAnimationData.FACE_DYING ? WalkerAnimationData.STEP_DEAD : WalkerAnimationData.STAND),
+					newGait);
 		}
 		
 		private function stopDeathAnimation():void {

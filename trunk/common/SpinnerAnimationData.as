@@ -17,7 +17,7 @@ package angel.common {
 		//mapping from facing to position on image sheet
 		//(facing 8 == DYING holds the death images)
 		private static const imageColumn:Vector.<int> = Vector.<int>([1, 0, 7, 6, 5, 4, 3, 2, 8]);
-		public static const FACE_DYING:int = 8;
+		private static const DYING_COLUMN:int = 8;
 		
 		private var bits:Vector.<BitmapData>;
 		
@@ -65,11 +65,14 @@ package angel.common {
 		}
 		
 		public function standardImage(down:Boolean = false):BitmapData {
-			return bitsFacing(down ? FACE_DYING : 1);
+			return bitsFacing(down ? DYING_COLUMN : 1);
 		}
 		
 		// Facing == rotation/45 if we were in a top-down view, or 8 for dead/down.
 		public function bitsFacing(facing:int):BitmapData {
+			if ((facing < 0) || (facing >= DYING_COLUMN)) {
+				facing = DYING_COLUMN;
+			}
 			return bits[facing];
 		}
 		

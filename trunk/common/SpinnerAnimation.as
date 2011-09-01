@@ -26,16 +26,16 @@ package angel.common {
 			
 		}
 		
-		public function adjustImageForMove(facing:int, frameOfMove:int, totalFramesInMove:int):void {
-			turnToFacing(facing);
+		public function adjustImageForMove(facing:int, frameOfMove:int, totalFramesInMove:int, gait:int):void {
+			turnToFacing(facing, gait);
 		}
 		
-		public function turnToFacing(newFacing:int):void {
+		public function turnToFacing(newFacing:int, newGait:int):void {
 			imageBitmap.bitmapData = animationData.bitsFacing(newFacing);
 		}
 		
 		public function startDeathAnimation():void {
-			imageBitmap.bitmapData = animationData.bitsFacing(SpinnerAnimationData.FACE_DYING);
+			imageBitmap.bitmapData = animationData.bitsFacing(WalkerAnimationData.FACE_DYING);
 		}
 		
 		public function startHuddleAnimation():void {

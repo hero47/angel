@@ -7,8 +7,8 @@ package angel.common {
 	public interface IEntityAnimation {
 		
 		function cleanup():void;
-		function adjustImageForMove(facing:int, frameOfMove:int, totalFramesInMove:int):void;
-		function turnToFacing(newFacing:int):void;
+		function adjustImageForMove(facing:int, frameOfMove:int, totalFramesInMove:int, gait:int):void;
+		function turnToFacing(newFacing:int, newGait:int):void;
 		function startDeathAnimation():void;
 		function startHuddleAnimation():void;
 	}

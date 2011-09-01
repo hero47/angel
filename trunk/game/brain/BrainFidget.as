@@ -31,7 +31,7 @@ package angel.game.brain {
 			}
 			
 			var facing:int = getFacingFunction();
-			me.turnToFacing(facing);
+			me.turnToFacing(facing, 0);
 			// Set the first twitch opportunity to a random fraction of a second, so all the NPCs in
 			// the room aren't acting in unison.
 			roomExplore.addTimedEvent(Math.random(), twitchOpportunity);
@@ -47,7 +47,7 @@ package angel.game.brain {
 			var currentFacing:int = me.currentFacing();
 			var newFacing:int = getFacingFunction();
 			if (currentFacing != newFacing) {
-				me.turnToFacing(newFacing);
+				me.turnToFacing(newFacing, 0);
 				roomExplore.addTimedEvent(2, twitchOpportunity);
 			} else {
 				roomExplore.addTimedEvent(1, twitchOpportunity);

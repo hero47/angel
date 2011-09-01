@@ -403,7 +403,7 @@ package angel.game {
 				standUp();
 			} else {
 				currentHealth = 0;
-				animation.turnToFacing(WalkerAnimationData.FACE_DYING); // stands back up if we were dead
+				animation.turnToFacing(WalkerAnimationData.FACE_DYING, 0); // stands back up if we were dead
 				solidness = solidness & (~Prop.TALL); // Dead entities are short, by fiat.
 				Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.CHANGED_SOLIDNESS));
 			}
@@ -416,7 +416,7 @@ package angel.game {
 		}
 		
 		public function standUp():void {
-			animation.turnToFacing(facing); // stands back up if we were down
+			animation.turnToFacing(facing, 0); // stands back up if we were down
 			solidness = solidnessWhenAlive;
 			Settings.gameEventQueue.dispatch(new EntityQEvent(this, EntityQEvent.CHANGED_SOLIDNESS));
 		}
@@ -459,17 +459,17 @@ package angel.game {
 			animation.startDeathAnimation();
 		}
 		
-		public function adjustImageForMove(frameOfMove:int, totalFramesInMove:int):void {
-			animation.adjustImageForMove(facing, frameOfMove, totalFramesInMove);
+		public function adjustImageForMove(frameOfMove:int, totalFramesInMove:int, gait:int):void {
+			animation.adjustImageForMove(facing, frameOfMove, totalFramesInMove, gait);
 		}
 		
 		public function currentFacing():int {
 			return facing;
 		}
 		
-		public function turnToFacing(newFacing:int):void {
+		public function turnToFacing(newFacing:int, newGait:int):void {
 			facing = Util.negSafeMod(newFacing, 8);
-			animation.turnToFacing(facing);
+			animation.turnToFacing(facing, newGait);
 		}
 		
 		// Return the facing that closest approximates the tile's direction
@@ -481,7 +481,8 @@ package angel.game {
 		
 		// Turn to the facing that closest approximates the tile's direction
 		public function turnToFaceTile(loc:Point):void {
-			turnToFacing(findFacingToTile(loc));
+			var gait:int = (movement == null ? 0 : movement.mostRecentGait);
+			turnToFacing(findFacingToTile(loc), gait);
 		}
 		
 		public function centerRoomOnMe():void {
