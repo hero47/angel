@@ -44,6 +44,7 @@ package angel.game {
 		// and detect clicks on entities.
 
 		public var contentsLayer:Sprite;
+		private var coverUntilInitFinishedLayer:Sprite;
 		
 		public var filename:String;
 		private var quitButton:SimplerButton;
@@ -84,6 +85,12 @@ package angel.game {
 			contentsLayer.mouseChildren = false;
 			addChild(contentsLayer);
 			
+			coverUntilInitFinishedLayer = new Sprite();
+			coverUntilInitFinishedLayer.mouseEnabled = false;
+			coverUntilInitFinishedLayer.graphics.beginFill(0x000000);
+			coverUntilInitFinishedLayer.graphics.drawRect( -1000, -1000, 2000, 2000);
+			addChild(coverUntilInitFinishedLayer);
+			
 			size = floor.size;
 			cells = new Vector.<Vector.<Cell>>(size.x);
 			for (var i:int = 0; i < size.x; i++) {
@@ -115,6 +122,17 @@ package angel.game {
 			if (!resumedFromSave) {
 				Settings.gameEventQueue.dispatch(new QEvent(this, ROOM_INIT));
 			}
+			
+			//This would like to be a gameEventQueue event with lowered priority, so it would keep floating to the end of the
+			//queue until all init stuff and other events spawned by them have been processed.  Since we don't have
+			//priority implemented, I'm doing it on the first enterFrame instead
+			Settings.gameEventQueue.addListener(this, parent, GAME_ENTER_FRAME, removeCover); // used just once after init processed
+		}
+		
+		private function removeCover(event:QEvent):void {
+			Settings.gameEventQueue.removeListener(parent, GAME_ENTER_FRAME, removeCover);
+			removeChild(coverUntilInitFinishedLayer);
+			coverUntilInitFinishedLayer = null;
 		}
 		
 		public function cleanup():void {

@@ -13,7 +13,7 @@ package angel.common {
 		
 		public static const WIDTH:int = 1000;
 		public static const HEIGHT:int = 600;
-		private static const COLOR_BEFORE_IMAGE_LOADS:uint = 0xffffcc;
+		private static const COLOR_BEFORE_IMAGE_LOADS:uint = 0x000000;
 		
 		public static const TAG:String = "splash";
 		
