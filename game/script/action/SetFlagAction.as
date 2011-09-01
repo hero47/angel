@@ -8,13 +8,15 @@ package angel.game.script.action {
 	 * ...
 	 * @author Beth Moursund
 	 */
-	public class AddFlagAction implements IAction {
+	
+	// set flag.  Default is set to 1; if another parameter is included, evaluate it as a Computation and set to that value.
+	public class SetFlagAction implements IAction {
 		private var flag:String;
 		private var value:IComputation;
 		
-		public static const TAG:String = "addFlag";
+		public static const TAG:String = "set";
 		
-		public function AddFlagAction(flag:String, value:IComputation) {
+		public function SetFlagAction(flag:String, value:IComputation) {
 			this.flag = flag;
 			this.value = value;
 		}
@@ -29,9 +31,9 @@ package angel.game.script.action {
 				var xml:XML = actionXml.copy();
 				delete xml.@flag;
 				var value:IComputation = ComputationFactory.createFromXml(xml, script);
-				return (value == null ? null : new AddFlagAction(flag, value));
+				return (value == null ? null : new SetFlagAction(flag, value));
 			}
-			return new AddFlagAction(flag, null);
+			return new SetFlagAction(flag, null);
 		}
 		
 		public function doAction(context:ScriptContext):Object {

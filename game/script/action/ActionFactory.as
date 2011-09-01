@@ -11,7 +11,6 @@ package angel.game.script.action {
 		
 		private static const actionNameToClass:Object = {
 			"addNpc":AddNpcAction,
-			"add":AddFlagAction,
 			"addToInventory":AddToInventoryAction,
 			"change":ChangeAction,
 			"changeMainPc":ChangeMainPcAction,
@@ -31,6 +30,7 @@ package angel.game.script.action {
 			"removeFromInventory":RemoveFromInventoryAction,
 			"removeFromRoom":RemoveFromRoomAction,
 			"revive":ReviveAction,
+			"set":SetFlagAction,
 			"splash":SplashAction,
 			"stop":StopAction,
 			"winGame":WinGameAction

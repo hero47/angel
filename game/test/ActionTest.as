@@ -71,7 +71,7 @@ package angel.game.test {
 			Autotest.assertEqual(testRoom.mode, null, modeChangeFail);
 		}
 		
-		private const addTestFlag:XML = <add flag="xxTest" />;
+		private const addTestFlag:XML = <set flag="xxTest" />;
 		private const removeTestFlag:XML = <remove flag="xxTest" />;
 		private function testFlagActions():void {
 			Autotest.testActionFromXml(addTestFlag);
@@ -80,7 +80,7 @@ package angel.game.test {
 			Autotest.assertFalse(Boolean(Flags.getValue("xxTest")));
 		}
 		
-		private const addTestFlag2:XML = <add flag="xxTest2" int="16" />;
+		private const addTestFlag2:XML = <set flag="xxTest2" int="16" />;
 		private function testNumericFlagActions():void {
 			Autotest.testActionFromXml(addTestFlag2);
 			Autotest.assertEqual(Flags.getValue("xxTest2"), 16, "Set flag to constant failed");
