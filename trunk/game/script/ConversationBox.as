@@ -43,7 +43,7 @@ package angel.game.script {
 		// Currently taking bitmap, but this is likely to change to use a cataloged resource at some point
 		// If a conversation entry has only one conversation box, then that box is primary.  Otherwise, the PC box is
 		// primary.  The primary box sends ENTRY_FINISHED event when user makes a selection.
-		public function ConversationBox(portraitBitmap:Bitmap, pc:Boolean, rawSegments:Vector.<ConversationSegment>, primary:Boolean) {
+		public function ConversationBox(portraitBitmap:Bitmap, pc:Boolean, rawSegments:Vector.<ConversationSegment>, primary:Boolean, context:ScriptContext) {
 			graphics.beginFill(BOX_COLOR, 0.8);
 			graphics.drawRoundRect( -BOX_WIDTH / 2, 0, BOX_WIDTH, BOX_HEIGHT, 20);
 			
@@ -56,7 +56,7 @@ package angel.game.script {
 				portraitBitmap.x = -(BOX_WIDTH + portraitBitmap.width) / 2;
 				textX = -BOX_WIDTH/2 + TEXT_PORTRAIT_MARGIN;
 			}
-			segments = rawSegments;
+			createMySegments(rawSegments, context);
 			
 			if (primary) {
 				addEventListener(MouseEvent.CLICK, clickListener);
@@ -75,10 +75,10 @@ package angel.game.script {
 			Settings.gameEventQueue.dispatch(new QEvent(this, ConversationBox.CONVERSATION_ENTRY_FINISHED, selected));
 		}
 		
-		public function set segments(rawSegments:Vector.<ConversationSegment>):void {
+		private function createMySegments(rawSegments:Vector.<ConversationSegment>, context:ScriptContext):void {
 			mySegments = new Vector.<ConversationSegment>();
 			for (var i:int = 0; i < rawSegments.length; i++) {
-				if (rawSegments[i].haveAllNeededFlags()) {
+				if (rawSegments[i].haveAllNeededFlags(context)) {
 					if (rawSegments[i].header) {
 						++numberOfHeaders;
 					}

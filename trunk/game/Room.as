@@ -351,6 +351,9 @@ package angel.game {
 				case Util.KEYBOARD_R:
 					forEachComplexEntity(function(entity:ComplexEntity):void { entity.revive(); } );
 				break;
+				case Util.KEYBOARD_F:
+					Flags.debugShowFlags();
+				break;
 				
 				default:
 					activeUi.keyDown(event.keyCode);

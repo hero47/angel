@@ -52,8 +52,8 @@ package angel.game.script {
 			return segment;
 		}
 		
-		public function haveAllNeededFlags():Boolean {
-			return Flags.haveAllFlagsIn(need);
+		public function haveAllNeededFlags(context:ScriptContext):Boolean {
+			return context.haveAllFlagsIn(need);
 		}
 		
 		public function doActionsAndGetNextEntryId(context:ScriptContext):Object {

@@ -24,6 +24,7 @@ package angel.common {
 		// of the letter-key constants.  The version in CS5 has them.  ?????
 		public static const KEYBOARD_C:uint = 67;
 		public static const KEYBOARD_E:uint = 69;
+		public static const KEYBOARD_F:uint = 70;
 		public static const KEYBOARD_I:uint = 73;
 		public static const KEYBOARD_M:uint = 77;
 		public static const KEYBOARD_R:uint = 82;
