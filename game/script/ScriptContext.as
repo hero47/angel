@@ -212,6 +212,18 @@ package angel.game.script {
 			return Flags.setValue(translateScriptIdInFlagIdIfNeeded(flagId), value);
 		}
 		
+		public function haveAllFlagsIn(list:Vector.<String>):Boolean {
+			if (list == null) {
+				return true;
+			}
+			for (var i:int = 0; i < list.length; ++i) {
+				if (!getFlagValue(list[i])) {
+					return false;
+				}
+			}
+			return true;
+		}
+		
 	}
 
 }

@@ -49,19 +49,18 @@ package angel.game.script {
 			}
 		}
 		
-		//UNDONE: allow context-sensitive flags in "need" list
-		private function findValidTopic():Topic {
+		private function findValidTopic(context:ScriptContext):Topic {
 			var max:int = -1;
 			var topicIdWithMax:String = null;
 			var possibleError:String = "";
 			for (var topicId:String in topics) {
 				var topic:Topic = topics[topicId];
 				var length:int = (topic.need == null ? 0 : topic.need.length);
-				if ((length > max) && Flags.haveAllFlagsIn(topic.need)) {
+				if ((length > max) && context.haveAllFlagsIn(topic.need)) {
 					max = length;
 					topicIdWithMax = topicId;
 					possibleError = "";
-				} else if ((length == max) && Flags.haveAllFlagsIn(topic.need)) {
+				} else if ((length == max) && context.haveAllFlagsIn(topic.need)) {
 					possibleError += " " + topicId;
 				}
 			}
@@ -74,7 +73,7 @@ package angel.game.script {
 		}
 		
 		public function runConversation(ui:ConversationInterface):void {
-			currentTopic = findValidTopic();
+			currentTopic = findValidTopic(ui.context);
 			if (currentTopic == null) {
 				Alert.show("Error! No valid topic.");
 				ui.cleanup()

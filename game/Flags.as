@@ -90,18 +90,6 @@ package angel.game {
 			return false;
 		}
 		
-		public static function haveAllFlagsIn(list:Vector.<String>):Boolean {
-			if (list == null) {
-				return true;
-			}
-			for (var i:int = 0; i < list.length; ++i) {
-				if (!getValue(list[i])) {
-					return false;
-				}
-			}
-			return true;
-		}
-		
 		public static function toText():String {
 			var text:String = "";
 			for (var flagId:String in flags) {
@@ -126,6 +114,14 @@ package angel.game {
 				var nameAndValue:Array = element.split("=");
 				setValue(nameAndValue[0], int(nameAndValue[1]));
 			}
+		}
+		
+		public static function debugShowFlags():void {
+			var displayString:String = "";
+			for (var id:String in flags) {
+				displayString += id + "=" + flags[id] + "\n";
+			}
+			Alert.show(displayString);
 		}
 		
 	} // end class Flags

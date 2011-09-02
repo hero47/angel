@@ -96,7 +96,7 @@ package angel.game.script {
 		}
 		
 		private function displayConversationSegment(portraitBitmap:Bitmap, pc:Boolean, segments:Vector.<ConversationSegment>, x:int, y:int, listener:Function):ConversationBox {
-			var box:ConversationBox = new ConversationBox(portraitBitmap, pc, segments, listener != null);
+			var box:ConversationBox = new ConversationBox(portraitBitmap, pc, segments, listener != null, context);
 			addChild(box);
 			box.x = x;
 			box.y = y;
