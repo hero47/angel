@@ -28,14 +28,15 @@ package angel.game {
 		// once Wm makes a decision (because we don't want the clutter and expense of maintaining code for
 		// options that we've decided not to make use of).  Some of them will probably remain variables
 		// even after the game is released.
+		
 		public static var testExploreScroll:int;
 		public static var mouseScroll:int;
-		public static var walkPercent:int;
-		public static var runPercent:int;
-		public static var sprintPercent:int;
 		public static var minForOpportunity:int;
 		
 		public static var controlEnemies:Boolean;
+		
+		public static var walkDistance:int;
+		public static var runDistance:int;
 		
 		public static var exploreSpeed:Number;
 		public static var walkSpeed:Number;
@@ -70,14 +71,17 @@ package angel.game {
 				Alert.show("Warning: baseDamage found in 'Settings'.\nThis is no longer used; weapon damage is set independently\nfor each character in character editor.");
 			}
 			
+			if ((xml.@walkPercent.length() > 0) || (xml.@runPercent.length() > 0) || (xml.@sprintPercent.length() > 0)) {
+				Alert.show("Warning: movement percents found in 'Settings'.\nNo longer supported; use walkDistance and runDistance instead.");
+			}
+			
 			Settings.testExploreScroll = (xml.@testExploreScroll);
 			Settings.mouseScroll = (xml.@mouseScroll);
 			
-			walkPercent = int(xml.@walkPercent);
-			runPercent = int(xml.@runPercent);
-			sprintPercent = int(xml.@sprintPercent);
-			if (walkPercent != 0 && runPercent != 0 && sprintPercent != 0) {
-				Alert.show("One of walk/run/sprintPercent should be 0 or omitted; that one gets the leftover points after rounding.");
+			walkDistance = int(xml.@walkDistance);
+			runDistance = int(xml.@runDistance);
+			if (runDistance <= walkDistance) {
+				Alert.show("Warning: runDistance should be greater than walkDistance.");
 			}
 			
 			setNumberFromXml("exploreSpeed", Defaults.MOVE_SPEED, xml.@exploreSpeed);

@@ -83,32 +83,11 @@ package angel.game {
 			}
 		}
 		
-		public function setMovePoints(points:int):void {		
-			// Init file gives us settings for two of the three percents.  We want to set movement points for those
-			// two speeds based on percent of total points, then give the third one whatever's left (so rounding
-			// errors fall into the unspecified one).
-			// Then, once that's figured out, convert them to totals.
+		public function setMovePoints(points:int):void {
 			combatMovePoints = unusedMovePoints = points;
-			var walkPoints:int = combatMovePoints * Settings.walkPercent/100;
-			var runPoints:int = combatMovePoints * Settings.runPercent/100;
-			var sprintPoints:int = combatMovePoints * Settings.sprintPercent/100;
-			if (walkPoints + runPoints + sprintPoints == 0) {
-				walkPoints = runPoints = combatMovePoints / 3;
-			}
-			
-			if (walkPoints == 0) {
-				walkPoints = combatMovePoints - runPoints - sprintPoints;
-			}
-			if (runPoints == 0) {
-				runPoints = combatMovePoints - walkPoints - sprintPoints;
-			}
-			if (sprintPoints == 0) {
-				sprintPoints = combatMovePoints - walkPoints - runPoints;
-			}
-			
-			runPoints += walkPoints;
-			sprintPoints += runPoints;
-			gaitDistances = Vector.<int>( [0, walkPoints, runPoints, sprintPoints] );
+			var walkPoints:int = Math.min(Settings.walkDistance, points);
+			var runPoints:int = Math.min(Settings.runDistance, points);
+			gaitDistances = Vector.<int>( [0, walkPoints, runPoints, points] );
 		}
 		
 		public function restrictGaitUntilMoveFinished(gait:int):void {
